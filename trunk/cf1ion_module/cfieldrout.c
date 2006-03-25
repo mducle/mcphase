@@ -4252,7 +4252,7 @@ CHAR *leftcopy(string,bufferlen)
  
     buffer = STRING_ALLOC(bufferlen+2);
  
-    len  = strlen(string);
+    len  = strlen_own(string);
     for( i=0 ; i<=len; ++i)
          VALUE(buffer,i) = VALUE(string,i);
     for( i=len ; i<=bufferlen; ++i)
@@ -4262,9 +4262,9 @@ CHAR *leftcopy(string,bufferlen)
     return( buffer );
 }
 /*------------------------------------------------------------------------------
-                                  strlen()
+                                  strlen_own()
 ------------------------------------------------------------------------------*/
-strlen(s)
+strlen_own(s)
     CHAR *s;
 {
     INT len=0;
@@ -4904,8 +4904,8 @@ INT equal( s , t ) /* enthaelt String t den String s ?*/
     CHAR up();
  
  
-    len = strlen(s);
-    if( strlen(t)  < strlen(s) )  return(0);
+    len = strlen_own(s);
+    if( strlen_own(t)  < strlen_own(s) )  return(0);
  
  
     for( i=0; i<len ; ++i){

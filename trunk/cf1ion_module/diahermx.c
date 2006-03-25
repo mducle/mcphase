@@ -115,8 +115,7 @@ EWPROBLEM  *diagonalisiere(ewproblem,matrix,overwrite,setup)
 /*[4]*/  ewproblem        = number_ev( dia_hessenberg );
 /*[5]*/  ewproblem        = ordnen_ew( ewproblem,overwrite );
 /*[6]*/  ewproblem        = entartung( ewproblem,overwrite );
-/*[7]*/  ewproblem        = orthonormalisieren( ewproblem );
- 
+/*[7]*/  ewproblem        = orthonormalisieren( ewproblem ); 
          return( ewproblem );
  
 /* [0] Rechnergenauigkeit bestimmen                                 */
@@ -511,7 +510,6 @@ INT test_nullmatrix(matrix)  /* Ist die Matrix matrix eine Nullmatrix? */
 {
  
    INT zeile,spalte,anz_nullen;
- 
    anz_nullen = 0;
    for( zeile=1;zeile<=MXDIM(matrix);++zeile)
        for( spalte=1;spalte<=MXDIM(matrix);++spalte){
@@ -807,6 +805,7 @@ EWPROBLEM *orthonormalisieren( ewproblem )/* Eigenvektoren */
     COMHES *comhes;
  
     comhes = ewproblem -> comhes;
+
     if(test_nullmatrix(comhes->matrix)==JA) return( ewproblem );
  
     ev        = ewproblem -> eigenvektoren;

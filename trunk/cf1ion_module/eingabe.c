@@ -1138,11 +1138,11 @@ create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     fprintf(fp,t53);
  
     t11 = "===============================================================\n";
-    tss = "| Energy Eignevalues are          : %6s                         |\n";
-    t15 = "| Temperature of the sample       : %7.2f Kelvin                |\n";
-    t12 = "| Ion                             : %25s                        |\n";
-    t13 = "| Symmetry              : %s   Symmetry number : %1d |\n";
-    t14 = "| Magnetic field                  : %s                          |\n";
+    tss = "| Energy Eigenvalues are in  : %6s                         |\n";
+    t15 = "| Temperature of the probe   : %7.2f Kelvin                 |\n";
+    t12 = "| Ion                        : %25s     |\n";
+    t13 = "| Symmetry         : %s     Symmetry number : %1d       |\n";
+    t14 = "| Magnetic field             : %s                 |\n";
     t11 = "===============================================================\n";
     t11 = "===============================================================\n";
     tx  = "|   x  :                                                      |\n";
@@ -1580,7 +1580,8 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
                                      B1(iteration),
                                      B2(iteration),
                                      B3(iteration)  );
- 
+				     
+	MODUS(iteration) = 'r';
         B1MOL(iteration) = 0.0;
         B2MOL(iteration) = 0.0;
         B3MOL(iteration) = 0.0;
@@ -1589,8 +1590,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
         PHI(  iteration) = 0.0;
         THETA(iteration) = 0.0;
  
-        fclose(fp);
-        return( HMAG(iteration) );
+      return( HMAG(iteration) );
     }
     /* falls ein Magnetfeld angelegt wurde : */
  
@@ -3059,7 +3059,6 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
  
  
     HMAG(iteration) = readBmag(fp,name,modus,myB,iteration,buffer_size,string);
- 
     fclose(fp);
     return( iteration );
 }

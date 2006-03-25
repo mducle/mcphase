@@ -1109,7 +1109,8 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
   iteration = ITERATION(kristallfeld);
   feld      = DOUBLE_ALLOC(anz_feld);
   t01       = "%5d%5d %s %4s %s \n";
-  t05       = "#%5d%5d Magnetisches Moment von %4s in [%2d,%2d,%2d] fuer B in [%2d,%2d,%2d]\n";
+  t04       = "#%5d%5d Betrag des Magnetischen Moments von %4s  fuer B in [%2g,%2g,%2g]\n";
+  t05       = "#%5d%5d Magnetisches Moment von %4s in [%2d,%2d,%2d] fuer B in [%2g,%2g,%2g]\n";
   t02       = "%10.5e %10.5e\n";
   b1        = B1(iteration);
   b2        = B2(iteration);
@@ -1118,8 +1119,8 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
   b2mol     = B2MOL(iteration);
   b3mol     = B3MOL(iteration);
  
- 
-  b_norm    = sqrt( b1   *b1    + b2   *b2    + b3   *b3    );
+
+  b_norm    = sqrt( b1   *b1    + b2   *b2    + b3   *b3 );
   bmol_norm = sqrt( b1mol*b1mol + b2mol*b2mol + b3mol*b3mol );
   if( !null(b_norm,macheps)  ){
         b1 /= b_norm; b2 /= b_norm; b3 /= b_norm; }
@@ -1136,11 +1137,11 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
  
     if( null(b_norm,macheps) && null(bmol_norm,macheps) ){
         b1 = 1.0; b2 = 0.0; b3 = 0.0;
-        r1 = 1  ; r2 = 0  ; r3 = 0  ;
+        r1 = 1.0  ; r2 = 0.0  ; r3 = 0.0  ;
     }
     for( i=1; i<= anz_feld ; ++i )
           VALUE(feld,i) = feld_step*(DOUBLE)(i-1)+anf_feld;
-    printf("Berechne magnetisches Moment in [100] fuer B in [%2d,%2d,%2d] ... \n", r1,r2,r3);
+    printf("Berechne magnetisches Moment in [100] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     x_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
@@ -1150,17 +1151,16 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
     fp = fopen( MAGNETM, "w");
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
-    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,1,0,0,r1,r2,r3);
+    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,1,0,0,b1,b2,b3);
     for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),VALUE(x_s,i) );
-    fclose(fp);
  
  
     if( null(b_norm,macheps) &&  null(bmol_norm,macheps) ){
         b1 = 0.0; b2 = 1.0; b3 = 0.0;
         r1 = 0  ; r2 = 1  ; r3 = 0  ;
     }
-    printf("Berechne magnetisches Moment in [010] fuer B in [%2d,%2d,%2d] ... \n", r1,r2,r3);
+    printf("Berechne magnetisches Moment in [010] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     y_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
@@ -1168,19 +1168,17 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
                              (b1*VALUE(feld,i)),(b2*VALUE(feld,i)),(b3*VALUE(feld,i)),temp);
     }
     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
-    fp = fopen( MAGNETM, "a");
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
-    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,0,1,0,r1,r2,r3);
+    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,0,1,0,b1,b2,b3);
     for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),VALUE(y_s,i) );
-    fclose(fp);
  
  
     if( null(b_norm,macheps) &&  null(bmol_norm,macheps) ){
         b1 = 0.0; b2 = 0.0; b3 = 1.0;
         r1 = 0  ; r2 = 0  ; r3 = 1  ;
     }
-    printf("Berechne magnetisches Moment in [001] fuer B in [%2d,%2d,%2d] ... \n", r1,r2,r3);
+    printf("Berechne magnetisches Moment in [001] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     z_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
@@ -1188,22 +1186,22 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
                               (b1*VALUE(feld,i)),(b2*VALUE(feld,i)),(b3*VALUE(feld,i)),temp);
     }
     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
-    fp = fopen( MAGNETM, "a");
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
-    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,0,0,1,r1,r2,r3);
+    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,0,0,1,b1,b2,b3);
     for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),VALUE(z_s,i) );
-    printf("Berechne magnetisches Moment in [%2d%2d%2d] fuer B in [%2d,%2d,%2d] ... \n", r1,r2,r3,r1,r2,r3);
-    printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
-    fp = fopen( MAGNETM, "a");
-    if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
-    fprintf(fp,t05,datensatz_nr,anz_feld,ionname,r1,r2,r3,r1,r2,r3);
-    for( i=1; i<= anz_feld; ++i )
+
+    if( !null(b_norm,macheps) ||  !null(bmol_norm,macheps) )
+    {    
+     printf("Berechne Betrag des magnetisches Moments fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
+     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
+     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
+     fprintf(fp,t04,datensatz_nr,anz_feld,ionname,b1,b2,b3);
+     for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),sqrt( VALUE(x_s,i)*VALUE(x_s,i)+VALUE(y_s,i)*VALUE(y_s,i)+VALUE(z_s,i)*VALUE(z_s,i) ) );
+   }
  
- 
-    t01="\n%s wurde nicht angelegt. Magnetnetisches Moment ist Null.\n";
- 
+    t01="\n%s wurde nicht angelegt. Magnetisches Moment ist Null.\n";
     if( datensatz_nr <= 0 && anz_daten == 0)  printf(t01,MAGNETM);
  
     free_(x_s);
@@ -1261,9 +1259,15 @@ DOUBLE magnetm(mat_Ji,setup,ewproblem,kristallfeld,Bx,By,Bz,t)
     Bymol        = B2MOL(iteration);
     Bzmol        = B3MOL(iteration);
  
- 
+  
     HMAG(iteration) = calc_iBmag( bmag,gj,myB,Bx,By,Bz,Bxmol,Bymol,Bzmol);
-    ewproblem       = solve(setup,ewproblem,NOSPACE,kristallfeld,art);
+
+    ewproblem       = solve(setup,ewproblem,NEIN,kristallfeld,art);
+/* here changed to NOSPACE to NEIN MR okt 2002 - because NOSPACE leads
+to overwriting the eigenvectors and eigenvalue (intended to savememory) -
+this has the consequence that the entartung gets different in different
+fields and the diagonalize routine cannot deal (in the NOSPACE=overwrite
+modus) with repeated calls leading to different entartungen */
     macheps   = ewproblem->eps_machine;
     entartung = ewproblem->entartung;
     gi        = ewproblem->gi;
