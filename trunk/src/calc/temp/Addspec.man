@@ -1,0 +1,15 @@
+Usage: Addspec [-t type] [-v] InputFile
+          -t dos:  OutFile in DOS <lf><cr> format
+          -t unix: OutFile in UNIX <lf> format
+          -t ommited: OutFile same as IputFile format
+          -v: verify -> print header after operation (stderr) 	   
+          -V: Print Version number
+          -h: Print this help message 
+       InputFile: New SXS-Data file
+RESULT:
+Add all spectra in InputFile with the same start/end parameters.
+InputFile can be piped (|). 
+Output is written to stdout.
+Works for NEW SXS-data files ONLY
+
+$Id: Addspec.man,v 1.6 1999/07/09 11:28:28 herbie Exp herbie $

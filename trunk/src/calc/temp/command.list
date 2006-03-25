@@ -1,0 +1,31 @@
+*** GENERAL:
+Calc -f 
+Deriv -n 3 
+Exchg -c #:# 
+Fileop -f 
+Head -n 1 -f 8 
+Integ 
+Look 
+Merge -r -c 
+Polyfit  -n #  
+Reduce -n # 
+Remove -c #:# -r #:# -f #:# 
+Select -c #:# -r #:# -f #:# 
+Sort 
+Spline  
+*** SXS:
+Addspec       
+*** THERMAL EXPANSION:
+Calib 
+Dll -L #  
+Gap 
+Ggap  
+Zero -f # 
+*** X-WINDOWS:
+Disp 
+Fit 
+Plot 
+Show 
+Xport
+Xhelp
+Xmount

@@ -1,0 +1,27 @@
+Usage: Disp [-x #] [-y #] [-t] [-v] [-h]  InputFile
+        -x #:             
+        -y #: (int) number of x-, y-columns used for the plot
+              If ommited the default values x:1, y:2 are assumed.
+        -t dos : OutFile in DOS <lf><cr> format
+        -t unix: OutFile in UNIX <lf> format
+             -t: ommited: OutFile same as InputFile format
+             -h: Print this help message 
+             -v: verify -> print header before and after operation (stderr)          
+             -V: Print Version number
+             -h: Print this help message 
+     InputFile: Input data file
+RESULT:
+x versus y column of the data file are displayed on screen.
+Data can be changed "on line" by several functions.
+X-Windows is needed.
+The following keys can be used to control the layout of the display:
+ Function keys (F1- F10) allow to manipulate data
+    + Key: increase symbolsize
+    - Key: decrease symbolsize to default value
+    E Key: toggle error bars/symbols
+    C Key: connect points with line
+ ErrorBar: ONLY for spectroscopic data !! (Y: count rate)
+           displays error bars: sqrt(Y)  
+InputFile can be piped (>).
+
+$Id: Disp.man,v 1.4 1999/06/14 09:08:05 herbie Exp herbie $

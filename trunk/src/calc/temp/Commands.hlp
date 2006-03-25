@@ -1,0 +1,110 @@
+*** Common ***
+      
+Options:
+  -t type:
+       -t dos : OutFile in DOS <lf><cr> format
+       -t unix: OutFile in UNIX <lf> format
+     def: ommited: OutFile same as IputFile format
+	    
+  -v: verify -> print header before and after operation (stderr)          
+
+  -h: Print this help message 
+
+  -s: set no. (If file type supports multiple sets) (int) def: 1      
+
+  -x: Single x-column number or a list of x-column numbers
+  -y: Single y-column number or a list of y-column numbers
+   Valid list: 1 or 1,2,3 or ,4 or ,,5,,6
+      
+   
+  -r: one row or row range of a file
+  -c: one column or column range of a file
+   Valid Range:  2 or 3:10 or 2.5:300
+
+  Options in brackets [] are optional; if not specified defaults are used
+  
+  Filenames in brackets () can be piped | via stdin      
+
+  Range:  int :   2
+                  3:10
+         float: 2.5:300
+
+*** General Functions ***
+
+Fileop  [-s #[,#]] -f op [-x #[,#]] [-y #[,#]] [-t type] [-v] [-h] (File1) File2
+ Adds, substracts, multiplies, divides, ... two DataFiles
+ Y(X) = Y1(X1) <+-*/^> Y2(X2)
+
+Look    [-s #[,#]] [-i]  [-x #[,#]] [-y #[,#]] [-t type] [-v] [-h] (Data) Table
+ A table lookup is performed: yData[xData] = yTable[xTable] 
+
+Calc    [-s #] -f string [-t type] [-v] [-h] (InputFile)  
+ A column can be added, substracted, ... with a value
+ 
+Head    [-s #] [-n #] [-f #] [-t type]      [-h] (InputFile) 
+ Display the header of a DataFile
+
+Deriv   [-s #] [-n #] [-x #] [-y #] [-t type] [-v] [-h] (InputFile)
+ Calculate the derivation dy/dx 
+ 
+Integ   [-s #] [-x #] [-y #] [-t type] [-v] [-h] (InputFile)
+ Integrate
+
+Select  [-s #] [-c #:#] [-r #:#] [-f #:#] [-t type] [-v] [-h] (InputFile) 
+ Select a range of rows, columns or values
+
+Sort    [-s #] [-c #] [-t type] [-v] [-h] (InputFile)
+ Sort by values of a column
+ 
+Remove  [-s #] [-c #:#] [-r #:#] [-f #:#] [-t type] [-v] [-h] (InputFile)
+ Remove a range of rows, columns or values
+
+
+Exchg   [-s #] [-c #:#] [-t type] [-v] [-h] (InputFile)
+ Exchange (swap) two columns of a Datafile
+ 
+Spline  [-s #] [-x #] [-y #] [-t type] [-v] [-h] (InputFile) 
+ Build a spline table (3rd column -> 2nd derivative)
+ 
+Reduce  [-s #] -n # [-t type] [-v] [-h] (InputFile) 
+ Reduce data by removing each n-th point
+
+Merge   [-s#,[#]] [-r] [-c] [-t type] [-v] [-h] (File1) File2
+ Merge two DatFiles by columns or rows
+
+Fitpoly [-s #] -n # [-x #] [-y #] [-N #] [-t type] [-v] [-h] (InputFile)
+ Fit a polynomal of order -n (Gauss-algorythm)
+ 
+*** SxS Functions ***
+Addspec  [-t type] [-v] [-h] (InputFile)      
+ Add all spectra in a SxS-DataFile
+ 
+
+*** Thermal Expansion Functions ***
+Zero    [-s #]  -f #  [-x #] [-y #] [-t type] [-v] [-h] (InputFile)
+ Shift zero-point of a column
+
+Dll     [-s #] [-c #]  -L # [-t type] [-v] [-h] (InputFile)
+ Calculate L(T)-L(T0)/L0
+ 
+Gap     [-s #] [-c #] [-D #] [-G #] [-t type] [-v] [-h] (InputFile) 
+ Calculate gap [mm] from C [pF] using parallel condensor formula
+ 
+Ggap    [-s #] [-F par-file] [-t type] [-v] [-h] (InputFile) 
+ Calculate gap [mm] from C [pF] using tilted plate condensor formula
+
+Calib    [-s #] [-F par-file] [-t type] [-v] [-h] (InputFile) 
+ Prform a thermal expansion calibration procedure 
+ 
+*** Functions needing X-Windows ***
+Plot [-x #[,#,...]] [-y #[,#,...]] [-t] [-v] [-h] (File1) File2 File3 ...
+ Plot DataFiles on a printer with preview on screen
+
+Disp [-x #] [-y #]                 [-t type] [-v] [-h] (InputFile)
+ Display InputFile; make changes; write to stdout
+
+Show [-x #] [-y #]                           [-v] [-h] (InputFile)
+ Show a small plot
+
+Fit [-x #] [-y #] [-t type] [-v] [-h] (InputFile)
+ Perform a fit of predefined functions

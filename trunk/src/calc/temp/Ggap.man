@@ -1,0 +1,18 @@
+Usage: Ggap [-s #] [-F par-file] [-t type] [-v] [-h] (InputFile) 
+	    -F #: (string) Parameterfile from which the dimensions of the cell
+	          are obtained.
+          -t dos: OutFile in DOS <lf><cr> format
+         -t unix: OutFile in UNIX <lf> format
+      -t ommited: OutFile same as IputFile format
+              -v: verify -> print header after operation (stderr) 	   
+              -V: Print Version number
+              -h: Print this help message 
+       InputFile: Data file
+RESULT:
+Calculates gap [mm] using capacitance [pF] for tilted plates (mini-dialtometer).
+Using the parameters file  -F.
+If -F is omited the default file ausw.conf is used.
+InputFile can be piped (|). 
+Output is written to stdout.
+
+$Id: Ggap.man,v 1.3 1999/03/15 09:37:03 herbie Exp herbie $

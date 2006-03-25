@@ -1,0 +1,17 @@
+Usage: Sort [-s #] [-c #] [-t] [-v] [-h] InputFile
+            -s #: (int) number of data set to perform integration
+                  (Only valid if file type supports multiple data sets)  
+            -c #: (int) number of column to use for sort.
+          -t dos: OutFile in DOS <lf><cr> format
+         -t unix: OutFile in UNIX <lf> format
+      -t ommited: OutFile same as IputFile format
+              -v: verify -> print header after operation (stderr) 	   
+              -V: Print Version number
+              -h: Print this help message 
+       InputFile: Data file
+RESULT:
+All columns are sorted with respect to column number specified by -c.
+InputFile can be piped (|). 
+Output is written to stdout.
+
+$Id: Sort.man,v 1.3 1999/03/15 09:40:15 herbie Exp herbie $
