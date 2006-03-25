@@ -1,0 +1,299 @@
+0. INTRODUCTION:
+
+This package include commands for manipulating data files in a various and
+powerful way.
+
+Most of the functions are reading data from a input file and change it.
+The general philosopy is to keep the original file unchanged and write
+the changed data to "stdout".
+As usual in UNIX, now you can pipe the data to the next command (|)
+or you pipe it to a file (>).
+
+You can apply switches to define or control data operation of the commands.
+
+To avoid confusion with linux-commands all commands of this package start
+with a capital (big) letter.
+A command looks like the following:
+
+ Commando [optional SWITCHES] INPUTFILES(s)
+ 
+A SWITCH is used to pass information to your programm (command) it 
+consists of 3 parts:
+ 1. - sign
+ 2. a letter
+ 3. optional parameters
+ Example: -c 1:3 
+          12 3 
+
+The INPUTFILE supplies your programm with data. If it is ommited then the
+data stream must come via a pipe (|) from the previous command.
+If more than one file is possible they are separated by blancs.
+
+In general a input file is a ASCII-File which has:
+  1. a header (text lines) on top.
+  2. followed by columns of numbers representing the numerical data.
+  
+A line ends with "\n"->new line or "\n\r"-> new line and return.
+The coulmns must be seperated by blancs.
+Numerical values are: 18 or 1.234 or -1.234 or 1.5e-06.
+
+Data files are analyzed before processing (see SUPPORTED DATA FILES).
+The number of textlines, data columns and data lines is not limited
+by the program.
+The number of columns must be the same for all data lines.
+
+
+-------------------------------------------------------------------------
+
+1. GENERAL:
+
+1.1 SWITCHES:
+The switches of most commands have similar meanings:
+
+-c #:#      : Single column or column list or column range
+-r #:#      : Single row or row list or row range
+-t <arg>    : Type <dos|unix|OMIT>
+-v          : Verify (Print debug info and file headers after operation on stderr)
+-s #        : # :int (1-n) Data set; if supported
+-f <arg>    : <string>: formula or #: format
+-h          : Print help
+-x #        : x-column number (1-n)
+-y #        : y-column number (1-n)
+-z #        : z-column number (1-n)
+-D #        : Diameter of capacitor
+-G #        : Guard ring gap of capacitor
+-F string   : Parameter file
+-L #        : Length of a sample at room temperature
+-V          : Print version number
+Range:  int :   2
+                3:10
+       float: 2.5:300
+----------------------------------------------------------
+1.2 FUNCTIONS and COMMANDS
+
+This is a short description of all commands.
+A detailed description of each command can be optained by displaying
+the file *.man or starting the command with the -h switch.
+
+GENERAL FUNCTIONS
+
+Fileop  [-s #[,#]] -f op [-x #[,#]] [-y #[,#]] [-t type] [-v] [-V] [-h] (File1) File2
+ Adds, substracts, multiplies or divides two data files 
+
+Look    [-s #[,#]] [-i] [-x #[,#]] [-y #[,#]] [-t type] [-v] [-V] [-h] (Data) Table
+ Perform a spline table lookup and replace (add) one column with the 
+ interpolated values 
+ 
+Calc    [-s #]  -f string [-t type] [-v] [-V] [-h] (InputFile)  
+ Perform mathematic operations with columns
+
+Head    [-s #] [-f #] [-n #] [-t type] [-V] [-h] (InputFile) 
+ Display the textlines or column statisics
+ 
+Deriv   [-s #] [-n #] [-x #] [-y #] [-t type] [-v] [-V] [-h] (InputFile)
+ Caluclate numeric derivation of one column with respect to another column
+ 
+Integ   [-s #] [-x #] [-y #] [-t type] [-v] [-V] [-h] (InputFile)
+ Calculate numeric integral of of one column with respect to another column
+
+Select  [-s #] [-c #:#] [-r #:#] [-f #:#] [-t type] [-v] [-V] [-h] (InputFile) 
+ Extract one part of the row, columns or values of a file
+
+Sort    [-s #] [-c #] [-t type] [-v] [-V] [-h] (InputFile)
+ Sort values by one column
+
+Remove  [-s #] [-c #:#] [-r #:#] [-f #:#] [-t type] [-v] [-h] [-V] (InputFile)
+ Remove row, columns or values from a file
+
+Exchg   [-s #] [-c #:#] [-t type] [-v] [-h] [-V] (InputFile)
+ Exchange data columns of a file
+  
+Spline  [-s #] [-x #] [-y #] [-t type] [-v] [-h] [-V] (InputFile) 
+ Make a cubic spline table (3rd column is 2nd derivative)
+
+Reduce  [-s #] -n # [-t type] [-v] [-h] [-V] (InputFile) 
+ Reducd rows by skipping
+
+Merge   [-s#,[#]] [-r] [-c] [-t type] [-v] [-h] [-V] (File1) File2
+ Merge 2 data files by roes or columns
+
+Fitpoly [-s #] -n #  [-x #] [-y #] [-N #]  [-t type] [-v] [-h] [-V] (InputFile)
+ Perform a polynomal fit
+ 
+ 
+FUNCTIONS USING X-Windows and Qt
+
+Plot  [-s #] [-x #[,#,...]] [-y #[,#,...]]  [-t type] [-v] [-h] [-V] Files or - ...
+ Perform a plot of up to 8 files which can be sent to the printer
+ 
+Disp  [-x #] [-y #] [-t type] [-v] [-h] [-V] (InputFile)
+ Display data and manipulate it 
+
+Show  [-s #] [-x #] [-y #] [-v] [-h] [-V] (InputFile)
+ Show a small grafic on screen
+
+Fit   [-x #] [-y #] [-t type] [-v] [-h] [-V] (InputFile) 
+ Perform a simplex-fit for several functions; with grafic display 
+
+Xport [-s #] [-t type] [-v] [-h] [-V] (InputFile)
+ Convert data to ASCII-columns and remove or add text lines
+
+Xhelp  [-h] [-V] (InputFile)
+ Display the contents of a text fole (*.man) in small window
+
+Xmount [-h] [-V] 
+ SMB-mount with grafic interface (like Windows-Explorer)
+ 
+SPECIAL FUNCTIONS:
+ Thermal Expansion:
+  Zero    [-s #]  -f #  [-x #] [-y #]         [-t type] [-v] [-h] [-V] (InputFile)
+   Dll    [-s #] [-c #]  -L #                 [-t type] [-v] [-h] [-V] (InputFile)
+   Gap    [-s #] [-c #] [-D #] [-G #]         [-t type] [-v] [-h] [-V] (InputFile) 
+   Ggap   [-s #]        [-F par-file]         [-t type] [-v] [-h] [-V] (InputFile) 
+   Calib  [-s #]        [-F par-file]         [-t type] [-v] [-h] [-V] (InputFile) 
+   Convtrd (FieldFile) current
+   U2TH                  [-F FieldFile]        [-t type] [-v] [-h] [-V] (InputFile) 
+
+ Soft x-ray Spectroscopy
+Addspec                                     [-t type] [-v] [-V] [-h] (InputFile)      
+
+If (filename) is in brackets it can be piped (|) from stdin of previos command
+
+XAusw: Grafic front end for above functions
+
+-------------------------------------------------------------------
+
+2. SUPPLIED DATA FILES
+
+ --------------------------------------------
+ Special for herbie (Thermal expansion group):
+ --------------------------------------------
+The - File: header
+ Thermal Expansion File
+ Header Supports: nCols, nRows, ColID
+ Unsorted
+ ------------ 
+SxS - File 
+ Old Header: nRows
+ New Header: nRows, nCols, ColID, Sets
+ Sorted by 1st col
+ ------------
+Spline - File:
+ Header supports nRows
+ Sorted by 1st col
+ ---------------------------
+ Special for Transport group:
+ ----------------------------
+Trans - File 
+ Ascii columns
+ Unsorted
+ -----------------------------------
+ Special for X-ray diffraction users:
+ -----------------------------------
+XDif - File: 
+ Binary special format (SIEMENS X-ray diffraction)
+ Sorted by 1st col
+ ---------------------------
+For all users:
+ ---------------------------
+Ascii - File: 
+ qAscii columns
+ Unsorted
+
+An ASCII-File is analyzed by the following rules:
+The first line which contains only numerical characters (+-.123456789Ee)
+is interpreted as data line. The number of columns of this line is counted.
+All following lines must contain only numbers and the same number of columns as
+the first data line.
+
+--------------------------------------------------- 
+
+XAusw: Grafic front end for above functions
+Needs:
+       ausw.conf
+       command.list
+       XAusw.history
+       USERNAME.history
+
+       *.man
+       Makefile
+---------------------------------------------------
+INSTALLING and COMPILING:
+
+Create folowing directory structure
+
+...XAusw-|
+         -bin
+	 |
+	 -etc
+         |
+         -man
+         |
+         -src
+      
+XAusw: command.list      
+  bin: all binaries
+  etc: ausw.conf
+  man: all *.man
+  src: all source-files and Makefile
+
+In the .bashrc or .bash_login:
+
+*   Add to your PATH environment variable ...XAusw/bin
+    (export PATH=$PATH:...XAusw/bin)
+
+*   Set an environment variable  AUSW_MANPATH to ...XAusw/man
+    (export AUSW_MANPATH=...XAusw/man )
+
+*   Set an environment variable  AUSW_CONF_PATH to ...XAusw/etc
+    (export AUSW_CONF_PATH=...XAusw/etc )
+    Copy ausw.conf to this path
+      
+Then you can start the XAusw-commands from any directory      
+
+COMPILING:
+
+Requirements:
+ General functions (no X11-grafic): gcc only
+                     X11-functions: X11-lib, Qt 1.33 or compatible
+ 
+* Copy XAusw.tgz to the ..XAusw directory 
+
+* unzip with 
+  tar -xvzpf Xausw.tgz
+  all sources and Makefile will be copied to ...XAusw/src
+
+* If neccesary adapt src/Makefile to your installation
+  The following lines may be considered to be changed:
+
+  INCDIR = /usr/X11R6/lib/qt/include
+  CFLAGS = -g -Wall -W -I/usr/X11R6/include
+  LFLAGS = -L/usr/X11R6/lib/qt/lib -lm 
+  MOC = /usr/X11R6/lib/qt/bin/moc
+
+* Initialize make: 
+   make clean
+   make depend
+   make libcommand.a
+   make libxausw.a
+   
+* Start compiling:
+   If you dont want X11 grafic functions:
+   make noX  
+   
+   If you want all functions:
+   make
+   
+* Copy binary- and man-files to the paths:
+   make install
+         
+---------------------------------------------------------------------
+You can report errors to herbie@ifp.tuwien.ac.at
+NO WARRANTY OF ANY KIND!!!
+
+The software is free.
+
+All X-functions are compiled (gcc) with the free Qt-library 1.33 for linux.
+Copying: free (GNU conditions)
+Price: free; fees for manipulation, medias and shipment are possible.
+$Id: Man.man,v 1.1 1999/03/06 09:59:09 herbie Exp herbie $

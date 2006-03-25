@@ -1,0 +1,29 @@
+Usage: Plot [-x #[,...]] [-y #[,...]] [-v] [-h]  (File1 or -) File2 ...
+        -x #,...:             
+        -y #,...#: (int) number of x-, y-columns used for the plot
+	        Numbers separated by commas can be specified, refering 
+		to first file, second file, ...  respectively   
+	        If ommited the default values x:1, y:2 are assumed.
+            -v: verify -> print header before and after operation (stderr)          
+            -V: Print Version number
+            -h: Print this help message 
+     InputFile: Input data file
+RESULT:
+The x-, y-columns of te data files are plotted on screen.
+A plot on a printer can be requested.
+X-Windows is needed.
+If a plot is displayed the following keys can be used to control
+the layout:
+    # + Key: increase symbolsize of curve #
+    # - Key: decrease symbolsize of curve #
+    # E Key: set/reset error bars of curve #
+    # C Key: connect points with line
+   ErrorBar: ONLY for spectroscopic data !! (Y: count rate)
+	    displays error bars: sqrt(Y)  
+
+If only one file, the file name can be ommited to be piped (|) from stdin.
+If more files use "-" for the first file name then it can be piped from stdin.
+
+
+
+$Id: Plot.man,v 1.3 1999/03/15 09:38:31 herbie Exp herbie $

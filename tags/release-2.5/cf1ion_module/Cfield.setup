@@ -1,0 +1,71 @@
+ -----------------------
+| VERSION :   5.20      |
+ -----------------------
+
+ -------------------------------------------------------------- 
+|                                                              |
+|                           C F I E L D                        |
+|                                                              |
+|                    ein Kristallfeldprogramm                  |
+|                                                              |
+ -------------------------------------------------------------- 
+                __________________________________              
+               |                                  |             
+               |          Programmautor:          |             
+               |                                  |             
+               |         Peter  Hoffmann          |             
+               |    Forschungszentrum Juelich     |             
+               |Institut fuer Festkoerperforschung|             
+               |Tel.: 02461-616896                |             
+                __________________________________              
+ ______________________________________________________________ 
+|                                                              |
+|                      CFIELD - SETUP - FILE                   |
+|                                                              |
+ ______________________________________________________________ 
+
+================================================================
+|                                                              |
+| Rechengenauigkeit des Computers  =  5e-20                    |
+|                                                              |
+================================================================
+
+================================================================
+|                                                              |
+| Die Ungenauigkeit der Rechnung liegt auf der  20. Nachkomma- |
+| stelle. Diese  Nachkommastelle  bestimmt, wann  zwei  Zahlen |
+| fuer den Computer gleich sind.   Wegen Rundungsfehler sollte |
+| sollte diese Nachkommastelle heruntergesetzt werden.         |
+|                                                              |
+|  Empfohlene           ==================                     |
+|  Nachkommastelle :    |       3        |                     |
+|                       ==================                     |
+|                                                              |
+================================================================
+
+================================================================
+| Das Programm berechnet auch Datensaetze, die dann auf be-    |
+| stimmte Files heraus geschrieben werden. Die Datensaetze     |
+| werden defaultmaessig NICHT durchnummeriert. Sollen sie      |
+| dennoch durchnummeriert werden, bitte im unteren Kaestchen   |
+| eine von Null verschiedene Zahl eintragen.                   |
+|                                                              |
+|                       ==================                     |
+|                       |       0        |                     |
+|                       ==================                     |
+|                                                              |
+================================================================
+
+================================================================
+|                                                              |
+| Das Programm berechnet auch Datensaetze, die dann auf be-    |
+| stimmte Files heraus geschrieben werden.  Die Anzahl der     |
+| Datenpunkte, die  berechnet werden sollen, bitte im unteren  |
+| Kaestchen eintragen.                                         |
+|                                                              |
+|                       ==================                     |
+|                       |       20       |                     |
+|                       ==================                     |
+|                                                              |
+================================================================
+

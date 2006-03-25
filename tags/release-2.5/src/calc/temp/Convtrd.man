@@ -1,0 +1,24 @@
+Usage: Convtrd FieldFile current
+  FieldFile: Input data file is a *.trd file from Martin which holds
+             sensor field calibration data
+             1st column: T[K]
+             2nd column: R sensor [Ohm] at H=1 Tesla
+             3rd column: dR/dH
+             4th column: R sensor [Ohm] at H=2 Tesla
+             ...
+    current: Current in [A] to calculate voltage from R
+RESULT:
+The *.trd file is converted in a field spline table (*.uth) 
+used by XAusw and XMeas.
+1st Line: Textline: FIELDTABLE UTH> Sensorname
+2nd Line: rows,columns of table: 150,9
+3rd Line: Field values of following columns: 0,1,2,3,4,5,6,7,8,9
+4th - nth Line: spline data columns.
+1st column: T [K]
+2nd column: U sensor [V] for 1st value in 3rd Line
+3rd column: U sensor [V] for 2nd value in 3rd Line
+...
+
+InputFile can be piped (|). 
+Output is written to stdout.
+$Id: Convtrd.man,v 1.3 1999/03/15 09:19:57 herbie Exp herbie $

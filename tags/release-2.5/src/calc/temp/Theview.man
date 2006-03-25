@@ -1,0 +1,16 @@
+Usage: Theview [-h] [-V] (InputFile) 
+              -V: Print Version number
+              -h: Print this help message 
+       InputFile: Data file
+RESULT:
+Plots (shows) all relevant data of a thermal expansion measurement. 
+InputFile must be a valid thermal expansion data file (CAPV1).
+The corresponding *.aux file must exist in the same directory.
+C/Ts, Ts/t, HeLevel/Ts, dTs/t, P/Ts, W/Ts, Ts-Th/Ts and
+Loss/Ts is plotted on one sheet.
+
+P-key: Plots the sheet on printer
+Esc-Key or Q-Key: exits
+InputFile can be piped (|). 
+
+$Id: Theview.man,v 1.1 1999/05/06 10:23:26 herbie Exp herbie $

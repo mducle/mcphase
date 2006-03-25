@@ -1,0 +1,31 @@
+Usage: Remove [-c #:#] [-r #:#] [-f #:#] [-t] [-v] [-h] (InputFile)
+            -s #: (int) number of data set to perform operation
+                  (Only valid if file type supports multiple data sets)  
+          -c #:#: Range of columns to be remove.
+                  If -c ommited no columns are removed
+          -r #:#: Range of columns to be removed.
+                  If -r ommited no rows are removed
+                  Range: One or two int numbers separated by a colon e.g. 2:4
+          -f #:#: Range of values from column (-c) to be removed.
+                  Range: One or two float numbers; if two separated by a colon
+                  e.g. 2.5:400
+                  -f can be used only with -c #
+          -t dos: OutFile in DOS <lf><cr> format
+         -t unix: OutFile in UNIX <lf> format
+      -t ommited: OutFile same as IputFile format
+              -v: verify -> print header after operation (stderr) 	   
+              -V: Print Version number
+              -h: Print this help message 
+       InputFile: Data file
+RESULT:
+Removes the specified rows/columns of a file.
+Output is written to stdout.
+InputFile can be piped (|). 
+
+EXAMPLE: 
+Remove -c 2:3 -r 1:50 Data.cnt
+Removes column 2 and 3 and the rows from 1 - 50 of the file Data.cnt to stdout
+
+Remove -c 1 -f 2:30.5 Data.cnt
+Removes all rows with values between 2 and 3.5 in coumn 1
+$Id: Remove.man,v 1.3 1999/03/15 09:39:31 herbie Exp herbie $

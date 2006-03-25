@@ -1,0 +1,28 @@
+Usage: Fileop -f op [-x #[,#]] [-y #[,#]] [-s #,#] [-t] [-v] [-h]  (File1) File2
+        -s #,#: (int) number of data set to use for the calculation
+	        Two numbers separated by commas can be specified, refering 
+		to File1 or File2, respectively   
+                (Only valid if file type supports multiple data sets)  
+         -f op: A single character defining operation
+        -x #,#:             
+        -y #,#: (int) number of x-, y-columns used for the calculation.
+	        Two numbers separated by commas can be specified, refering 
+		to File1 or File2, respectively   
+	        If ommited the default values x:1, y:2 are assumed.
+       -t dos : OutFile in DOS <lf><cr> format
+       -t unix: OutFile in UNIX <lf> format
+            -t: ommited: OutFile same as IputFile format
+            -v: verify -> print header before and after operation (stderr)          
+            -V: Print Version number
+            -h: Print this help message 
+     InputFile: Input data file
+RESULT:
+The operation defined by the character is performed:
+y1(x1) = y1(x1) <op> y2(x1). 
+x(File1) and x(File2) need not be same, linear interpolation is used to get
+the value y2(x1) from y2(x2)
+Columns not involved in the operation are unchanged.
+Values MUST be sorted by x-column
+File1 can be piped (>).
+Output is written to stdout.
+$Id: Fileop.man,v 1.4 1999/04/29 09:44:09 herbie Exp herbie $
