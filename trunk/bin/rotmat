@@ -1,0 +1,142 @@
+#!/usr/bin/perl
+
+use PDL;
+use vars qw/ %opt /;
+
+# Taken from perl-howto, by Alex Batko
+# http://www.cs.mcgill.ca/~abatko/computers/programming/perl/howto/getopts/
+sub init()
+    {
+        use Getopt::Std;
+        my $opt_string = 'hi:B:c:m:';
+        getopts( "$opt_string", \%opt ) or usage();
+        usage() if $opt{h};
+    }
+
+sub usage()
+    {
+        print STDERR << "EOF";
+
+    $0 calculates a set of crystal field parameters for Stevens equivalent
+    operators in which Jx || c, Jy || b and Jz || a, from a set of crystal
+    field parameters with Jx || a, Jy || b, and Jz || c. It is for use  by
+    the program mcphase which requires this axis convention.
+
+    The calculations are  done by means of matrix  multiplication based on
+    the method of Buckmaster (phys. stat. sol. a, vol 13,  pp 9, 1972) and
+    Rudowicz (J. Phys: Solid State Phys., vol 18, pp 1415, 1985).   
+
+    This program uses the  Perl Data Language (PDL) modules  which must be
+    installed.
+
+    usage: $0 [-h] [-i input_file] [-B parameters] [-o output_file] 
+
+     -h          : this (help) message
+     -i in_file  : input CF parameters file in cfield or mcphase formats
+     -B params   : input parameters from  standards input.  The parameters
+                   must be of the format: Bkq=x.xx,Bkq=x.xx, etc.
+		   e.g. -B B20=0.21,B40=0.0005,B60=0.051,B66=0.626
+     -o out_file : output CF parameters file in mcphase format
+
+    if -i is omitted, the program will assume
+
+    if -c or -m is omitted, the programs prints the parameters to standard
+    output. 
+
+EOF
+        exit;
+    }
+
+init();
+
+my $MR2 = pdl [
+            [    0, -1/2,    0,    0,    0],
+            [    2,    0,    0,    0,    0],
+            [    0,    0, -1/2,    0,  1/2],
+            [    0,    0,    0,   -1,    0],
+            [    0,    0,  3/2,    0,  1/2]
+          ];
+
+my $MR4 = pdl [
+            [    0, -1/8,    0, -7/8,    0,    0,    0,    0,    0],
+            [    1,    0,  7/2,    0,    0,    0,    0,    0,    0],
+            [    0, -1/4,    0,  1/4,    0,    0,    0,    0,    0],
+            [    1,    0, -1/2,    0,    0,    0,    0,    0,    0],
+            [    0,    0,    0,    0,  3/8,    0, -1/8,    0,  1/8],
+            [    0,    0,    0,    0,    0,  3/4,    0, -1/4,    0],
+            [    0,    0,    0,    0, -5/2,    0,  1/2,    0,  1/2],
+            [    0,    0,    0,    0,    0, -7/4,    0, -3/4,    0],
+            [    0,    0,    0,    0, 35/8,    0,  7/8,    0,  1/8]
+          ];
+
+my $MR6 = pdl [
+  [      0,  -1/32,      0, -11/32,      0, -33/32,      0,      0,      0,      0,      0,      0,      0],
+  [    3/8,      0,   11/4,      0,   33/8,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,   -1/8,      0,   -3/8,      0,    3/8,      0,      0,      0,      0,      0,      0,      0],
+  [    5/8,      0,    5/4,      0,   -9/8,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,  -5/32,      0,   9/32,      0,  -5/32,      0,      0,      0,      0,      0,      0,      0],
+  [    3/4,      0,   -1/2,      0,    1/4,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,      0,      0,      0,      0,      0,  -5/16,      0,   1/16,      0,  -1/16,      0,   1/16],
+  [      0,      0,      0,      0,      0,      0,      0,   -5/8,      0,    3/8,      0,   -1/8,      0],
+  [      0,      0,      0,      0,      0,      0, 105/32,      0, -17/32,      0,   5/32,      0,  15/32],
+  [      0,      0,      0,      0,      0,      0,      0,  15/16,      0,  -1/16,      0,  -5/16,      0],
+  [      0,      0,      0,      0,      0,      0, -63/16,      0,   3/16,      0,  13/16,      0,   3/16],
+  [      0,      0,      0,      0,      0,      0,      0, -33/16,      0, -33/16,      0,  -5/16,      0],
+  [      0,      0,      0,      0,      0,      0, 231/32,      0,  33/32,      0,  11/32,      0,   1/32]
+];
+
+while(<>) {                                        # Selects out lines with crystal field parameters
+  if ($_ =~ /(B[0-9][\-0-9][ 0-9]).*[=:]\s*([- ]\d\.\d*)/ ) { 
+                                                   # () are groups which may be access with $1, $2 etc.
+                                                   # * means match previous char any number of times.
+                                                   # Parameters are of form Bkq = x.xx or Bkq : x.xx
+                                                   # \s matches whitespace characters.
+#    print "$1\t$2\n";
+    my $ind = $1; my $par = $2;
+
+    if ($ind =~ /B20/ ) { $B20 = $par; next; }     # Assigns values for the crystal field parameters.
+    if ($ind =~ /B21/ ) { $B21 = $par; next; }
+    if ($ind =~ /B22/ ) { $B22 = $par; next; }
+    if ($ind =~ /B40/ ) { $B40 = $par; next; }
+    if ($ind =~ /B41/ ) { $B41 = $par; next; }
+    if ($ind =~ /B42/ ) { $B42 = $par; next; }
+    if ($ind =~ /B43/ ) { $B43 = $par; next; }
+    if ($ind =~ /B44/ ) { $B44 = $par; next; }
+    if ($ind =~ /B60/ ) { $B60 = $par; next; }
+    if ($ind =~ /B61/ ) { $B61 = $par; next; }
+    if ($ind =~ /B62/ ) { $B62 = $par; next; }
+    if ($ind =~ /B63/ ) { $B63 = $par; next; }
+    if ($ind =~ /B64/ ) { $B64 = $par; next; }
+    if ($ind =~ /B65/ ) { $B65 = $par; next; }
+    if ($ind =~ /B66/ ) { $B66 = $par; next; }
+
+    if ($ind =~ /B2-0/ ) { $B2m0 = $par; next; }   # Assigns values for -ve crystal field parameters.
+    if ($ind =~ /B2-1/ ) { $B2m1 = $par; next; }
+    if ($ind =~ /B2-2/ ) { $B2m2 = $par; next; }
+    if ($ind =~ /B4-0/ ) { $B4m0 = $par; next; }
+    if ($ind =~ /B4-1/ ) { $B4m1 = $par; next; }
+    if ($ind =~ /B4-2/ ) { $B4m2 = $par; next; }
+    if ($ind =~ /B4-3/ ) { $B4m3 = $par; next; }
+    if ($ind =~ /B4-4/ ) { $B4m4 = $par; next; }
+    if ($ind =~ /B6-0/ ) { $B6m0 = $par; next; }
+    if ($ind =~ /B6-1/ ) { $B6m1 = $par; next; }
+    if ($ind =~ /B6-2/ ) { $B6m2 = $par; next; }
+    if ($ind =~ /B6-3/ ) { $B6m3 = $par; next; }
+    if ($ind =~ /B6-4/ ) { $B6m4 = $par; next; }
+    if ($ind =~ /B6-5/ ) { $B6m5 = $par; next; }
+    if ($ind =~ /B6-6/ ) { $B6m6 = $par; next; }
+  }
+}
+
+#print "$B2m2\n$B2m1\n$B20\n$B21\n$B22\n";
+#print "$B4m4\n$B4m3\n$B4m2\n$B4m1\n$B40\n$B41\n$B42\n$B43\n$B44\n";
+#print "$B6m6\n$B6m5\n$B6m4\n$B6m3\n$B6m2\n$B6m1\n$B60\n$B61\n$B62\n$B63\n$B64\n$B65\n$B66\n" ;
+
+my $B2 = pdl [ [$B2m2],[$B2m1],[$B20],[$B21],[$B22] ];
+my $R2 = $MR2 x $B2;
+my $B4 = pdl [ [$B4m4],[$B4m3],[$B4m2],[$B4m1],[$B40],[$B41],[$B42],[$B43],[$B44] ];
+my $R4 = $MR4 x $B4;
+my $B6 = pdl [ [$B6m6],[$B6m5],[$B6m4],[$B6m3],[$B6m2],[$B6m1],[$B60],[$B61],[$B62],[$B63],[$B64],[$B65],[$B66] ];
+my $R6 = $MR6 x $B6;
+
+
