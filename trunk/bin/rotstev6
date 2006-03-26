@@ -11,6 +11,7 @@
 # by Duc Le 2006 - duc.le@ucl.ac.uk
 
 use Math::Algebra::Symbols trig=>1;     # exports trig function to my namespace
+use Getopt::Long;
 
 # The following subroutines were shamelessly stolen from the Perl Cookbook
 # by O'Reily, and used for the symbolic matrix multiplications.
@@ -60,6 +61,69 @@ sub matdim {
 
 # End of stolen code!
 
+sub usage() {
+  print STDERR << "EOF";
+
+    $0:
+    Calculates the relationship  between a set of crystal field  parameters
+    which has  been rotated by phi about  the y-axis and theta about the z-
+    axis and its unrotated counter-part.
+
+    The  calculations  are  done  by  means  of  matrix  multiplication and 
+    symbolic algebra  using the Math::Algebra::Symbols package and based on
+    the method of  Buckmaster (phys. stat. sol. a, vol 13,  pp 9, 1972) and
+    Rudowicz (J. Phys: Solid State Phys., vol 18, pp 1415, 1985).   
+
+    usage: $0 [-h] [--help] 
+              [-r] [-radians]
+	      [-p phi_angle] [--phi phi_angle]
+	      [-t theta_angle] [--theta theta_angle]
+	      [-o output_file] [--output output_file]
+
+     -h             : this (help) message
+     -r             : specifies that phi and theta are given in radians
+     -p phi_angle   : angle to rotate about y-axis (=0 by default)
+     -t theta_angel : angle to rotate about z-axis (=90 degrees by default)  
+     -o out_file    : output latex file name
+
+    if -r is omitted, the program assumes phi and theta are in degrees.
+    
+    if either -p or -t are omitted, the program will use the default values 
+    
+    if -o is omitted the  program will output the  transformation relations
+    and rotation matrix to screen.  Otherwise it will generate a Latex file
+    of the transformations and matrix.
+
+    (C) 2006 duc.le\@ucl.ac.uk
+EOF
+  exit;
+}
+
+# see http://aplawrence.com/Unix/perlgetops.html for details of GetOptions
+
+GetOptions("help"=>\$helpflag,
+	   "radians"=>\$radflag,
+	   "phi=f"=>\$phi,
+	   "theta=f"=>\$theta,
+	   "output=s"=>\$output);
+	   
+usage() if $helpflag;
+
+my ($S, $f, $t, $i, $pi) = symbols(qw(six f t i pi));
+my ($l, $m, $n);
+
+if (!$phi) { $phi = 0; }
+if (!$theta) { $theta = 90; }
+
+if (!$radflag) {
+  $phi_val = $phi * $pi / 180;
+  $theta_val = $theta * $pi / 180;
+}
+else {
+  $phi_val = $phi;
+  $theta_val = $theta;
+}
+
 my ($f, $t, $i, $pi) = symbols(qw(f t i pi));
 my ($T, $e, $F, $X, $S, $E) = symbols(qw(two three five six seven eleven));
 my ($l, $m, $n);
@@ -80,22 +144,6 @@ my $A6 = [
 	[4,    0,     0,    0,     0,     0,     0,      0,      0,     0,     0,     0,      4]
       ];
 
-#my $invA6 = [
-#	[    1/8,0,0,0,0,0,0,0,0,0,0,0,                1/8],
-#	[0,   sqrt(3/16),0,0,0,0,0,0,0,0,0,   sqrt(3/16),0],
-#	[0,0,  sqrt(3/352),0,0,0,0,0,0,0,  sqrt(3/352),0,0],
-#	[0,0,0,  sqrt(5/176),0,0,0,0,0,  sqrt(5/176),0,0,0],
-#	[0,0,0,0,  sqrt(5/704),0,0,0,  sqrt(5/704),0,0,0,0],
-#	[0,0,0,0,0,   sqrt(1/88),0,   sqrt(1/88),0,0,0,0,0],
-#	[0,0,0,0,0,0, sqrt(1/3696),0,0,0,0,0,0],
-#	[0,0,0,0,0,   sqrt(1/88),0,  -sqrt(1/88),0,0,0,0,0],
-#	[0,0,0,0, -sqrt(5/704),0,0,0,  sqrt(5/704),0,0,0,0],
-#	[0,0,0,  sqrt(5/176),0,0,0,0,0, -sqrt(5/176),0,0,0],
-#	[0,0, -sqrt(3/352),0,0,0,0,0,0,0,  sqrt(3/352),0,0],
-#	[0,   sqrt(3/16),0,0,0,0,0,0,0,0,0,  -sqrt(3/16),0],
-#	[   -1/8,0,0,0,0,0,0,0,0,0,0,0,                1/8]
-#      ];
-      
 my $invA6 = [
 	[  1/8,                0,0,0,0,0,0,0,0,0,0,0,      1/8           ],
 	[0,  sqrt($e)/4,         0,0,0,0,0,0,0,0,0,    sqrt($e)/4,      0],
@@ -241,10 +289,8 @@ my $R6 = mmult($A6, $tmp2);
 
 my $S6 = [];
 my $M6 = [];
-print "Transformation relations for O6q:\n"; 
 for $l (0 .. 12) { 
-  $S6->[$l] = $R6->[$l][0]->sub(f=>0, t=>$pi/2);
-  print $S6->[$l]; print "\n";
+  $S6->[$l] = $R6->[$l][0]->sub(f=>$phi_val, t=>$theta_val);
   $S6->[$l] = $S6->[$l]->sub(two=>2,three=>3,five=>5,six=>6,seven=>7,eleven=>11); 
   $M6->[0][$l] = $S6->[$l]->sub(Osms=>1,OsmF=>0,Osmf=>0,OsmT=>0,Osmt=>0,Osmo=>0,Ospz=>0,Ospo=>0,Ospt=>0,OspT=>0,Ospf=>0,OspF=>0,Osps=>0);
   $M6->[1][$l] = $S6->[$l]->sub(Osms=>0,OsmF=>1,Osmf=>0,OsmT=>0,Osmt=>0,Osmo=>0,Ospz=>0,Ospo=>0,Ospt=>0,OspT=>0,Ospf=>0,OspF=>0,Osps=>0);
@@ -261,7 +307,90 @@ for $l (0 .. 12) {
   $M6->[12][$l] = $S6->[$l]->sub(Osms=>0,OsmF=>0,Osmf=>0,OsmT=>0,Osmt=>0,Osmo=>0,Ospz=>0,Ospo=>0,Ospt=>0,OspT=>0,Ospf=>0,OspF=>0,Osps=>1);
 }
 
-print "\nRotation Matrix for O6q:\n";
-for $l (0 .. 12) { for $m (0 .. 12) {
-  print $M6->[$l][$m]; print "\t"; } print "\n"; }
-    
+if (!$output) {
+  %T6 = (0,'O6m6',1,'O6m5',2,'O6m4',3,'O6m3',4,'O6m2',5,'O6m1',6,'O6_0',7,'O6_1',8,'O6_2',9,'O6_3',10,'O6_4',11,'O6_5',12,'O6_6');
+  print "Crystal field parameters under rotation of phi=$phi about y-axis and theta=$theta about z-axis are given by:\n\n";
+  print "Transformations relations for O6q:\n";
+  for $l (0 .. 12) { 
+    print "\[$T6{$l}\] = "; 
+    $_ = $S6->[$l]; 
+    s/\$Osms/\{O6m6\}/g;
+    s/\$OsmF/\{O6m5\}/g;
+    s/\$Osmf/\{O6m4\}/g;
+    s/\$OsmT/\{O6m3\}/g;
+    s/\$Osmt/\{O6m2\}/g;
+    s/\$Osmo/\{O6m1\}/g;
+    s/\$Ospz/\{O6_0\}/g;
+    s/\$Ospo/\{O6_1\}/g;
+    s/\$Ospt/\{O6_2\}/g;
+    s/\$OspT/\{O6_3\}/g;
+    s/\$Ospf/\{O6_4\}/g;
+    s/\$OspF/\{O6_5\}/g;
+    s/\$Osps/\{O6_6\}/g;
+    print "$_\n"; 
+  }
+  print "\nRotation Matrix for O6q:\n";
+  for $l (0 .. 12) { for $m (0 .. 12) {
+    print $M6->[$l][$m]; print "\t"; } print "\n"; }
+}
+else {
+  %T6 = (0,'O_6^{-6}',1,'O_6^{-5}',2,'O_6^{-4}',3,'O_6^{-4}',4,'O_6^{-2}',5,'O_6^{-1}',6,'O_6^0',7,'O_6^1',8,'O_6^2',9,'O_6^3',10,'O_6^4',11,'O_6^5',12,'O_6^6');
+
+  open (outfile, ">$output") or die "$0: cannot open $output for output.";
+  print outfile << "EOF";
+
+\\documentclass [12pt,a4paper,notitlepage]{article}
+\\usepackage{latexsym}
+\\usepackage{pslatex}
+\\setlength{\\unitlength}{1cm}
+
+\\begin{document}
+
+Crystal field parameters under rotation of phi=$phi\$^{o}\$ about y-axis and theta=$theta\$^{o}\$ about z-axis are given by:
+
+Transformation relations for \$O_6^q\$ Steven's equivalent operators:
+
+EOF
+  
+  for $l (0 .. 12) {
+    $_ = $S6->[$l];
+    s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;
+    s/([\.\d]+)\/([\.\d]+)/\\frac\{$1\}\{$2\}/g;
+    s/\$Osms/\\left\[ O\_6\^\{-6\} \\right\]/g;
+    s/\$OsmF/\\left\[ O\_6\^\{-5\} \\right\]/g;
+    s/\$Osmf/\\left\[ O\_6\^\{-4\} \\right\]/g;
+    s/\$OsmT/\\left\[ O\_6\^\{-3\} \\right\]/g;
+    s/\$Osmt/\\left\[ O\_6\^\{-2\} \\right\]/g;
+    s/\$Osmo/\\left\[ O\_6\^\{-1\} \\right\]/g;
+    s/\$Ospz/\\left\[ O\_6\^0 \\right\]/g;
+    s/\$Ospo/\\left\[ O\_6\^1 \\right\]/g;
+    s/\$Ospt/\\left\[ O\_6\^2 \\right\]/g;
+    s/\$OspT/\\left\[ O\_6\^3 \\right\]/g;
+    s/\$Ospf/\\left\[ O\_6\^4 \\right\]/g;
+    s/\$OspF/\\left\[ O\_6\^5 \\right\]/g;
+    s/\$Osps/\\left\[ O\_6\^6 \\right\]/g;
+    s/\*//g;
+    print outfile "\\begin\{equation\}\n";
+    print outfile "\\left\\\{ $T6{$l} \\right\\\} = $_\n";
+    print outfile "\\end\{equation\}\n";
+  }
+
+  print outfile "\nRotation Matrix for \$O_6^q\$:\n\\begin{equation}\n\\left(\n\\begin{array}{ccccccccccccc}\n";
+  for $l (0 .. 12) { 
+    for $m (0 .. 12) {
+      $_ = $M6->[$l][$m];
+      s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;
+      s/\/(\\sqrt\{[\/\.\d]*\})/\\frac\{\}\{$1\}/g;
+      s/([\.\d]+)\/([\.\d]+)/\\frac\{$1\}\{$2\}/g;       # + matches 1 or more times
+      s/\*//g;
+      if ($m == 12) { print outfile "$_ "; } else {
+      print outfile "$_ & "; }
+    } 
+    print outfile "\\\\\n"; 
+  }
+  print outfile "\\end{array}\n\\right)\n\\end{equation}\n";
+
+  print outfile "\\end\{document\}\n";
+
+  close (out_file);
+}

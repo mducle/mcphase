@@ -11,6 +11,7 @@
 # by Duc Le 2006 - duc.le@ucl.ac.uk
 
 use Math::Algebra::Symbols trig=>1;     # exports trig function to my namespace
+use Getopt::Long;
 
 # The following subroutines were shamelessly stolen from the Perl Cookbook
 # by O'Reily, and used for the symbolic matrix multiplications.
@@ -60,9 +61,68 @@ sub matdim {
 
 # End of stolen code!
 
+sub usage() {
+  print STDERR << "EOF";
+
+    $0:
+    Calculates the relationship  between a set of crystal field  parameters
+    which has  been rotated by phi about  the y-axis and theta about the z-
+    axis and its unrotated counter-part.
+
+    The  calculations  are  done  by  means  of  matrix  multiplication and 
+    symbolic algebra  using the Math::Algebra::Symbols package and based on
+    the method of  Buckmaster (phys. stat. sol. a, vol 13,  pp 9, 1972) and
+    Rudowicz (J. Phys: Solid State Phys., vol 18, pp 1415, 1985).   
+
+    usage: $0 [-h] [--help] 
+              [-r] [-radians]
+	      [-p phi_angle] [--phi phi_angle]
+	      [-t theta_angle] [--theta theta_angle]
+	      [-o output_file] [--output output_file]
+
+     -h             : this (help) message
+     -r             : specifies that phi and theta are given in radians
+     -p phi_angle   : angle to rotate about y-axis (=0 by default)
+     -t theta_angel : angle to rotate about z-axis (=90 degrees by default)  
+     -o out_file    : output latex file name
+
+    if -r is omitted, the program assumes phi and theta are in degrees.
+    
+    if either -p or -t are omitted, the program will use the default values 
+    
+    if -o is omitted the  program will output the  transformation relations
+    and rotation matrix to screen.  Otherwise it will generate a Latex file
+    of the transformations and matrix.
+
+    (C) 2006 duc.le\@ucl.ac.uk
+EOF
+  exit;
+}
+
+# see http://aplawrence.com/Unix/perlgetops.html for details of GetOptions
+
+GetOptions("help"=>\$helpflag,
+	   "radians"=>\$radflag,
+	   "phi=f"=>\$phi,
+	   "theta=f"=>\$theta,
+	   "output=s"=>\$output);
+	   
+usage() if $helpflag;
+
 my ($S, $f, $t, $i, $pi) = symbols(qw(six f t i pi));
 my ($l, $m, $n);
 
+if (!$phi) { $phi = 0; }
+if (!$theta) { $theta = 90; }
+
+if (!$radflag) {
+  $phi_val = $phi * $pi / 180;
+  $theta_val = $theta * $pi / 180;
+}
+else {
+  $phi_val = $phi;
+  $theta_val = $theta;
+}
 
 # Transformation matrix between Stevens and Buckmaster operator equivalents
 my $A2 = [
@@ -128,20 +188,13 @@ my ($O2m2, $O2m1, $O2p0, $O2p1, $O2p2) = symbols(qw(Otmt Otmo Otpz Otpo Otpt));
 
 my $B2 = [ [$O2m2],[$O2m1],[$O2p0],[$O2p1],[$O2p2] ];
 
-#for $l (0 .. 4) {
-#  for $m (0 .. 4) {
-#    print $D2->[$l][$m]; print "\n"; }
-#  print "\n"; }
-
 my $tmp1 = mmult($invA2,$B2);
 my $tmp2 = mmult($D2, $tmp1);
 my $R2 = mmult($A2, $tmp2);
 
-print "Transformations relations for O2q:\n";
 my $S2 = [];
 for $l (0 .. 4) { 
-  $S2->[$l] = $R2->[$l][0]->sub(f=>0, t=>$pi/2);
-  print $S2->[$l]; print "\n";
+  $S2->[$l] = $R2->[$l][0]->sub(f=>$phi_val, t=>$theta_val);
   $S2->[$l] = $S2->[$l]->sub(six=>6); 
   $M2->[0][$l] = $S2->[$l]->sub(Otmt=>1,Otmo=>0,Otpz=>0,Otpo=>0,Otpt=>0);
   $M2->[1][$l] = $S2->[$l]->sub(Otmt=>0,Otmo=>1,Otpz=>0,Otpo=>0,Otpt=>0);
@@ -150,7 +203,74 @@ for $l (0 .. 4) {
   $M2->[4][$l] = $S2->[$l]->sub(Otmt=>0,Otmo=>0,Otpz=>0,Otpo=>0,Otpt=>1);
 }
 
-print "\nRotation Matrix for O2q:\n";
-for $l (0 .. 4) { for $m (0 .. 4) {
-  print $M2->[$l][$m]; print "\t"; } print "\n"; }
-    
+if (!$output) {
+  %T2 = (0,'O2m2',1,'O2m1',2,'O2_0',3,'O2_1',4,'O2_2');
+  print "Crystal field parameters under rotation of phi=$phi about y-axis and theta=$theta about z-axis are given by:\n\n";
+  print "Transformations relations for O2q:\n";
+  for $l (0 .. 4) { 
+    print "\[$T2{$l}\] = "; 
+    $_ = $S2->[$l]; 
+    s/\$Otmt/\{O2m2\}/g;
+    s/\$Otmo/\{O2m1\}/g;
+    s/\$Otpz/\{O2_0\}/g;
+    s/\$Otpo/\{O2_1\}/g;
+    s/\$Otpt/\{O2_2\}/g;
+    print "$_\n"; 
+  }
+  print "\nRotation Matrix for O2q:\n";
+  for $l (0 .. 4) { for $m (0 .. 4) {
+    print $M2->[$l][$m]; print "\t"; } print "\n"; }
+}
+else {
+  %T2 = (0,'O_2^{-2}',1,'O_2^{-1}',2,'O_2^0',3,'O_2^1',4,'O_2^2');
+
+  open (outfile, ">$output") or die "$0: cannot open $output for output.";
+  print outfile << "EOF";
+
+\\documentclass [12pt,a4paper,notitlepage]{article}
+\\usepackage{latexsym}
+\\usepackage{pslatex}
+\\setlength{\\unitlength}{1cm}
+
+\\begin{document}
+
+Crystal field parameters under rotation of phi=$phi\$^{o}\$ about y-axis and theta=$theta\$^{o}\$ about z-axis are given by:
+
+Transformation relations for \$O_2^q\$ Steven's equivalent operators:
+
+EOF
+  
+  for $l (0 .. 4) {
+    $_ = $S2->[$l];
+    s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;
+    s/([\.\d]+)\/([\.\d]+)/\\frac\{$1\}\{$2\}/g;
+    s/\$Otmt/\\left\[ O\_2\^\{-2\} \\right\]/g;
+    s/\$Otmo/\\left\[ O\_2\^\{-1\} \\right\]/g;
+    s/\$Otpz/\\left\[ O\_2\^0 \\right\]/g;
+    s/\$Otpo/\\left\[ O\_2\^1 \\right\]/g;
+    s/\$Otpt/\\left\[ O\_2\^2 \\right\]/g;
+    s/\*//g;
+    print outfile "\\begin\{equation\}\n";
+    print outfile "\\left\\\{ $T2{$l} \\right\\\} = $_\n";
+    print outfile "\\end\{equation\}\n";
+  }
+
+  print outfile "\nRotation Matrix for \$O_2^q\$:\n\\begin{equation}\n\\left(\n\\begin{array}{ccccc}\n";
+  for $l (0 .. 4) { 
+    for $m (0 .. 4) {
+      $_ = $M2->[$l][$m];
+      s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;
+      s/\/(\\sqrt\{[\/\.\d]*\})/\\frac\{\}\{$1\}/g;
+      s/([\.\d]+)\/([\.\d]+)/\\frac\{$1\}\{$2\}/g;       # + matches 1 or more times
+      s/\*//g;
+      if ($m == 4) { print outfile "$_ "; } else {
+      print outfile "$_ & "; }
+    } 
+    print outfile "\\\\\n"; 
+  }
+  print outfile "\\end{array}\n\\right)\n\\end{equation}\n";
+
+  print outfile "\\end\{document\}\n";
+
+  close (out_file);
+}
