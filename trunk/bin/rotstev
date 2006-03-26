@@ -16,40 +16,60 @@ use Math::Algebra::Symbols trig=>1;     # exports trig function to my namespace
 # by O'Reily, and used for the symbolic matrix multiplications.
 
 sub mmult {
-    my ($m1,$m2) = @_;
-    my ($m1rows,$m1cols) = matdim($m1);
-    my ($m2rows,$m2cols) = matdim($m2);
+#  my ($m1,$m2) = @_;
+#  my ($m1rows,$m1cols) = matdim($m1);
+#  my ($m2rows,$m2cols) = matdim($m2);
+#  my (@m1,@m2) = @_;
+  my ($m1_pt,$m2_pt) = @_;
+#  my @m1 = $$m1_pt;
+#  my @m2 = $$m2_pt;
+  print "$m1_pt\t$m2_pt\n";
+  my ($m1rows,$m1cols) = matdim(@m1);
+  my ($m2rows,$m2cols) = matdim(@m2);
 
-    unless ($m1cols == $m2rows) {       # raise exception
-        die "IndexError: matrices don't match: $m1cols != $m2rows";
+  unless ($m1cols == $m2rows) {       # raise exception
+    die "IndexError: matrices don't match: $m1cols != $m2rows";
+  }
+
+#  my $result = [];
+  my @result = ();
+  my ($i, $j, $k);
+
+#  for $i (range($m1rows)) {
+#    for $j (range($m2cols)) {
+#      for $k (range($m1cols)) {
+#        $result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
+#      }
+#    }
+#  }
+  for $i (0 .. $m1rows) {
+    for $j (0 .. $m2cols) {
+      for $k (0 .. $m1cols) {
+        $result[$i][$j] += $m1[$i][$k] * $m2[$k][$j];
+      }
     }
+  }
 
-    my $result = [];
-    my ($i, $j, $k);
-
-    for $i (range($m1rows)) {
-        for $j (range($m2cols)) {
-            for $k (range($m1cols)) {
-                $result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
-            }
-        }
-    }
-    return $result;
+  return $result;
 }
 
-sub range { 0 .. ($_[0] - 1) }
+#sub range { 0 .. ($_[0] - 1) }
 
-sub veclen {
-    my $ary_ref = $_[0];
-    my $type = ref $ary_ref;
-    if ($type ne "ARRAY") { die "$type is bad array ref for $ary_ref" }
-    return scalar(@$ary_ref);
-}
+#sub veclen {
+#    my $ary_ref = $_[0];
+#    my $type = ref $ary_ref;
+#    if ($type ne "ARRAY") { die "$type is bad array ref for $ary_ref" }
+#    return scalar(@$ary_ref);
+#}
 
 sub matdim {
-    my $matrix = $_[0];
-    my $rows = veclen($matrix);
-    my $cols = veclen($matrix->[0]);
+#    my $matrix = $_[0];
+#    my $rows = veclen($matrix);
+#    my $cols = veclen($matrix->[0]);
+    my @matrix = @_;
+    $rows = $#matrix;
+    $cols = @{@matrix->[0]} - 1;   
+    print "r:$rows  c:$cols\n";
     return ($rows, $cols);
 }
 
@@ -100,13 +120,15 @@ my $A6 = [
 	[4,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,    0,       4]
       ];
 
-my $invA2 = [
+#my $invA2 = [
+my @invA2 = (
 	[       1/2,         0,         0,         0,       1/2],
 	[         0,         1,         0,         1,         0],
 	[         0,         0, sqrt(1/6),         0,         0],
 	[         0,         1,         0,        -1,         0],
 	[      -1/2,         0,         0,         0,       1/2]
-      ];
+#      ];
+      );
 
 my $invA4 = [
 	[ 1/4,     0,      0,      0,      0,      0,      0,     0,      1/4],
@@ -138,266 +160,99 @@ my $invA6 = [
 
 # --------------------------------------- O1 ------------------------------------- #
 
-my $D10_0 = cos(t);
-my $D10_1 = (sqrt(2)/2)*sin(t);
+my $D10p0 = cos($t);
+my $D10p1 = (sqrt(2)/2)*sin($t);
 
-my $D1_1m1 = exp( $i*$f) * (1/2)*(1-cos(t));
-my $D1_1_1 = exp( $i*$f) * (1/2)*(1+cos(t));
-my $D1_1_0 = exp( $i*$f) * (sqrt(2)/2)*sin(t);
+my $D1p1m1 = exp( $i*$f) * (1/2)*(1-cos($t));
+my $D1p1p1 = exp( $i*$f) * (1/2)*(1+cos($t));
+my $D1p1p0 = exp( $i*$f) * (sqrt(2)/2)*sin($t);
 
-my $D1m1m1 = exp(-$i*$f) * (1/2)*(1+cos(t));
-my $D1m1_1 = exp(-$i*$f) * (1/2)*(1-cos(t));
-my $D1m1_0 = exp(-$i*$f) * (sqrt(2)/2)*sin(t);
+my $D1m1m1 = exp(-$i*$f) * (1/2)*(1+cos($t));
+my $D1m1p1 = exp(-$i*$f) * (1/2)*(1-cos($t));
+my $D1m1p0 = exp(-$i*$f) * (sqrt(2)/2)*sin($t);
 
-my $D1 =  [
-	    [ $D1m1m1,  $D1m1_0, $D1m1_1],
-	    [-$D10_1,   $D10_0,  $D10_1 ],
-	    [ $D1_1m1, -$D1_1_0, $D1_1_1]
-          ];
+my @D1 =  (
+	    [ $D1m1m1,  $D1m1p0, $D1m1p1],
+	    [-$D10p1,   $D10p0,  $D10p1 ],
+	    [ $D1p1m1, -$D1p1p0, $D1p1p1]
+          );
 
-my ($O1m1, $O1_0, $O1_1) = symbols(qw(O1m1 O1_0 O1_1));
+my ($O1m1, $O1p0, $O1p1) = symbols(qw(O1m1 O1p0 O1p1));
+
+#print "$D10p0\t$D10p1\n";
+#
+#for $i (0 .. 2) { 
+#  for $j (0 .. 2) { 
+#    print "$D1[$i][$j]\t"; } 
+#  print "\n";
+#}
+
+#$_ = $D1[1][1] * exp(-2*$i*$f); print "$_\n";
+#
+#print "$#D1\n";
+
 
 # --------------------------------------- O2 ------------------------------------- #
 
-my $D20_2 = (sqrt(6)/4)*sin(t)^2;
-my $D20_1 = (sqrt(6)/2)*sin(t)*cos(t);
-my $D20_0 = (1/2)*(3*cos(t)^2 - 1);
+my $D20p2 = (sqrt(6)/4)*sin($t)^2;
+my $D20p1 = (sqrt(6)/2)*sin($t)*cos($t);
+my $D20p0 = (1/2)*(3*cos($t)^2 - 1);
 
-my $D2m1m2 = exp(-$i*$f) * -(1/2)*sin(t)*(1+cos(t));
-my $D2m1_2 = exp(-$i*$f) *  (1/2)*sin(t)*(1-cos(t));
-my $D2m1m1 = exp(-$i*$f) *  (1/2)*(1+cos(t))*(2*cos(t)-1);
-my $D2m1_1 = exp(-$i*$f) *  (1/2)*(1-cos(t))*(2*cos(t)+1);
-my $D2m1_0 = exp(-$i*$f) *  (sqrt(6)/2)*sin(t)*cos(t);
+my $D2m1m2 = exp(-$i*$f) * -(1/2)*sin($t)*(1+cos($t));
+my $D2m1p2 = exp(-$i*$f) *  (1/2)*sin($t)*(1-cos($t));
+my $D2m1m1 = exp(-$i*$f) *  (1/2)*(1+cos($t))*(2*cos($t)-1);
+my $D2m1p1 = exp(-$i*$f) *  (1/2)*(1-cos($t))*(2*cos($t)+1);
+my $D2m1p0 = exp(-$i*$f) *  (sqrt(6)/2)*sin($t)*cos($t);
 
-my $D2_1m2 = exp( $i*$f) * -(1/2)*sin(t)*(1-cos(t));
-my $D2_1_2 = exp( $i*$f) *  (1/2)*sin(t)*(1+cos(t));
-my $D2_1m1 = exp( $i*$f) *  (1/2)*(1-cos(t))*(2*cos(t)+1);
-my $D2_1_1 = exp( $i*$f) *  (1/2)*(1+cos(t))*(2*cos(t)-1);
-my $D2_1_0 = exp( $i*$f) * -(sqrt(6)/2)*sin(t)*cos(t);
+my $D2p1m2 = exp( $i*$f) * -(1/2)*sin($t)*(1-cos($t));
+my $D2p1p2 = exp( $i*$f) *  (1/2)*sin($t)*(1+cos($t));
+my $D2p1m1 = exp( $i*$f) *  (1/2)*(1-cos($t))*(2*cos($t)+1);
+my $D2p1p1 = exp( $i*$f) *  (1/2)*(1+cos($t))*(2*cos($t)-1);
+my $D2p1p0 = exp( $i*$f) * -(sqrt(6)/2)*sin($t)*cos($t);
 
-my $D2m2m2 = exp(-2*$i*$f) *  (1/4)*(1+cos(t))^2;
-my $D2m2_2 = exp(-2*$i*$f) *  (1/4)*(1-cos(t))^2;
-my $D2m2m1 = exp(-2*$i*$f) *  (1/2)*sin(t)*(1+cos(t));
-my $D2m2_1 = exp(-2*$i*$f) *  (1/2)*sin(t)*(1-cos(t));
-my $D2m2_0 = exp(-2*$i*$f) *  (sqrt(6)/4)*sin(t)^2;
+my $D2m2m2 = exp(-2*$i*$f) *  (1/4)*(1+cos($t))^2;
+my $D2m2p2 = exp(-2*$i*$f) *  (1/4)*(1-cos($t))^2;
+my $D2m2m1 = exp(-2*$i*$f) *  (1/2)*sin($t)*(1+cos($t));
+my $D2m2p1 = exp(-2*$i*$f) *  (1/2)*sin($t)*(1-cos($t));
+my $D2m2p0 = exp(-2*$i*$f) *  (sqrt(6)/4)*sin($t)^2;
 
-my $D2_2m2 = exp( 2*$i*$f) *  (1/4)*(1-cos(t))^2;
-my $D2_2_2 = exp( 2*$i*$f) *  (1/4)*(1+cos(t))^2;
-my $D2_2m1 = exp( 2*$i*$f) * -(1/2)*sin(t)*(1-cos(t));
-my $D2_2_1 = exp( 2*$i*$f) * -(1/2)*sin(t)*(1+cos(t));
-my $D2_2_0 = exp( 2*$i*$f) *  (sqrt(6)/4)*sin(t)^2;
+my $D2p2m2 = exp( 2*$i*$f) *  (1/4)*(1-cos($t))^2;
+my $D2p2p2 = exp( 2*$i*$f) *  (1/4)*(1+cos($t))^2;
+my $D2p2m1 = exp( 2*$i*$f) * -(1/2)*sin($t)*(1-cos($t));
+my $D2p2p1 = exp( 2*$i*$f) * -(1/2)*sin($t)*(1+cos($t));
+my $D2p2p0 = exp( 2*$i*$f) *  (sqrt(6)/4)*sin($t)^2;
 
-my $D2 = [
-	   [$D2m2m2, $D2m2m1, $D2m2_0, $D2m2_1, $D2m2_2],
-           [$D2m1m2, $D2m1m1, $D2m1_0, $D2m1_1, $D2m1_2],
-           [$D20_2, -$D20_1,  $D20_0,  $D20_1,  $D20_2 ],
-           [$D2_1m2, $D2_1m1, $D2_1_0, $D2_1_1, $D2_1_2],
-           [$D2_2m2, $D2_2m1, $D2_2_0, $D2_2_1, $D2_2_2]
-         ];
+#my $D2 = [
+my @D2 = (
+	   [$D2m2m2, $D2m2m1, $D2m2p0, $D2m2p1, $D2m2p2],
+           [$D2m1m2, $D2m1m1, $D2m1p0, $D2m1p1, $D2m1p2],
+           [$D20p2, -$D20p1,  $D20p0,  $D20p1,  $D20p2 ],
+           [$D2p1m2, $D2p1m1, $D2p1p0, $D2p1p1, $D2p1p2],
+           [$D2p2m2, $D2p2m1, $D2p2p0, $D2p2p1, $D2p2p2]
+#         ];
+         );
 
-my ($O2m2, $O2m1, $O2_0, $O1_1, $O2_2) = symbols(qw(O2m2 O2m1 O2_0 O2_1 O2_2));
+my ($O2m2, $O2m1, $O2p0, $O1p1, $O2p2) = symbols(qw(O2m2 O2m1 O2p0 O2p1 O2p2));
 
 
-my $B2 = [ [O2m2],[O2m1],[O2_0],[O2_1],[O2_2] ];
+#my $B2 = [ [O2m2],[O2m1],[O2p0],[O2p1],[O2p2] ];
+my @B2 = ( [O2m2],[O2m1],[O2p0],[O2p1],[O2p2] );
 
-my $R2 = mmult($invA2,$B2);
-my $tmp = mmult($D2, $R2);
-my $R2 = mmult($A2, $tmp);
+#my $R2 = mmult($invA2,$B2);
+my @R2 = mmult(\@invA2,\@B2);
+#my $tmp = mmult($D2, $R2);
+#my $R2 = mmult($A2, $tmp);
 
 #for $i (0 .. 5) { if ($_ = $R2->[$i][0]) { print "$Bo2{$i} = $_\n"; } }
-for $i (0 .. 5) { $_ = $R2->[$i][0]; print "$_\n"; } 
+#for $i (0 .. 5) { $_ = $R2->[$i][0]; print "$_\n"; } 
 
-# --------------------------------------- O4 ------------------------------------- #
+#print $B2;
+for $i (0 .. 4) { 
+  for $j (0 .. 4) { 
+    $_ = $R2->[$i][$j]; print "$_\t"; } 
+  print "\n";
+}
 
-D4_0_4 =  (sqrt(70)/16) * sin(t)^4;
-D4_0_3 =  (sqrt(35)/4)  * sin(t)^3 * cos(t);
-D4_0_2 =  (sqrt(10)/8)  * sin(t)^2 * (7*cos(t)^2-1);
-D4_0_1 =  (sqrt(5)/4)   * sin(t)   * cos(t) * (7*cos(t)^2-3);
-D4_0_0 =  (1/8)         * (35*cos(t)^4 - 30*cos(t)^2 + 3);
+matdim(@D2);
 
-D4_1_0 =  (sqrt(5)/4)   * sin(t)   * cos(t)   * (7*cos(t)^2-3);
-D4_1_1 =  (1/8)         * (1+cos(t)) * (28*cos(t)^3 - 21*cos(t)^2 - 6*cos(t) + 3);
-D4_1m1 =  (1/8)         * (1-cos(t)) * (28*cos(t)^3 + 21*cos(t)^2 - 6*cos(t) - 3);
-D4_1_2 =  (sqrt(2)/8)   * sin(t)   * (1+cos(t)) * (14*cos(t)^2 - 7*cos(t) - 1);
-D4_1m2 = -(sqrt(2)/8)   * sin(t)   * (1-cos(t)) * (14*cos(t)^2 + 7*cos(t) - 1);
-D4_1_3 =  (sqrt(7)/8)   * sin(t)^2 * (1+cos(t)) * ( 4*cos(t) - 1);
-D4_1m3 =  (sqrt(7)/8)   * sin(t)^2 * (1-cos(t)) * ( 4*cos(t) + 1);
-D4_1_4 =  (sqrt(14)/8)  * sin(t)^3 * (1+cos(t));
-D4_1m4 = -(sqrt(14)/8)  * sin(t)^3 * (1-cos(t));
-
-D4_2_0 =  (sqrt(10)/8)  * sin(t)^2 * (7*cos(t)^2 - 1);
-D4_2_1 =  (sqrt(2)/8)   * sin(t)   * (1+cos(t)) * (14*cos(t)^2 - 7*cos(t) - 1);
-D4_2m1 =  (sqrt(2)/8)   * sin(t)   * (1-cos(t)) * (14*cos(t)^2 + 7*cos(t) - 1);
-D4_2_2 =  (1/4)         * (1+cos(t))^2 * (7*cos(t)^2 - 7*cos(t) + 1);
-D4_2m2 =  (1/4)         * (1-cos(t))^2 * (7*cos(t)^2 + 7*cos(t) + 1);
-D4_2_3 =  (sqrt(14)/8)  * sin(t)   * (1+cos(t))^2 * (2*cos(t) - 1);
-D4_2m3 = -(sqrt(14)/8)  * sin(t)   * (1-cos(t))^2 * (2*cos(t) + 1);
-D4_2_4 =  (sqrt(7)/8)   * sin(t)^2 * (1+cos(t))^2;
-D4_2m4 =  (sqrt(7)/8)   * sin(t)^2 * (1-cos(t))^2;
-
-D4_3_0 =  (sqrt(35)/4)  * sin(t)^3 * cos(t);
-D4_3_1 =  (sqrt(7)/8)   * sin(t)^2 * (1+cos(t)) * (4*cos(t) - 1);
-D4_3m1 =  (sqrt(7)/8)   * sin(t)^2 * (1-cos(t)) * (4*cos(t) + 1);
-D4_3_2 =  (sqrt(14)/8)  * sin(t)   * (1+cos(t))^2 * (2*cos(t) - 1);
-D4_3m2 =  (sqrt(14)/8)  * sin(t)   * (1-cos(t))^2 * (2*cos(t) + 1);
-D4_3_3 =  (1/8)         * (1+cos(t))^3 * (4*cos(t) - 3);
-D4_3m3 =  (1/8)         * (1-cos(t))^3 * (4*cos(t) + 3);
-D4_3_4 =  (sqrt(2)/8)   * sin(t)   * (1+cos(t))^3;
-D4_3m4 = -(sqrt(2)/8)   * sin(t)   * (1-cos(t))^3;
-
-D4_4_0 =  (sqrt(70)/16) * sin(t)^4;
-D4_4_1 =  (sqrt(14)/8)  * sin(t)^3 * (1+cos(t));
-D4_4m1 =  (sqrt(14)/8)  * sin(t)^3 * (1-cos(t));
-D4_4_2 =  (sqrt(7)/8)   * sin(t)^2 * (1+cos(t))^2;
-D4_4m2 =  (sqrt(7)/8)   * sin(t)^2 * (1-cos(t))^2;
-D4_4_3 =  (sqrt(2)/8)   * sin(t)   * (1+cos(t))^3;
-D4_4m3 =  (sqrt(2)/8)   * sin(t)   * (1-cos(t))^3;
-D4_4_4 =  (1/16)        * (1+cos(t))^4;
-D4_4m4 =  (1/16)        * (1-cos(t))^4;
-
-D4 = [...
-    exp(-4i*f) * [ D4_4_4  D4_4_3  D4_4_2  D4_4_1  D4_4_0  D4_4m1  D4_4m2  D4_4m3  D4_4m4];
-    exp(-3i*f) * [-D4_3_4  D4_3_3  D4_3_2  D4_3_1  D4_3_0  D4_3m1  D4_3m2  D4_3m3 -D4_3m4];
-    exp(-2i*f) * [ D4_2_4 -D4_2_3  D4_2_2  D4_2_1  D4_2_0  D4_2m1  D4_2m2 -D4_2m3  D4_2m4];
-    exp(-i*f)  * [-D4_1_4  D4_1_3 -D4_1_2  D4_1_1  D4_1_0  D4_1m1 -D4_1m2  D4_1m3 -D4_1m4];
-                 [ D4_0_4 -D4_0_3  D4_0_2 -D4_0_1  D4_0_0  D4_0_1  D4_0_2  D4_0_3  D4_0_4];
-    exp( i*f)  * [ D4_1m4  D4_1m3  D4_1m2  D4_1m1 -D4_1_0  D4_1_1  D4_1_2  D4_1_3  D4_1_4];
-    exp( 2i*f) * [ D4_2m4  D4_2m3  D4_2m2 -D4_2m1  D4_2_0 -D4_2_1  D4_2_2  D4_2_3  D4_2_4];
-    exp( 3i*f) * [ D4_3m4  D4_3m3 -D4_3m2  D4_3m1 -D4_3_0  D4_3_1 -D4_3_2  D4_3_3  D4_3_4];
-    exp( 4i*f) * [ D4_4m4 -D4_4m3  D4_4m2 -D4_4m1  D4_4_0 -D4_4_1  D4_4_2 -D4_4_3  D4_4_4];
-     ];
-
-O4m4 = sym('O4m4'); O4m3 = sym('O4m3'); O4m2 = sym('O4m2'); O4m1 = sym('O4m1'); 
-O4_0 = sym('O4_0');
-O4_4 = sym('O4_4'); O4_3 = sym('O4_3'); O4_2 = sym('O4_2'); O4_1 = sym('O4_1'); 
-
-# --------------------------------------- O6 ------------------------------------- #
-
-D60_0 =  (1/16)          * (231*cos(t)^6 - 315*cos(t)^4 + 105*cos(t)^2 - 5);
-D60_1 =  (sqrt(42)/16)   * sin(t)   * cos(t) * (33*cos(t)^4 - 30*cos(t)^2 + 5);
-D60_2 =  (sqrt(105)/32)  * sin(t)^2 * (33*cos(t)^4 - 18*cos(t)^2 + 1);
-D60_3 =  (sqrt(105)/16)  * sin(t)^3 * cos(t) * (11*cos(t)^2 - 3);
-D60_4 =  (3*sqrt(14)/32) * sin(t)^4 * (11*cos(t)^2 - 1);
-D60_5 =  (3*sqrt(77)/16) * sin(t)^5 * cos(t);
-D60_6 =  (sqrt(231)/32)  * sin(t)^6;
-
-D61_0 =  (sqrt(42)/16)   * sin(t)   * cos(t) * (33*cos(t)^4 - 30*cos(t)^2 + 5);
-D61_1 =  (1/16)          * (1+cos(t)) * (198*cos(t)^5 - 165*cos(t)^4 - 120*cos(t)^3 + 90*cos(t)^2 + 10*cos(t) - 5);
-D61m1 =  (1/16)          * (1-cos(t)) * (198*cos(t)^5 + 165*cos(t)^4 - 120*cos(t)^3 - 90*cos(t)^2 + 10*cos(t) + 5);
-D61_2 =  (sqrt(10)/32)   * sin(t)   * (1+cos(t)) * (99*cos(t)^4 - 66*cos(t)^3 - 36*cos(t)^2 + 18*cos(t) + 1);
-D61m2 = -(sqrt(10)/32)   * sin(t)   * (1-cos(t)) * (99*cos(t)^4 + 66*cos(t)^3 - 36*cos(t)^2 - 18*cos(t) + 1);
-D61_3 =  (3*sqrt(10)/32) * sin(t)^2 * (1+cos(t)) * (22*cos(t)^3 - 11*cos(t)^2 - 4*cos(t) + 1);
-D61m3 =  (3*sqrt(10)/32) * sin(t)^2 * (1-cos(t)) * (22*cos(t)^3 + 11*cos(t)^2 - 4*cos(t) - 1);
-D61_4 =  (sqrt(3)/16)    * sin(t)^3 * (1+cos(t)) * (33*cos(t)^2 - 11*cos(t) - 2);
-D61m4 = -(sqrt(3)/16)    * sin(t)^3 * (1-cos(t)) * (33*cos(t)^2 + 11*cos(t) - 2);
-D61_5 =  (sqrt(66)/32)   * sin(t)^4 * (1+cos(t)) * (6*cos(t) - 1);
-D61m5 =  (sqrt(66)/32)   * sin(t)^4 * (1-cos(t)) * (6*cos(t) + 1);
-D61_6 =  (3*sqrt(22)/32) * sin(t)^5 * (1+cos(t));
-D61m6 = -(3*sqrt(22)/32) * sin(t)^5 * (1-cos(t));
-
-D62_0 =  (sqrt(105)/32)  * sin(t)^2 * (33*cos(t)^4 - 18*cos(t)^2 + 1);
-D62_1 =  (sqrt(10)/32)   * sin(t)   * (1+cos(t))   * (99*cos(t)^4 - 66*cos(t)^3 - 36*cos(t)^2 + 18*cos(t) + 1); 
-D62m1 =  (sqrt(10)/32)   * sin(t)   * (1-cos(t))   * (99*cos(t)^4 + 66*cos(t)^3 - 36*cos(t)^2 - 18*cos(t) + 1); 
-D62_2 =  (1/64)          *            (1+cos(t))^2 * (495*cos(t)^4 - 660*cos(t)^3 + 90*cos(t)^2 + 108*cos(t) - 17);
-D62m2 =  (1/64)          *            (1-cos(t))^2 * (495*cos(t)^4 + 660*cos(t)^3 + 90*cos(t)^2 - 108*cos(t) - 17);
-D62_3 =  (3/32)          * sin(t)   * (1+cos(t))^2 * (55*cos(t)^3 - 55*cos(t)^2 + 5*cos(t) + 3);
-D62m3 = -(3/32)          * sin(t)   * (1-cos(t))^2 * (55*cos(t)^3 + 55*cos(t)^2 + 5*cos(t) - 3);
-D62_4 =  (sqrt(30)/64)   * sin(t)^2 * (1+cos(t))^2 * (33*cos(t)^2 - 22*cos(t) + 1);
-D62m4 =  (sqrt(30)/64)   * sin(t)^2 * (1-cos(t))^2 * (33*cos(t)^2 + 22*cos(t) + 1);
-D62_5 =  (sqrt(165)/32)  * sin(t)^3 * (1+cos(t))^2 * (3*cos(t) - 1);
-D62m5 = -(sqrt(165)/32)  * sin(t)^3 * (1-cos(t))^2 * (3*cos(t) + 1);
-D62_6 =  (3*sqrt(55)/64) * sin(t)^4 * (1+cos(t))^2;
-D62m6 =  (3*sqrt(55)/64) * sin(t)^4 * (1-cos(t))^2;
-
-D63_0 =  (sqrt(105)/16)  * sin(t)^3 * cos(t)       * (11*cos(t)^2 - 3);
-D63_1 =  (3*sqrt(10)/32) * sin(t)^2 * (1+cos(t))   * (22*cos(t)^3 - 11*cos(t)^2 - 4*cos(t) + 1);
-D63m1 =  (3*sqrt(10)/32) * sin(t)^2 * (1-cos(t))   * (22*cos(t)^3 + 11*cos(t)^2 - 4*cos(t) - 1);
-D63_2 =  (3/32)          * sin(t)   * (1+cos(t))^2 * (55*cos(t)^3 - 55*cos(t)^2 + 5*cos(t) + 3);
-D63m2 =  (3/32)          * sin(t)   * (1-cos(t))^2 * (55*cos(t)^3 + 55*cos(t)^2 + 5*cos(t) - 3);
-D63_3 =  (1/32)          *            (1+cos(t))^3 * (110*cos(t)^3 - 165*cos(t)^2 + 60*cos(t) - 1);
-D63m3 =  (1/32)          *            (1-cos(t))^3 * (110*cos(t)^3 + 165*cos(t)^2 + 60*cos(t) + 1);
-D63_4 =  (sqrt(30)/32)   * sin(t)   * (1+cos(t))^3 * (11*cos(t)^2 - 11*cos(t) + 2);
-D63m4 = -(sqrt(30)/32)   * sin(t)   * (1-cos(t))^3 * (11*cos(t)^2 + 11*cos(t) + 2);
-D63_5 =  (sqrt(165)/32)  * sin(t)^2 * (1+cos(t))^3 * (2*cos(t) - 1);
-D63m5 =  (sqrt(165)/32)  * sin(t)^2 * (1-cos(t))^3 * (2*cos(t) + 1);
-D63_6 =  (sqrt(55)/32)   * sin(t)^3 * (1+cos(t))^3;
-D63m6 = -(sqrt(55)/32)   * sin(t)^3 * (1-cos(t))^3;
-
-D64_0 =  (3*sqrt(14)/32) * sin(t)^4 * (11*cos(t)^2 - 1);
-D64_1 =  (sqrt(3)/16)    * sin(t)^3 * (1+cos(t))   * (33*cos(t)^2 - 11*cos(t) - 2);
-D64m1 =  (sqrt(3)/16)    * sin(t)^3 * (1-cos(t))   * (33*cos(t)^2 + 11*cos(t) - 2);
-D64_2 =  (sqrt(30)/64)   * sin(t)^2 * (1+cos(t))^2 * (33*cos(t)^2 - 22*cos(t) + 1);
-D64m2 =  (sqrt(30)/64)   * sin(t)^2 * (1-cos(t))^2 * (33*cos(t)^2 + 22*cos(t) + 1);
-D64_3 =  (sqrt(30)/32)   * sin(t)   * (1+cos(t))^3 * (11*cos(t)^2 - 11*cos(t) + 2);
-D64m3 =  (sqrt(30)/32)   * sin(t)   * (1-cos(t))^3 * (11*cos(t)^2 + 11*cos(t) + 2);
-D64_4 =  (1/32)          *            (1+cos(t))^4 * (33*cos(t)^2 - 44*cos(t) + 13);
-D64m4 =  (1/32)          *            (1-cos(t))^4 * (33*cos(t)^2 + 44*cos(t) + 13);
-D64_5 =  (sqrt(22)/32)   * sin(t)   * (1+cos(t))^4 * (3*cos(t) - 2);
-D64m5 = -(sqrt(22)/32)   * sin(t)   * (1-cos(t))^4 * (3*cos(t) + 2);
-D64_6 =  (sqrt(66)/64)   * sin(t)^2 * (1+cos(t))^4;
-D64m6 =  (sqrt(66)/64)   * sin(t)^2 * (1-cos(t))^4;
-
-D65_0 =  (3*sqrt(77)/16) * sin(t)^5 * cos(t);
-D65_1 =  (sqrt(66)/32)   * sin(t)^4 * (1+cos(t))   * (6*cos(t) - 1);
-D65m1 =  (sqrt(66)/32)   * sin(t)^4 * (1-cos(t))   * (6*cos(t) + 1);
-D65_2 =  (sqrt(165)/32)  * sin(t)^3 * (1+cos(t))^2 * (3*cos(t) - 1);
-D65m2 =  (sqrt(165)/32)  * sin(t)^3 * (1-cos(t))^2 * (3*cos(t) + 1);
-D65_3 =  (sqrt(165)/32)  * sin(t)^2 * (1+cos(t))^3 * (2*cos(t) - 1);
-D65m3 =  (sqrt(165)/32)  * sin(t)^2 * (1-cos(t))^3 * (2*cos(t) + 1);
-D65_4 =  (sqrt(22)/32)   * sin(t)   * (1+cos(t))^4 * (3*cos(t) - 2);
-D65m4 =  (sqrt(22)/32)   * sin(t)   * (1-cos(t))^4 * (3*cos(t) + 2);
-D65_5 =  (1/32)          *            (1+cos(t))^5 * (6*cos(t) - 5);
-D65m5 =  (1/32)          *            (1-cos(t))^5 * (6*cos(t) + 5);
-D65_6 =  (sqrt(3)/32)    * sin(t)   * (1+cos(t))^5;
-D65m6 = -(sqrt(3)/32)    * sin(t)   * (1-cos(t))^5;
-
-D66_0 =  (sqrt(231)/32)  * sin(t)^6;
-D66_1 =  (3*sqrt(22)/32) * sin(t)^5 * (1+cos(t));
-D66m1 =  (3*sqrt(22)/32) * sin(t)^5 * (1-cos(t));
-D66_2 =  (3*sqrt(55)/64) * sin(t)^4 * (1+cos(t))^2;
-D66m2 =  (3*sqrt(55)/64) * sin(t)^4 * (1-cos(t))^2;
-D66_3 =  (sqrt(55)/32)   * sin(t)^3 * (1+cos(t))^3;
-D66m3 =  (sqrt(55)/32)   * sin(t)^3 * (1-cos(t))^3;
-D66_4 =  (sqrt(66)/64)   * sin(t)^2 * (1+cos(t))^4;
-D66m4 =  (sqrt(66)/64)   * sin(t)^2 * (1-cos(t))^4;
-D66_5 =  (sqrt(3)/32)    * sin(t)   * (1+cos(t))^5;
-D66m5 =  (sqrt(3)/32)    * sin(t)   * (1-cos(t))^5;
-D66_6 =  (1/64)          *            (1+cos(t))^6;
-D66m6 =  (1/64)          *            (1-cos(t))^6;
-
-D6 = [...
- exp(-6i*f) * [ D66_6  D66_5  D66_4  D66_3  D66_2  D66_1  D66_0  D66m1  D66m2  D66m3  D66m4  D66m5  D66m6];
- exp(-5i*f) * [-D65_6  D65_5  D65_4  D65_3  D65_2  D65_1  D65_0  D65m1  D65m2  D65m3  D65m4  D65m5 -D65m6];
- exp(-4i*f) * [ D64_6 -D64_5  D64_4  D64_3  D64_2  D64_1  D64_0  D64m1  D64m2  D64m3  D64m4 -D64m5  D64m6];
- exp(-3i*f) * [-D63_6  D63_5 -D63_4  D63_3  D63_2  D63_1  D63_0  D63m1  D63m2  D63m3 -D63m4  D63m5 -D63m6];
- exp(-2i*f) * [ D62_6 -D62_5  D62_4 -D62_3  D62_2  D62_1  D62_0  D62m1  D62m2 -D62m3  D62m4 -D62m5  D62m6];
- exp(-i*f)  * [-D61_6  D61_5 -D61_4  D61_3 -D61_2  D61_1  D61_0  D61m1 -D61m2  D61m3 -D61m4  D61m5 -D61m6];
-              [ D60_6 -D60_5  D60_4 -D60_3  D60_2 -D60_1  D60_0  D60_1  D60_2  D60_3  D60_4  D60_5  D60_6];
- exp( i*f)  * [ D61m6  D61m5  D61m4  D61m3  D61m2  D61m1 -D61_0  D61_1  D61_2  D61_3  D61_4  D61_5  D61_6];
- exp( 2i*f) * [ D62m6  D62m5  D62m4  D62m3  D62m2 -D62m1  D62_0 -D62_1  D62_2  D62_3  D62_4  D62_5  D62_6];
- exp( 3i*f) * [ D63m6  D63m5  D63m4  D63m3 -D63m2  D63m1 -D63_0  D63_1 -D63_2  D63_3  D63_4  D63_5  D63_6];
- exp( 4i*f) * [ D64m6  D64m5  D64m4 -D64m3  D64m2 -D64m1  D64_0 -D64_1  D64_2 -D64_3  D64_4  D64_5  D64_6];
- exp( 5i*f) * [ D65m6  D65m5 -D65m4  D65m3 -D65m2  D65m1 -D65_0  D65_1 -D65_2  D65_3 -D65_4  D65_5  D65_6];
- exp( 6i*f) * [ D66m6 -D66m5  D66m4 -D66m3  D66m2 -D66m1  D66_0 -D66_1  D66_2 -D66_3  D66_4 -D66_5  D66_6];
-     ];
-
-O6m6 = sym('O6m6'); O6m5 = sym('O6m5'); O6m4 = sym('O6m4'); 
-O6m3 = sym('O6m3'); O6m2 = sym('O6m2'); O6m1 = sym('O6m1'); 
-O6_0 = sym('O6_0');
-O6_3 = sym('O6_3'); O6_2 = sym('O6_2'); O6_1 = sym('O6_1'); 
-O6_6 = sym('O6_6'); O6_5 = sym('O6_5'); O6_4 = sym('O6_4'); 
-
-# ------------------------------------ Finished !! ------------------------------- #
-
-# The operator in the rotated frame. Rx(y) is equivalent to {Oxy} in Rudowicz notation
-# and Ox_y, Oxmy is equivalent to [Oxy], [OxyM] in Rudowicz
-
-R1 = simplify(A1*D1*A1^(-1)*[O1m1;O1_0;O1_1]);
-R2 = simplify(A2*D2*A2^(-1)*[O2m2;O2m1;O2_0;O2_1;O2_2]);
-R4 = simplify(A4*D4*A4^(-1)*[O4m4;O4m3;O4m2;O4m1;O4_0;O4_1;O4_2;O4_3;O4_4]);
-R6 = simplify(A6*D6*A6^(-1)*[O6m6;O6m5;O6m4;O6m3;O6m2;O6m1;O6_0;O6_1;O6_2;O6_3;O6_4;O6_5;O6_6]);
-
-MR2 = subs(R2,{f,t},{0,double(pi/2)})
-MR4 = subs(R4,{f,t},{0,double(pi/2)})
-MR6 = subs(R6,{f,t},{0,double(pi/2)})
-
+#$_ = exp(2*$i*$f); print "$_\n";
