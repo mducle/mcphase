@@ -105,7 +105,8 @@ GetOptions("help"=>\$helpflag,
 	   "radians"=>\$radflag,
 	   "phi=f"=>\$phi,
 	   "theta=f"=>\$theta,
-	   "output=s"=>\$output);
+	   "output=s"=>\$output,
+           "z_internal"=>\$z_int);
 	   
 usage() if $helpflag;
 
@@ -336,8 +337,9 @@ if (!$output) {
 else {
   %T6 = (0,'O_6^{-6}',1,'O_6^{-5}',2,'O_6^{-4}',3,'O_6^{-4}',4,'O_6^{-2}',5,'O_6^{-1}',6,'O_6^0',7,'O_6^1',8,'O_6^2',9,'O_6^3',10,'O_6^4',11,'O_6^5',12,'O_6^6');
 
-  open (outfile, ">$output") or die "$0: cannot open $output for output.";
-  print outfile << "EOF";
+  if (!$z_int) {
+    open (outfile, ">$output") or die "$0: cannot open $output for output.";
+    print outfile << "EOF";
 
 \\documentclass [12pt,a4paper,notitlepage]{article}
 \\usepackage{latexsym}
@@ -352,6 +354,12 @@ Transformation relations for \$O_6^q\$ Steven's equivalent operators:
 
 EOF
   
+  }
+  else {
+    open (outfile, ">>$output") or die;
+    print outfile "\nTransformation relations for \$O_6^q\$ Steven's equivalent operators:\n";
+  }
+
   for $l (0 .. 12) {
     $_ = $S6->[$l];
     s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;

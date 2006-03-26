@@ -105,7 +105,8 @@ GetOptions("help"=>\$helpflag,
 	   "radians"=>\$radflag,
 	   "phi=f"=>\$phi,
 	   "theta=f"=>\$theta,
-	   "output=s"=>\$output);
+	   "output=s"=>\$output,
+           "z_internal"=>\$z_int);
 	   
 usage() if $helpflag;
 
@@ -270,7 +271,9 @@ EOF
   }
   print outfile "\\end{array}\n\\right)\n\\end{equation}\n";
 
-  print outfile "\\end\{document\}\n";
+  if (!$z_int) {
+    print outfile "\\end\{document\}\n";
+  }
 
   close (out_file);
 }

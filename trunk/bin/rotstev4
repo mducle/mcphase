@@ -105,7 +105,8 @@ GetOptions("help"=>\$helpflag,
 	   "radians"=>\$radflag,
 	   "phi=f"=>\$phi,
 	   "theta=f"=>\$theta,
-	   "output=s"=>\$output);
+	   "output=s"=>\$output,
+           "z_internal"=>\$z_int);
 	   
 usage() if $helpflag;
 
@@ -267,8 +268,9 @@ if (!$output) {
 else {
   %T4 = (0,'O_4^{-4}',1,'O_4^{-4}',2,'O_4^{-2}',3,'O_4^{-1}',4,'O_4^0',5,'O_4^1',6,'O_4^2',7,'O_4^3',8,'O_4^4');
 
-  open (outfile, ">$output") or die "$0: cannot open $output for output.";
-  print outfile << "EOF";
+  if (!$z_int) {
+    open (outfile, ">$output") or die "$0: cannot open $output for output.";
+    print outfile << "EOF";
 
 \\documentclass [12pt,a4paper,notitlepage]{article}
 \\usepackage{latexsym}
@@ -283,6 +285,12 @@ Transformation relations for \$O_4^q\$ Steven's equivalent operators:
 
 EOF
   
+  }
+  else {
+    open (outfile, ">>$output") or die;
+    print outfile "\nTransformation relations for \$O_4^q\$ Steven's equivalent operators:\n";
+  }
+
   for $l (0 .. 8) {
     $_ = $S4->[$l];
     s/sqrt\(([\/\.\d]*)\)/\\sqrt\{$1}/g;
@@ -317,7 +325,9 @@ EOF
   }
   print outfile "\\end{array}\n\\right)\n\\end{equation}\n";
 
-  print outfile "\\end\{document\}\n";
+  if (!$z_int) {
+    print outfile "\\end\{document\}\n";
+  }
 
   close (out_file);
 }
