@@ -3,9 +3,50 @@
 use PDL;
 use Getopt::Long;
 
-sub usage()
-    {
-        print STDERR << "EOF";
+# The following subroutines were shamelessly stolen from the Perl Cookbook
+# by O'Reily (Recipe 2.14), and used for the matrix multiplications.
+
+sub mmult {
+    my ($m1,$m2) = @_;
+    my ($m1rows,$m1cols) = matdim($m1);
+    my ($m2rows,$m2cols) = matdim($m2);
+
+    unless ($m1cols == $m2rows) {       # raise exception
+        die "IndexError: matrices don't match: $m1cols != $m2rows";
+    }
+
+    my $result = [];
+    my ($i, $j, $k);
+
+    for $i (range($m1rows)) {
+        for $j (range($m2cols)) {
+            for $k (range($m1cols)) {
+                $result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
+            }
+        }
+    }
+    return $result;
+}
+
+sub range { 0 .. ($_[0] - 1) }
+
+sub veclen {
+    my $ary_ref = $_[0];
+    my $type = ref $ary_ref;
+    if ($type ne "ARRAY") { die "$type is bad array ref for $ary_ref" }
+    return scalar(@$ary_ref);
+}
+
+sub matdim {
+    my $matrix = $_[0];
+    my $rows = veclen($matrix);
+    my $cols = veclen($matrix->[0]);
+    return ($rows, $cols);
+}
+
+# End of stolen code!
+sub usage() {
+  print STDERR << "EOF";
 
     $0:
     Calculates a set of  crystal field  parameters for  Stevens equivalent
@@ -36,8 +77,8 @@ sub usage()
     if -o is omitted, the program prints the parameters to standard output. 
 
 EOF
-        exit;
-    }
+  exit;
+}
 
 # see http://aplawrence.com/Unix/perlgetops.html for details of GetOptions
 
@@ -48,8 +89,8 @@ GetOptions("help"=>\$helpflag,
 usage() if $helpflag;
 
 if (!$input && !$ARGV[0]) { 
-    print STDERR "$0: requires at least input file or CF parameters on command line.\n";
-    exit;
+  print STDERR "$0: requires at least input file or CF parameters on command line.\n";
+  exit;
 }
 
 my $MR2 = pdl [
@@ -88,6 +129,42 @@ my $MR6 = pdl [
   [      0,      0,      0,      0,      0,      0, 231/32,      0,  33/32,      0,  11/32,      0,   1/32]
 ];
 
+my $MS2 = [
+            [    0, -1/2,    0,    0,    0],
+            [    2,    0,    0,    0,    0],
+            [    0,    0, -1/2,    0,  1/2],
+            [    0,    0,    0,   -1,    0],
+            [    0,    0,  3/2,    0,  1/2]
+          ];
+
+my $MS4 = [
+            [    0, -1/8,    0, -7/8,    0,    0,    0,    0,    0],
+            [    1,    0,  7/2,    0,    0,    0,    0,    0,    0],
+            [    0, -1/4,    0,  1/4,    0,    0,    0,    0,    0],
+            [    1,    0, -1/2,    0,    0,    0,    0,    0,    0],
+            [    0,    0,    0,    0,  3/8,    0, -1/8,    0,  1/8],
+            [    0,    0,    0,    0,    0,  3/4,    0, -1/4,    0],
+            [    0,    0,    0,    0, -5/2,    0,  1/2,    0,  1/2],
+            [    0,    0,    0,    0,    0, -7/4,    0, -3/4,    0],
+            [    0,    0,    0,    0, 35/8,    0,  7/8,    0,  1/8]
+          ];
+
+my $MS6 = [
+  [      0,  -1/32,      0, -11/32,      0, -33/32,      0,      0,      0,      0,      0,      0,      0],
+  [    3/8,      0,   11/4,      0,   33/8,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,   -1/8,      0,   -3/8,      0,    3/8,      0,      0,      0,      0,      0,      0,      0],
+  [    5/8,      0,    5/4,      0,   -9/8,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,  -5/32,      0,   9/32,      0,  -5/32,      0,      0,      0,      0,      0,      0,      0],
+  [    3/4,      0,   -1/2,      0,    1/4,      0,      0,      0,      0,      0,      0,      0,      0],
+  [      0,      0,      0,      0,      0,      0,  -5/16,      0,   1/16,      0,  -1/16,      0,   1/16],
+  [      0,      0,      0,      0,      0,      0,      0,   -5/8,      0,    3/8,      0,   -1/8,      0],
+  [      0,      0,      0,      0,      0,      0, 105/32,      0, -17/32,      0,   5/32,      0,  15/32],
+  [      0,      0,      0,      0,      0,      0,      0,  15/16,      0,  -1/16,      0,  -5/16,      0],
+  [      0,      0,      0,      0,      0,      0, -63/16,      0,   3/16,      0,  13/16,      0,   3/16],
+  [      0,      0,      0,      0,      0,      0,      0, -33/16,      0, -33/16,      0,  -5/16,      0],
+  [      0,      0,      0,      0,      0,      0, 231/32,      0,  33/32,      0,  11/32,      0,   1/32]
+];
+
 my %B=();
 
 open (input_file, $input) or die "$0: cannot open $input for input CF parameters";
@@ -100,54 +177,8 @@ while(<input_file>) {                              # Selects out lines with crys
                                                    # \s matches whitespace characters.
 						   
     $B{$1}=$2;                                     # Assigns values of CF parameters to a hash.
-
-    print "$1 = $B{$1}\n";
-#    my $ind = $1; my $par = $2;
-#
-#    if ($ind =~ /B20/ ) { $B20 = $par; next; }     # Assigns values for the crystal field parameters.
-#    if ($ind =~ /B21/ ) { $B21 = $par; next; }
-#    if ($ind =~ /B22/ ) { $B22 = $par; next; }
-#    if ($ind =~ /B40/ ) { $B40 = $par; next; }
-#    if ($ind =~ /B41/ ) { $B41 = $par; next; }
-#    if ($ind =~ /B42/ ) { $B42 = $par; next; }
-#    if ($ind =~ /B43/ ) { $B43 = $par; next; }
-#    if ($ind =~ /B44/ ) { $B44 = $par; next; }
-#    if ($ind =~ /B60/ ) { $B60 = $par; next; }
-#    if ($ind =~ /B61/ ) { $B61 = $par; next; }
-#    if ($ind =~ /B62/ ) { $B62 = $par; next; }
-#    if ($ind =~ /B63/ ) { $B63 = $par; next; }
-#    if ($ind =~ /B64/ ) { $B64 = $par; next; }
-#    if ($ind =~ /B65/ ) { $B65 = $par; next; }
-#    if ($ind =~ /B66/ ) { $B66 = $par; next; }
-#
-#    if ($ind =~ /B2-0/ ) { $B2m0 = $par; next; }   # Assigns values for -ve crystal field parameters.
-#    if ($ind =~ /B2-1/ ) { $B2m1 = $par; next; }
-#    if ($ind =~ /B2-2/ ) { $B2m2 = $par; next; }
-#    if ($ind =~ /B4-0/ ) { $B4m0 = $par; next; }
-#    if ($ind =~ /B4-1/ ) { $B4m1 = $par; next; }
-#    if ($ind =~ /B4-2/ ) { $B4m2 = $par; next; }
-#    if ($ind =~ /B4-3/ ) { $B4m3 = $par; next; }
-#    if ($ind =~ /B4-4/ ) { $B4m4 = $par; next; }
-#    if ($ind =~ /B6-0/ ) { $B6m0 = $par; next; }
-#    if ($ind =~ /B6-1/ ) { $B6m1 = $par; next; }
-#    if ($ind =~ /B6-2/ ) { $B6m2 = $par; next; }
-#    if ($ind =~ /B6-3/ ) { $B6m3 = $par; next; }
-#    if ($ind =~ /B6-4/ ) { $B6m4 = $par; next; }
-#    if ($ind =~ /B6-5/ ) { $B6m5 = $par; next; }
-#    if ($ind =~ /B6-6/ ) { $B6m6 = $par; next; }
   }
 }
-
-#print "$B2m2\n$B2m1\n$B20\n$B21\n$B22\n";
-#print "$B4m4\n$B4m3\n$B4m2\n$B4m1\n$B40\n$B41\n$B42\n$B43\n$B44\n";
-#print "$B6m6\n$B6m5\n$B6m4\n$B6m3\n$B6m2\n$B6m1\n$B60\n$B61\n$B62\n$B63\n$B64\n$B65\n$B66\n" ;
-
-#my $B2 = pdl [ [$B2m2],[$B2m1],[$B20],[$B21],[$B22] ];
-#my $R2 = $MR2 x $B2;
-#my $B4 = pdl [ [$B4m4],[$B4m3],[$B4m2],[$B4m1],[$B40],[$B41],[$B42],[$B43],[$B44] ];
-#my $R4 = $MR4 x $B4;
-#my $B6 = pdl [ [$B6m6],[$B6m5],[$B6m4],[$B6m3],[$B6m2],[$B6m1],[$B60],[$B61],[$B62],[$B63],[$B64],[$B65],[$B66] ];
-#my $R6 = $MR6 x $B6;
 
 my $B2 = pdl [ [$B{"B2-2"}],[$B{"B2-1"}],[$B{"B20 "}],[$B{"B21 "}],[$B{"B22 "}] ];
 my $R2 = $MR2 x $B2;
@@ -156,6 +187,36 @@ my $R4 = $MR4 x $B4;
 my $B6 = pdl [ [$B{"B6-6"}],[$B{"B6-5"}],[$B{"B6-4"}],[$B{"B6-3"}],[$B{"B6-2"}],[$B{"B6-1"}],[$B{"B60 "}],[$B{"B61 "}],[$B{"B62 "}],[$B{"B63 "}],[$B{"B64 "}],[$B{"B65 "}],[$B{"B66 "}] ];
 my $R6 = $MR6 x $B6;
 
-print $R2;
-print $R4;
-print $R6;
+my $C2 = [ [$B{"B2-2"}],[$B{"B2-1"}],[$B{"B20 "}],[$B{"B21 "}],[$B{"B22 "}] ];
+my $S2 = mmult($MS2, $C2);
+my $C4 = [ [$B{"B4-4"}],[$B{"B4-3"}],[$B{"B4-2"}],[$B{"B4-1"}],[$B{"B40 "}],[$B{"B41 "}],[$B{"B42 "}],[$B{"B43 "}],[$B{"B44 "}] ];
+my $S4 = mmult($MS4, $C4);
+my $C6 = [ [$B{"B6-6"}],[$B{"B6-5"}],[$B{"B6-4"}],[$B{"B6-3"}],[$B{"B6-2"}],[$B{"B6-1"}],[$B{"B60 "}],[$B{"B61 "}],[$B{"B62 "}],[$B{"B63 "}],[$B{"B64 "}],[$B{"B65 "}],[$B{"B66 "}] ];
+my $S6 = mmult($MS6, $C6);
+
+my %Bo2 = (0, "B2-2", 1, "B2-1", 2, "B20 ", 3, "B21 ", 4, "B22 ");
+my %Bo4 = (0, "B4-4", 1, "B4-3", 2, "B4-2", 3, "B4-1", 4, "B40 ", 5, "B41 ", 6, "B42 ", 7, "B43 ", 8, "B44 ");
+my %Bo6 = (0, "B6-6", 1, "B6-5", 2, "B6-4", 3, "B6-3", 4, "B6-2", 5, "B6-1", 6, "B60 ", 7, "B61 ", 8, "B62 ", 9, "B63 ", 10, "B64 ", 11, "B65 ", 12, "B66 ");
+
+if (!$output) {
+#  foreach ($B2) { print $_;}
+
+#  print $R2;
+#  print $R4;
+#  print $R6;
+
+#  my ($S2r,$S2c) = matdim($S2);
+#  print "$S2r\t$S2c\n";
+#  for $i (0 .. 5) { $_ = $S2->[$i][0]; print "$_\t"; } print "\n";
+#  for $i (0 .. 9) { $_ = $S4->[$i][0]; print "$_\t"; } print "\n";
+#  for $i (0 .. 13) { $_ = $S6->[$i][0]; print "$_\t"; } print "\n";
+#  
+#  print "MS2:$MS2->[0][1]\n";
+#  foreach $elem (@S2) { print "$elem\n"; }
+#  print "$S2[0]\t$S2[1]\n";
+
+  for $i (0 .. 5) { if ($_ = $S2->[$i][0]) { print "$Bo2{$i} = $_\n"; } }
+  for $i (0 .. 9) { if ($_ = $S4->[$i][0]) { print "$Bo4{$i} = $_\n"; } }
+  for $i (0 .. 13) { if ($_ = $S6->[$i][0]) { print "$Bo6{$i} = $_\n"; } }
+  
+}
