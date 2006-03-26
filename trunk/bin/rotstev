@@ -31,11 +31,11 @@ sub mmult {
     for $j (range($m2cols)) {
       for $k (range($m1cols)) {
         $m1el = $m1->[$i][$k];
-        $m2el = $m2->[$i][$k];
-        print "$m1el\t$m2el\t";
+        $m2el = $m2->[$k][$j];
+#        print "$m1el\t$m2el\t";
         #$result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
-        $prod_el = $m1el * $m2el;
-        print "$prod_el\n";
+        $prod_el += $m1el * $m2el;
+#        print "$prod_el\n";
       }
       $result->[$i][$j] = $prod_el;
       $prod_el = 0;
@@ -58,13 +58,14 @@ sub matdim {
     my $matrix = $_[0];
     my $rows = veclen($matrix);
     my $cols = veclen($matrix->[0]);
-    print "r:$rows  c:$cols\n";
     return ($rows, $cols);
 }
 
 # End of stolen code!
 
-my ($f, $t, $i, $o, $pi) = symbols(qw(f t i 1 pi));
+my ($f, $t, $i, $pi) = symbols(qw(f t i pi));
+my ($l, $m, $n);
+
 
 # Transformation matrix between Stevens and Buckmaster operator equivalents
 my $A1 = [
@@ -109,15 +110,13 @@ my $A6 = [
 	[4,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,    0,       4]
       ];
 
-#my $invA2 = [
-my @invA2 = (
+my $invA2 = [
 	[       1/2,         0,         0,         0,       1/2],
 	[         0,         1,         0,         1,         0],
 	[         0,         0, sqrt(1/6),         0,         0],
 	[         0,         1,         0,        -1,         0],
 	[      -1/2,         0,         0,         0,       1/2]
-#      ];
-      );
+      ];
 
 my $invA4 = [
 	[ 1/4,     0,      0,      0,      0,      0,      0,     0,      1/4],
@@ -160,26 +159,13 @@ my $D1m1m1 = exp(-$i*$f) * (1/2)*(1+cos($t));
 my $D1m1p1 = exp(-$i*$f) * (1/2)*(1-cos($t));
 my $D1m1p0 = exp(-$i*$f) * (sqrt(2)/2)*sin($t);
 
-my @D1 =  (
+my $D1 =  [
 	    [ $D1m1m1,  $D1m1p0, $D1m1p1],
 	    [-$D10p1,   $D10p0,  $D10p1 ],
 	    [ $D1p1m1, -$D1p1p0, $D1p1p1]
-          );
+          ];
 
-my ($O1m1, $O1p0, $O1p1) = symbols(qw(O1m1 O1p0 O1p1));
-
-#print "$D10p0\t$D10p1\n";
-#
-#for $i (0 .. 2) { 
-#  for $j (0 .. 2) { 
-#    print "$D1[$i][$j]\t"; } 
-#  print "\n";
-#}
-
-#$_ = $D1[1][1] * exp(-2*$i*$f); print "$_\n";
-#
-#print "$#D1\n";
-
+my ($O1m1, $O1p0, $O1p1) = symbols(qw(Oomo Oopz Oopo));
 
 # --------------------------------------- O2 ------------------------------------- #
 
@@ -211,35 +197,41 @@ my $D2p2m1 = exp( 2*$i*$f) * -(1/2)*sin($t)*(1-cos($t));
 my $D2p2p1 = exp( 2*$i*$f) * -(1/2)*sin($t)*(1+cos($t));
 my $D2p2p0 = exp( 2*$i*$f) *  (sqrt(6)/4)*sin($t)^2;
 
-#my $D2 = [
-my @D2 = (
+my $D2 = [
 	   [$D2m2m2, $D2m2m1, $D2m2p0, $D2m2p1, $D2m2p2],
            [$D2m1m2, $D2m1m1, $D2m1p0, $D2m1p1, $D2m1p2],
            [$D20p2, -$D20p1,  $D20p0,  $D20p1,  $D20p2 ],
            [$D2p1m2, $D2p1m1, $D2p1p0, $D2p1p1, $D2p1p2],
            [$D2p2m2, $D2p2m1, $D2p2p0, $D2p2p1, $D2p2p2]
-#         ];
-         );
+         ];
 
-my ($O2m2, $O2m1, $O2p0, $O1p1, $O2p2) = symbols(qw(O2m2 O2m1 O2p0 O2p1 O2p2));
+#($O2m2, $O2m1, $O2p0, $O1p1, $O2p2) = symbols(qw(O2m2 O2m1 O2p0 O2p1 O2p2));
+($O2m2, $O2m1, $O2p0, $O2p1, $O2p2) = symbols(qw(Otmt Otmo Otpz Otpo Otpt));
 
 
-#my $B2 = [ [O2m2],[O2m1],[O2p0],[O2p1],[O2p2] ];
-my @B2 = ( [O2m2],[O2m1],[O2p0],[O2p1],[O2p2] );
+my $B2 = [ [$O2m2],[$O2m1],[$O2p0],[$O2p1],[$O2p2] ];
 
-#my $R2 = mmult($invA2,$B2);
-my $R2 = mmult(\@invA2,\@B2);
-#my $tmp = mmult($D2, $R2);
-#my $R2 = mmult($A2, $tmp);
+my $tmp1 = mmult($invA2,$B2);
+my $tmp2 = mmult($D2, $tmp1);
+my $R2 = mmult($A2, $tmp2);
 
-#for $i (0 .. 5) { if ($_ = $R2->[$i][0]) { print "$Bo2{$i} = $_\n"; } }
-#for $i (0 .. 5) { $_ = $R2->[$i][0]; print "$_\n"; } 
+my $S2 = [];
 
-#print $B2;
-for $i (0 .. 4) { 
-  for $j (0 .. 4) { 
-    $_ = $R2->[$i][$j]; print "$_\t"; } 
-  print "\n";
+#for $l (0 .. 4) {
+#  my $tmp = $R2->[$l];
+#  print "$tmp\n";
+#  $S2->[$l] = $tmp->sub(f=>0,t=>$pi/2);
+#}
+
+for $l (0 .. 4) { 
+  for $m (0 .. 4) { 
+    my $tmp = $R2->[$l][$m];
+    print "$tmp\n";
+    $S2->[$l][$m] = $tmp->sub(f=>0);
+#    $_ = $S2->[$l][$m]; 
+#    print "$_\t";
+  } 
+  print "\n"; 
 }
 
 #matdim(@D2);
