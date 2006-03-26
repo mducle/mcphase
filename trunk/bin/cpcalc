@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+$Tmin=$ARGV[0];
+$Tmax=$ARGV[1];
+$deltaT=$ARGV[2];
+unless($#ARGV==2)
+  {print "Program cpcalc - calculates specific heat from output file cfield.out\n";
+   print "             use as :  cpcalc tmin tmax deltat\n"; 
+   print "             alternatively \n";
+   print "             use as: cpcalc col1 col2 datafile\n";
+   print "                     (take cp-data from datafile and calculate\n";
+   print "                      standard deviation)\n";
+   print "     output is written to stdout, energies have to be given in meV,\n";
+   print "     temperatures tmin tmax deltat in Kelvin\n";
+   exit(1);
+  }
+
+unless (open (Fin,"cfield.out")) {print "ERROR cpcalc: file cfield.out not found\n";exit(1);}
+
+$noflevels=1; # initialize noflevels
+# read energies from cfield.out
+  while($line=<Fin>)
+  {if($line=~/^.*\QEnergy Eigenvalues are in\E/){unless ($line=~/^.*\QEnergy Eigenvalues are in  meV\E/) 
+                                                        {print "ERROR cpcalc: energies  in cfield.out not in meV - ".$line."\n";exit(1);}
+                                                }
+   if($line=~/^.*\QNumber of different energy levels\E\s*:/) # read noflevels
+      {($noflevels)=($line=~m|\QNumber of different energy levels\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
+       print "#Number of different energy levels: $noflevels\n";
+      } 
+   for($i=1;$i<=$noflevels;++$i)
+     {if($line=~/^.*\QE( \E$i\Q)\E\s*=/) 
+      {($E[$i])=($line=~m|\QE( \E$i\Q)\E\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);
+       ($deg[$i])=($line=~m|.*\QDegeneracy\E\s*:\s*([\d.eEdD]+)|);
+      print "#E($i)=".$E[$i]."meV degeneracy ".$deg[$i]."-fold\n";
+      } 
+     }
+  }     
+  close Fin;
+
+$dT=0.1; # this is fixed value for calculation of derivative of energy
+
+if (open (Fin,$deltaT))
+{
+$colT=$Tmin;
+$colcp=$Tmax;
+$ii=0;$sta=0;
+# read temperatures and calculate cp + comp to experiment
+  print  "# T(K)  cpclc(mJ/molK) cpexp(mJ/molK)\n";
+  while($line=<Fin>)
+  {
+       if ($line=~/^\s*#/) {}
+       else{@numbers=split(" ",$line);
+           	$T0=$numbers[$colT-1];
+		$cpexp=$numbers[$colcp-1];
+            ($cpclc)=cp(); # CALCULATE cp !!!!
+	 ++$ii;
+	 $sta+=($cpclc-$cpexp)*($cpclc-$cpexp);
+         print   "$T $cpclc $cpexp\n";
+        }
+  }
+  $sta/=$ii;
+  print  "#sta=$sta\n";       
+  close Fin;
+}
+else
+{print  "# T(K)  cpclc(mJ/molK)\n";
+ for($T0=$Tmin;$T0<$Tmax;$T0+=$deltaT)
+ {($cpclc)=cp();
+  print "$T0  $cpclc\n";
+ }
+}
+exit(0);
+
+sub cp {
+$T=$T0+$dT/2;
+            $Zp=0;$Up=0;
+            for ($i=1;$i<=$noflevels;++$i)
+                {$x=$E[$i]/$T/0.0862;
+                 $Zp+=$deg[$i]*exp(-$x);
+                 $Up+=$deg[$i]*$E[$i]*exp(-$x);
+                 }
+            $Up/=$Zp*0.0862; # magnetic energy per ion in K
+            $Up*=1.38066*6.023; # magnetic energy in J per mol
+	    
+	    $T=$T0-$dT/2;
+            $Zm=0;$Um=0;
+            for ($i=1;$i<=$noflevels;++$i)
+                {$x=$E[$i]/$T/0.0862;
+                 $Zm+=$deg[$i]*exp(-$x);
+                 $Um+=$deg[$i]*$E[$i]*exp(-$x);
+                 }
+            $Um/=$Zm*0.0862; # magnetic energy per ion in K
+            $Um*=1.38066*6.023; # magnetic energy in J per mol
+         
+	 $cpc=($Up-$Um)/$dT;  	    
+         #$f=$T*log($Z)*1.38066*6.023;
+return $cpc;
+}

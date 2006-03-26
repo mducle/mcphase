@@ -1,0 +1,34 @@
+#!/bin/sh
+# main program batch of mcphase
+
+
+if [ X"$1" != X"-version" -a  X"$1" != X"-help" -a  X"$1" != X"-h" ]; then
+# yes do a calculation
+
+cat << EOF > results/.mcdisp.qom
+0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 1 1 1 1 1 1 1 1 1 1 1
+EOF
+
+cat << EOF > results/.mcdisp.dsigma
+0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 1 1 1 1 1 1 1 1 1 1 1
+EOF
+ java displaydsigma 8 9 ./results/.mcdisp.qom 8 9 ./results/.mcdisp.dsigma  &
+ spinid=$!
+ 
+ #start calculation program
+ mcdispit $1 $2 $3 $4 $5 $6 $7 $8 $9
+
+ #kill all processes
+ kill $spinid
+ rm -f ./results/.mcdisp.qom;
+ rm -f ./results/.mcdisp.dsigma;
+ cp -f mcdisp.ini ./results;
+ cp -f mcdisp.mf ./results;
+ cp -f mcphas.j ./results;
+
+else
+# do not do a calculation - only print version / help screen
+ mcdispit $1 $2 $3 $4 $5 $6;
+fi

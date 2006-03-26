@@ -1,0 +1,40 @@
+#!/bin/sh
+# main program batch of mcphase
+
+
+if [ X"$1" != X"-version" -a  X"$1" != X"-help" -a  X"$1" != X"-h" ]; then
+# yes do a calculation
+ #start displaying results
+ java IniConfigurator &
+ javaid=$!
+ #inimenu  & 
+
+cat << EOF > results/.mcphas.fum
+0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 1 1 1 1 1 1 1 1 1 1 1
+EOF
+ # displaymag   & 
+ java displaymag 2 11 ./results/.mcphas.fum 2 12 ./results/.mcphas.fum 2 13 ./results/.mcphas.fum  &
+ magid=$!
+ displayspins  &
+ spinid=$!
+  
+ sleep 5 s
+ #start calculation program
+ mcphasit $1 $2 $3 $4 $5 $6
+
+ #kill all processes
+ # killall gv gnuplot gnuplot_x11 displaymag displayspins inimenu java
+ kill $javaid $magid $spinid
+ rm -f ./results/.mcphas.fum
+ rm -f ./results/.spins.eps
+ rm -f ./results/.mag.gnu
+ rm -f ./results/.gv;
+ cp -f mcphas.j ./results
+ cp -f mcphas.ini ./results
+ cp -f mcphas.tst ./results
+ 
+else
+# do not do a calculation - only print version / help screen
+ mcphasit $1 $2 $3 $4 $5 $6;
+fi

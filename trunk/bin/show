@@ -1,0 +1,23 @@
+#!/bin/sh
+if (($#<3)); then
+ echo 'program show - show data(+updates) on screen. '
+ echo 'use as: show x-colnr y-colnr filename';
+else
+cat << EOF > .show.gnu
+set key left top 
+set border 15 lw 1.5
+set linestyle 1 lt 1 lw 2 pt 1 ps 2.5 
+set linestyle 2 lt 2 lw 2 pt 2 ps 2.5 
+set linestyle 3 lt 3 lw 2 pt 3 ps 2.5 
+set size ratio 1 
+set xlabel "column $1"
+set ylabel "column $2" 
+plot "$3"  using $1:$2 title "$3" with linesp ls 1
+pause 2
+#set terminal postscript 
+#set output "magmes1T.ps" 
+# reread is here to make the window popup every 2 seconds 
+reread 
+EOF
+gnuplot .show.gnu;
+fi
