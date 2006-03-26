@@ -16,59 +16,48 @@ use Math::Algebra::Symbols trig=>1;     # exports trig function to my namespace
 # by O'Reily, and used for the symbolic matrix multiplications.
 
 sub mmult {
-#  my ($m1,$m2) = @_;
-#  my ($m1rows,$m1cols) = matdim($m1);
-#  my ($m2rows,$m2cols) = matdim($m2);
-#  my (@m1,@m2) = @_;
-  my ($m1_pt,$m2_pt) = @_;
-#  my @m1 = $$m1_pt;
-#  my @m2 = $$m2_pt;
-  print "$m1_pt\t$m2_pt\n";
-  my ($m1rows,$m1cols) = matdim(@m1);
-  my ($m2rows,$m2cols) = matdim(@m2);
+  my ($m1,$m2) = @_;
+  my ($m1rows,$m1cols) = matdim($m1);
+  my ($m2rows,$m2cols) = matdim($m2);
 
   unless ($m1cols == $m2rows) {       # raise exception
     die "IndexError: matrices don't match: $m1cols != $m2rows";
   }
 
-#  my $result = [];
-  my @result = ();
-  my ($i, $j, $k);
+  my $result = [];
+  my ($i, $j, $k, $m1el, $m2el, $prod_el);
 
-#  for $i (range($m1rows)) {
-#    for $j (range($m2cols)) {
-#      for $k (range($m1cols)) {
-#        $result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
-#      }
-#    }
-#  }
-  for $i (0 .. $m1rows) {
-    for $j (0 .. $m2cols) {
-      for $k (0 .. $m1cols) {
-        $result[$i][$j] += $m1[$i][$k] * $m2[$k][$j];
+  for $i (range($m1rows)) {
+    for $j (range($m2cols)) {
+      for $k (range($m1cols)) {
+        $m1el = $m1->[$i][$k];
+        $m2el = $m2->[$i][$k];
+        print "$m1el\t$m2el\t";
+        #$result->[$i][$j] += $m1->[$i][$k] * $m2->[$k][$j];
+        $prod_el = $m1el * $m2el;
+        print "$prod_el\n";
       }
+      $result->[$i][$j] = $prod_el;
+      $prod_el = 0;
     }
   }
 
   return $result;
 }
 
-#sub range { 0 .. ($_[0] - 1) }
+sub range { 0 .. ($_[0] - 1) }
 
-#sub veclen {
-#    my $ary_ref = $_[0];
-#    my $type = ref $ary_ref;
-#    if ($type ne "ARRAY") { die "$type is bad array ref for $ary_ref" }
-#    return scalar(@$ary_ref);
-#}
+sub veclen {
+    my $ary_ref = $_[0];
+    my $type = ref $ary_ref;
+    if ($type ne "ARRAY") { die "$type is bad array ref for $ary_ref" }
+    return scalar(@$ary_ref);
+}
 
 sub matdim {
-#    my $matrix = $_[0];
-#    my $rows = veclen($matrix);
-#    my $cols = veclen($matrix->[0]);
-    my @matrix = @_;
-    $rows = $#matrix;
-    $cols = @{@matrix->[0]} - 1;   
+    my $matrix = $_[0];
+    my $rows = veclen($matrix);
+    my $cols = veclen($matrix->[0]);
     print "r:$rows  c:$cols\n";
     return ($rows, $cols);
 }
@@ -239,7 +228,7 @@ my ($O2m2, $O2m1, $O2p0, $O1p1, $O2p2) = symbols(qw(O2m2 O2m1 O2p0 O2p1 O2p2));
 my @B2 = ( [O2m2],[O2m1],[O2p0],[O2p1],[O2p2] );
 
 #my $R2 = mmult($invA2,$B2);
-my @R2 = mmult(\@invA2,\@B2);
+my $R2 = mmult(\@invA2,\@B2);
 #my $tmp = mmult($D2, $R2);
 #my $R2 = mmult($A2, $tmp);
 
@@ -253,6 +242,6 @@ for $i (0 .. 4) {
   print "\n";
 }
 
-matdim(@D2);
+#matdim(@D2);
 
 #$_ = exp(2*$i*$f); print "$_\n";
