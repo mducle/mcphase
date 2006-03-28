@@ -1597,7 +1597,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
     /* externes Magnetfeld lesen  */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*1.==== */
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* :   P... v   R... v   S...*/
+    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(iteration) = 'r';
@@ -1612,7 +1612,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* :    h1   h2   h3  */
+    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
     B1(iteration) = x1 = a_tof(line, 2,13);
     B2(iteration) = x2 = a_tof(line,15,26);
     x3=0.0;
@@ -1646,7 +1646,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
  if( EFVERSION(iteration) >= 2.0 ){
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* :    h1   h2   h3  */
+    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
     B1MOL(iteration) = x1 = a_tof(line, 2,13);
     B2MOL(iteration) = x2 = a_tof(line,15,26);
     x3=0.0;
@@ -3240,7 +3240,7 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
  
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* :   P... v   R... v   S...*/
+    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(umgebung) = 'r';
@@ -3255,14 +3255,14 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* :    h1   h2   h3  */
+    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
     B1(umgebung) = x1 = a_tof(line, 2,13);
     B2(umgebung) = x2 = a_tof(line,15,26);
     if(MODUS(umgebung) !='p')  B3(umgebung) = x3 = a_tof(line,28,39);
     isinlimits(fp,name ,0, x1,x2,x3,MODUS(umgebung) );
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*8.==== */
-    line=fgets( string , buffer_size , fp );   /* :  _nnn__  */
+    line=fgets( string , buffer_size , fp );   /* : |_nnn__  */
  
     ANZ_NN(umgebung) = anz_nn = a_toi( line , 1 , 6 );
     Q_P(umgebung)    = DOUBLE_ALLOC(anz_nn);
@@ -3276,7 +3276,7 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
  
     for( i=1 ; i<= anz_nn ; ++i ){/* Ort und Ladung lesen */
  
-         line=fgets( string , buffer_size , fp ); /*   nnn   ... */
+         line=fgets( string , buffer_size , fp ); /* | nnn | ... */
  
          if(  (nummer = a_toi(line,1,5)) != i) read_error(4,fp,name)     ;
  
@@ -3770,15 +3770,15 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
  
     #define SN "%s\n"
     rsm  = "====================================================";
-    rsmt = "  External magnetic field  B (scaled with g_J)      ";
-    rsmtk= "  %8s   %8s   %8s   comment    \n";
-    rsmk = "                                                    ";
+    rsmt = "| External magnetic field  B (scaled with g_J)     |";
+    rsmtk= "| %8s | %8s | %8s | comment   |\n";
+    rsmk = "|            |            |            |           |";
     rsmtu= "----------------------------------------------------";
  
     pom  = "=======================================";
-    pomt = "  External Magnetic field B            ";
-    pomtk= "  %8s   %8s   comment  \n";
-    pomk = "                                       ";
+    pomt = "| External Magnetic field B           |";
+    pomtk= "| %8s | %8s | comment |\n";
+    pomk = "|            |            |           |";
     pomtu= "---------------------------------------";
  
     switch(modus){
@@ -3801,11 +3801,11 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
  
     fprintf(fp,"\n");
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"  The co-ordinates of the magnetic field are given in      \n");
-    fprintf(fp,"  %12s co-ordinates.                               \n",s_modus);
+    fprintf(fp,"| The co-ordinates of the magnetic field are given in     |\n");
+    fprintf(fp,"| %12s co-ordinates.                              |\n",s_modus);
     fprintf(fp,"-----------------------------------------------------------\n");
-    fprintf(fp,"    B := Magnetic field       in Tesla                     \n");
-    fprintf(fp,"                                                           \n");
+    fprintf(fp,"|   B := Magnetic field     | in Tesla                    |\n");
+    fprintf(fp,"|                           |                             |\n");
     fprintf(fp,"===========================================================\n");
     fprintf(fp,"\n");
  
@@ -3835,15 +3835,15 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
         }
  
     rsm  = "====================================================";
-    rsmt = "  Molecular field B_mol (scaled with  2[g_J -1])    ";
-    rsmtk= "  %8s   %8s   %8s   comment    \n";
-    rsmk = "                                                    ";
+    rsmt = "| Molecular field B_mol (scaled with  2[g_J -1])   |";
+    rsmtk= "| %8s | %8s | %8s | comment   |\n";
+    rsmk = "|            |            |            |           |";
     rsmtu= "----------------------------------------------------";
  
     pom  = "=======================================";
-    pomt = "  molecular field B_mol                  ";
-    pomtk= "  %8s   %8s   comment  \n";
-    pomk = "                                       ";
+    pomt = "| molecular field B_mol                 |";
+    pomtk= "| %8s | %8s | comment |\n";
+    pomk = "|            |            |           |";
     pomtu= "---------------------------------------";
     if( modus=='r' || modus=='s' ){ /* Tabelle in rechtw. oder sphaer. Koord.*/
  
@@ -3991,13 +3991,13 @@ t11 ="|                                                        |\n";
 t12 ="|----------------------------============================|\n";
 t13 ="| Please give a number   : 0                             |\n";
 t14 ="|----------------------------============================|\n";
-t15 ="| Default                    : no positions or          |\n";
+t15 ="| Default                    : no positions or           |\n";
 t16 ="|                            : Intensities given.        |\n";
 t17 ="|----------------------------============================|\n";
 t18 ="| Filename  (variable)       : Posint.Chi2               |\n";
 t19 ="|----------------------------============================|\n";
-t20 ="|            |1 Header      : I5I5F12F12F12Text         |\n";
-t21 ="|I5:         |n Data lines  ...                         |\n";
+t20 ="|            |1 Header      : I5I5F12F12F12Text          |\n";
+t21 ="|I5:         |n Data lines  ...                          |\n";
 t22 ="|Record      |-------------------------------------------|\n";
 t23 ="|            |                                           |\n";
 t24 ="|            |If the data record numbers are positive    |\n";
@@ -4168,7 +4168,7 @@ t30 ="|            |then the x and y-values		       |\n";
 t31 ="|            |are next to eachother.                     |\n";
 t32 ="|            |                                           |\n";
 t33 ="|            |                 =====      =====          |\n";
-t34 ="|            |per dataline :   |  2| times | 12|          |\n";
+t34 ="|            |per dataline :   |  2| times | 12|         |\n";
 t35 ="|            |                 =====      =====          |\n";
 t36 ="|            |                                           |\n";
 t37 ="|--------------------------------------------------------|\n";
@@ -4457,7 +4457,7 @@ READ *read_einheit(name,art)
     /* externes Magnetfeld lesen  */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*1.==== */
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* :   P... v   R... v   S...*/
+    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(read) = 'r';
@@ -4472,7 +4472,7 @@ READ *read_einheit(name,art)
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* :    h1   h2   h3  */
+    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
     B1(read) = x1 = a_tof(line, 2,13);
     B2(read) = x2 = a_tof(line,15,26);
     x3=0.0;

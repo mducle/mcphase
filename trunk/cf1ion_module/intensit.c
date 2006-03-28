@@ -2496,7 +2496,7 @@ CHAR i_toc( i )     /*  3 -> '3'   : integer to character */
                               aJtb_2()
 -----------------------------------------------------------------------------*/
      /*                  ---                      2             */
-     /* Matrixelememte : >   |<E ;tau  J  E ;mue>|              */
+     /* Matrixelememte : >   |<E ;tau| J |E ;mue>|              */
      /*                  ---    i       T  k                    */
      /*                tau,mue                                  */
 MATRIX *aJtb_2( ewproblem,macheps)
@@ -2553,7 +2553,7 @@ DOUBLE zustandssumme( einheitnr_in , ew , temperatur )
                               sum_mat_Jt2()
 -----------------------------------------------------------------------------*/
 /*  ---                     2*/
-/*  >   |<E ,tau J  E ,mue>| */
+/*  >   |<E ,tau|J |E ,mue>| */
 /*  ---    i      T  k       */
  
 DOUBLE sum_mat_Jt2(ev,entartung,zeile,gi_ze,spalte,gi_sp,macheps)
@@ -2644,9 +2644,9 @@ DOUBLE suszept(mat_Ji2,ewproblem,einheitnr_in,t,gj)
                               mat_Jt2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
+DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
     VEKTOR *a,*b;             /*                     T       */
-    DOUBLE macheps;           /*  a,b  =  a>, b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jx();
@@ -2697,7 +2697,7 @@ DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
    if( !is_equal(IT(aJtb),0.0,macheps) ){
        printf("Unexpected error in mat_Jt2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a J  b>|  ) = %f != 0 \n",IT(aJtb) );
+       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJtb) );
        printf("         T                  \n\n");
        exit(0);
    }
@@ -2711,9 +2711,9 @@ DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
                               mat_Jx2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
+DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
     VEKTOR *a,*b;             /*                     x       */
-    DOUBLE macheps;           /*  a,b  =  a>, b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jx();
@@ -2732,7 +2732,7 @@ DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
    if( !is_equal(IT(aJxb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jx2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a J  b>|  ) = %f != 0 \n",IT(aJxb_norm2) );
+       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJxb_norm2) );
        printf("         x                  \n\n");
        exit(0);
    }
@@ -2748,9 +2748,9 @@ DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
                               mat_Jy2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
+DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
     VEKTOR *a,*b;             /*                     y       */
-    DOUBLE macheps;           /*  a,b  =  a>, b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jy();
@@ -2768,7 +2768,7 @@ DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
    if( !is_equal(IT(aJyb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jy2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a J  b>|  ) = %f != 0 \n",IT(aJyb_norm2) );
+       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJyb_norm2) );
        printf("         y                  \n\n");
        exit(0);
    }
@@ -2784,9 +2784,9 @@ DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
                               mat_Jz2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
+DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
     VEKTOR *a,*b;             /*                     z       */
-    DOUBLE macheps;           /*  a,b  =  a>, b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jz();
@@ -2804,7 +2804,7 @@ DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
    if( !is_equal(IT(aJzb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jz2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a J  b>|  ) = %f != 0 \n",IT(aJzb_norm2) );
+       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJzb_norm2) );
        printf("         z                  \n\n");
        exit(0);
    }
@@ -2819,9 +2819,9 @@ DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a J  b>|   */
 /*----------------------------------------------------------------------------
                               mat_Jx()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <a J  b>  */
+KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <a|J |b>  */
     VEKTOR *a,*b;     /*                    x     */
-                      /*  a,b  =  a>, b> Spaltenvektoren */
+                      /*  a,b  = |a>,|b> Spaltenvektoren */
 {
    KOMPLEX *mat_Jp();
    KOMPLEX *mat_Jm();
@@ -2849,9 +2849,9 @@ KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <a J  b>  */
 /*----------------------------------------------------------------------------
                               mat_Jy()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <a J  b>  */
+KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <a|J |b>  */
     VEKTOR *a,*b;     /*                    y     */
-                      /*  a,b  =  a>, b> Spaltenvektoren */
+                      /*  a,b  = |a>,|b> Spaltenvektoren */
 {
    KOMPLEX *mat_Jp();
    KOMPLEX *mat_Jm();
@@ -2879,9 +2879,9 @@ KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <a J  b>  */
 /*----------------------------------------------------------------------------
                               mat_Jp()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a J  b>  */
+KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a|J |b>  */
     VEKTOR *a,*b;     /*                    +     */
-                      /*  a,b  =  a>, b> Spaltenvektoren */
+                      /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2893,7 +2893,7 @@ KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a J  b>  */
     dimj = VRDIM(b);
  
     Jpb = vr_alloc( dimj );
-    for( n=dimj ; n>=2 ; --n  ){      /*   J+ b> */
+    for( n=dimj ; n>=2 ; --n  ){      /*   J+|b> */
        RV(Jpb,n) = RV(b,n-1)*JP(nj-1);
        IV(Jpb,n) = IV(b,n-1)*JP(nj-1);
     }
@@ -2907,9 +2907,9 @@ KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a J  b>  */
 /*----------------------------------------------------------------------------
                               mat_Jm()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a J  b>  */
+KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a|J |b>  */
     VEKTOR *a,*b;     /*                    -     */
-                      /*  a,b  =  a>, b> Spaltenvektoren */
+                      /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2921,7 +2921,7 @@ KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a J  b>  */
     dimj = VRDIM(b);
  
     Jmb = vr_alloc( dimj );
-    for( n=1 ; n<dimj ; ++n  ){      /*   J- b> */
+    for( n=1 ; n<dimj ; ++n  ){      /*   J-|b> */
        RV(Jmb,n) = RV(b,n+1)*JM(nj+1);
        IV(Jmb,n) = IV(b,n+1)*JM(nj+1);
     }
@@ -2935,9 +2935,9 @@ KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a J  b>  */
 /*----------------------------------------------------------------------------
                               mat_Jz()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <a J  b>  */
+KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <a|J |b>  */
     VEKTOR *a,*b;     /*                    z     */
-                      /*  a,b  =  a>, b> Spaltenvektoren */
+                      /*  a,b  = |a>,|b> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2950,7 +2950,7 @@ KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <a J  b>  */
  
     Jzb = vr_alloc( dimj );
  
-    for( n=1 ; n<=dimj ; ++n  ){      /*   Jz b> */
+    for( n=1 ; n<=dimj ; ++n  ){      /*   Jz|b> */
        RV(Jzb,n) = RV(b,n)*nj;
        IV(Jzb,n) = IV(b,n)*nj;
     }

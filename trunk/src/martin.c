@@ -219,7 +219,7 @@ float integer (float s){  double result;modf(s,&result);  return result;};
 float rnd(float z){return  z*rand()/RAND_MAX;};
 
 #ifndef __linux__
-// /* not needed any more in mingw3.1
+/* not needed any more in mingw3.1
 // return rounded value
 //double rint(double value)
 //{if (fabs(floor(value)-value)<fabs(ceil(value)-value))
@@ -235,10 +235,17 @@ double copysign(double a,double b)
  //return a*a/fabs(a)*b/fabs(b);
  return _copysign(a,b);
 }
-// */
+// */ 
 //sleep function
 void sleep(int a)
-{_sleep(a*1000);}
+{
+#ifdef CYGWIN
+#include<unistd.h>
+  usleep(a*1000);
+#else
+  _sleep(a*1000);
+#endif
+}
 
 #endif
 

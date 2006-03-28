@@ -3727,36 +3727,36 @@ info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
     fp = fopen(name,"w");
  
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"  Table of implemented Symmetries                          \n");
+    fprintf(fp,"| Table of implemented Symmetries                         |\n");
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"  +-Symmetrynr.   Point groups of the crystal field        \n");
+    fprintf(fp,"| +-Symmetrynr. | Point groups of the crystal field       |\n");
     fprintf(fp,"- V -------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    C                                 \n");
-    fprintf(fp,"  0   triclinic        i    1                                \n");
+    fprintf(fp,"|   |            |  C    C                                |\n");
+    fprintf(fp,"| 0 | triclinic  |   i    1                               |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    C    C                            \n");
-    fprintf(fp,"  1   monoclinic       2    s    2h                          \n");
+    fprintf(fp,"|   |            |  C    C    C                           |\n");
+    fprintf(fp,"| 1 | monoclinic |   2    s    2h                         |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    D    D                            \n");
-    fprintf(fp,"  2   rhombich      2v   2    2h                          \n");
+    fprintf(fp,"|   |            |  C    D    D                           |\n");
+    fprintf(fp,"| 2 | rhombich   |   2v   2    2h                         |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    S    C                            \n");
-    fprintf(fp,"  3                  4    4    4h                          \n");
-    fprintf(fp," ---  tetragonal  -----------------------------------------\n");
-    fprintf(fp,"                    D    C    D    D                       \n");
-    fprintf(fp,"  4                  4    4v   2d   4h                     \n");
+    fprintf(fp,"|   |            |  C    S    C                           |\n");
+    fprintf(fp,"| 3 |            |   4    4    4h                         |\n");
+    fprintf(fp,"|---| tetragonal |-----------------------------------------\n");
+    fprintf(fp,"|   |            |  D    C    D    D                      |\n");
+    fprintf(fp,"| 4 |            |   4    4v   2d   4h                    |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    S                                 \n");
-    fprintf(fp,"  5                  3    6                                \n");
-    fprintf(fp,"----  trigonal    -----------------------------------------\n");
-    fprintf(fp,"                    D    C    D                            \n");
-    fprintf(fp,"  6                  3    3v   3d                          \n");
+    fprintf(fp,"|   |            |  C    S                                |\n");
+    fprintf(fp,"| 5 |            |   3    6                               |\n");
+    fprintf(fp,"----| trigonal   |-----------------------------------------\n");
+    fprintf(fp,"|   |            |  D    C    D                           |\n");
+    fprintf(fp,"| 6 |            |   3    3v   3d                         |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    C    C    C    D    C    D    D        \n");
-    fprintf(fp,"  7   hexagonal      6    3h   6h   6    6v   3h   6h      \n");
+    fprintf(fp,"|   |            |  C    C    C    D    C    D    D       |\n");
+    fprintf(fp,"| 7 | hexagonal  |   6    3h   6h   6    6v   3h   6h     |\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"                    T    T    T    O    O                  \n");
-    fprintf(fp,"  8   Cubic             d    h         h                 \n");
+    fprintf(fp,"|   |            |  T    T    T    O    O                 |\n");
+    fprintf(fp,"| 8 | Cubic      |        d    h         h                |\n");
     fprintf(fp,"-----------------------------------------------------------\n");
     fprintf(fp,"\n");
  
@@ -4107,11 +4107,11 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
  
  
     s01 = "======================== \n";
-    s02 = "                         \n";
-    s03 = "   k   q   epsilon       \n";
-    s04 = "                  kq     \n";
+    s02 = "|        |             | \n";
+    s03 = "|  k   q | epsilon     | \n";
+    s04 = "|        |        kq   | \n";
     s05 = "======================== \n";
-    s06 = "  %2d %2d   %12.9f      \n";
+    s06 = "| %2d %2d | %12.9f |    \n";
     s07 = "------------------------ \n";
  
  
@@ -4376,9 +4376,9 @@ INT k,q;
     t48 = "|                                                         |";
     t49 = "-----------------------------------------------------------";
     t50 = "|                                                         |";
-    t51 = "|             /  1  , if n is an element of m               |";
+    t51 = "|             /   1  , if n is an element of m            |";
     t52 = "|  D     :=   |                                           |";
-    t53 = "|   n;M       \\  0  ,if n is not an element of m          |";
+    t53 = "|   n;M       \\  0  ,if n is not an element of m         |";
     t54 = "|                                                         |";
     t55 = "-----------------------------------------------------------";
  
@@ -4445,11 +4445,11 @@ INT k,q;
     fprintf(fp,"%s\n",t55);
  
     s01 = "======================= \n";
-    s02 = "                        \n";
-    s03 = "   k  q     omega       \n";
-    s04 = "                 kq     \n";
+    s02 = "|       |             | \n";
+    s03 = "|  k  q |   omega     | \n";
+    s04 = "|       |        kq   | \n";
     s05 = "======================= \n";
-    s06 = "  %2d %2d      %3.0f         \n";
+    s06 = "| %2d %2d |    %3.0f      |  \n";
     s07 = "----------------------- \n";
  
  

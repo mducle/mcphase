@@ -23,7 +23,8 @@ int main (int argc, char **argv)
 { FILE * fin=NULL;
   int im,j,l;
   int nofstapoints=0;
-  float x,y,dumm,z,u;
+  float x,y,dumm;
+  double z,u;
   double T;
   float nn[20];nn[0]=19;
   double sta=0;
@@ -48,7 +49,7 @@ int main (int argc, char **argv)
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
 T=1.0;for(l=1;l<=inputpars.nofatoms;++l){
       for (im=1;im<=inputpars.nofcomponents;++im){h1=0;h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;
-                            mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,(double)z,(double)u)(im);
+                            mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u)(im);
 			   }
                                         }
 for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}

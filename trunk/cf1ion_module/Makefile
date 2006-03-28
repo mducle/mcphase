@@ -84,5 +84,5 @@ module.o: module.c
 	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) 
 
 clean:
-	rm -vf ./*.o ./*.info ./*.parameter ./*.output
+	rm -vf ./*.o ./*.info ./*.parameter ./*.output cfield.so
 
