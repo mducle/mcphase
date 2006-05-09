@@ -193,7 +193,8 @@ void jjjpar::addpars (int number, jjjpar & addjjj)
 
 //constructor
 jjjpar::jjjpar(FILE * file) 
-{ FILE * cf_file;   
+{ 
+  FILE * cf_file;   
   char modulefilename[MAXNOFCHARINLINE];
   char instr[MAXNOFCHARINLINE];
   cffilename= new char [MAXNOFCHARINLINE];
@@ -217,63 +218,98 @@ jjjpar::jjjpar(FILE * file)
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
   // determine the file type
   if(strncmp(instr,"#!",2)!=0)
-    {fprintf(stderr,"Error: single ion property file %s does not start with '#!'\n",cffilename);
-     exit(EXIT_FAILURE);}
+  {
+    fprintf(stderr,"Error: single ion property file %s does not start with '#!'\n",cffilename);
+    exit(EXIT_FAILURE);
+  }
 
   fprintf (stderr,"#parsing single ion property file: %s - loading module %s",cffilename,instr+2);
 
   if(strncmp(instr,"#!kramer ",9)==0||strncmp(instr,"#!kramer\n",9)==0)
-    {intern_mcalc=1;fprintf (stderr,"[internal]\n");
-      // input all  lines starting with comments
-      while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
-      if(i!=3){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n");
-              fprintf(stderr,"\n#!kramer\n#comment lines ..\n#matrix elements\nparamnames= |<+-|Ja|-+>| |<+-|Jb|-+>| |<+-|Jc|+->|\nparams=2 3 1\n\n",cffilename);exit(EXIT_FAILURE);}
-      // now we have the numbers corresponding to vector ABC() in nn[]
-      ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];}
-      fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n",ABC(1),ABC(2),ABC(3));
+  {
+    intern_mcalc=1;fprintf (stderr,"[internal]\n");
+    // input all  lines starting with comments
+    while((i=inputparline("params",cf_file, nn))==0 && feof(cf_file)==false);
+    if(i!=3)
+    {
+      fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\n",cffilename);
+      fprintf(stderr,"correct file format is:\n");
+      fprintf(stderr,"\n#!kramer\n");
+      fprintf(stderr,"#comment lines ..\n");
+      fprintf(stderr,"#matrix elements\n");
+      fprintf(stderr,"paramnames= |<+-|Ja|-+>| |<+-|Jb|-+>| |<+-|Jc|+->|\nparams=2 3 1\n\n");
+      exit(EXIT_FAILURE);
     }
+    // now we have the numbers corresponding to vector ABC() in nn[]
+    ABC=Vector(1,i);
+    for(j=1;j<=i;++j)
+    {
+      ABC(j)=nn[j];
+    }
+    fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n", \
+            ABC(1),ABC(2),ABC(3));
+  }
   else 
-  {if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
-    {intern_mcalc=2;fprintf (stderr,"#[internal]\n");
-     iops=new ionpars(cf_file);  
-     // get 1ion parameters - operator matrices
-
+  {
+    if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
+    {
+      intern_mcalc=2;fprintf (stderr,"#[internal]\n");
+      iops=new ionpars(cf_file);  
+      // get 1ion parameters - operator matrices
     }
     else
     {   
 #ifdef __linux__
-  instr[1]='=';
-  extract(instr,"#",modulefilename,(size_t)MAXNOFCHARINLINE);
-  fprintf (stderr,"#[external]\n");
+      instr[1]='=';
+      extract(instr,"#",modulefilename,(size_t)MAXNOFCHARINLINE);
+      fprintf (stderr,"#[external]\n");
   
-       // input all  lines starting with comments
-    while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
-    // now we have the numbers corresponding to vector ABC() in nn[] - these are the module parameters !
-    fprintf(stderr,"#parameters: ");
-    if(i>0){
-             ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];fprintf(stderr,"%g ",nn[j]);} 
-            }else{
-             ABC=Vector(1,1);
-	    } 
-    fprintf(stderr,"\n");
+      // input all  lines starting with comments
+      while((i=inputparline("params",cf_file, nn))==0 && feof(cf_file)==false);
+      // now we have the numbers corresponding to vector ABC() in nn[] - these are the module parameters !
+      fprintf(stderr,"#parameters: ");
+      if(i>0)
+      {
+        ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];fprintf(stderr,"%g ",nn[j]);} 
+      }
+      else
+      {
+        ABC=Vector(1,1);
+      } 
+      fprintf(stderr,"\n");
 
-  char * error;intern_mcalc=0;
-  handle=dlopen (modulefilename,RTLD_NOW | RTLD_GLOBAL);
-  if (!handle){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
-               if ((error=dlerror())!=NULL) 
-	         {fprintf (stderr,"%s\n",error);}
-	       exit (EXIT_FAILURE);
-	      }
-  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,double*,double*))dlsym(handle,"mcalc");
-  if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s\n",error);exit (EXIT_FAILURE);}
-  dm=(int(*)(int*,double*,Vector*,double*,Vector*,ComplexMatrix*,float*))dlsym(handle,"dmcalc");
-  if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);dm=NULL;}
+      char * error;intern_mcalc=0;
+      handle=dlopen (modulefilename,RTLD_NOW | RTLD_GLOBAL);
+      if (!handle)
+      {
+        fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
+        if ((error=dlerror())!=NULL) 
+        {
+          fprintf (stderr,"%s\n",error);
+        }
+        exit (EXIT_FAILURE);
+      }
+
+      m=(void(*)(Vector*,double*,Vector*,double*,Vector*,double*,double*))dlsym(handle,"mcalc");
+      if ((error=dlerror())!=NULL) 
+      {
+        fprintf (stderr,"jjjpar::jjjpar %s\n",error);
+        exit (EXIT_FAILURE);
+      }
+
+      dm=(int(*)(int*,double*,Vector*,double*,Vector*,ComplexMatrix*,float*))dlsym(handle,"dmcalc");
+      if ((error=dlerror())!=NULL) 
+      {
+        fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);
+        dm=NULL;
+      }
 #else
-  fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
-  exit(EXIT_FAILURE);
+      fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
+      exit(EXIT_FAILURE);
 #endif
     }
-   }
+  }
+
   magFF=Vector(1,14);
   Blm=Vector(1,45);Blm=0;
   magFF=0;  magFF[1]=1;
@@ -284,145 +320,214 @@ jjjpar::jjjpar(FILE * file)
   cf_file = fopen_errchk (cffilename, "rb");
 
   while(feof(cf_file)==false)
-  {fgets(instr, MAXNOFCHARINLINE, cf_file);
-   if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
-   // read formfactor if given
-    extract(instr,"FFj0A",magFF[1]);
-    extract(instr,"FFj0a",magFF[2]);
-    extract(instr,"FFj0B",magFF[3]);
-    extract(instr,"FFj0b",magFF[4]);
-    extract(instr,"FFj0C",magFF[5]);
-    extract(instr,"FFj0c",magFF[6]);
-    extract(instr,"FFj0D",magFF[7]);
-    extract(instr,"FFj2A",magFF[8]);
-    extract(instr,"FFj2a",magFF[9]);
-    extract(instr,"FFj2B",magFF[10]);
-    extract(instr,"FFj2b",magFF[11]);
-    extract(instr,"FFj2C",magFF[12]);
-    extract(instr,"FFj2c",magFF[13]);
-    extract(instr,"FFj2D",magFF[14]);
-   // read debeywallerfactor if given    
-    extract(instr,"DWF",DWF);
-   // read crystal field parameters 
-   if (intern_mcalc==2){
-   extract(instr,"B2-2",Blm(1));
-   extract(instr,"B2-1",Blm(2));
-   extract(instr,"B20",Blm(3));
-   extract(instr,"B21",Blm(4));
-   extract(instr,"B22",Blm(5));
+  {
+    fgets(instr, MAXNOFCHARINLINE, cf_file);
+    if(instr[strspn(instr," \t")]!='#') //unless the line is commented ...
+    // read formfactor if given
+    {
+      extract(instr,"FFj0A",magFF[1]);
+      extract(instr,"FFj0a",magFF[2]);
+      extract(instr,"FFj0B",magFF[3]);
+      extract(instr,"FFj0b",magFF[4]);
+      extract(instr,"FFj0C",magFF[5]);
+      extract(instr,"FFj0c",magFF[6]);
+      extract(instr,"FFj0D",magFF[7]);
+      extract(instr,"FFj2A",magFF[8]);
+      extract(instr,"FFj2a",magFF[9]);
+      extract(instr,"FFj2B",magFF[10]);
+      extract(instr,"FFj2b",magFF[11]);
+      extract(instr,"FFj2C",magFF[12]);
+      extract(instr,"FFj2c",magFF[13]);
+      extract(instr,"FFj2D",magFF[14]);
+      // read debeywallerfactor if given    
+      extract(instr,"DWF",DWF);
+      // read crystal field parameters 
+      if (intern_mcalc==2)
+      {
+        extract(instr,"B2-2",Blm(1));
+        extract(instr,"B2-1",Blm(2));
+        extract(instr,"B20",Blm(3));
+        extract(instr,"B21",Blm(4));
+        extract(instr,"B22",Blm(5));
    
-   extract(instr,"B3-3",Blm(6));
-   extract(instr,"B3-2",Blm(7));
-   extract(instr,"B3-1",Blm(8));
-   extract(instr,"B30",Blm(9));
-   extract(instr,"B31",Blm(10));
-   extract(instr,"B32",Blm(11));
-   extract(instr,"B32",Blm(12));
+        extract(instr,"B3-3",Blm(6));
+        extract(instr,"B3-2",Blm(7));
+        extract(instr,"B3-1",Blm(8));
+        extract(instr,"B30",Blm(9));
+        extract(instr,"B31",Blm(10));
+        extract(instr,"B32",Blm(11));
+        extract(instr,"B32",Blm(12));
 
-   extract(instr,"B4-4",Blm(13));
-   extract(instr,"B4-3",Blm(14));
-   extract(instr,"B4-2",Blm(15));
-   extract(instr,"B4-1",Blm(16));
-   extract(instr,"B40",Blm(17));
-   extract(instr,"B41",Blm(18));
-   extract(instr,"B42",Blm(19));
-   extract(instr,"B43",Blm(20));
-   extract(instr,"B44",Blm(21));
+        extract(instr,"B4-4",Blm(13));
+        extract(instr,"B4-3",Blm(14));
+        extract(instr,"B4-2",Blm(15));
+        extract(instr,"B4-1",Blm(16));
+        extract(instr,"B40",Blm(17));
+        extract(instr,"B41",Blm(18));
+        extract(instr,"B42",Blm(19));
+        extract(instr,"B43",Blm(20));
+        extract(instr,"B44",Blm(21));
   
-   extract(instr,"B5-5",Blm(22));
-   extract(instr,"B5-4",Blm(23));
-   extract(instr,"B5-3",Blm(24));
-   extract(instr,"B5-2",Blm(25));
-   extract(instr,"B5-1",Blm(26));
-   extract(instr,"B50",Blm(27));
-   extract(instr,"B51",Blm(28));
-   extract(instr,"B52",Blm(29));
-   extract(instr,"B53",Blm(30));
-   extract(instr,"B54",Blm(31));
-   extract(instr,"B55",Blm(32));
+        extract(instr,"B5-5",Blm(22));
+        extract(instr,"B5-4",Blm(23));
+        extract(instr,"B5-3",Blm(24));
+        extract(instr,"B5-2",Blm(25));
+        extract(instr,"B5-1",Blm(26));
+        extract(instr,"B50",Blm(27));
+        extract(instr,"B51",Blm(28));
+        extract(instr,"B52",Blm(29));
+        extract(instr,"B53",Blm(30));
+        extract(instr,"B54",Blm(31));
+        extract(instr,"B55",Blm(32));
  
-   extract(instr,"B6-6",Blm(33));
-   extract(instr,"B6-5",Blm(34));
-   extract(instr,"B6-4",Blm(35));
-   extract(instr,"B6-3",Blm(36));
-   extract(instr,"B6-2",Blm(37));
-   extract(instr,"B6-1",Blm(38));
-   extract(instr,"B60",Blm(39));
-   extract(instr,"B61",Blm(40));
-   extract(instr,"B62",Blm(41));
-   extract(instr,"B63",Blm(42));
-   extract(instr,"B64",Blm(43));
-   extract(instr,"B65",Blm(44));
-   extract(instr,"B66",Blm(45));
-  }}    
- }
-if (intern_mcalc==2){
-if((*iops).Hcf==(double)0.0){
-// calculation of the cf matrix according 
-fprintf(stderr,"crystal field parameters\n");  
-for(l=1;l<=45;++l){(*iops).Hcf+=Blm(l)*(*(*iops).Olm[l]);
-                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
-		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
-		                }
-                  }
-}}
+        extract(instr,"B6-6",Blm(33));
+        extract(instr,"B6-5",Blm(34));
+        extract(instr,"B6-4",Blm(35));
+        extract(instr,"B6-3",Blm(36));
+        extract(instr,"B6-2",Blm(37));
+        extract(instr,"B6-1",Blm(38));
+        extract(instr,"B60",Blm(39));
+        extract(instr,"B61",Blm(40));
+        extract(instr,"B62",Blm(41));
+        extract(instr,"B63",Blm(42));
+        extract(instr,"B64",Blm(43));
+        extract(instr,"B65",Blm(44));
+        extract(instr,"B66",Blm(45));
+      }
+    }    
+  }
+
+  if (intern_mcalc==2)
+  {
+    if((*iops).Hcf==(double)0.0)
+    {
+      // calculation of the cf matrix according 
+      fprintf(stderr,"crystal field parameters\n");  
+      for(l=1; l<=45; ++l)
+      {
+        (*iops).Hcf += Blm(l) * (*(*iops).Olm[l]);
+        if(Blm(l) != 0)
+        {
+          if(l<24)
+          {
+            fprintf(stderr,"B%c=%g   ",l+99,Blm(l));   /* d to z */
+          }
+          else
+          {
+            fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l)); /* z+1 to z+22 */
+          }
+        }
+      }
+    }
+  }
  
-fprintf(stderr,"\nmagnetic formfactors\n");
-fprintf(stderr," FFj0A=%4.4g  FFj0a=%4.4g FFj0B=0%4.4g FFj0b=%4.4g  FFj0C=%4.4g  FFj0c=%4.4g FFj0D=%4.4g\n",magFF(1),magFF(2),magFF(3),magFF(4),magFF(5),magFF(6),magFF(7));  
-fprintf(stderr," FFj2A=%4.4g FFj2a=%4.4g FFj2B =%4.4g FFj2b=%4.4g FFj2C=%4.4g  FFj2c=%4.4g FFj2D=%4.4g\n",magFF(8), magFF(9),magFF(10),magFF(11),magFF(12),magFF(13),magFF(14));
-fprintf(stderr,"Debey-Waller Factor\n DWF=%g\n\n",DWF);
+  fprintf(stderr,"\nmagnetic formfactors\n");
+  fprintf(stderr,"FFj0A=%4.4g FFj0a=%4.4g FFj0B=%4.4g FFj0b=%4.4g FFj0C=%4.4g FFj0c=%4.4g FFj0D=%4.4g\n", \
+          magFF(1),magFF(2),magFF(3),magFF(4),magFF(5),magFF(6),magFF(7));  
+  fprintf(stderr,"FFj2A=%4.4g FFj2a=%4.4g FFj2B=%4.4g FFj2b=%4.4g FFj2C=%4.4g FFj2c=%4.4g FFj2D=%4.4g\n", \
+          magFF(8),magFF(9),magFF(10),magFF(11),magFF(12),magFF(13),magFF(14));
+  fprintf(stderr,"Debey-Waller Factor\n DWF=%g\n\n",DWF);
  
- fclose (cf_file); 
+  fclose (cf_file); 
 
   nofcomponents=3; // default value for nofcomponents - (important in case nofparameters=0)
-// read the exchange parameters from file (exactly paranz parameters!)
+
+  // read the exchange parameters from file (exactly paranz parameters!)
   for  (i=1;i<=paranz;++i)
-  {while((j=inputline(file, nn))==0&&feof(file)==0){}; // returns 0 if comment line or eof, exits with error, if input string too long
-   if(feof(file)!=0){ fprintf (stderr, "Error in jjjpar.cpp: input jjj parameters - \n");
-  fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
+  {
+    while((j=inputline(file, nn))==0 && feof(file)==0){}; 
+    // returns 0 if comment line or eof, exits with error, if input string too long
+    if(feof(file)!=0)
+    { 
+      fprintf (stderr, "Error in jjjpar.cpp: input jjj parameters - \n");
+      fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
       exit (EXIT_FAILURE);
     }
-    if(i==1){// determine nofcomponents from number of parameters read in first line of mcphas.j
-             if(diagonalexchange==1){nofcomponents=j-3;}else{nofcomponents=(int)sqrt((double)(j-3));}
-             if(intern_mcalc==1)
-	     {// check dimensions of vector if internal kramers is used
-              if(nofcomponents!=3)
-              {fprintf(stderr,"Error reading mcphas.j: number of dimensions (not equal 3) not compatible with internal single ion module kramer - check number of columns in file mcphas.j\n");
-               exit(EXIT_FAILURE);}
-             }
-             // dimension arrays
-             dn = new Vector[paranz+1](1,3);if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
-             sublattice = new int[paranz+1];if (sublattice == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
-             jij = new Matrix[paranz+1](1,nofcomponents,1,nofcomponents);if (jij == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-            }
-   //check if correct number of columns has been read	        
-    if((diagonalexchange==1&&nofcomponents!=j-3)||(diagonalexchange==0&&nofcomponents!=(int)sqrt((double)(j-3))))
-              {fprintf(stderr,"Error reading mcphas.j line %i: check number of columns\n",i);
-               exit(EXIT_FAILURE);}
+    if(i==1) // determine nofcomponents from number of parameters read in first line of mcphas.j
+             // lines are of format: dx dy dz Jaa Jbb Jcc Jab Jba Jac Jca Jbc Jcb
+    {
+      if(diagonalexchange==1)
+      {
+        nofcomponents=j-3;
+      }
+      else
+      {
+        nofcomponents = (int)sqrt((double)(j-3));
+      }
+      if(intern_mcalc==1)
+      { // check dimensions of vector if internal kramers is used
+        if(nofcomponents!=3)
+        {
+          fprintf(stderr,"Error reading mcphas.j: number of dimensions (not equal 3) not compatible \
+                  with internal single ion module kramer - check number of columns in file mcphas.j\n");
+          exit(EXIT_FAILURE);}
+        }
 
-  J=Vector(1,nofcomponents); 
+        // dimension arrays
+        dn = new Vector[paranz+1](1,3);
+        if (dn == NULL)
+        {
+          fprintf (stderr, "Out of memory\n"); 
+          exit (EXIT_FAILURE);
+        }
 
-   //(1-3) give the absolute coordinates of the neighbour and are transformed here to relative
-   // coordinates !!
-   dn[i](1) = nn[1];dn[i](2) = nn[2];dn[i](3) = nn[3];
-   jij[i]=0;
+        sublattice = new int[paranz+1];
+        if (sublattice == NULL)
+        { 
+          fprintf (stderr, "Out of memory\n"); 
+          exit (EXIT_FAILURE);
+        }
+        
+        jij = new Matrix[paranz+1](1,nofcomponents,1,nofcomponents);
+        if (jij == NULL)
+        {
+          fprintf (stderr, "Out of memory\n");
+          exit (EXIT_FAILURE);
+        }
+      }
 
-  // format of matrix 
-  // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
-  // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
-  // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
-  // etc ...
-  //read diagonal components of exchange matrix
-  for(i1=1;i1<=nofcomponents;++i1){jij[i](i1,i1)= nn[i1+3];}
-  //read off-diagonal components of exchange matrix (if required)
-  if (diagonalexchange==0){k1=3+nofcomponents;
-                           for(i1=1;i1<=nofcomponents-1;++i1)
-                              {for(j1=i1+1;j1<=nofcomponents;++j1)
-                               {++k1;jij[i](i1,j1)= nn[k1];
-			        ++k1;jij[i](j1,i1)= nn[k1];
-			       }
-			      }
-                          }
+    //check if correct number of columns has been read	        
+    if( (diagonalexchange==1 && nofcomponents!=j-3) || \
+        (diagonalexchange==0 && nofcomponents!=(int)sqrt((double)(j-3))) )
+    {
+      fprintf(stderr,"Error reading mcphas.j line %i: check number of columns\n",i);
+      exit(EXIT_FAILURE);
+    }
+
+    J=Vector(1,nofcomponents); 
+
+    //(1-3) give the absolute coordinates of the neighbour and are transformed here to relative
+    // coordinates !!
+    dn[i](1) = nn[1];
+    dn[i](2) = nn[2];
+    dn[i](3) = nn[3];
+    jij[i]=0;
+
+    // format of matrix 
+    // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
+    // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
+    // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
+    // etc ...
+    //read diagonal components of exchange matrix
+    for(i1=1; i1<=nofcomponents; ++i1)
+    {
+      jij[i](i1,i1)= nn[i1+3];
+    }
+    //read off-diagonal components of exchange matrix (if required)
+    if (diagonalexchange==0)
+    {
+      k1 = 3+nofcomponents;
+      for(i1=1; i1<=nofcomponents-1; ++i1)
+      {
+        for(j1=i1+1; j1<=nofcomponents; ++j1)
+        {
+          ++k1;
+          jij[i](i1,j1)= nn[k1];
+          ++k1;
+          jij[i](j1,i1)= nn[k1];
+        }
+      }
+    }
   }
 }
 
@@ -766,8 +871,8 @@ return 3; // kramers doublet has always exactly one transition + 2 levels (quasi
 //------------------------------------------------------------------------------------------------
 Vector & jjjpar::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
 //void cf(Vector & J,float * T,Vector & gjmbH, double * gJ,Vector & ABC, double * Z,double * U)
-{//ABC not used !!!
-    /*on input
+{ //ABC not used !!!
+  /* on input
     T		temperature[K]
     gJmbH	vector of effective field [meV]
     gJ          Lande factor
@@ -776,91 +881,107 @@ Vector & jjjpar::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
     J		single ion momentum vector <J>
     Z		single ion partition function
     U		single ion magnetic energy
-*/
+  */
 
-// check dimensions of vector
-if(gjmbH.Hi()>48)
-   {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
-    exit(EXIT_FAILURE);}
+  // check dimensions of vector
+  if(gjmbH.Hi()>48)
+  {
+    fprintf(stderr,"Error internal module cfield: wrong number of dimensions - \
+                    check number of columns in file mcphas.j\n");
+    exit(EXIT_FAILURE);
+  }
 
-//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
-//  of a complex Hermitian matrix z.The real parts of the elements must be
-//  stored in the lower triangle of z,the imaginary parts (of the elements
-//  corresponding to the lower triangle) in the positions
-//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
-//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
-//  True, otherwise  not ordered for sort = False. The real  and imaginary
-//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
-//  The storage requirement is 3*n*n + 4*n complex numbers. 
-//  All matrices and vectors have to be allocated and removed by the user.
-//  They are checked for conformance !
-// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
-// 			   int sort, int maxiter)
-static Vector J(1,gjmbH.Hi());
-   // setup hamiltonian
-   int dj,j;
-   dj=(*iops).Hcf.Rhi();
-   Matrix Ham(1,dj,1,dj);
-   ComplexMatrix z(1,dj,1,dj);
-   ComplexMatrix za(1,dj,1,dj);
-   ComplexMatrix zb(1,dj,1,dj);
-   ComplexMatrix zc(1,dj,1,dj);
-   ComplexMatrix zolm(1,dj,1,dj);    
+  //  Driver routine to compute the  eigenvalues and normalized eigenvectors 
+  //  of a complex Hermitian matrix z.The real parts of the elements must be
+  //  stored in the lower triangle of z,the imaginary parts (of the elements
+  //  corresponding to the lower triangle) in the positions
+  //  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
+  //  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
+  //  True, otherwise  not ordered for sort = False. The real  and imaginary
+  //  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
+  //  The storage requirement is 3*n*n + 4*n complex numbers. 
+  //  All matrices and vectors have to be allocated and removed by the user.
+  //  They are checked for conformance !
+  // void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
+  // 			   int sort, int maxiter)
+  static Vector J(1,gjmbH.Hi());
+  // setup hamiltonian
+  int dj,j;
+  dj = (*iops).Hcf.Rhi();
+  Matrix Ham(1,dj,1,dj);
+  ComplexMatrix z(1,dj,1,dj);
+  ComplexMatrix za(1,dj,1,dj);
+  ComplexMatrix zb(1,dj,1,dj);
+  ComplexMatrix zc(1,dj,1,dj);
+  ComplexMatrix zolm(1,dj,1,dj);    
 
-   Ham=(*iops).Hcf-gjmbH(1)*(*iops).Ja-gjmbH(2)*(*iops).Jb-gjmbH(3)*(*iops).Jc;
+  Ham = (*iops).Hcf - gjmbH(1) * (*iops).Ja-gjmbH(2) * (*iops).Jb - gjmbH(3) * (*iops).Jc;
 
-   for(j=4;j<=J.Hi();++j){Ham-=gjmbH(j)*(*(*iops).Olm[j-3]);}
+  for(j=4; j<=J.Hi(); ++j)
+  {
+    Ham -= gjmbH(j) * (*(*iops).Olm[j-3]);
+  }
 
-/*   int i1,j1; //printout matrix
+  /*   int i1,j1; //printout matrix
    for (i1=1;i1<=dj;++i1){
     for (j1=1;j1<=dj;++j1) printf ("%4.6g ",(*(*iops).Olm[j])(i1,j1));
     printf ("\n");
     }*/
-      
     
-   // diagonalize
-   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
-   int sort=0;int maxiter=1000000;
-   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
-   // calculate Z and wn (occupation probability)
-     Vector wn(1,dj);
-     double x,y;int i;
-     x=Min(En);
-     for (i=1;i<=dj;++i)
-     {if ((y=(En(i)-x)/K_B/T)<600) wn[i]=exp(-y); 
-      else wn[i]=0.0;
-    //  printf("%g\n",En(i));
-      }
-     double Zs;
-     Zs=Sum(wn);wn/=Zs;
-     lnZs=log(Zs)-x/K_B/T;
-   // calculate U
-     U=En*wn;
-   // calculate Ja,Jb,Jc
-     z=ComplexMatrix(zr,zi);
-     
-     za=(*iops).Jaa*z;
-     zb=(*iops).Jbb*z;
-     zc=(*iops).Jcc*z;
+  // diagonalize
+  Vector En(1,dj);
+  Matrix zr(1,dj,1,dj);
+  Matrix zi(1,dj,1,dj);
+  int sort = 0;
+  int maxiter = 1000000;
+  EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
 
+  // calculate Z and wn (occupation probability)
+  Vector wn(1,dj);
+  double x,y;
+  int i;
+  x=Min(En);
+  for (i=1;i<=dj;++i)
+  {
+    if ( (y=(En(i)-x)/K_B/T) < 600) 
+      wn[i]=exp(-y); 
+    else 
+      wn[i]=0.0;
+//  printf("%g\n",En(i));
+  }
+
+  double Zs;
+  Zs = Sum(wn);
+  wn /= Zs;
+  lnZs = log(Zs)-x/K_B/T;
+
+  // calculate U
+  U=En*wn;
+
+  // calculate Ja,Jb,Jc
+  z=ComplexMatrix(zr,zi);
+  za=(*iops).Jaa*z;
+  zb=(*iops).Jbb*z;
+  zc=(*iops).Jcc*z;
     
-     J=0;
-//    ComplexVector ddd;
-    for (i=1;i<=dj;++i)
-    {
-     J[1]+=wn(i)*real(z.Column(i)*za.Column(i));
-     J[2]+=wn(i)*real(z.Column(i)*zb.Column(i));
-     J[3]+=wn(i)*real(z.Column(i)*zc.Column(i));
-    }
+  J=0;
+
+  // ComplexVector ddd;
+  for (i=1;i<=dj;++i)
+  {
+    J[1] += wn(i) * real(z.Column(i) * za.Column(i));
+    J[2] += wn(i) * real(z.Column(i) * zb.Column(i));
+    J[3] += wn(i) * real(z.Column(i) * zc.Column(i));
+  }
      
-   for(j=4;j<=J.Hi();++j)
-   {
+  for(j=4;j<=J.Hi();++j)
+  {
     zolm=(*(*iops).OOlm[j-3])*z;
-    for (i=1;i<=dj;++i) J[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));
-   };
+    for (i=1; i<=dj; ++i) 
+      J[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));
+  };
 
-
-return J;
+  return J;
 }
 /**************************************************************************/
 

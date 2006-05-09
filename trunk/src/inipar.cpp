@@ -13,89 +13,110 @@
  // class of initial parameters for program mcphas
 
 void inipar::errexit() // type info and error exit 
-{     printf (" \n			%s \n",MCPHASVERSION);
-printf (" 		use as: mcphas \n or as: mcphas [file]\n");
-printf ("                [file] ... input file  with sets of x y T H Ha Hb Hc points \n");
-printf (" 	       (format as output file mcphas.xyt)\n\n");
-printf (" 	       Options: -h     print this help screen\n");
-printf (" 	                -v     verbose mode: \n");
-printf (" 			          * more information is printed to stdout, \n");
-printf (" 			          * the qvectors file mcphas.qom will contain \n");
-printf (" 				    the explicit spinconfigurations\n");
-printf (" 			          * ./results/.sps.eps will be updated not only \n");
-printf (" 				    when a H-T point has been finished but always \n");
-printf (" 				    when a structure with smaller free energy \n");
-printf (" 				    has been stabilized\n\n");
-printf (" 	       Note: files which must be in current directory -\n");
-printf (" 	       ./mcphas.ini, ./mcphas.j, directory ./results\n\n");
-      exit (EXIT_FAILURE);
+{
+  printf ("\n			%s \n",MCPHASVERSION);
+  printf ("		use as: mcphas \n or as: mcphas [file]\n");
+  printf ("		  [file] ... input file  with sets of x y T H Ha Hb Hc points \n");
+  printf ("		(format as output file mcphas.xyt)\n\n");
+  printf ("		Options: -h     print this help screen\n");
+  printf ("			 -v     verbose mode: \n");
+  printf (" 			          * more information is printed to stdout, \n");
+  printf (" 			          * the qvectors file mcphas.qom will contain \n");
+  printf (" 				    the explicit spinconfigurations\n");
+  printf (" 			          * ./results/.sps.eps will be updated not only \n");
+  printf (" 				    when a H-T point has been finished but always \n");
+  printf (" 				    when a structure with smaller free energy \n");
+  printf (" 				    has been stabilized\n\n");
+  printf (" 	       Note: files which must be in current directory -\n");
+  printf (" 	       ./mcphas.ini, ./mcphas.j, directory ./results\n\n");
+  exit (EXIT_FAILURE);
 } 
 
 
 //load parameters from file
 int inipar::load ()
-{ FILE *fin_coq;
+{ 
+  FILE *fin_coq;
   char instr[MAXNOFCHARINLINE];
   errno = 0;
   fin_coq = fopen(savfilename, "rb");
   if (fin_coq==NULL) return 1;
-  xv=0;yv=0;xmin=1;xmax=0;ymin=1;ymax=0;xstep=0;ystep=0;
-  qmin(1)=1;qmin(2)=1;qmin(3)=1;qmax=0;deltaq=0;maxqperiod=0;maxnofspins=0;nofrndtries=0;
-  maxnofmfloops=0;maxstamf=0;bigstep=0;maxspinchange=0;
-  nofspincorrs=0;maxnofhkls=0;maxQ=0;
   
-  while (fgets(instr,MAXNOFCHARINLINE,fin_coq)!=NULL)
-  {if(instr[strspn(instr," \t")]!='#'&&instr[strspn(instr," \t")]!='[') // comment lines headed by # or [ are ignored in mcphas.ini
-   {extract(instr,"exit",exit_mcphas);extract(instr,"pause",pause_mcphas);
-    extract(instr,"displayall",displayall);extract(instr,"logfevsQ",logfevsQ); 
+  xv = 0; yv = 0;
+  xmin = 1; xmax = 0; xstep = 0;
+  ymin = 1; ymax = 0; ystep = 0;
+
+  qmin(1) = 1; qmin(2) = 1; qmin(3) = 1;
+  qmax = 0;
+  deltaq = 0;
+  maxqperiod = 0;
+  maxnofspins = 0;
+  nofrndtries = 0;
+
+  maxnofmfloops = 0;
+  maxstamf = 0;
+  bigstep = 0;
+  maxspinchange = 0;
+
+  nofspincorrs = 0;
+  maxnofhkls = 0;
+  maxQ = 0;
+  
+  while (fgets(instr,MAXNOFCHARINLINE,fin_coq) != NULL)
+  {
+// comment lines headed by # or [ are ignored in mcphas.ini
+    if(instr[strspn(instr," \t")] != '#' && instr[strspn(instr," \t")] != '[') 
+    {
+      extract(instr,"exit",exit_mcphas);extract(instr,"pause",pause_mcphas);
+      extract(instr,"displayall",displayall);extract(instr,"logfevsQ",logfevsQ); 
      
-    extract(instr,"xT",xv[0]);      extract(instr,"xHa",xv[1]);
-    extract(instr,"xHb",xv[2]);    extract(instr,"xHc",xv[3]);
-    extract(instr,"xmin",xmin);  extract(instr,"xmax",xmax);
-    extract(instr,"xstep",xstep);
+      extract(instr,"xT",xv[0]);  
+      extract(instr,"xHa",xv[1]); extract(instr,"xHb",xv[2]); extract(instr,"xHc",xv[3]);
+      extract(instr,"xmin",xmin); extract(instr,"xmax",xmax);
+      extract(instr,"xstep",xstep);
    
-    extract(instr,"yT",yv[0]);     extract(instr,"yHa",yv[1]);
-    extract(instr,"yHb",yv[2]);   extract(instr,"yHc",yv[3]);
-    extract(instr,"ymin",ymin); extract(instr,"ymax",ymax);
-    extract(instr,"ystep",ystep);   
+      extract(instr,"yT",yv[0]);
+      extract(instr,"yHa",yv[1]); extract(instr,"yHb",yv[2]); extract(instr,"yHc",yv[3]);
+      extract(instr,"ymin",ymin); extract(instr,"ymax",ymax);
+      extract(instr,"ystep",ystep);   
  
-    extract(instr,"T0",zero(0));
-    extract(instr,"Ha0",zero(1));
-    extract(instr,"Hb0",zero(2));
-    extract(instr,"Hc0",zero(3));
+      extract(instr,"T0",zero(0));
+      extract(instr,"Ha0",zero(1));
+      extract(instr,"Hb0",zero(2));
+      extract(instr,"Hc0",zero(3));
     
    
-    extract(instr,"hmin",qmin[1]); 
-    extract(instr,"kmin",qmin[2]); 
-    extract(instr,"lmin",qmin[3]); 
-    extract(instr,"hmax",qmax[1]); 
-    extract(instr,"kmax",qmax[2]); 
-    extract(instr,"lmax",qmax[3]); 
-    extract(instr,"deltah",deltaq[1]); 
-    extract(instr,"deltak",deltaq[2]); 
-    extract(instr,"deltal",deltaq[3]); 
-    extract(instr,"maxqperiod",maxqperiod);
-    extract(instr,"maxnofspins",maxnofspins);
-    extract(instr,"nofrndtries",nofrndtries);
+      extract(instr,"hmin",qmin[1]); 
+      extract(instr,"kmin",qmin[2]); 
+      extract(instr,"lmin",qmin[3]); 
+      extract(instr,"hmax",qmax[1]); 
+      extract(instr,"kmax",qmax[2]); 
+      extract(instr,"lmax",qmax[3]); 
+      extract(instr,"deltah",deltaq[1]); 
+      extract(instr,"deltak",deltaq[2]); 
+      extract(instr,"deltal",deltaq[3]); 
+      extract(instr,"maxqperiod",maxqperiod);
+      extract(instr,"maxnofspins",maxnofspins);
+      extract(instr,"nofrndtries",nofrndtries);
 
-    extract(instr,"maxnofmfloops",maxnofmfloops);
-    extract(instr,"maxstamf",maxstamf); 
-    extract(instr,"bigstep",bigstep); 
-    extract(instr,"maxspinchange",maxspinchange); 
+      extract(instr,"maxnofmfloops",maxnofmfloops);
+      extract(instr,"maxstamf",maxstamf); 
+      extract(instr,"bigstep",bigstep); 
+      extract(instr,"maxspinchange",maxspinchange); 
 
-    extract(instr,"nofspincorrs",nofspincorrs); 
-    extract(instr,"maxnofhkls",maxnofhkls); 
-    extract(instr,"maxQ",maxQ); 
+      extract(instr,"nofspincorrs",nofspincorrs); 
+      extract(instr,"maxnofhkls",maxnofhkls); 
+      extract(instr,"maxQ",maxQ); 
     }
-   }
+  }
   fclose (fin_coq);
 
-  if (Norm(xv)==0){fprintf(stderr,"ERROR reading xT xHa xHb xHc\n");return 1;}
-  if (Norm(yv)==0){fprintf(stderr,"ERROR reading yT yHa yHb yHc\n");return 1;}
-  if (xmin>xmax){fprintf(stderr,"ERROR reading xmin xmax\n");return 1;}
-  if (ymin>ymax){fprintf(stderr,"ERROR reading ymin ymax\n");return 1;}
-  if (xstep==0){fprintf(stderr,"Warning reading xstep: xstep=0\n");}
-  if (ystep==0){fprintf(stderr,"Warning reading ystep: ystep=0\n");}
+  if(Norm(xv)==0){fprintf(stderr,"ERROR reading xT xHa xHb xHc\n");return 1;}
+  if(Norm(yv)==0){fprintf(stderr,"ERROR reading yT yHa yHb yHc\n");return 1;}
+  if(xmin>xmax){fprintf(stderr,"ERROR reading xmin xmax\n");return 1;}
+  if(ymin>ymax){fprintf(stderr,"ERROR reading ymin ymax\n");return 1;}
+  if(xstep==0){fprintf(stderr,"Warning reading xstep: xstep=0\n");}
+  if(ystep==0){fprintf(stderr,"Warning reading ystep: ystep=0\n");}
 
   if(qmin(1)>qmax(1)){fprintf(stderr,"ERROR reading hmin hmax\n");return 1;}
   if(qmin(2)>qmax(2)){fprintf(stderr,"ERROR reading kmin kmax\n");return 1;}
@@ -103,8 +124,8 @@ int inipar::load ()
   if(Norm(deltaq)==0){fprintf(stderr,"Warning reading deltah k l: deltah=deltak=deltal=0\n");}
   if(maxqperiod==0){fprintf(stderr,"Warning reading maxqperiod=0\n");}
   if(nofrndtries==0){fprintf(stderr,"Warning reading nofrndtries=0\n");}
-  if (maxnofspins==0){maxnofspins=maxqperiod*maxqperiod*maxqperiod;
-                      fprintf(stderr,"warning ... reading maxnofspins=0: putting it to %i\n",maxnofspins);}
+  if(maxnofspins==0){maxnofspins=maxqperiod*maxqperiod*maxqperiod;
+                     fprintf(stderr,"warning ... reading maxnofspins=0: putting it to %i\n",maxnofspins);}
 
   if(maxnofmfloops==0){fprintf(stderr,"Error reading maxnofmfloops\n");return 1;}
   if(maxstamf==0){fprintf(stderr,"Error reading maxstamf\n");return 1;}
@@ -115,19 +136,19 @@ int inipar::load ()
   if(maxnofhkls==0){fprintf(stderr,"Warning reading maxnofhkls=0 - no magnetic neutron reflections  will be calculated\n");}
   if(maxQ==0){fprintf(stderr,"Warning reading maxQ=0:magnetic neutron reflections  will be calculated only in primitive cell of reciprocal lattice\n");}
 
-return 0;
+  return 0;
 }
 
 
 
 void inipar::print () // printout initial parameters to file 
 {
- FILE * fout;
+  FILE * fout;
 // we should print to a file all used configurations
- fout = fopen_errchk (savfilename,"w");
-    fprintf(fout,"[MCPHASE RUNTIME CONTROL]\n");
-    fprintf(fout,"#<!--mcphase.mcphas.ini-->\n");
-    fprintf(fout,"# to stop program set exit to 1 \
+  fout = fopen_errchk (savfilename,"w");
+  fprintf(fout,"[MCPHASE RUNTIME CONTROL]\n");
+  fprintf(fout,"#<!--mcphase.mcphas.ini-->\n");
+  fprintf(fout,"# to stop program set exit to 1 \
                   \nexit=%i \
                   \n# to hold program set pause to 1 \
                   \npause=%i \
@@ -193,7 +214,8 @@ void inipar::print () // printout initial parameters to file
 
 //constructor ... load initial parameters from file
 inipar::inipar (char * file)
-{ savfilename= new char [strlen(file)+1];
+{ 
+  savfilename= new char [strlen(file)+1];
   strcpy(savfilename,file);
   xv=Vector(0,3);yv=Vector(0,3);zero=Vector(0,3);
   qmin=Vector(1,3);qmax=Vector(1,3);deltaq=Vector(1,3);

@@ -6,24 +6,6 @@ cfdir = cf1ion_module
 mcpdir = src
 vecdir = src/vector
 
-VECOBJ= matpack.o sortdbl.o sort2dbl.o sort3dbl.o\
-        ivector.o imatrix.o \
-        dvector.o dmatrix.o dmatmul.o \
-        cvector.o cmatrix.o cmatmul.o \
-        dludcomp.o dsvdcomp.o dortho.o \
-        cludcomp.o \
-        tred.o imtql.o imtql2.o rseigen.o cheigen.o chgeigen.o  \
-        matlapl.o moment.o matexph.o matsqth.o \
-        magicsquare.o
-
-#export INCLDIRS =      -I. \
-		-I../include \
-		-I/usr/include/readline \
-		-I/local/lib  \
-		-I/usr/X11R6/include
-
-#export INCLUDE = ./include
-
 all: vector cfield mcphase
 
 vector: 
