@@ -614,206 +614,340 @@ return (physprops.j=testspins.addspincf(sps));  //ok=1
 /*****************************************************************************/
 // here the free energy is calculated for a given (initial) spinconfiguration
 // using the meanfield algorithm 
-double fecalc(Vector  Hex,double T,par & inputpars,
-             spincf & sps,mfcf & mf,double & u,testspincf & testspins, qvectors & testqs)
-{/*on input:
-    T		Temperature[K]
-    Hex		Vector of external magnetic field [T]
-    inputpars	exchange and other parameters
-    sps		initial spinconfiguration
-    testspins	all other testspinconfigurations
-  on return
-    returns free energy[meV]
-    sps		selfconsistently stabilized spinconfiguration (may be different
-		from initial spinconfiguration)
-    u		mangetic energy[meV]
+double fecalc(Vector Hex, double T, par &inputpars,
+              spincf &sps, mfcf &mf, double &u, testspincf &testspins, qvectors &testqs)
+{ /* on input:
+      T		Temperature[K]
+      Hex	Vector of external magnetic field [T]
+      inputpars	exchange and other parameters
+      sps	initial spinconfiguration
+      testspins	all other testspinconfigurations
+     on return
+      returns	free energy[meV]
+      sps	selfconsistently stabilized spinconfiguration (may be different
+		  from initial spinconfiguration)
+      u		mangetic energy[meV]
         
- */
- double fe; // free energy 
- Vector diff(1,inputpars.nofcomponents*inputpars.nofatoms),d(1,3),d_rint(1,3),xyz(1,3),xyz_rint(1,3);// some vector
- Vector meanfield(1,inputpars.nofcomponents),moment(1,inputpars.nofcomponents),d1(1,inputpars.nofcomponents);
- char text[60]; // some text variable
- int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
- div_t result; // some modulo variable
- float    sta=1000000; // initial value of standard deviation
- float staold=2000000; int slowct;
- float stepratio=ini.bigstep;
- float spinchange=0; // initial value of spinchange
- sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
- Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
- Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
- int diagonalexchange=1;
- FILE * fin_coq;
+  */
+  double fe; // free energy 
+  Vector diff(1,inputpars.nofcomponents*inputpars.nofatoms);  //
+  Vector d(1,3),d_rint(1,3);                                  // some vectors
+  Vector xyz(1,3),xyz_rint(1,3);                              //
+  Vector meanfield(1,inputpars.nofcomponents);
+  Vector moment(1,inputpars.nofcomponents);
+  Vector d1(1,inputpars.nofcomponents);
+  char text[60]; // some text variable
+  int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
+  div_t result; // some modulo variable
+  float    sta=1000000; // initial value of standard deviation
+  float staold=2000000; 
+  int slowct;
+  float stepratio=ini.bigstep;
+  float spinchange=0; // initial value of spinchange
+  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
+  Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
+  Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
+  int diagonalexchange=1;
+  FILE * fin_coq;
  
- spincf  spsold(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old sps
- mfcf  mfold(mf.na(),mf.nb(),mf.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old mf
- spsold=sps;
+// spinconf variable to store old sps
+  spincf spsold(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents); 
+// spinconf variable to store old mf
+  mfcf mfold(mf.na(),mf.nb(),mf.nc(),inputpars.nofatoms,inputpars.nofcomponents);
+  spsold=sps;
  
 // coupling coefficients jj[](a-c) berechnen
 // for (r=0;r<=sdim;++r)
 
- Matrix * jj; //if (inputpars.diagonalexchange()==0){i=9;}else{i=3;}
-  jj= new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); // coupling coeff.variable
-   if (jj == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+  Matrix * jj; //if (inputpars.diagonalexchange()==0){i=9;}else{i=3;}
+// coupling coeff.variable
+  jj=new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); 
+  if (jj == NULL)
+  {
+    fprintf (stderr, "Out of memory\n");
+    exit (EXIT_FAILURE);
+  }
 
- for (r=0;r<=0;++r) // only distance is important ...
+  for (r=0; r<=0; ++r) // only distance is important ...
   {// initialize mfold
-   for(s=0;s<=mfold.in(mfold.na(),mfold.nb(),mfold.nc());++s){mfold.mi(s)=0;} 
-   for(s=0;s<=sdim;++s){jj[r*(sdim+1)+s]=0;} //clear jj(j,...)
+    for(s=0; s<=mfold.in(mfold.na(),mfold.nb(),mfold.nc()); ++s)
+      mfold.mi(s) = 0;
+
+    for(s=0; s<=sdim; ++s)
+      jj[r*(sdim+1)+s] = 0; //clear jj(j,...)
    
-   for(m=1;m<=inputpars.nofatoms;++m)
-   {if ((*inputpars.jjj[m]).diagonalexchange==0){diagonalexchange=0;} // if any ion has anisotropic exchange - calculate anisotropic
-    for(l=1;l<=(*inputpars.jjj[m]).paranz;++l)
-    {//sum up l.th neighbour interaction
-    // 1. transform dn(l) to primitive lattice
-     xyz=(*inputpars.jjj[m]).dn[l]-(*inputpars.jjj[m]).xyz; 
-     d=inputpars.rez*(const Vector&)xyz;
+    for(m=1; m<=inputpars.nofatoms; ++m)
+    {
+      if ((*inputpars.jjj[m]).diagonalexchange==0)
+        diagonalexchange=0; // if any ion has anisotropic exchange - calculate anisotropic
+
+      for(l=1; l<=(*inputpars.jjj[m]).paranz; ++l)
+      { //sum up l.th neighbour interaction
+        // 1. transform dn(l) to primitive lattice
+        xyz = (*inputpars.jjj[m]).dn[l]-(*inputpars.jjj[m]).xyz; 
+        d = inputpars.rez*(const Vector&)xyz;
      
-     for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); //round relative position to integer numbers (to do 
-                                             // something sensible if not integer, i.e. if sublattice
-					     // of neighbour has not been identified by par.cpp)
-	i=(int)(sps.ijk(r)[1]+d_rint(1));
-	j=(int)(sps.ijk(r)[2]+d_rint(2));
-	k=(int)(sps.ijk(r)[3]+d_rint(3));
-        while (i<=0) i+=sps.na();result=div(i,sps.na());i=result.rem; // only distance is important ...
-        while (j<=0) j+=sps.nb();result=div(j,sps.nb());j=result.rem;
-        while (k<=0) k+=sps.nc();result=div(k,sps.nc());k=result.rem;
-	s=sps.in(i,j,k); //ijk range here from 0 to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
-	// sum up parameter
-	n=(*inputpars.jjj[m]).sublattice[l];
+        for (i=1; i<=3; ++i)
+          d_rint(i)=rint(d(i)); // round relative position to integer numbers (to do 
+                                // something sensible if not integer, i.e. if sublattice
+				// of neighbour has not been identified by par.cpp)
+        i = (int)(sps.ijk(r)[1]+d_rint(1));
+        j = (int)(sps.ijk(r)[2]+d_rint(2));
+        k = (int)(sps.ijk(r)[3]+d_rint(3));
+        while (i<=0) 
+          i += sps.na();
+        result = div(i,sps.na());
+        i = result.rem; // only distance is important ...
+
+        while (j<=0) 
+          j += sps.nb();
+        result = div(j,sps.nb());
+        j = result.rem;
+
+        while (k<=0) 
+          k += sps.nc();
+        result = div(k,sps.nc());
+        k = result.rem;
+
+        s = sps.in(i,j,k); //ijk range here from 0 to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
+
+        // sum up parameter
+        n = (*inputpars.jjj[m]).sublattice[l];
 //     myPrintMatrix(stdout,(*inputpars.jjj[m]).jij[l]);
 
-	for(i=1;i<=inputpars.nofcomponents;++i){for(j=1;j<=inputpars.nofcomponents;++j){
-	  jj[r*(sdim+1)+s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j)+=(*inputpars.jjj[m]).jij[l](i,j); 
-        }}
-
-
+        for(i=1; i<=inputpars.nofcomponents; ++i)
+        {
+          for(j=1;j<=inputpars.nofcomponents;++j)
+          {
+            jj[r*(sdim+1)+s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j) \
+               +=(*inputpars.jjj[m]).jij[l](i,j); 
+          }
+        }
 //	  jj[r*(sdim+1)+s](3*(m-1)+1,3*(n-1)+3,3*(m-1)+1,3*(n-1)+3)+=(*inputpars.jjj[m]).jij[l]; 
 	//remark: function par:jij(l) returns exchange constants (*inputpars.jjj[1]).jij[l](1-9)	   	
-    } 
-   }
+      } 
+    }
   }
    
-   
-if (ini.displayall==1)   // display spincf if button is pressed
- {
-     fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-     sprintf(text,"fecalc:%i spins, iteration 0",sps.n());
-     sps.eps(fin_coq,text);
-     fclose (fin_coq);
-     sleep(2);
-
-// sps.display(text);
- }
-
+  if (ini.displayall == 1)   // display spincf if button is pressed
+  {
+    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+    sprintf(text,"fecalc:%i spins, iteration 0",sps.n());
+    sps.eps(fin_coq,text);
+    fclose (fin_coq);
+    sleep(2);
+  //sps.display(text);
+  }
 
 // loop for selfconsistency
-for (r=1;sta>ini.maxstamf;++r)
-{if (r>ini.maxnofmfloops)
-    {delete []jj;delete []lnzi;delete []ui;
-     if (verbose==1) fprintf(stderr,"feDIV!MAXlooP");
-     return 20000;}
-if (spinchange>ini.maxspinchange)
-    {delete []jj;delete []lnzi;delete []ui;
-     if (verbose==1) fprintf(stderr,"feDIV!MAXspinchangE");
-     return 20001;}
+  for (r=1; sta>ini.maxstamf; ++r)
+  {
+    if (r>ini.maxnofmfloops)
+    {
+      delete []jj;
+      delete []lnzi;
+      delete []ui;
+      if (verbose==1) 
+        fprintf(stderr,"feDIV!MAXlooP");
+      return 20000;
+    }
 
- //1. calculate mf from sps (and calculate sta)
- sta=0;
- for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
- {mf.mf(i,j,k)=0;
-  for (l=1;l<=inputpars.nofatoms;++l){
-   for (i1=1;i1<=3&&i1<=inputpars.nofcomponents;++i1){
-             mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=Hex(i1)*inputpars.gJ(l)*MU_B;
-				                     }
-				     }
-  for (i1=1;i1<=sps.na();++i1){if (i<i1){di=i-i1+sps.na();}else{di=i-i1;} 
-                               for (j1=1;j1<=sps.nb();++j1){if (j<j1){dj=j-j1+sps.nb();}else{dj=j-j1;}
-			                                    for (k1=1;k1<=sps.nc();++k1){if (k<k1){dk=k-k1+sps.nc();}else{dk=k-k1;}
-    l=sps.in(di,dj,dk);//di dj dk range from 0 to to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
+    if (spinchange>ini.maxspinchange)
+    {
+      delete []jj;
+      delete []lnzi;
+      delete []ui;
+      if (verbose==1) 
+        fprintf(stderr,"feDIV!MAXspinchangE");
+      return 20001;
+    }
 
-     
-     if (diagonalexchange==0||inputpars.nofatoms>1)
-     {mf.mf(i,j,k)+=jj[l]*(const Vector&)sps.m(i1,j1,k1);
-     }else
-     {//do the diagonal elements separately to accellerate the sum
-      for(m1=1;m1<=inputpars.nofatoms*inputpars.nofcomponents;++m1)
-         {mf.mf(i,j,k)(m1)+=sps.m(i1,j1,k1)(m1)*jj[l](m1,m1);}
-     }
-    }}}
-  diff=mf.mf(i,j,k)-mfold.mf(i,j,k);sta+=diff*diff;
-  diff*=stepratio;mf.mf(i,j,k)=mfold.mf(i,j,k)+diff;//step gently ... i.e. scale change of MF with stepratio
-  }}}
-  mfold=mf;      
-  sta=sqrt(sta/sps.n()/inputpars.nofatoms);
-  if (staold<sta&&stepratio==ini.bigstep){stepratio=ini.bigstep/10;slowct=10;}//if sta increases then set stepratio to bigstep
-  if (staold>sta&&stepratio<ini.bigstep){--slowct;if (slowct<=0)stepratio=ini.bigstep;} // at least for 10 cycles
-  staold=sta;
+// 1. calculate mf from sps (and calculate sta)
+    sta=0;
+    for (i=1; i<=sps.na(); ++i)
+    {
+      for(j=1; j<=sps.nb(); ++j)
+      {
+        for(k=1; k<=sps.nc(); ++k)
+        {
+          mf.mf(i,j,k) = 0;
+          for (l=1; l<=inputpars.nofatoms; ++l)
+          {
+            for (i1=1; i1<=3 && i1<=inputpars.nofcomponents; ++i1)
+            {
+              mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1] = Hex(i1)*inputpars.gJ(l)*MU_B;
+            }
+          }
+          for (i1=1; i1<=sps.na(); ++i1)
+          {
+            if (i<i1)
+            {
+              di = i - i1 + sps.na();
+            }
+            else
+            {
+              di = i - i1;
+            } 
+            for (j1=1; j1<=sps.nb(); ++j1)
+            {
+              if (j<j1)
+              {
+                dj = j - j1 + sps.nb();
+              }
+              else
+              {
+                dj = j - j1;
+              }
+              for (k1=1; k1<=sps.nc(); ++k1)
+              {
+                if (k<k1)
+                {
+                  dk = k - k1 + sps.nc();
+                }
+                else
+                {
+                  dk = k - k1;
+                }
+
+                l = sps.in(di,dj,dk); //di dj dk range from 0 to to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
+    
+                if (diagonalexchange==0 || inputpars.nofatoms>1)
+                {
+                  mf.mf(i,j,k) += jj[l]*(const Vector&)sps.m(i1,j1,k1);
+                }
+                else
+                { //do the diagonal elements separately to accellerate the sum
+                  for(m1=1; m1<=inputpars.nofatoms*inputpars.nofcomponents; ++m1)
+                  {
+                    mf.mf(i,j,k)(m1) += sps.m(i1,j1,k1)(m1) * jj[l](m1,m1);
+                  }
+                }
+              }
+            }
+          }
+
+          diff = mf.mf(i,j,k) - mfold.mf(i,j,k);
+          sta += diff * diff;
+          diff *= stepratio;
+          mf.mf(i,j,k) = mfold.mf(i,j,k) + diff; //step gently ... i.e. scale change of MF with stepratio
+        }
+      }
+    }
+
+    mfold = mf;      
+    sta = sqrt(sta / sps.n() / inputpars.nofatoms);
+
+    if (staold<sta && stepratio==ini.bigstep)
+    {
+      stepratio = ini.bigstep/10;
+      slowct = 10;
+    } //if sta increases then set stepratio to bigstep
+
+    if (staold>sta && stepratio<ini.bigstep)
+    {
+      --slowct;
+      if (slowct<=0)
+        stepratio=ini.bigstep;
+    } // at least for 10 cycles
+    staold=sta;
 
 //2. calculate sps from mf
- for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
- {diff=sps.m(i,j,k);s=sps.in(i,j,k);
-  for(l=1;l<=inputpars.nofatoms;++l)
-  {int lm1m3;
-   lm1m3=inputpars.nofcomponents*(l-1);
-   for(m1=1;m1<=inputpars.nofcomponents;++m1)
-   {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
-   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l]);
-   for(m1=1;m1<=inputpars.nofcomponents;++m1)
-   {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
-  }
-  diff-=sps.m(i,j,k);
-  spinchange+=sqrt(diff*diff)/sps.n();  
-  }}}
+    for (i=1; i<=sps.na(); ++i)
+    {
+      for(j=1; j<=sps.nb(); ++j)
+      {
+        for(k=1; k<=sps.nc(); ++k)
+        {
+          diff = sps.m(i,j,k);
+          s = sps.in(i,j,k);
 
-  //treat program interrupts 
-  checkini(testspins,testqs); 
-if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
- {
+          for(l=1; l<=inputpars.nofatoms; ++l)
+          {
+            int lm1m3;
+            lm1m3 = inputpars.nofcomponents*(l-1);
+            for(m1=1; m1<=inputpars.nofcomponents; ++m1)
+            {
+              d1[m1] = mf.mf(i,j,k)[lm1m3+m1];
+            }
+            moment = (*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l]);
+            for(m1=1; m1<=inputpars.nofcomponents; ++m1)
+            {
+              sps.m(i,j,k)(lm1m3+m1) = moment[m1];
+            }
+          }
+
+          diff -= sps.m(i,j,k);
+          spinchange += sqrt(diff*diff)/sps.n();  
+        }
+      }
+    }
+
+    // treat program interrupts 
+    checkini(testspins,testqs); 
+    if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
+    {
       fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-     sprintf(text,"fecalc:%i spins, iteration %i sta=%g",sps.n(),r,sta);
-     sps.eps(fin_coq,text);
-     fclose (fin_coq);
-     sleep(2);
- }
-}
-
-// calculate free energy fe and energy u
-fe=0;u=0;
-for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
-{s=sps.in(i,j,k);
- for(l=1;l<=inputpars.nofatoms;++l)
- {fe-=K_B*T*lnzi[s][l];
-  u+=ui[s][l]; 
-// correction term
-  for(m1=1;m1<=inputpars.nofcomponents;++m1)
-   {d1[m1]=sps.m(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
-  meanfield[m1]=mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+m1];}
-  // subtract external field (only necessary for magnetic field, not for quadrupolar fields,
-  // because the Cf parameters are treated separately in mcalc and not as part of the quadrupolar
-  // field)
-  for(m1=1;m1<=3;++m1){meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
-
-  // add correction term
-  fe+=0.5*(meanfield*d1);
-  u+=0.5*(meanfield*d1);
-//  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
- }
-}}}
-fe/=(double)sps.n()*sps.nofatoms; //norm to formula unit
-u/=(double)sps.n()*sps.nofatoms;
-
-if (ini.displayall==1)
- {
-      fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-       sprintf(text,"fecalc:%i spins, iteration %i, fe=%gmeV",sps.n(),i,fe);
-       sps.eps(fin_coq,text);
+      sprintf(text,"fecalc:%i spins, iteration %i sta=%g",sps.n(),r,sta);
+      sps.eps(fin_coq,text);
       fclose (fin_coq);
       sleep(2);
+    }
+  }
+
+// calculate free energy fe and energy u
+  fe=0;
+  u=0;
+
+  for (i=1; i<=sps.na(); ++i)
+  {
+    for (j=1; j<=sps.nb(); ++j)
+    {
+      for (k=1; k<=sps.nc(); ++k)
+      {
+        s = sps.in(i,j,k);
+        for(l=1; l<=inputpars.nofatoms; ++l)
+        {
+          fe -= K_B*T * lnzi[s][l];
+          u += ui[s][l]; 
+
+          // correction term
+          for(m1=1; m1<=inputpars.nofcomponents; ++m1)
+          {
+            d1[m1] = sps.m(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
+            meanfield[m1] = mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
+          }
+
+          // subtract external field (only necessary for magnetic field, not for 
+          // quadrupolar fields, because the Cf parameters are treated separately 
+          // in mcalc and not as part of the quadrupolar field)
+          for(m1=1; m1<=3; ++m1)
+          {
+            meanfield[m1] -= Hex[m1]*inputpars.gJ(l)*MU_B;
+          }
+       
+          // add correction term
+          fe += 0.5*(meanfield*d1);
+          u += 0.5*(meanfield*d1);
+
+//  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
+        }
+      }
+    }
+  }
+  fe/=(double)sps.n()*sps.nofatoms; //norm to formula unit
+  u/=(double)sps.n()*sps.nofatoms;
+
+  if (ini.displayall==1)
+  {
+    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+    sprintf(text,"fecalc:%i spins, iteration %i, fe=%gmeV",sps.n(),i,fe);
+    sps.eps(fin_coq,text);
+    fclose (fin_coq);
+    sleep(2);
 // sps.display(text);
   }
 
- delete []jj;delete []lnzi;delete []ui;
-return fe;     
+  delete []jj;delete []lnzi;delete []ui;
+  return fe;     
 }
 
