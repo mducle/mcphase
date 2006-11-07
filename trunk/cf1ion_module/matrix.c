@@ -230,9 +230,9 @@ MATRIX *mx_mult(a,b)      /* c := a * b  */
 /*----------------------------------------------------------------------------
                                    mx_ewev()
 ------------------------------------------------------------------------------*/
-MATRIX *mx_ewev(ew,ev,shift)/*       |                              | */
+MATRIX *mx_ewev(ew,ev,shift)/*       |         º                º   | */
     VEKTOR *ew;             /*  c := | ew(1)*ev(1)  ... ew(n)*ev(n) | */
-    MATRIX *ev;             /*       |                              | */
+    MATRIX *ev;             /*       |         º                º   | */
     DOUBLE shift;
 {
     MATRIX *c;          /* neue Matrix c */

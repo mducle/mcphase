@@ -1,12 +1,12 @@
  -----------------------
-| VERSION :   5.20      |
+| VERSION :   5.30      |
  -----------------------
 
  -------------------------------------------------------------- 
 |                                                              |
 |                           C F I E L D                        |
 |                                                              |
-|                    ein Kristallfeldprogramm                  |
+|                    A Crystal field program                   |
 |                                                              |
  -------------------------------------------------------------- 
                 __________________________________              
@@ -26,29 +26,29 @@
 
 ================================================================
 |                                                              |
-| Rechengenauigkeit des Computers  =  5e-20                    |
+| Computational accuracy  =  5e-020                             |
 |                                                              |
 ================================================================
 
 ================================================================
 |                                                              |
-| Die Ungenauigkeit der Rechnung liegt auf der  20. Nachkomma- |
-| stelle. Diese  Nachkommastelle  bestimmt, wann  zwei  Zahlen |
-| fuer den Computer gleich sind.   Wegen Rundungsfehler sollte |
-| sollte diese Nachkommastelle heruntergesetzt werden.         |
+| the inacuracy of the calculation  is  20. decimal places     |
+| This agrees when two numbers                                 |
+| are the same for the computer. Because of rounding erro      |
+| This decimal place should be put too:                        |
 |                                                              |
-|  Empfohlene           ==================                     |
-|  Nachkommastelle :    |       3        |                     |
+|  Recommended          ==================                     |
+|  decimal place:       |       3        |                     |
 |                       ==================                     |
 |                                                              |
 ================================================================
 
 ================================================================
-| Das Programm berechnet auch Datensaetze, die dann auf be-    |
-| stimmte Files heraus geschrieben werden. Die Datensaetze     |
-| werden defaultmaessig NICHT durchnummeriert. Sollen sie      |
-| dennoch durchnummeriert werden, bitte im unteren Kaestchen   |
-| eine von Null verschiedene Zahl eintragen.                   |
+| The program outputs record into file which are NOT           |
+| numbered in the files.                                       |
+| If you would like the program to number the record in a file |
+| The put a different number in the box other than zero        |
+|                                                              |
 |                                                              |
 |                       ==================                     |
 |                       |       0        |                     |
@@ -58,10 +58,10 @@
 
 ================================================================
 |                                                              |
-| Das Programm berechnet auch Datensaetze, die dann auf be-    |
-| stimmte Files heraus geschrieben werden.  Die Anzahl der     |
-| Datenpunkte, die  berechnet werden sollen, bitte im unteren  |
-| Kaestchen eintragen.                                         |
+| The program writes to output fiels                           |
+| Please give the                                              |
+| number of datapoints that are supposed to be calculated      |
+| in the lower box.                                            |
 |                                                              |
 |                       ==================                     |
 |                       |       20       |                     |

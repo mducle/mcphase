@@ -438,6 +438,32 @@ DOUBLE omegan6n(n)
  
 
 /*------------------------------------------------------------------------------
+ function for extracting some important parameters of ions - for INTERNAL 
+ class ionpars
+------------------------------------------------------------------------------*/
+getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, double * lande,
+       double * rh2, double * rh4,double * rh6 )
+{
+    KRISTALLFELD *kristallfeld,*init_iterationnew();
+    SETUP        *setup;
+    ITERATION    *iteration;
+    init_einheit();
+    setup =  cfield_setup(); /* setup's aus SETUP-file holen */
+    kristallfeld=init_iterationnew(iontype);/*sets up HMAG */
+    iteration= ITERATION (kristallfeld);
+
+    (*dj)=DIMJ(iteration);
+    (*alpha)=alpha_J[E4f(IONENNUMMER(iteration))];
+    (*beta)=beta_J[E4f(IONENNUMMER(iteration))];
+    (*gamma)=gamma_J[E4f(IONENNUMMER(iteration))];
+    (*lande)=GJ(iteration);
+    (*rh2)=r2[E4f(IONENNUMMER(iteration))];
+    (*rh4)=r4[E4f(IONENNUMMER(iteration))];
+    (*rh6)=r6[E4f(IONENNUMMER(iteration))];
+   
+}
+
+/*------------------------------------------------------------------------------
  mcphase function for calculating the crystal field matrix  - full diagonalization - for INTERNAL
  module cfield
 ------------------------------------------------------------------------------*/
@@ -491,7 +517,11 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
                               double ** mo63cr, double ** mo63ci,
                               double ** mo64cr, double ** mo64ci,
                               double ** mo65cr, double ** mo65ci,
-                              double ** mo66cr, double ** mo66ci,int * dj, double * alpha, double * beta, double * gamma)
+                              double ** mo66cr, double ** mo66ci,
+                              int * dj, 
+                              double * alpha, double * beta, double * gamma, 
+                              double * lande,
+                              double * rh2,double * rh4,double * rh6)
 {
     KRISTALLFELD *kristallfeld,*init_iterationnew();
     EWPROBLEM    *ewproblem,   *setuphcf();
@@ -520,7 +550,11 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
     (*alpha)=alpha_J[E4f(IONENNUMMER(iteration))];
     (*beta)=beta_J[E4f(IONENNUMMER(iteration))];
     (*gamma)=gamma_J[E4f(IONENNUMMER(iteration))];
-
+    (*lande)=GJ(iteration);
+    (*rh2)=r2[E4f(IONENNUMMER(iteration))];
+    (*rh4)=r4[E4f(IONENNUMMER(iteration))];
+    (*rh6)=r6[E4f(IONENNUMMER(iteration))];
+    
     Bx=-1.0/GJ(iteration)/myB;By=0.0;Bz=0.0;
       HMAG(iteration)=calc_Bmag(DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     for (i=1;i<=DIMJ(iteration);++i)
@@ -3271,36 +3305,36 @@ info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
     fp = fopen(name,"w");
  
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"| Table of implemented Symmetries                         |\n");
+    fprintf(fp,"º Table of implemented Symmetries                         º\n");
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"| +-Symmetrynr. | Point groups of the crystal field       |\n");
+    fprintf(fp,"º +-Symmetrynr. º Point groups of the crystal field       º\n");
     fprintf(fp,"- V -------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    C                                |\n");
-    fprintf(fp,"| 0 | triclinic  |   i    1                               |\n");
+    fprintf(fp,"º   º            º  C    C                                º\n");
+    fprintf(fp,"º 0 º triclinic    º   i    1                               º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    C    C                           |\n");
-    fprintf(fp,"| 1 | monoclinic |   2    s    2h                         |\n");
+    fprintf(fp,"º   º            º  C    C    C                           º\n");
+    fprintf(fp,"º 1 º monoclinic   º   2    s    2h                         º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    D    D                           |\n");
-    fprintf(fp,"| 2 | rhombich   |   2v   2    2h                         |\n");
+    fprintf(fp,"º   º            º  C    D    D                           º\n");
+    fprintf(fp,"º 2 º rhombich  º   2v   2    2h                         º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    S    C                           |\n");
-    fprintf(fp,"| 3 |            |   4    4    4h                         |\n");
-    fprintf(fp,"|---| tetragonal |-----------------------------------------\n");
-    fprintf(fp,"|   |            |  D    C    D    D                      |\n");
-    fprintf(fp,"| 4 |            |   4    4v   2d   4h                    |\n");
+    fprintf(fp,"º   º            º  C    S    C                           º\n");
+    fprintf(fp,"º 3 º            º   4    4    4h                         º\n");
+    fprintf(fp,"º---º tetragonal º-----------------------------------------\n");
+    fprintf(fp,"º   º            º  D    C    D    D                      º\n");
+    fprintf(fp,"º 4 º            º   4    4v   2d   4h                    º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    S                                |\n");
-    fprintf(fp,"| 5 |            |   3    6                               |\n");
-    fprintf(fp,"----| trigonal   |-----------------------------------------\n");
-    fprintf(fp,"|   |            |  D    C    D                           |\n");
-    fprintf(fp,"| 6 |            |   3    3v   3d                         |\n");
+    fprintf(fp,"º   º            º  C    S                                º\n");
+    fprintf(fp,"º 5 º            º   3    6                               º\n");
+    fprintf(fp,"----º trigonal   º-----------------------------------------\n");
+    fprintf(fp,"º   º            º  D    C    D                           º\n");
+    fprintf(fp,"º 6 º            º   3    3v   3d                         º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  C    C    C    D    C    D    D       |\n");
-    fprintf(fp,"| 7 | hexagonal  |   6    3h   6h   6    6v   3h   6h     |\n");
+    fprintf(fp,"º   º            º  C    C    C    D    C    D    D       º\n");
+    fprintf(fp,"º 7 º hexagonal  º   6    3h   6h   6    6v   3h   6h     º\n");
     fprintf(fp,"----+------------+-----------------------------------------\n");
-    fprintf(fp,"|   |            |  T    T    T    O    O                 |\n");
-    fprintf(fp,"| 8 | Cubic      |        d    h         h                |\n");
+    fprintf(fp,"º   º            º  T    T    T    O    O                 º\n");
+    fprintf(fp,"º 8 º Cubic    º        d    h         h                º\n");
     fprintf(fp,"-----------------------------------------------------------\n");
     fprintf(fp,"\n");
  
@@ -3650,15 +3684,15 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
     fprintf(fp,"%s\n",t50);
  
  
-    s01 = "======================== \n";
-    s02 = "|        |             | \n";
-    s03 = "|  k   q | epsilon     | \n";
-    s04 = "|        |        kq   | \n";
+     s01 = "======================== \n";
+    s02 = "º        º             º \n";
+    s03 = "º  k   q º epsilon     º \n";
+    s04 = "º        º        kq   º \n";
     s05 = "======================== \n";
-    s06 = "| %2d %2d | %12.9f |    \n";
+    s06 = "º %2d %2d º %12.9f º    \n";
     s07 = "------------------------ \n";
- 
- 
+
+
      fprintf(fp,"\n\n");
  
      fprintf(fp,s01);
@@ -3989,11 +4023,11 @@ INT k,q;
     fprintf(fp,"%s\n",t55);
  
     s01 = "======================= \n";
-    s02 = "|       |             | \n";
-    s03 = "|  k  q |   omega     | \n";
-    s04 = "|       |        kq   | \n";
+    s02 = "º       º             º \n";
+    s03 = "º  k  q º   omega     º \n";
+    s04 = "º       º        kq   º \n";
     s05 = "======================= \n";
-    s06 = "| %2d %2d |    %3.0f      |  \n";
+    s06 = "º %2d %2d º    %3.0f      º  \n";
     s07 = "----------------------- \n";
  
  

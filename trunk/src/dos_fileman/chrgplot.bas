@@ -312,7 +312,7 @@ SUB cfhamnew (j, gJ, b#(), hx, hy, hz, hr#(), hc#())
 ' PRINT : PRINT USING "##.#"; x;
   FOR y = -j TO j
 
-   REM addieren der einzelnen beitr ge v(m,n).<J,x:o(m,n):J,y>
+   REM addieren der einzelnen beitr„ge v(m,n).<J,x:o(m,n):J,y>
    hr#(x + j + 1, y + j + 1) = 0: hc#(x + j + 1, y + j + 1) = 0
 
    GOSUB 5000
@@ -330,17 +330,17 @@ SUB cfhamnew (j, gJ, b#(), hx, hy, hz, hr#(), hc#())
  GOTO 281
 
 5000 REM Berechnung von <Jx:o(m,n):Jy>=o#(m,n)
-5010 REM f r geringe Symmetrie sind eventuell zus tzliche
-5020 REM stevenson-Operatoren hier hinzuzuf gen und am Programmanfang
-5030 REM die entsprechenden b#(m,n) zu erg nzen
-5040 REM der gew hnliche Ausdruck f r einen Stevenson-op. wird hier
-5050 REM so ver ndert,dass direkt statt des operators jz entweder die
+5010 REM fr geringe Symmetrie sind eventuell zus„tzliche
+5020 REM stevenson-Operatoren hier hinzuzufgen und am Programmanfang
+5030 REM die entsprechenden b#(m,n) zu erg„nzen
+5040 REM der gew”hnliche Ausdruck fr einen Stevenson-op. wird hier
+5050 REM so ver„ndert,dass direkt statt des operators jz entweder die
 5060 REM zahl x od y bzw. statt j+ und j- entsprechende zahlen in der
 5070 REM formel vorkommen.
 5080 REM
  REM ********************************************************************
  REM berechnung der den potenzen von j+ und j- entsprechenden zahlen
- REM *****     Formeln f r die Stevenson - Operatoren              ******
+ REM *****     Formeln fr die Stevenson - Operatoren              ******
  REM                       Summation
  REM ********************************************************************
 IF x = y THEN
@@ -554,7 +554,7 @@ END FUNCTION
 SUB erww (hr#(), hc#(), d%, stnr%, en#(), cr#(), cc#(), tew#)
  REM ********************************************************************
  REM diese sub berechnet den erwartungswert tew# des hermiteschen
- REM operators hr#()+i.hc#() f r den Zustand n%
+ REM operators hr#()+i.hc#() fr den Zustand n%
  REM eingabe
  REM hr#(1..d%,1..d%)+i.hc#(1..d%.1..d%)...operatorkomponenten
  REM d%....................................dimension des zustandraums
@@ -908,6 +908,7 @@ SUB imtql2 (NM, n, d(), E(), z(), Ierr)
 ': : : : : : : : : : : : : : : : : FORM SHIFT: : : : : : : : : : : : : : : : : : :
       g = (d(l + 1) - p) / (2! * E(l))
       R = SQR(g * g + 1!)
+      IF g = 0 THEN g = 1E-30
       g = d(m) - p + E(l) / (g + SGN(g) * ABS(R))
       S = 1!
       C = 1!
@@ -1643,10 +1644,10 @@ FOR i = 1 TO col%: PRINT #9, USING "    ###"; i; : NEXT i
 PRINT #9,
  FOR i = 1 TO row%: PRINT #9, USING "##.#"; i;
     FOR l = 1 TO col%
-     IF ABS(ar#(l, i)) > .0001 THEN PRINT #9, USING "###.###"; ar#(l, i); :            ELSE PRINT #9, "  0    ";
+     IF ABS(ar#(l, i)) > .0001 THEN PRINT #9, USING "###.###"; ar#(l, i); :             ELSE PRINT #9, "  0    ";
     NEXT l: PRINT #9, : PRINT #9, "    ";
     FOR l = 1 TO col%
-     IF ABS(ac#(l, i)) > .0001 THEN PRINT #9, " +i"; : PRINT #9, USING "#.##"; ac#(l, i); :             ELSE PRINT #9, "       ";
+     IF ABS(ac#(l, i)) > .0001 THEN PRINT #9, " +i"; : PRINT #9, USING "#.##"; ac#(l, i); :              ELSE PRINT #9, "       ";
     NEXT l: PRINT #9,
 NEXT i
 

@@ -1,7 +1,7 @@
 #makefile for program cfield
 vpath %.h  ../include
 vpath %.hpp ../include
-vpath %.o  ../src/Vector
+vpath %.o  ../src/vector
 
 ###########################################################################
 # gcc version egcs-2.95.2 19991024 (release) on a Linux system
@@ -20,7 +20,7 @@ vpath %.o  ../src/Vector
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium -x c++ 
 #CCOPTS= -O0 -Wall -DDEBUG
 # ... define in makefile.common
-include ../src/Makefile.Common
+include ../src/Makefile.common
 
 #LIBL= /usr/lib/libfl.a
 ###########################################################################
@@ -84,5 +84,5 @@ module.o: module.c
 	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) 
 
 clean:
-	rm -vf ./*.o ./*.info ./*.parameter ./*.output cfield.so
+	rm -vf ./*.o ./*.info ./*.parameter ./*.output
 

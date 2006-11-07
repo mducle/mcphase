@@ -970,7 +970,7 @@ INT raus_kpoly( setup,ewproblem,kristallfeld,anf_feld,end_feld,
   iteration    = ITERATION(kristallfeld);
   feld         = DOUBLE_ALLOC(anz_feld);
   t01          = "%5d%5d %s %4s %s \n";
-  t05          = "%5d%5d Magnetisches Moment von %4s in der polykristallinen Mittelung\n";
+  t05          = "%5d%5d Magnetic Moment von %4s in the polycrystal average\n";
   t02          = "%10.5e %10.5e\n";
  
   for( i=1; i<= anz_feld ; ++i )
@@ -1109,8 +1109,8 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
   iteration = ITERATION(kristallfeld);
   feld      = DOUBLE_ALLOC(anz_feld);
   t01       = "%5d%5d %s %4s %s \n";
-  t04       = "#%5d%5d Betrag des Magnetischen Moments von %4s  fuer B in [%2g,%2g,%2g]\n";
-  t05       = "#%5d%5d Magnetisches Moment von %4s in [%2d,%2d,%2d] fuer B in [%2g,%2g,%2g]\n";
+  t04       = "#%5d%5d absolute value of magnetic moment of %4s  for B in [%2g,%2g,%2g]\n";
+  t05       = "#%5d%5d magnetic moment of %4s in [%2d,%2d,%2d] for B in [%2g,%2g,%2g]\n";
   t02       = "%10.5e %10.5e\n";
   b1        = B1(iteration);
   b2        = B2(iteration);
@@ -1141,7 +1141,7 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
     }
     for( i=1; i<= anz_feld ; ++i )
           VALUE(feld,i) = feld_step*(DOUBLE)(i-1)+anf_feld;
-    printf("Berechne magnetisches Moment in [100] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
+    printf("Calculating magnetic moment in [100] for B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     x_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
@@ -1160,14 +1160,14 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
         b1 = 0.0; b2 = 1.0; b3 = 0.0;
         r1 = 0  ; r2 = 1  ; r3 = 0  ;
     }
-    printf("Berechne magnetisches Moment in [010] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
+    printf("calculating magnetic moment in [010] for B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     y_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
          VALUE(y_s,i)=magnetm(mat_Jy,setup,ewproblem,kristallfeld,
                              (b1*VALUE(feld,i)),(b2*VALUE(feld,i)),(b3*VALUE(feld,i)),temp);
     }
-    printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
+    printf("Writing results to %s ... \n",MAGNETM);
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
     fprintf(fp,t05,datensatz_nr,anz_feld,ionname,0,1,0,b1,b2,b3);
     for( i=1; i<= anz_feld; ++i )
@@ -1178,7 +1178,7 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
         b1 = 0.0; b2 = 0.0; b3 = 1.0;
         r1 = 0  ; r2 = 0  ; r3 = 1  ;
     }
-    printf("Berechne magnetisches Moment in [001] fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
+    printf("calculating magnetic moment in [001] for B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
     z_s = DOUBLE_ALLOC( anz_feld );
     for( i=1; i<= anz_feld ; ++i ){
          ++anz_daten;
@@ -1192,16 +1192,18 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
          fprintf(fp,t02,VALUE(feld,i),VALUE(z_s,i) );
 
     if( !null(b_norm,macheps) ||  !null(bmol_norm,macheps) )
-    {    
+    {
+    
      printf("Berechne Betrag des magnetisches Moments fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
-     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
+     printf("writing results to %s ... \n",MAGNETM);
      if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
      fprintf(fp,t04,datensatz_nr,anz_feld,ionname,b1,b2,b3);
      for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),sqrt( VALUE(x_s,i)*VALUE(x_s,i)+VALUE(y_s,i)*VALUE(y_s,i)+VALUE(z_s,i)*VALUE(z_s,i) ) );
-   }
  
-    t01="\n%s wurde nicht angelegt. Magnetisches Moment ist Null.\n";
+  }
+ 
+    t01="\n%s was not stored. Magnetic Moment is zero.\n";
     if( datensatz_nr <= 0 && anz_daten == 0)  printf(t01,MAGNETM);
  
     free_(x_s);
@@ -1259,7 +1261,8 @@ DOUBLE magnetm(mat_Ji,setup,ewproblem,kristallfeld,Bx,By,Bz,t)
     Bymol        = B2MOL(iteration);
     Bzmol        = B3MOL(iteration);
  
-  
+ 
+ 
     HMAG(iteration) = calc_iBmag( bmag,gj,myB,Bx,By,Bz,Bxmol,Bymol,Bzmol);
 
     ewproblem       = solve(setup,ewproblem,NEIN,kristallfeld,art);
@@ -1721,16 +1724,25 @@ INT printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im)
   CHAR *t05,*t06,*t07,*t46,*t47;
   INT k,q;
   DOUBLE re,im;
-{
- 
-  if(modus!=LKQ && modus!='L'){
-     if( re!=0.0 && im!=0.0 ){fprintf(fp,t05,modus,k,q,re,im);}
-     if( re!=0.0 && im==0.0 ){fprintf(fp,t06,modus,k,q,re);   }
-     if( re==0.0 && im!=0.0 ){fprintf(fp,t07,modus,k,q,im);   }
+{CHAR *tc,*ts;
+ tc="# %c%1d%1d  =  %16.6f                                     |\n";
+ ts="# %c%1d%1ds =              %16.6f                         |\n" ;
+ if (modus==BKQ || modus=='B' || modus==AKQ || modus=='A')
+  {
+        if( re!=0.0 ){fprintf(fp,tc,modus,k,q,re);}
+        if( im!=0.0 ){fprintf(fp,ts,modus,k,q,im);}
   }
-  else{
-        if( re!=0.0 ){fprintf(fp,t46,modus,k,q,re);}
-        if( im!=0.0 ){fprintf(fp,t47,modus,k,q,im);}
+  else
+  {
+   if(modus!=LKQ && modus!='L'){
+      if( re!=0.0 && im!=0.0 ){fprintf(fp,t05,modus,k,q,re,im);}
+      if( re!=0.0 && im==0.0 ){fprintf(fp,t06,modus,k,q,re);   }
+      if( re==0.0 && im!=0.0 ){fprintf(fp,t07,modus,k,q,im);   }
+   }
+   else{
+         if( re!=0.0 ){fprintf(fp,t46,modus,k,q,re);}
+         if( im!=0.0 ){fprintf(fp,t47,modus,k,q,im);}
+   }
   }
    return(JA);
 }
@@ -1812,7 +1824,7 @@ t26="#    W     =   %16.6f                                |\n";
     }
  
  
-    if( b40!=0.0 && b60==0.0 ){
+    if( b40!=0.0 && b60==0.0){
              x = 1; w = b40*f4/x;
              fprintf(fp,t01);
              fprintf(fp,t22,einheit);
@@ -1962,6 +1974,21 @@ t26="#    W     =   %16.6f                                |\n";
                      v64r *=  2 * omegan2n(4);
                      v65r *=  2 * omegan1n(5);
                      v66r *=  2 * omegan0n(6);
+
+                     v21i *=  -2 * omegan1n(1);
+                     v22i *=  -2 * omegan0n(2);
+ 
+                     v41i *=  -2 * omegan3n(1);
+                     v42i *=  -2 * omegan2n(2);
+                     v43i *=  -2 * omegan1n(3);
+                     v44i *=  -2 * omegan0n(4);
+ 
+                     v61i *=  -2 * omegan5n(1);
+                     v62i *=  -2 * omegan4n(2);
+                     v63i *=  -2 * omegan3n(3);
+                     v64i *=  -2 * omegan2n(4);
+                     v65i *=  -2 * omegan1n(5);
+                     v66i *=  -2 * omegan0n(6);
                   }
  
  
@@ -2496,7 +2523,7 @@ CHAR i_toc( i )     /*  3 -> '3'   : integer to character */
                               aJtb_2()
 -----------------------------------------------------------------------------*/
      /*                  ---                      2             */
-     /* Matrixelememte : >   |<E ;tau| J |E ;mue>|              */
+     /* Matrixelememte : >   |<E ;tauº J ºE ;mue>|              */
      /*                  ---    i       T  k                    */
      /*                tau,mue                                  */
 MATRIX *aJtb_2( ewproblem,macheps)
@@ -2553,7 +2580,7 @@ DOUBLE zustandssumme( einheitnr_in , ew , temperatur )
                               sum_mat_Jt2()
 -----------------------------------------------------------------------------*/
 /*  ---                     2*/
-/*  >   |<E ,tau|J |E ,mue>| */
+/*  >   |<E ,tauºJ ºE ,mue>| */
 /*  ---    i      T  k       */
  
 DOUBLE sum_mat_Jt2(ev,entartung,zeile,gi_ze,spalte,gi_sp,macheps)
@@ -2644,9 +2671,9 @@ DOUBLE suszept(mat_Ji2,ewproblem,einheitnr_in,t,gj)
                               mat_Jt2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
+DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
     VEKTOR *a,*b;             /*                     T       */
-    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jx();
@@ -2697,7 +2724,7 @@ DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
    if( !is_equal(IT(aJtb),0.0,macheps) ){
        printf("Unexpected error in mat_Jt2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJtb) );
+       printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJtb) );
        printf("         T                  \n\n");
        exit(0);
    }
@@ -2711,9 +2738,9 @@ DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
                               mat_Jx2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
+DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
     VEKTOR *a,*b;             /*                     x       */
-    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jx();
@@ -2732,7 +2759,7 @@ DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
    if( !is_equal(IT(aJxb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jx2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJxb_norm2) );
+       printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJxb_norm2) );
        printf("         x                  \n\n");
        exit(0);
    }
@@ -2748,9 +2775,9 @@ DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
                               mat_Jy2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
+DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
     VEKTOR *a,*b;             /*                     y       */
-    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jy();
@@ -2768,7 +2795,7 @@ DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
    if( !is_equal(IT(aJyb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jy2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJyb_norm2) );
+       printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJyb_norm2) );
        printf("         y                  \n\n");
        exit(0);
    }
@@ -2784,9 +2811,9 @@ DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
                               mat_Jz2()
 -----------------------------------------------------------------------------*/
                               /*                          2  */
-DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
+DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
     VEKTOR *a,*b;             /*                     z       */
-    DOUBLE macheps;           /*  a,b  = |a>,|b> Spaltenvektoren */
+    DOUBLE macheps;           /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
    KOMPLEX *mat_Jz();
@@ -2804,7 +2831,7 @@ DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
    if( !is_equal(IT(aJzb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jz2() in Intensity.c\n");
        printf("              2             \n");
-       printf("IT( |<a|J |b>|  ) = %f != 0 \n",IT(aJzb_norm2) );
+       printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJzb_norm2) );
        printf("         z                  \n\n");
        exit(0);
    }
@@ -2819,9 +2846,9 @@ DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<a|J |b>|   */
 /*----------------------------------------------------------------------------
                               mat_Jx()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <a|J |b>  */
+KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <aºJ ºb>  */
     VEKTOR *a,*b;     /*                    x     */
-                      /*  a,b  = |a>,|b> Spaltenvektoren */
+                      /*  a,b  = ºa>,ºb> Spaltenvektoren */
 {
    KOMPLEX *mat_Jp();
    KOMPLEX *mat_Jm();
@@ -2849,9 +2876,9 @@ KOMPLEX *mat_Jx(a,b)  /* Matrixelement  <a|J |b>  */
 /*----------------------------------------------------------------------------
                               mat_Jy()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <a|J |b>  */
+KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <aºJ ºb>  */
     VEKTOR *a,*b;     /*                    y     */
-                      /*  a,b  = |a>,|b> Spaltenvektoren */
+                      /*  a,b  = ºa>,ºb> Spaltenvektoren */
 {
    KOMPLEX *mat_Jp();
    KOMPLEX *mat_Jm();
@@ -2879,9 +2906,9 @@ KOMPLEX *mat_Jy(a,b)  /* Matrixelement  <a|J |b>  */
 /*----------------------------------------------------------------------------
                               mat_Jp()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a|J |b>  */
+KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <aºJ ºb>  */
     VEKTOR *a,*b;     /*                    +     */
-                      /*  a,b  = |a>,|b> Spaltenvektoren */
+                      /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2893,7 +2920,7 @@ KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a|J |b>  */
     dimj = VRDIM(b);
  
     Jpb = vr_alloc( dimj );
-    for( n=dimj ; n>=2 ; --n  ){      /*   J+|b> */
+    for( n=dimj ; n>=2 ; --n  ){      /*   J+ºb> */
        RV(Jpb,n) = RV(b,n-1)*JP(nj-1);
        IV(Jpb,n) = IV(b,n-1)*JP(nj-1);
     }
@@ -2907,9 +2934,9 @@ KOMPLEX *mat_Jp(a,b)  /* Matrixelement  <a|J |b>  */
 /*----------------------------------------------------------------------------
                               mat_Jm()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a|J |b>  */
+KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <aºJ ºb>  */
     VEKTOR *a,*b;     /*                    -     */
-                      /*  a,b  = |a>,|b> Spaltenvektoren */
+                      /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2921,7 +2948,7 @@ KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a|J |b>  */
     dimj = VRDIM(b);
  
     Jmb = vr_alloc( dimj );
-    for( n=1 ; n<dimj ; ++n  ){      /*   J-|b> */
+    for( n=1 ; n<dimj ; ++n  ){      /*   J-ºb> */
        RV(Jmb,n) = RV(b,n+1)*JM(nj+1);
        IV(Jmb,n) = IV(b,n+1)*JM(nj+1);
     }
@@ -2935,9 +2962,9 @@ KOMPLEX *mat_Jm(a,b)  /* Matrixelement  <a|J |b>  */
 /*----------------------------------------------------------------------------
                               mat_Jz()
 -----------------------------------------------------------------------------*/
-KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <a|J |b>  */
+KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <aºJ ºb>  */
     VEKTOR *a,*b;     /*                    z     */
-                      /*  a,b  = |a>,|b> Spaltenvektoren */
+                      /*  a,b  = ºa>,ºb> Spaltenvektoren */
  
 {
     INT dimj,n;
@@ -2950,7 +2977,7 @@ KOMPLEX *mat_Jz(a,b)  /* Matrixelement  <a|J |b>  */
  
     Jzb = vr_alloc( dimj );
  
-    for( n=1 ; n<=dimj ; ++n  ){      /*   Jz|b> */
+    for( n=1 ; n<=dimj ; ++n  ){      /*   Jzºb> */
        RV(Jzb,n) = RV(b,n)*nj;
        IV(Jzb,n) = IV(b,n)*nj;
     }

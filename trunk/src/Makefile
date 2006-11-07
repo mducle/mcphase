@@ -21,10 +21,14 @@ vpath %.o  ./ ./vector ../cf1ion_module
 
 #---------------------------------------------------------------------
 #  Operating system
+OSTYPE=$(shell uname -o)
 #  (linux windows)
-# LINUX = linux
+ifeq ($(OSTYPE),Linux)
+LINUX = linux
+#else ifeq($(OSTYPE),Cygwin)
+else
 WINDOWS = windows
-CYGWIN = cygwin
+endif
 #
 # STATIC = static
 #
@@ -46,7 +50,7 @@ ifdef CYGWIN
 CYGFLAGS = -DCYGWIN
 endif 
 
-CFLAGS  = -fpermissive -Wall -c $(CCOPTS) $(INCLDIRS) $(CYGFLAGS)
+CFLAGS  = -c $(CCOPTS) $(INCLDIRS) $(CYGFLAGS)
 
 # PGPLLIBS =       -L$(PGPLOT_DIR)  -lcpgplot -lpgplot
 ifdef LINUX
@@ -102,7 +106,7 @@ LINKER= g++
 # Build mcphas
 #
 
-all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins addj singleion charges
+all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins addj singleion charges chrgplt pointc
 
 # ****************************************************
 # compile sources 
@@ -127,6 +131,7 @@ spincf.o: spincf.cpp spincf.hpp vector.h
 
 chargedensity.o: chargedensity.cpp chargedensity.hpp vector.h
 	g++  $(CFLAGS)  $< 
+
 
 mfcf.o: mfcf.cpp mfcf.hpp vector.h
 	g++  $(CFLAGS)  $< 
@@ -176,6 +181,12 @@ singleion.o: singleion.c par.hpp  martin.h vector.h
 charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h
 	g++ $(CFLAGS) $<
 
+chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h ionpars.hpp
+	g++ $(CFLAGS) $<
+
+pointc.o:  pointc.c  martin.h vector.h ionpars.hpp 
+	g++ $(CFLAGS) $<
+
 addj.o: addj.c par.hpp  martin.h vector.h
 	g++ $(CFLAGS) $<
 
@@ -212,6 +223,12 @@ singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o
 
 charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o
 	$(LINKER)  -Wall  -o ../bin/charges $^  $(LFLAGS)
+
+chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
+	$(LINKER)  -Wall  -o ../bin/chrgplt $^  $(LFLAGS)
+
+pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o 
+	$(LINKER)  -Wall  -o ../bin/pointc $^  $(LFLAGS)
 
 addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) ionpars.o
 	$(LINKER)  -Wall  -o ../bin/addj $^  $(LFLAGS)

@@ -31,7 +31,8 @@ VIEW *.* 13         - means view columns 1 vs.3, add option /c if you
                       the programs PRINTF,GRAPH and PLOT described below)
                       points can be deleted - then the program view
                       creates a file delpoint.del, which contains the
-                      new data set.
+                      new data set
+.
 		      
 GRAPH {xaxis=axistext] {yaxis=axistext]
                       - makes the scales and the axis TITLES (axistext ...)
@@ -99,6 +100,11 @@ SORTF *.* 2         - sort data points according to ascending column 2
 REDUCE *.* 2 dmin=0.1 -- reduces points in data file such that minimal
                       difference between neighbouring data points in column
                       2 is bigger than dmin=0.1
+AVERAGE *.* 4 [options] .... takes 4 points and averages data
+                      option
+                               middle point is taken
+                      /av      points are averaged
+                      /med     median of points is calculated and kept
 
 ---------------------------
 4. MATHEMATICAL OPERATIONS:
@@ -174,16 +180,22 @@ SPLINT *.* 1 stp=0.2 spl=3
 CONVOLUT *.* 23 stp=0.014 mode=gauss fwhm=0.2
                       - (means take file *.* second column as xaxis and
                         calculate CONVOLUTation for y axis=3rd column  with
-                        stepwidth 0.014) --->the result is written in
-                        file *.cvt use the mode= switch to specify the type
-                        of convolution function  used (gauss) and then
-                        specify the function parameters of f(x) convolution
-                        is done according to the formula:
+                        stepwidth 0.014) --->the result is written in file *.cvt 
+                        use the mode= switch to specify the type
+                        of convolution function  used. 
+                        convolution is done according to the formula:
                         conv(x')=sum_{x} col3(x)*f(x'-x)
-                        this procedurecan be used to calculate a diffraction
+
+                        possible modes are: gauss, fullprof2t, fullprofq
+                        the function parameters of f(x) : 
+                              for gauss: fwhm=, 
+                              for fullprof2t: u= v= w=, 
+                              for fullprofq:  u= v= w=,lamdba=[A]
+                        [u,v,w used to calculate fwhm from 2theta: 
+                              for D9-ILL u=16.08575, v=-6.2195, w=0.83903]
+                        
+                        example: this procedure can be used to calculate a diffraction
                         pattern from the output of program ELN
-
-
 
 LINREG *.* 23         - 23 means calc.LINREG of 3rd columns with respect
                         to second column)---> the result is written in
@@ -211,70 +223,7 @@ FOURIER *.* 12 xmax=3.47 deltax=0.1
 
 
 -----------------------------
-5. CRYSTAL FIELDS
------------------------------
-
-Pointc 0.2 Ce3+ 4 1 5.3
-                        Program to calculate Crystalfield Parameters from Point
-                        Charges
-                        ... meaning calculate Blms for one pointcharge of 0.2|e|
-                        in distance x=4 A y=1 A z=5.3 A from a Ce3+ ion, results 
-                        written to pointc.out
-
-CHRGPLOT  ...... plots charge density of 4f-electrons on screen and as
-                postscript file. Needs input file cf.par. For an example
-                see ./doc/figsrc/cf.par:
-                {parameterfile for program chrgplot
-                 The crystal field parameters can be given as Blm or as Vlm  (Blm=stevens factor x Vlm)
-                 parameter          name}
-                 {Ce3+}         {ion}
-                 .1601537      {B20[meV]}
-                 .1669528      {B22[meV]}
-                -2.620866E-04  {B40[meV]}
-                -1.929541E-05  {B42[meV]}
-                 1.603113E-03  {B44[meV]}
-                 1.565799E-07  {B60[meV]}
-                 1.530456E-07  {B62[meV]}
-                 2.258362E-07  {B64[meV]}
-                -2.174181E-06  {B66[meV]}
-                -3.909595E-04  {o20-q-exchange [meV]}
-                -1.193248E-03  {o22-q-exchange [meV]}
-                 1.878634E-08  {o40-q-exchange [meV]}
-                -4.423294E-08  {o42-q-exchange [meV]}
-                -8.45338E-08   {o44-q-exchange [meV]}
-                -2.557163E-14  {o60-q-exchange [meV]}
-                -1.78518E-12   {o62-q-exchange [meV]}
-                -2.064902E-12  {o64-q-exchange [meV]}
-                -4.076859E-12  {o66-q-exchange [meV]}
-
-
-             given the above parameters (1st column) the program calculates
-             a surface of constant charge density is plotted accordingly on screen and into
-             a postcript file and, moreover into a *.jvx file, which may be used for an animated
-             view (to do this type the command: java javaview *.jvx)
-\end{verbatim}	     
-	     
-             Quadrupolar interactions with the ion itself are treated self-
-             -consistently. A magnetic field may be entered.
-             The charge density is calculated according to the following
-             formula:
- 	     
-              
-\begin{equation}
-	       \langle \hat\rho(\mbf r)\rangle=|R_{4f}(r)|^2 \sum_{n=0,2,4,6}\sum_{m=-n,...,n}
-	       e  c_{nm} \theta_{n} \langle O_n^m(\mbf J)\rangle_T Z_{nm}(\Omega)
-	      \end{equation} 
-	      
-For the notation see \cite{hutchings64-227}: the $R_{4f}$ is the radial part of the
-4f wave function, $e$ the elementary charge, $c_{nm}$ the prefactors of harmonic tesseral
-functions $Z_{nm}(\Omega)$ as given in table IV in \cite{hutchings64-227}, $\Theta_n$
-correspond to the Stevens factors $\alpha$,$\beta$ and $\gamma$ for $n=$~2,4,6, respectively.
-
-
-\begin{verbatim}
-
------------------------------
-6. NEUTON POWDER DIFFRACTION:
+5. NEUTRON POWDER DIFFRACTION:
 -----------------------------
 
 ELN *.*               - calculate neutron reflection and intensity list
@@ -387,8 +336,10 @@ here follows an example input file (see examples/ndcu2b_new/eln/spins.out):
 {Nd3+} 4.5000 4.5000 4.5000 9.0000 -0.0000 -0.0000  0.0000 -2.9100 0.0000
 {Nd3+} 4.5000 5.0000 4.5766 9.0000 0.5000 0.0766  0.0000 -2.9100 0.0000
 ------------------------------------------
-
+\end{verbatim}
+After issuing the command {\prg eln spins.out} 
 this input file gives the following output file:
+\begin{verbatim}
 --------------------------------------------------
 #{.\eln.out 20:35:3007-18-2004   unit cell:
 #r1x= 21.9215  A r2x= 0  A r3x= 0 
@@ -511,5 +462,11 @@ etc ....
 .. such a reflection list can be easily transformed into a diffraction pattern
 by convolution with the resolution function of a neutron diffractometer.
 Use programs {\prg convolut} (windows only) or {\prg convolute} (windows and linux) for 
-this task.
+this task. Here is an example command
+
+{prg convolut ELN.OUT 68 STP=0.1 MODE=GAUSS FWHM=0.25}
+
+which gives the magnetic pattern shown in fig.~\ref{elnpattern}
+
+
 

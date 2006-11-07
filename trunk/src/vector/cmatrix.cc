@@ -348,13 +348,17 @@ ComplexMatrix& ComplexMatrix::operator = (complex<double> value)
 // all other elements are set to zero.
 //
 {
-    if (ncol != nrow)
-      Matpack.Error("ComplexMatrix& ComplexMatrix::operator=(complex<double>): non square matrix\n");
+    if (ncol != nrow&&abs(value)!=0)
+      Matpack.Error("ComplexMatrix & ComplexMatrix::operator=(complex<double>): non square matrix\n");
 
     complex<double> **m = M + rl;
     int i;
     copyval( M[rl]+cl, Zero, ncol*nrow );
-    for (i = cl; i <= ch; i++) (*m++)[i] = value;  // TODO
+
+    if (ncol == nrow)
+    {for (i = cl; i <= ch; i++) (*m++)[i] = value;  // TODO
+    }
+    
     return *this;
 }
 

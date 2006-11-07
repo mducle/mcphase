@@ -128,7 +128,7 @@ void Chreduce (Matrix& A, Matrix& B, Matrix& L, Matrix& P)
 	    }
 	    if (i == j) {
 		if (Rex <= 0.0) 
-		    Matpack.Error(Mat::UnspecifiedError,"Chredruce: matrix B is not positv definite");
+		    Matpack.Error(Mat::UnspecifiedError,"Chreduce: matrix B is not positiv definite");
 		else { 
 		    y = sqrt(Rex);		    
 		    l[i][i] = y;

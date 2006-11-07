@@ -20,7 +20,7 @@ DATA "   convolution is done according to the formula:             "
 DATA "    conv(x')=sum_{x} col3(x)*f(x'-x)"
 DATA " "
 DATA " format of file                                                          "
-DATA ""                                          
+DATA ""                                         
 DATA " { header: this is the                                                  "
 DATA "   file header delimited                                                "
 DATA "   by brackets after this header there follow 2 or more data columns }  "
@@ -69,11 +69,11 @@ IF INSTR(filename$, ".") > 0 THEN
 END IF
 ' open output file and write fileheader
 OPEN "o", 2, cvtfile$
-PRINT #2, "{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
-PRINT #2, DATE$; " "; TIME$; " column "; ix%; "  was taken as the x axis for ";
+PRINT #2, "#{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
+PRINT #2, "#"; DATE$; " "; TIME$; " column "; ix%; "  was taken as the x axis for ";
 PRINT #2, "CONVOLUTing the y axis with stepwidth "; stp;
 PRINT #2, iy%; " was taken as the yaxis - convolution was done with a  "; mode$; "-function"
-PRINT #2, "the command was: "; COMMAND$;
+PRINT #2, "#the command was: "; COMMAND$;
 PRINT #2, "- used program: CONVOLUT.bas}"
 
 REM write output data columns IN BLOCKS OF 1000 iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii

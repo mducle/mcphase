@@ -782,7 +782,7 @@ create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t36 = "|                                +                            |\n";
     t37 = "| q>0 :  STEV (J) := ( P  (J) + P  (J) )/2/omega    ,V  real  |\n";
     t38 = "|            kq         kq       kq             kq    kq      |\n";
-    t39 = "|                                +                            |\n";
+    t39 = "|            s                   +                            |\n";
     t50 = "| q>0 :  STEV (J) := ( P  (J) - P  (J) )/2/i/omega  ,V        |\n";
     t51 = "|            kq         kq       kq               kq  kq imag.|\n";
     t52 = "|-------------------------------------------------------------|\n";
@@ -792,11 +792,11 @@ create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t56 = "|-------------------------------------------------------------|\n";
     t70 = "| And    q=0 :  B        =  V                  | The left of  |\n";
     t71 = "|                k0          k0                | the equation |\n";
-    t72 = "|        q>0 :  B        =  2 * omega  * V     | are the      |\n";
-    t73 = "|                kq                  kq   kq   | magnitudes that|\n";
-    t74 = "|        q<0 :  B   / i  =  2 * omega  * V     | are real and |\n";
-    t75 = "|                kq                  kq   kq   | listed       |\n";
-    t76 = "|                                              | below.       |\n";
+    t72 = "|        q>0 :    B       =  2 * omega  * V     | are the      |\n";
+    t73 = "|               s  kq                 kq   kq   | magnitudes that|\n";
+    t74 = "|        q>0 : B   / i  =  2 * omega  * V     | are real and |\n";
+    t75 = "|               kq                  kq   kq   | listed       |\n";
+    t76 = "|                                             | below.       |\n";
     t11 = "===============================================================\n";
     TSS = "| Energy Eigenvalues are in  : %6s                         |\n";
     T15 = "| Temperature of the probe   : %7.2f Kelvin                 |\n";
@@ -925,27 +925,27 @@ create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t03 = "|Crystal Field parameter B  in   %6s  and real             |\n";
     t04 = "|                        kq   (compare Hutchings)             |\n";
     t05 = "|-----------------------------                                |\n";
-    t06 = "|        ---                 |                                |\n";
+    t06 = "|        ---    x            |                                |\n";
     t07 = "| H   =  >     B   STEV (J)  |  with  STEV (J)  hermitesch    |\n";
     t08 = "|  KF    ---    kq     kq    |           kq                   |\n";
     t09 = "|        k>=0                |                                |\n";
-    t10 = "|        q>=0                |                                |\n";
+    t10 = "|        q>=0,x=c,s          |                                |\n";
     t30 = "|-----------------------------                                |\n";
     t31 = "|                                                             |\n";
     t32 = "| q=0 :  STEV (J) := P  (J)                                   |\n";
     t33 = "|            k0       k0                                      |\n";
-    t34 = "|                                +                            |\n";
+    t34 = "|            c                   +                            |\n";
     t35 = "| q>0 :  STEV (J) := ( P  (J) + P  (J) )/2/omega    ,V   real |\n";
     t36 = "|            kq         kq       kq             kq    kq      |\n";
-    t37 = "|                                +                            |\n";
+    t37 = "|            s                   +                            |\n";
     t38 = "| q>0 :  STEV (J) := ( P  (J) - P  (J) )/2/i/omega  ,V        |\n";
     t39 = "|            kq         kq       kq               kq  kq imag.|\n";
     t50 = "|                                             | The left of   |\n";
     t51 = "| und    q=0 :  B        =  V                 | the equation  |\n";
-    t52 = "|                k0          k0               | are the       |\n";
-    t53 = "|        q>0 :  B        =  2 * omega  * V    | magnitudesthat|\n";
-    t54 = "|                kq                  kq   kq  | are real and  |\n";
-    t55 = "|        q>0 :  B   / i  =  2 * omega  * V    | are listed    |\n";
+    t52 = "|                k0 c        k0               | are the       |\n";
+    t53 = "|        q>0 :     B     =  2 * omega re(V  ) | magnitudesthat|\n";
+    t54 = "|                s  kq               kq   kq  | are real and  |\n";
+    t55 = "|        q>0 :  B        =  -2* omega*im(V  ) | are listed    |\n";
     t56 = "|                kq                  kq   kq  | below         |\n";
     t11 = "===============================================================\n";
     TSS = "| Energy Eigenvalues are in  : %6s                         |\n";
@@ -955,64 +955,64 @@ create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T14 = "| Magnetic field             : %s                 |\n";
     T11 = "===============================================================\n";
     t11 = "===============================================================\n";
-    T20n= "|  B20 R:                                                     |\n";
-    T20r= "|* B20 R:                                                     |\n";
+    T20n= "|  B20 c:                                                     |\n";
+    T20r= "|* B20 c:                                                     |\n";
     STR = "|-------------------------------------------------------------|\n";
-    T21n= "|  B21 R:                                                     |\n";
-    T21r= "|* B21 R:                                                     |\n";
-    T21c= "|* B21 R:                                                     |\n";
+    T21n= "|  B21 c:                      | B21 s:                       |\n";
+    T21r= "|* B21 C:                      | B21 s:                       |\n";
+    T21c= "|* B21 C:                      |*B21 s:                       |\n";
  
-    T22n= "|  B22 R:                                                     |\n";
-    T22r= "|* B22 R:                                                     |\n";
-    T22c= "|* B22 R:                                                     |\n";
+    T22n= "|  B22 C:                      | B22 s:                       |\n";
+    T22r= "|* B22 C:                      | B22 s:                       |\n";
+    T22c= "|* B22 C:                      |*B22 s:                       |\n";
     t11 = "===============================================================\n";
     t11 = "===============================================================\n";
-    T40n= "|  B40 R:                                                     |\n";
-    T40r= "|* B40 R:                                                     |\n";
+    T40n= "|  B40 C:                                                     |\n";
+    T40r= "|* B40 C:                                                     |\n";
  
-    T41n= "|  B41 R:                                                     |\n";
-    T41r= "|* B41 R:                                                     |\n";
-    T41c= "|* B41 R:                                                     |\n";
+    T41n= "|  B41 C:                      | B41 s:                       |\n";
+    T41r= "|* B41 C:                      | B41 s:                       |\n";
+    T41c= "|* B41 C:                      |*B41 s:                       |\n";
  
-    T42n= "|  B42 R:                                                     |\n";
-    T42r= "|* B42 R:                                                     |\n";
-    T42c= "|* B42 R:                                                     |\n";
+    T42n= "|  B42 C:                      | B42 s:                       |\n";
+    T42r= "|* B42 C:                      | B42 s:                       |\n";
+    T42c= "|* B42 C:                      |*B42 s:                       |\n";
  
-    T43n= "|  B43 R:                                                     |\n";
-    T43r= "|* B43 R:                                                     |\n";
-    T43c= "|* B43 R:                                                     |\n";
+    T43n= "|  B43 C:                      | B43 s:                       |\n";
+    T43r= "|* B43 C:                      | B43 s:                       |\n";
+    T43c= "|* B43 C:                      |*B43 s:                       |\n";
  
-    T44n= "|  B44 R:                                                     |\n";
-    T44r= "|* B44 R:                                                     |\n";
-    T44c= "|* B44 R:                                                     |\n";
+    T44n= "|  B44 C:                      | B44 s:                       |\n";
+    T44r= "|* B44 C:                      | B44 s:                       |\n";
+    T44c= "|* B44 C:                      |*B44 s:                       |\n";
     t11 = "===============================================================\n";
     t11 = "===============================================================\n";
-    T60n= "|  B60 R:                                                     |\n";
-    T60r= "|* B60 R:                                                     |\n";
+    T60n= "|  B60 C:                                                     |\n";
+    T60r= "|* B60 C:                                                     |\n";
  
-    T61n= "|  B61 R:                                                     |\n";
-    T61r= "|* B61 R:                                                     |\n";
-    T61c= "|* B61 R:                                                     |\n";
+    T61n= "|  B61 C:                      | B61 s:                       |\n";
+    T61r= "|* B61 C:                      | B61 s:                       |\n";
+    T61c= "|* B61 C:                      |*B61 s:                       |\n";
  
-    T62n= "|  B62 R:                                                     |\n";
-    T62r= "|* B62 R:                                                     |\n";
-    T62c= "|* B62 R:                                                     |\n";
+    T62n= "|  B62 C:                      | B62 s:                       |\n";
+    T62r= "|* B62 C:                      | B62 s:                       |\n";
+    T62c= "|* B62 C:                      |*B62 s:                       |\n";
  
-    T63n= "|  B63 R:                                                     |\n";
-    T63r= "|* B63 R:                                                     |\n";
-    T63c= "|* B63 R:                                                     |\n";
+    T63n= "|  B63 C:                      | B63 s:                       |\n";
+    T63r= "|* B63 C:                      | B63 s:                       |\n";
+    T63c= "|* B63 C:                      |*B63 s:                       |\n";
  
-    T64n= "|  B64 R:                                                     |\n";
-    T64r= "|* B64 R:                                                     |\n";
-    T64c= "|* B64 R:                                                     |\n";
+    T64n= "|  B64 C:                      | B64 s:                       |\n";
+    T64r= "|* B64 C:                      | B64 s:                       |\n";
+    T64c= "|* B64 C:                      |*B64 s:                       |\n";
  
-    T65n= "|  B65 R:                                                     |\n";
-    T65r= "|* B65 R:                                                     |\n";
-    T65c= "|* B65 R:                                                     |\n";
+    T65n= "|  B65 C:                      | B65 s:                       |\n";
+    T65r= "|* B65 C:                      | B65 s:                       |\n";
+    T65c= "|* B65 C:                      |*B65 s:                       |\n";
  
-    T66n= "|  B66 R:                                                     |\n";
-    T66r= "|* B66 R:                                                     |\n";
-    T66c= "|* B66 R:                                                     |\n";
+    T66n= "|  B66 C:                      | B66 s:                       |\n";
+    T66r= "|* B66 C:                      | B66 s:                       |\n";
+    T66c= "|* B66 C:                      |*B66 s:                       |\n";
     t11 = "===============================================================\n";
  
     fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
@@ -1070,7 +1070,7 @@ create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     ion         = leftcopy(ion ,25);
  
     t01 = "===============================================================\n";
-    t02 = "|              Crsyatal Field parameter  x,W (real)           |\n";
+    t02 = "|              Crystal Field parameter  x,W (real)            |\n";
     t03 = "|                            in  %6s                          |\n";
     t04 = "|                    for cubic Symmetry                       |\n";
     t05 = "|                                                             |\n";
@@ -1597,7 +1597,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
     /* externes Magnetfeld lesen  */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*1.==== */
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
+    line=fgets( string , buffer_size , fp );/* : º P... v º R... v º S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(iteration) = 'r';
@@ -1612,7 +1612,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
+    line=fgets( string , buffer_size , fp );   /* : º  h1 º h2 º h3 º*/
     B1(iteration) = x1 = a_tof(line, 2,13);
     B2(iteration) = x2 = a_tof(line,15,26);
     x3=0.0;
@@ -1646,7 +1646,7 @@ MATRIX *readBmag(fp,name,modus,myB,iteration,buffer_size,string)
  if( EFVERSION(iteration) >= 2.0 ){
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
+    line=fgets( string , buffer_size , fp );   /* : º  h1 º h2 º h3 º*/
     B1MOL(iteration) = x1 = a_tof(line, 2,13);
     B2MOL(iteration) = x2 = a_tof(line,15,26);
     x3=0.0;
@@ -2721,7 +2721,7 @@ ITERATION *read_Bkqnew(ion)  /* Vkq aus file name lesen */
     MATRIX    *readBmag();
  
     string   = STRING_ALLOC(buffer_size);
-    versionsnummer =5.2;
+    versionsnummer =5.3;
     c = 'm';
  /* units are in meV */
     einheitnr_in = is_einheit_imp(c);
@@ -2897,9 +2897,9 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     line=fgets( string , buffer_size , fp ); /* : Symmetrie ... Symmnr...*/
     symmetrienr =a_toi( line , 53,61);
     if( vsymmetrienr_vor >= 0 )            symmetrienr = vsymmetrienr_vor;
-    if( ! isreell( symmetrienr ,ion ) )  { fclose(fp);
+/*  if( ! isreell( symmetrienr ,ion ) )  { fclose(fp);
                                            Bkq_error( BKQNAME,ion,symmetrienr);}
- 
+*/ 
  
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
@@ -2940,16 +2940,16 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*|RE B21 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR21(iteration) = -1.0;
-    RT( V21(iteration) ) = a_tof(line, 9,61);
-    IT( V21(iteration) ) = 0.0;
+    RT( V21(iteration) ) = a_tof(line, 9,30);
+    IT( V21(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B22 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR22(iteration) = -1.0;
-    RT( V22(iteration) ) = a_tof(line, 9,61);
-    IT( V22(iteration) ) = 0.0;
+    RT( V22(iteration) ) = a_tof(line, 9,30);
+    IT( V22(iteration) ) = -a_tof(line, 39,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 5.==== */
- 
+
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 6.==== */
     line=fgets( string , buffer_size , fp ); /*|RE B40 ............. */
     RT( V40(iteration) ) = b40 = a_tof(line,9,61);
@@ -2957,26 +2957,26 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*|RE B41 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR41(iteration) = -1.0;
-    RT( V41(iteration) ) = a_tof(line, 9,61);
-    IT( V41(iteration) ) = 0.0;
+    RT( V41(iteration) ) = a_tof(line, 9,30);
+    IT( V41(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B42 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR42(iteration) = -1.0;
-    RT( V42(iteration) ) = a_tof(line, 9,61);
-    IT( V42(iteration) ) = 0.0;
+    RT( V42(iteration) ) = a_tof(line, 9,30);
+    IT( V42(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B43 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR43(iteration) = -1.0;
-    RT( V43(iteration) ) = a_tof(line, 9,61);
-    IT( V43(iteration) ) = 0.0;
+    RT( V43(iteration) ) = a_tof(line, 9,30);
+    IT( V43(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B44 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR44(iteration) = -1.0;
-    RT( V44(iteration) ) = b44 = a_tof(line, 9,61);
-    IT( V44(iteration) ) = 0.0;
+    RT( V44(iteration) ) = b44 = a_tof(line, 9,30);
+    IT( V44(iteration) ) = -a_tof(line, 39,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 7.==== */
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 8.==== */
@@ -2986,42 +2986,43 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*|RE B61 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR61(iteration) = -1.0;
-    RT( V61(iteration) ) = a_tof(line, 9,61);
-    IT( V61(iteration) ) = 0.0;
+    RT( V61(iteration) ) = a_tof(line, 9,30);
+    IT( V61(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B62 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR62(iteration) = -1.0;
-    RT( V62(iteration) ) = a_tof(line, 9,61);
-    IT( V62(iteration) ) = 0.0;
+    RT( V62(iteration) ) = a_tof(line, 9,30);
+    IT( V62(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B63 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR63(iteration) = -1.0;
-    RT( V63(iteration) ) = a_tof(line, 9,61);
-    IT( V63(iteration) ) = 0.0;
+    RT( V63(iteration) ) = a_tof(line, 9,30);
+    IT( V63(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B64 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR64(iteration) = -1.0;
-    RT( V64(iteration) ) = b64 = a_tof(line, 9,61);
-    IT( V64(iteration) ) = 0.0;
+    RT( V64(iteration) ) = b64 = a_tof(line, 9,30);
+    IT( V64(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B65 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR65(iteration) = -1.0;
-    RT( V65(iteration) ) = a_tof(line, 9,61);
-    IT( V65(iteration) ) = 0.0;
+    RT( V65(iteration) ) = a_tof(line, 9,30);
+    IT( V65(iteration) ) = -a_tof(line, 39,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|RE B66 ............. */
     c = VALUE(line,7); if( c=='i'||c=='I' ) VOR66(iteration) = -1.0;
-    RT( V66(iteration) ) = a_tof(line, 9,61);
-    IT( V66(iteration) ) = 0.0;
+    RT( V66(iteration) ) = a_tof(line, 9,30);
+    IT( V66(iteration) ) = -a_tof(line, 39,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*9.==== */
- 
+
     /* Auswahlregeln fuer Bkq beachten */
     iteration = auswahlregel(iteration,symmetrienr);
+
  
  
     if( symmetrienr==8 ){
@@ -3054,8 +3055,23 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
      RT( V66(iteration) ) /=  2 * omegan0n(6);
  
  
+     IT( V21(iteration) ) /=  2 * omegan1n(1);
+     IT( V22(iteration) ) /=  2 * omegan0n(2);
+ 
+     IT( V41(iteration) ) /=  2 * omegan3n(1);
+     IT( V42(iteration) ) /=  2 * omegan2n(2);
+     IT( V43(iteration) ) /=  2 * omegan1n(3);
+     IT( V44(iteration) ) /=  2 * omegan0n(4);
+ 
+     IT( V61(iteration) ) /=  2 * omegan5n(1);
+     IT( V62(iteration) ) /=  2 * omegan4n(2);
+     IT( V63(iteration) ) /=  2 * omegan3n(3);
+     IT( V64(iteration) ) /=  2 * omegan2n(4);
+     IT( V65(iteration) ) /=  2 * omegan1n(5);
+     IT( V66(iteration) ) /=  2 * omegan0n(6);
  
  
+
  
  
     HMAG(iteration) = readBmag(fp,name,modus,myB,iteration,buffer_size,string);
@@ -3240,7 +3256,7 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
  
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
+    line=fgets( string , buffer_size , fp );/* : º P... v º R... v º S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(umgebung) = 'r';
@@ -3255,14 +3271,14 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
+    line=fgets( string , buffer_size , fp );   /* : º  h1 º h2 º h3 º*/
     B1(umgebung) = x1 = a_tof(line, 2,13);
     B2(umgebung) = x2 = a_tof(line,15,26);
     if(MODUS(umgebung) !='p')  B3(umgebung) = x3 = a_tof(line,28,39);
     isinlimits(fp,name ,0, x1,x2,x3,MODUS(umgebung) );
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*8.==== */
-    line=fgets( string , buffer_size , fp );   /* : |_nnn__  */
+    line=fgets( string , buffer_size , fp );   /* : º_nnn__  */
  
     ANZ_NN(umgebung) = anz_nn = a_toi( line , 1 , 6 );
     Q_P(umgebung)    = DOUBLE_ALLOC(anz_nn);
@@ -3276,7 +3292,7 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
  
     for( i=1 ; i<= anz_nn ; ++i ){/* Ort und Ladung lesen */
  
-         line=fgets( string , buffer_size , fp ); /* | nnn | ... */
+         line=fgets( string , buffer_size , fp ); /* º nnn º ... */
  
          if(  (nummer = a_toi(line,1,5)) != i) read_error(4,fp,name)     ;
  
@@ -3770,15 +3786,15 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
  
     #define SN "%s\n"
     rsm  = "====================================================";
-    rsmt = "| External magnetic field  B (scaled with g_J)     |";
-    rsmtk= "| %8s | %8s | %8s | comment   |\n";
-    rsmk = "|            |            |            |           |";
+    rsmt = "º External magnetic field  B (scaled with g_J)     º";
+    rsmtk= "º %8s º %8s º %8s º comment   º\n";
+    rsmk = "º            º            º            º           º";
     rsmtu= "----------------------------------------------------";
  
     pom  = "=======================================";
-    pomt = "| External Magnetic field B           |";
-    pomtk= "| %8s | %8s | comment |\n";
-    pomk = "|            |            |           |";
+    pomt = "º External Magnetic field B           º";
+    pomtk= "º %8s º %8s º comment º\n";
+    pomk = "º            º            º           º";
     pomtu= "---------------------------------------";
  
     switch(modus){
@@ -3801,11 +3817,11 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
  
     fprintf(fp,"\n");
     fprintf(fp,"===========================================================\n");
-    fprintf(fp,"| The co-ordinates of the magnetic field are given in     |\n");
-    fprintf(fp,"| %12s co-ordinates.                              |\n",s_modus);
+    fprintf(fp,"º The co-ordinates of the magnetic field are given in     º\n");
+    fprintf(fp,"º %12s co-ordinates.                              º\n",s_modus);
     fprintf(fp,"-----------------------------------------------------------\n");
-    fprintf(fp,"|   B := Magnetic field     | in Tesla                    |\n");
-    fprintf(fp,"|                           |                             |\n");
+    fprintf(fp,"º   B := Magnetic field     º in Tesla                    º\n");
+    fprintf(fp,"º                           º                             º\n");
     fprintf(fp,"===========================================================\n");
     fprintf(fp,"\n");
  
@@ -3835,15 +3851,15 @@ drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
         }
  
     rsm  = "====================================================";
-    rsmt = "| Molecular field B_mol (scaled with  2[g_J -1])   |";
-    rsmtk= "| %8s | %8s | %8s | comment   |\n";
-    rsmk = "|            |            |            |           |";
+    rsmt = "º Molecular field B_mol (scaled with  2[g_J -1])   º";
+    rsmtk= "º %8s º %8s º %8s º comment   º\n";
+    rsmk = "º            º            º            º           º";
     rsmtu= "----------------------------------------------------";
  
     pom  = "=======================================";
-    pomt = "| molecular field B_mol                 |";
-    pomtk= "| %8s | %8s | comment |\n";
-    pomk = "|            |            |           |";
+    pomt = "º molecular field B_mol                 º";
+    pomtk= "º %8s º %8s º comment º\n";
+    pomk = "º            º            º           º";
     pomtu= "---------------------------------------";
     if( modus=='r' || modus=='s' ){ /* Tabelle in rechtw. oder sphaer. Koord.*/
  
@@ -3991,13 +4007,13 @@ t11 ="|                                                        |\n";
 t12 ="|----------------------------============================|\n";
 t13 ="| Please give a number   : 0                             |\n";
 t14 ="|----------------------------============================|\n";
-t15 ="| Default                    : no positions or           |\n";
+t15 ="| Default                    : no positions or          |\n";
 t16 ="|                            : Intensities given.        |\n";
 t17 ="|----------------------------============================|\n";
 t18 ="| Filename  (variable)       : Posint.Chi2               |\n";
 t19 ="|----------------------------============================|\n";
-t20 ="|            |1 Header      : I5I5F12F12F12Text          |\n";
-t21 ="|I5:         |n Data lines  ...                          |\n";
+t20 ="|            |1 Header      : I5I5F12F12F12Text         |\n";
+t21 ="|I5:         |n Data lines  ...                         |\n";
 t22 ="|Record      |-------------------------------------------|\n";
 t23 ="|            |                                           |\n";
 t24 ="|            |If the data record numbers are positive    |\n";
@@ -4168,7 +4184,7 @@ t30 ="|            |then the x and y-values		       |\n";
 t31 ="|            |are next to eachother.                     |\n";
 t32 ="|            |                                           |\n";
 t33 ="|            |                 =====      =====          |\n";
-t34 ="|            |per dataline :   |  2| times | 12|         |\n";
+t34 ="|            |per dataline :   |  2| times | 12|          |\n";
 t35 ="|            |                 =====      =====          |\n";
 t36 ="|            |                                           |\n";
 t37 ="|--------------------------------------------------------|\n";
@@ -4457,7 +4473,7 @@ READ *read_einheit(name,art)
     /* externes Magnetfeld lesen  */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*1.==== */
     line=fgets( string , buffer_size , fp ); /* : die Koordinaten der ...*/
-    line=fgets( string , buffer_size , fp );/* : | P... v | R... v | S...*/
+    line=fgets( string , buffer_size , fp );/* : º P... v º R... v º S...*/
     c   = VALUE(line,2);
     switch(c){
          case 'K' : MODUS(read) = 'r';
@@ -4472,7 +4488,7 @@ READ *read_einheit(name,art)
  
     for( i=1 ; i<= 3 ; ++i)/* Kopf der Magnetfeldtabelle ueberlesen */
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );
-    line=fgets( string , buffer_size , fp );   /* : |  h1 | h2 | h3 |*/
+    line=fgets( string , buffer_size , fp );   /* : º  h1 º h2 º h3 º*/
     B1(read) = x1 = a_tof(line, 2,13);
     B2(read) = x2 = a_tof(line,15,26);
     x3=0.0;

@@ -115,7 +115,8 @@ EWPROBLEM  *diagonalisiere(ewproblem,matrix,overwrite,setup)
 /*[4]*/  ewproblem        = number_ev( dia_hessenberg );
 /*[5]*/  ewproblem        = ordnen_ew( ewproblem,overwrite );
 /*[6]*/  ewproblem        = entartung( ewproblem,overwrite );
-/*[7]*/  ewproblem        = orthonormalisieren( ewproblem ); 
+/*[7]*/  ewproblem        = orthonormalisieren( ewproblem );
+ 
          return( ewproblem );
  
 /* [0] Rechnergenauigkeit bestimmen                                 */

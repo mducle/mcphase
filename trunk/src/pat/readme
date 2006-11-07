@@ -1,0 +1,111 @@
+This package was written by Herbert MUELLER
+<herbie(at)ifp(dot)tuwien(dot)ac(dot)at> 2004-2005
+It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
+
+0. Copyright:
+   Copyright (C) 2004-2005 H. Mueller
+   Pat homepage: http://www.ifp.tuwien.ac.at/pat/
+
+   Pat is free software under the terms of the GNU General Public License.
+   See the file LICENSE for details.
+
+1. General:
+   Many scientist and technicians have data files containing some data columns
+   Usually you are manipulating these data by spread sheet programs with
+   graphical output.
+   This package has been developed for friends of command line tools to
+   perform calculations with their ASCII data files. You can include this
+   programs into scripts to perform automatic processing in an efficient way.
+   
+   PAT: Processing of ASCII Tables
+   The tools in this package allows you to perform numerical processing with
+   ASCII data files. The PAT-Tools are written in python, so they can be
+   simply installed. With some knowledge in programming you can adapt the
+   programs for your special purpose.
+   
+   A valid ASCII data file recognized by PAT must have the following schema:
+   
+   Any number of text lines followed by columns of numbers.
+   The number of columns must not change in the data rows.
+   The separators between the numbers are blanks or tabs
+   
+   Typical short example:
+   
+   ---------------------------
+   Measurement of a falling body
+   1st column: time [s]
+   2nd column: distance [m]
+   0   0
+   1   5
+   1.5 11.25
+   2   20
+   3   45
+   4   80
+   5   125
+   ---------------------------
+   
+   
+   The package consists of different programs where each performs its special task.
+   The philosophy is not to change the original data. The result of the 
+   operations applied to the input data file will be sent to standard output.
+   So you can pipe (|) the output of each program to another one to perform a
+   series of operations or you send the output to a new file (>) to save the
+   result.
+   Only these columns which are changed by the operation will modified, all
+   other columns will be unchanged.
+   This concept allows you to write (shell) scripts to manipulate data files
+   automatically without user intervention. 
+  
+   The following operations can be performed:
+   
+      Calc.py: Perform a calculation with one column  
+     Deriv.py: Calculate the numeric derivative
+     Exchg.py: Swap columns
+    Fileop.py: Add, subtract, multiply or divide two data files
+     Integ.py: Numerical integration
+    Intpol.py: Interpolate one value from a table
+      Look.py: Interpolate all values of data file from a table file
+     Merge.py: Merge two data files
+    Select.py: Obtain a part from a data file
+      Sort.py: Sort columns
+     Stext.py: Change one text line
+   
+   All scripts work on command line:
+
+    script [options] input_file
+
+   Each script understands several options.
+   Detailed help for each script can be obtained with the option -h.
+
+   If X and Qt (pyqt) are installed on computer also some graphical
+   tools are available for displaying and printing data files:
+   
+       Show.py: Display a graphic of one data file on the screen
+       Plot.py: Display and print up to 8 data files in one plot
+       Disp.py: Detailed graphic display with the possibility to change data
+    Rescale.py: Get a data file from a x/y-plot (jpeg, png, ...)
+
+2. Special Addons:
+
+   a. Thermal Expansion 
+     For my thermal expansion experiment some special functions have been
+     programmed, but these function require special formatted data files,
+     which have additional information included in the head lines.
+   
+      CGap.py: Calculate the gap of a thermal expansion measurement (simple)
+       Gap.py: Calculate the gap of a thermal expansion measurement (advanced)
+               Needs a special configuration file
+       Dll.py: Calculate Delta l/l of a thermal expansion measurement
+      Zero.py: Shift the zero point of a thermal expansion measurement
+
+   b. Soft X-Ray spectroscopy 
+     For my soft xray experiment a special functions have been
+     programmed, but this function requires a special formatted data file.
+
+     Addspec.py: Add all spectra in a SXS-data file
+  
+  This add ons are not included in the standard version
+
+3. Installation:
+
+   Follow the instructions in the file INSTALL.

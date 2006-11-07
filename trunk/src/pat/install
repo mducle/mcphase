@@ -1,0 +1,99 @@
+This package was written by Herbert MUELLER
+<herbie(at)ifp(dot)tuwien(dot)ac(dot)at> 2004-2005.
+It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
+
+Pat-homepage: http://www.ifp.tuwien.ac.at/pat/
+
+Copyright (C) 2004-2005 H. Mueller
+Pat is free software under the terms of the GNU General Public License.
+See the file LICENSE for details.
+
+
+1 REQUIREMENTS
+  PAT tools are written in python (a scripting language for details see
+  http://www.python.org).
+  
+  For the command line tools you need to have installed python version 2.3 or
+  newer. This software was developed on a LINUX operating system. It may work
+  also under windows (TM), but it has never been tryed or tested.
+  
+  If you want to use the graphic tools (Disp.py, Plot.py, Show.py, Rescale.py)
+  you need to have installed a X-server, python version 2.4 and python-qt3.
+  
+  
+2 INSTALLATION
+  PAT is written in python, no compilation procedure is required.
+  You need only to copy the files to a suitable directory and set two
+  environment variables. Copying the files is done by an installation script
+  included in the package. The environment variables must be set by hand.
+  
+  Installation of the PAT tools requires the following steps:
+
+   1. Get the compressed archive (tgz or zip) from the pat home page
+      http://www.ifp.tuwien.ac.at/pat/
+   2. Copy the archive to a intermediate directory
+   3. Unpack your tar/zip-file pat-v.v.vv-xxxx.tgz[zip] in this directory.
+      where v.v.vv stands for the version number and xxxx stands either for
+      general or graphic if the command line tools or the graphic tools are
+      included.
+      tgz: tar -xzvf pat-v.v.vv-xxxx.tgz
+      zip: unzip pat-v.v.vv-xxxx.zip
+   4. The archive will extract in a new directory tree where all scripts are
+      located. Change to this directory.
+      cd pat/
+   5. Start the installation script ./install.py and answer the questions.
+      You can install pat
+      a. For one user.
+         Start ./install.py as normal user.
+	 All necessary scripts will be copied in the sub directory pat/ in
+         your home directory (recommended)
+      b. For all users
+         Start ./install.py as root
+	 All necessary scripts will be copied in /usr/local/pat.
+	 (recommended only for advanced users)
+   6. a. Set your PATH environment variable to the pat-bin-path
+         e.g. /home/username/pat/bin
+      b. Set the environment variable PAT_LIB_PATH to the pat-lib-path
+         e.g. /home/username/pat/lib
+      If you are using bash, put the lines:
+         export PAT_LIB_PATH="/home/username/pat/lib"
+         export PATH=$PATH:/home/username/pat/bin
+      in your .bashrc or .bash_profile to make the changes permanent.
+   7. Test the installed programs
+   8. If everything is working you can remove the intermediate directory.
+
+3 KNOWN PROBLEMS
+
+  The graphic tools are designed to work on screens with a resolution 1024x768
+  or 1280x1024.
+  For other resolution the size of the windows or of some fonts may not be
+  suitable.
+  
+  You can change this if you modify some lines in the file grafic.py located
+  in the sub directory lib/ of your installation.
+  
+  Plot.py:
+  Size of plot window is bad:
+  Search in grafic.py for the line:
+  #   Change here if window size of Plot.py does not fit
+  Within the next 8 lines you can change the window size.
+
+  Font sizes are bad:
+  Search in grafic.py for the line:
+  #   Change here if font size of Plot.py does not fit
+  Within the next 1 line you can change the font size.
+  "font": QFont("sanserif",10) 
+                            |---> Font size in pixels. 
+			 
+  Show.py:
+  Initial size of plot window is bad:
+  Search in grafic.py for the line:
+  #   Change here if window size of Show.py does not fit
+  Within the next 2 lines you can change the window size.
+
+  Font sizes are bad:
+  Search in grafic.py for the line:
+  #   Change here if font size of Show.py does not fit
+  Within the next 1 line you can change the window size.
+  self.FontSize = self.height()/24
+           Font size in parts of the window height

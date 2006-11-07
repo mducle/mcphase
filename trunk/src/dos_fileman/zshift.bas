@@ -51,10 +51,28 @@ WEND  'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 5 CLOSE 1
 IF CONSTANT = 1.3E+38 THEN PRINT filename$; ":"; tnorm; "out of range - nothing has been shifted": GOTO 6
 
-' add constant to column jj% using program shift
-SHELL "shiftc " + filename$ + " " + STR$(jj%) + " " + STR$(CONSTANT)
+OPEN "i", 1, filename$: CALL headerinput(text$(), j, 1)' open file+ input file header
+OPEN "o", 2, "fact.fac"
+PRINT #2, "{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
+PRINT #2, DATE$; " "; TIME$; " column"; jj%;
+PRINT #2, "shiftec by "; CONSTANT; " using program zshift.bas}"
 
-PRINT
+WHILE EOF(1) = 0  ' REM input columns
+
+CALL inputline(1, x#(), col%)
+ IF col% = -1 GOTO 7
+ x#(jj%) = x#(jj%) + CONSTANT
+ FOR coll% = 1 TO col%: PRINT #2, x#(coll%); : NEXT
+PRINT #2,
+
+WEND
+
+7 PRINT
+CLOSE 1, 2
+
+SHELL "copy fact.fac " + filename$
+SHELL "del fact.fac"
+
 PRINT "END ZSHIFT file "; filename$; ": function y(x)=col"; jj%; "(col"; ii%; ") - zero-y has been shifted "
 PRINT "to x="; tnorm; " by adding a const.(lin.interpol. of data points)"
 6 IF INSTR(COMMAND$, "*") <> 0 GOTO 999

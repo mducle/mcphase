@@ -14,12 +14,11 @@
 
 all : pack 
 
-compile : IniConfigurator.java IniFile.java IniItem.java IniKey.java
+compile : IniConfigurator.java IniFile.java IniItem.java IniKey.java display.java
 	javac ./*.java
 
-pack    : 
+pack    : compile
 	jar cvf mcphas.jar ./*.class 
 
 clean  :
 	rm -vf ./*.class
-        rm -vf mcphas.ja
