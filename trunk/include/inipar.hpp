@@ -64,12 +64,12 @@ class inipar
   double maxQ;
  
   // printout initial parameters to file   
-  void print();
-  void errexit();
-  int load();
+   void print();
+   void errexit();
+   int load();
   inipar (char * file); //constructor
   inipar (const inipar & p);//kopier-konstruktor
-  ~inipar ();//destruktor
+ ~inipar ();//destruktor
 };
 
 #endif

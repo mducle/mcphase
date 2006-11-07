@@ -3,372 +3,258 @@
 //#include "myev.h"
 
 void checkini(testspincf & testspins,qvectors & testqs)
-{
-  struct stat filestatus;
-  static time_t last_modify_time;
-  int loaderr;
+{struct stat filestatus;
+ static time_t last_modify_time;
+ int loaderr;
   errno = 0;
 
-  if (stat(ini.savfilename,&filestatus) != 0)
-  {
-    fprintf (stderr, "Error checking mcphas.ini: Couldn't read status of file %s: %s\n",
-             ini.savfilename, strerror (errno));exit (EXIT_FAILURE);
-  }
+  if (stat(ini.savfilename,&filestatus)!=0)
+    {fprintf (stderr, "Error checking mcphas.ini: Couldn't read status of file %s: %s\n",
+              ini.savfilename, strerror (errno));exit (EXIT_FAILURE);
+     }
 
 
-  if (filestatus.st_mtime != last_modify_time) //check if file has been modified
-  {
-    again:
-    last_modify_time = filestatus.st_mtime;
-    fprintf(stdout,"mcphas.ini has been modified - reading new mcphas.ini\n");
-    sleep(1);
-    loaderr=ini.load();
-    if(ini.exit_mcphas==1)
-    {
-      testspins.save();  //exit normally
-      testqs.save();
-      exit(0);
+ if (filestatus.st_mtime!=last_modify_time) //check if file has been modified
+    {again:
+     last_modify_time=filestatus.st_mtime;
+     fprintf(stdout,"mcphas.ini has been modified - reading new mcphas.ini\n");
+      sleep(1);
+      loaderr=ini.load();
+      if(ini.exit_mcphas==1)
+        {testspins.save();  //exit normally
+         testqs.save();
+         exit(0);
+	}
+
+      while(ini.pause_mcphas==1||loaderr==1) // wait until pause button is released and no loaderror occurs
+       {fprintf(stdout,"Pausing ...\n");
+        while(filestatus.st_mtime==last_modify_time)  //wait until filestatus changes again
+          {sleep(1);
+            if (stat(ini.savfilename,&filestatus)!=0)
+               {fprintf (stderr, "Error checking file mcphas.ini: Couldn't read status of file %s: %s\n",
+                ini.savfilename, strerror (errno));exit (EXIT_FAILURE);
+               }
+          }
+	goto again;  
+       }
+       
+
     }
-
-    while(ini.pause_mcphas==1 || loaderr==1) // wait until pause button is released and no loaderror occurs
-    {
-      fprintf(stdout,"Pausing ...\n");
-      while(filestatus.st_mtime==last_modify_time)  //wait until filestatus changes again
-      {
-        sleep(1);
-        if (stat(ini.savfilename,&filestatus) != 0)
-        {
-          fprintf (stderr, "Error checking file mcphas.ini: Couldn't read status of file %s: %s\n",
-                   ini.savfilename, strerror (errno));
-          exit (EXIT_FAILURE);
-        }
-      }
-      goto again;  
-    }
-  }
 }
 
 
-int htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
-            testspincf & testspins, physproperties & physprops)
-{
-  /* calculates magnetic structure at a given HT- point  
-   on input: 
-     T		Temperature[K]
-     H		Vector of External Magnetic Field [T]
-     inputpars	Input parameters (exchange constants etc...)
-     testqs	Set of propagation vectors to be tested 
-     testspins	Set of Spinconfigurations to be tested
-   on return:
-     physprops	physical properties at (HT) point (i.e. magnetic structure
+int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
+             testspincf & testspins, physproperties & physprops)
+{/* calculates magnetic structure at a given HT- point  
+  on input: 
+    T	Temperature[K]
+    H	Vector of External Magnetic Field [T]
+    inputpars	Input parameters (exchange constants etc...)
+    testqs	Set of propagation vectors to be tested 
+    testspins	Set of Spinconfigurations to be tested
+  on return:
+    physprops	physical properties at (HT) point (i.e. magnetic structure
 		neutron intensities, thermal expansion ...)	
-  // returns 0 if successfull
-  // returns 1 if too maxnofspinconfigurations is exceeded 
-  // returns 2 if no spinconfiguration has been found at ht point
-  */
+ // returns 0 if successfull
+ // returns 1 if too maxnofspinconfigurations is exceeded 
+ // returns 2 if no spinconfiguration has been found at ht point
+ */
+ int i,ii,iii,j,k,tryrandom,nr,rr,ri;
+ double fe,fered;
+ double u,lnz; // free- and magnetic energy per ion [meV]
+ Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms),nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
+ Vector h1(1,inputpars.nofcomponents),hkl(1,3);
+ double femin=10000;char text[100];
+ spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
+ spincf  spsmin(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
+ mfcf * mf;
+ FILE * felog; // logfile for q dependence of fe
+ FILE * fin_coq;
 
-  int i,j,k;
-  int ii,iii;
-  int tryrandom;
-  int nr,rr,ri;
-  double fe,fered;
-  double u,lnz; // free- and magnetic energy per ion [meV]
-
-  Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms);
-  Vector phi(1,inputpars.nofcomponents*inputpars.nofatoms);
-  Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
-  Vector h1(1,inputpars.nofcomponents);
-  Vector hkl(1,3);
-
-  double femin=10000;
-  char text[100];
-  spincf sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
-  spincf sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
-  spincf spsmin(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
-
-  mfcf * mf;
-  FILE * felog; // logfile for q dependence of fe
-  FILE * fin_coq;
-
-  srand(time(0)); // initialize random number generator
-  checkini(testspins,testqs); // check if user pressed a button
-
-  if (ini.logfevsQ == 1) 
-  {
-    felog=fopen_errchk("./results/mcphas.log","a");
-    fprintf(felog,"#Logging of h k l fe[meV] T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
-    fclose(felog);
-  }
+ srand(time(0)); // initialize random number generator
+ checkini(testspins,testqs); // check if user pressed a button
+ if (ini.logfevsQ==1) {felog=fopen_errchk("./results/mcphas.log","a");
+               fprintf(felog,"#Logging of h k l fe[meV] T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
+               fclose(felog);
+	      }
 	      
-  j = -testqs.nofqs() + (int)rint(rnd(testspins.n+testqs.nofqs())); 
-  //begin with j a random number, j<0 means test spinconfigurations 
-  //constructed from q vector set testqs, j>0 means test spinconfigurations from
-  //set testspins
-  //j=0;  //uncomment this for debugging purposes
+
+ j=-testqs.nofqs()+(int)rint(rnd(testspins.n+testqs.nofqs())); 
+    //begin with j a random number, j<0 means test spinconfigurations 
+    //constructed from q vector set testqs, j>0 means test spinconfigurations from
+    //set testspins
+    //j=0;  //uncomment this for debugging purposes
     
-  for (k = -testqs.nofqs(); k<=testspins.n; ++k)
-  {
-    ++j;
-    if (j>testspins.n) 
-      j = -testqs.nofqs();
-
-    for (tryrandom=0; tryrandom<=ini.nofrndtries && j!=0; ++tryrandom)
-    {
-      if (j>0)
-      {
-        sps = (*testspins.configurations[j]); // take test-spinconfiguration
-        if (tryrandom==0 && verbose==1) 
-          printf ("conf. no %i (%ix%ix%i spins)",j,sps.na(),sps.nb(),sps.nc());
-      }
-      else     // take q vector and choose phase and mom dir randomly
-      {
-        q = testqs.q(-j);  
-	if (tryrandom==0)
-        {
-          nettom = testqs.nettom(-j);
-          momentq0 = testqs.momentq0(-j);
-          phi = testqs.phi(-j);
-        }
-	else
-	{
-          for(i=1; i<=inputpars.nofatoms; ++i)
-          {
-            for(ii=1; ii<=inputpars.nofcomponents; ++ii)
-            {
-              iii = inputpars.nofcomponents * (i-1) + ii;
-              h1 = 0;
-              h1(ii) = 10*MU_B*(*inputpars.jjj[i]).gJ;
-              nettom(iii) = (*inputpars.jjj[i]).mcalc(T,h1,lnz,u)(ii) * rnd(1);
-              momentq0(iii) = rnd(1);
-              phi(iii) = rnd(1) * 3.1415;
+ for (k= -testqs.nofqs();k<=testspins.n;++k)
+ {++j; if (j>testspins.n) j=-testqs.nofqs();
+  for (tryrandom=0;tryrandom<=ini.nofrndtries&&j!=0;++tryrandom)
+   {if (j>0){sps=(*testspins.configurations[j]);// take test-spinconfiguration
+	     if (tryrandom==0&&verbose==1) printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc());
             }
-          }
-        }
-
-        sps.spinfromq(testqs.na(-j),testqs.nb(-j),testqs.nc(-j),
-                      q,nettom,momentq0,phi);
-        hkl = inputpars.rez.Transpose() * q;  
-        if (tryrandom==0 && verbose==1) 
-          printf ("(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",
-                  hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc());
-        }	 
-
-        if (tryrandom>0)
-        {
-          nr = (int)(rint(rnd(1.0) * (sps.n()*inputpars.nofatoms-1))) + 1;
-          for (i=1; i<=nr; ++i) //MonteCarlo randomize nr spins
-          {
-            rr = (int)rint(rnd(1.0)*(sps.n()-1)) + 1;
-            ri = inputpars.nofcomponents * (int)rint(rnd(1.0) * (inputpars.nofatoms-1));
-            for(ii=1; ii<=inputpars.nofcomponents; ++ii)
-            {
-              sps.mi(rr)(ri+ii) = rnd(1.0);
-            }
-          } // randomize spin rr
-        }
-
-        if (H*sps.nettomagmom(inputpars.gJ) < 0) //see if nettomoment positiv
-        {
-          sps.invert();
-          momentq0 = -momentq0;
-        } //if not - invert spinconfiguration
+    else     // take q vector and choose phase and mom dir randomly
+            {q=testqs.q(-j);  
+	     if (tryrandom==0)
+	     {nettom=testqs.nettom(-j);momentq0=testqs.momentq0(-j);phi=testqs.phi(-j);
+	     }
+	     else
+	     {for(i=1;i<=inputpars.nofatoms;++i)
+	      {for(ii=1;ii<=inputpars.nofcomponents;++ii)
+	        {iii=inputpars.nofcomponents*(i-1)+ii;h1=0;h1(ii)=10*MU_B*(*inputpars.jjj[i]).gJ;
+		 nettom(iii)=(*inputpars.jjj[i]).mcalc(T,h1,lnz,u)(ii)*rnd(1);
+	         momentq0(iii)=rnd(1);
+	         phi(iii)=rnd(1)*3.1415;
+		}
+	      }
+	     }
+	     sps.spinfromq(testqs.na(-j),testqs.nb(-j),testqs.nc(-j),
+	                   q,nettom,momentq0,phi);
+             hkl=inputpars.rez.Transpose()*q;  
+   	     if (tryrandom==0&&verbose==1) printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc());
+	    }	 
+    if (tryrandom>0){nr=(int)(rint(rnd(1.0)*(sps.n()*inputpars.nofatoms-1)))+1;
+	             for (i=1;i<=nr;++i) //MonteCarlo randomize nr spins
+                      {rr=(int)rint(rnd(1.0)*(sps.n()-1))+1;
+		       ri=inputpars.nofcomponents*(int)rint(rnd(1.0)*(inputpars.nofatoms-1));
+	               for(ii=1;ii<=inputpars.nofcomponents;++ii)
+		       {sps.mi(rr)(ri+ii)=rnd(1.0) ;}
+		       } // randomize spin rr
+                    }
+     if (H*sps.nettomagmom(inputpars.gJ)<0) //see if nettomoment positiv
+        {sps.invert();momentq0=-momentq0;} //if not - invert spinconfiguration
 
       //!!!calculate free eneregy - this is the heart of this loop !!!!
-      mf = new mfcf(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents);
-      fe = fecalc(H ,T,inputpars,sps,(*mf),u,testspins,testqs);
+      mf=new mfcf(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents);
+      fe=fecalc(H ,T,inputpars,sps,(*mf),u,testspins,testqs);
       delete mf;
+           // test spinconfiguration  and remember it                                    
+      if (fe<femin)
+            {               // first - reduce the spinconfiguration if possible
+	       sps1=sps;sps1.reduce();
+                   mf=new mfcf(sps1.na(),sps1.nb(),sps1.nc(),inputpars.nofatoms,inputpars.nofcomponents);
+               if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs))<=fe+0.00001)sps=sps1;
+                   delete mf;
+	       spsmin=sps;	   
+                 // display spinstructure
+                if (verbose==1)
+                {
+                    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+                     sprintf(text,"fe=%g,fered=%g<femin=%g:T=%gK, |H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT,  %i spins",fe,fered,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
+                     sps.eps(fin_coq,text);
+                    fclose (fin_coq);
+		}
 
-      // test spinconfiguration  and remember it                                    
-      if (fe < femin)
-      {       // first - reduce the spinconfiguration if possible
-        sps1 = sps;
-        sps1.reduce();
-        mf = new mfcf(sps1.na(),sps1.nb(),sps1.nc(),inputpars.nofatoms,inputpars.nofcomponents);
-        if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs)) <= fe+0.00001)
-          sps=sps1;
-        delete mf;
-        spsmin=sps;	   
-              // display spinstructure
-        if (verbose==1)
-        {
-          fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-          sprintf(text,"fe=%g,fered=%g<femin=%g:T=%gK, |H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT,  %i spins", \
-                        fe,fered,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
-          sps.eps(fin_coq,text);
-          fclose (fin_coq);
-        }
 	           
-              // see if spinconfiguration is already stored
-        if (0==checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,physprops))
-        {     //0 means error in checkspincf/addspincf
-	  fprintf(stderr,"Error htcalc: too many spinconfigurations created");
-          testspins.save();testqs.save(); 
-          return 1;
-        }
-
-        femin=fe;	  
-        //printout fe
-        if (verbose==1) 
-          printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,physprops.j,j);
-      }
-      if (tryrandom==ini.nofrndtries && verbose==1)
-        printf("\n");
+                           // see if spinconfiguration is already stored
+	     if (0==checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,physprops))//0 means error in checkspincf/addspincf
+	        {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
+                 testspins.save();testqs.save(); 
+		 return 1;}
+	     femin=fe;	  
+            //printout fe
+	    if (verbose==1) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,physprops.j,j);
+	     }
+            if (tryrandom==ini.nofrndtries&&verbose==1){printf("\n");}
 	    
-      // log fe if required
-      if (ini.logfevsQ == 1) 
-      {
-        ComplexVector a(1,3*inputpars.nofatoms);
-        ComplexVector b(1,3*inputpars.nofatoms);
-        ComplexVector b1(1,inputpars.nofcomponents*inputpars.nofatoms);
-        float inmax=0;
-        int qh,qk,ql,l;
-        ComplexVector * mq;  
-        mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2](1,inputpars.nofcomponents*inputpars.nofatoms);
-        Vector sq2(1,3*inputpars.nofatoms);
-        Vector qs(1,3);
-        qs(1)=1000;
-        Vector qt(1,3);
-        float in;
-        sps.FT(mq); //Fourier trafo of spincf
+	    
+  // log fe if required
+   if (ini.logfevsQ==1) {
+                 ComplexVector a(1,3*inputpars.nofatoms),b(1,3*inputpars.nofatoms);
+                 ComplexVector b1(1,inputpars.nofcomponents*inputpars.nofatoms);
+                 float inmax=0;int qh,qk,ql,l;
+                 ComplexVector * mq;  
+                 mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2](1,inputpars.nofcomponents*inputpars.nofatoms);
+                 Vector sq2(1,3*inputpars.nofatoms),qs(1,3),qt(1,3);float in;qs(1)=1000;
+                 sps.FT(mq); //Fourier trafo of spincf
+		 // get the main propagation vector by looking for the
+		 // biggest Fourier component of the magnetic moment arrangement 
+                 for(qh=0;qh<=sps.na()/2;++qh){for(qk=0;qk<=sps.nb()/2;++qk){for(ql=0;ql<=sps.nc()/2;++ql)
+                  {// get magnetic moment from momentum fouriercomponent
+		   b1 = mq[sps.in(sps.na()-qh,sps.nb()-qk,sps.nc()-ql)];
+                   for(l=1;l<=inputpars.nofatoms;++l)
+		   {b(3*(l-1)+1)=b1(inputpars.nofcomponents*(l-1)+1)*(*inputpars.jjj[l]).gJ;    
+		    b(3*(l-1)+2)=b1(inputpars.nofcomponents*(l-1)+2)*(*inputpars.jjj[l]).gJ;    
+		    b(3*(l-1)+3)=b1(inputpars.nofcomponents*(l-1)+3)*(*inputpars.jjj[l]).gJ;} // mind to set zero b(3*(l-1)+4,5,6... 
+		   a = b.Conjugate();
+		   b1 = mq[sps.in(qh,qk,ql)];
+                   for(l=1;l<=inputpars.nofatoms;++l)
+		   {b(3*(l-1)+1)=b1(inputpars.nofcomponents*(l-1)+1)*(*inputpars.jjj[l]).gJ;    
+		    b(3*(l-1)+2)=b1(inputpars.nofcomponents*(l-1)+2)*(*inputpars.jjj[l]).gJ;    
+		    b(3*(l-1)+3)=b1(inputpars.nofcomponents*(l-1)+3)*(*inputpars.jjj[l]).gJ;} // mind to set zero b(3*(l-1)+4,5,6... 
+                   // inner product
+                   sq2=Abs(b+a)/(double)sps.n()/(double)inputpars.nofatoms;
+                   Vector q(1,3);
+		   q(1)=1.0*qh/sps.na();
+	           q(2)=1.0*qk/sps.nb();
+                   q(3)=1.0*ql/sps.nc();
+                   qt=inputpars.rez.Transpose()*q;
+		   in=Norm(sq2)*Norm(sq2);
+	           if ((in>inmax-0.01&&Norm(qt)<Norm(qs))
+		      ||in>inmax)
+                    {inmax=in;qs=qt;}
+                   }}}
+                   felog=fopen_errchk("./results/mcphas.log","a");
+                   fprintf(felog,"%g %g %g %g\n",qs(1),qs(2),qs(3),fe);
+	           fclose(felog);
+                  delete []mq;
+                 }
 
-        // get the main propagation vector by looking for the
-        // biggest Fourier component of the magnetic moment arrangement 
-        for(qh=0; qh<=sps.na()/2; ++qh)
-        {
-          for(qk=0; qk<=sps.nb()/2; ++qk)
-          {
-            for(ql=0; ql<=sps.nc()/2; ++ql)
-            { // get magnetic moment from momentum fouriercomponent
-              b1 = mq[sps.in(sps.na()-qh,sps.nb()-qk,sps.nc()-ql)];
-              for(l=1; l<=inputpars.nofatoms; ++l)
-              {
-                b(3*(l-1)+1) = b1(inputpars.nofcomponents*(l-1)+1) * (*inputpars.jjj[l]).gJ;    
-                b(3*(l-1)+2) = b1(inputpars.nofcomponents*(l-1)+2) * (*inputpars.jjj[l]).gJ;    
-                b(3*(l-1)+3) = b1(inputpars.nofcomponents*(l-1)+3) * (*inputpars.jjj[l]).gJ;
-              } // mind to set zero b(3*(l-1)+4,5,6... 
-
-              a = b.Conjugate();
-              b1 = mq[sps.in(qh,qk,ql)];
-
-              for(l=1;l<=inputpars.nofatoms;++l)
-              {
-                b(3*(l-1)+1) = b1(inputpars.nofcomponents*(l-1)+1) * (*inputpars.jjj[l]).gJ;    
-                b(3*(l-1)+2) = b1(inputpars.nofcomponents*(l-1)+2) * (*inputpars.jjj[l]).gJ;    
-                b(3*(l-1)+3) = b1(inputpars.nofcomponents*(l-1)+3) * (*inputpars.jjj[l]).gJ;
-              } // mind to set zero b(3*(l-1)+4,5,6... 
-
-              // inner product
-              sq2 = Abs(b+a) / (double)sps.n() / (double)inputpars.nofatoms;
-              Vector q(1,3);
-              q(1) = 1.0 * qh / sps.na();
-              q(2) = 1.0 * qk / sps.nb();
-              q(3) = 1.0 * ql / sps.nc();
-              qt = inputpars.rez.Transpose() * q;
-              in = Norm(sq2) * Norm(sq2);
-              if ((in>inmax-0.01 && Norm(qt)<Norm(qs)) || in>inmax)
-              {
-                inmax=in;
-                qs=qt;
-              }
-            }
-          }
-        }
-
-        felog = fopen_errchk("./results/mcphas.log","a");
-        fprintf(felog,"%g %g %g %g\n",qs(1),qs(2),qs(3),fe);
-        fclose(felog);
-        delete []mq;
       }
-    }
   }
 
-  if (femin>=10000) // did we find a stable structure ??
-  {
-    fprintf(stderr,"Warning propcalc: femin positive ... no stable structure found at  T= %g K / H= %g T\n",
-            physprops.T,Norm(physprops.H));
-    return 2;
-  }
-  else // if yes ... then
-  { // calculate physical properties
-    if (physprops.j>0)
-    { // take spinconfiguration ----
-      sps = (*testspins.configurations[physprops.j]);
-      if (sps.wasstable==0)
-      { // go through qvectors and spinfconfigurations and see if periodicity matches
-        for (i=1; i<=testqs.nofqs(); ++i)
-        {
-          if (testqs.na(i)==sps.na() && testqs.nb(i)==sps.nb() && testqs.nc(i)==sps.nc())
-          {
-            sps.wasstable = -i;
-            break;
-          }
-        }
-        if (sps.wasstable==0)
-        {
-          for (i=1; i<=testspins.n; ++i)
-          {
-            if ((*testspins.configurations[i]).na()==sps.na() 
-                 && (*testspins.configurations[i]).nb()==sps.nb()
-                 && (*testspins.configurations[i]).nc()==sps.nc())
-            {
-              sps.wasstable=i; 
-              break;
-            }
-          }
-        }
+if (femin>=10000) // did we find a stable structure ??
+ {fprintf(stderr,"Warning propcalc: femin positive ... no stable structure found at  T= %g K / H= %g T\n",
+                 physprops.T,Norm(physprops.H));return 2;}
+else // if yes ... then
+ {// calculate physical properties
+ if (physprops.j>0){ // take spinconfiguration ----
+                     sps=(*testspins.configurations[physprops.j]);
+                       if (sps.wasstable==0)
+                       {// go through qvectors and spinfconfigurations and see if periodicity matches
+                        for (i=1;i<=testqs.nofqs();++i)
+                         {if (testqs.na(i)==sps.na()&&testqs.nb(i)==sps.nb()&&testqs.nc(i)==sps.nc())
+                             {sps.wasstable=-i;break;}
+                         }
+		        if (sps.wasstable==0)
+                         {for (i=1;i<=testspins.n;++i)
+                          {if ((*testspins.configurations[i]).na()==sps.na()&&
+			       (*testspins.configurations[i]).nb()==sps.nb()&&
+			       (*testspins.configurations[i]).nc()==sps.nc())
+                             {sps.wasstable=i;break;}
+                          }
+                         }
+			if (sps.wasstable==0){fprintf(stderr,"internal ERROR htcalc - calculating periodicity not possible");exit(EXIT_FAILURE);}
+			//---mark it as stable with periodicity key---
+			(*testspins.configurations[physprops.j]).wasstable=sps.wasstable;    
+                       }
+	      }
+    else     // ---- or take q vector
+            { sps.spinfromq(testqs.na(-physprops.j),testqs.nb(-physprops.j),
+	              testqs.nc(-physprops.j),testqs.q(-physprops.j),
+		      testqs.nettom(-physprops.j),testqs.momentq0(-physprops.j),
+		      testqs.phi(-physprops.j));
+	      }
 
-        if (sps.wasstable==0)
-        {
-          fprintf(stderr,"internal ERROR htcalc - calculating periodicity not possible");
-          exit(EXIT_FAILURE);
-        }
-
-        //---mark it as stable with periodicity key---
-        (*testspins.configurations[physprops.j]).wasstable = sps.wasstable;    
-      }
-    }
-
-    else  //---- or take q vector
-    { 
-      sps.spinfromq(testqs.na(-physprops.j),testqs.nb(-physprops.j),
-	            testqs.nc(-physprops.j),testqs.q(-physprops.j),
-		    testqs.nettom(-physprops.j),testqs.momentq0(-physprops.j),
-		    testqs.phi(-physprops.j));
-    }
-
-    sps=spsmin; //take spinconfiguration which gave minimum free energy as starting value
-    if (H*sps.nettomagmom(inputpars.gJ)<0)   //see if nettomoment positiv
-      sps.invert(); //if not - invert spinconfiguration
-
-    // now really calculate the physical properties
-    mf = new mfcf(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents);
-    physprops.fe = fecalc(H ,T,inputpars,sps,(*mf),physprops.u,testspins,testqs); 
-
-    // display spinstructure
-    if (verbose==1)
-    {
-      fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-      sprintf(text,"recalculated: fe=%g,femin=%g:T=%gK,|H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT, %i spins",
-              physprops.fe,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
-      sps.eps(fin_coq,text);
-      fclose (fin_coq);
-    }
-
-    // check if fecalculation gives again correct result
-    if (physprops.fe > femin+0.0001)
-    {
-      fprintf(stderr,"Warning htcalc.c: at T=%g K /  H= %g Tfemin=%4.9g was calc.(conf no %i),\n",
-              T, Norm(H), femin, physprops.j);
-      fprintf(stderr,"but recalculation  gives fe= %4.9gmeV -> no structure saved\n", physprops.fe);
+     sps=spsmin;//take spinconfiguration which gave minimum free energy as starting value
+     if (H*sps.nettomagmom(inputpars.gJ)<0)   //see if nettomoment positiv
+        {sps.invert();} //if not - invert spinconfiguration
+  // now really calculate the physical properties
+      mf=new mfcf(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents);
+      physprops.fe=fecalc(H ,T,inputpars,sps,(*mf),physprops.u,testspins,testqs); 
+             // display spinstructure
+                if (verbose==1)
+                {fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+                     sprintf(text,"recalculated: fe=%g,femin=%g:T=%gK,|H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT, %i spins",physprops.fe,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
+                     sps.eps(fin_coq,text);
+                    fclose (fin_coq);
+		}
+ //check if fecalculation gives again correct result
+   if (physprops.fe>femin+0.0001){fprintf(stderr,"Warning htcalc.c: at T=%g K /  H= %g Tfemin=%4.9g was calc.(conf no %i),\n but recalculation  gives fe= %4.9gmeV -> no structure saved\n",
+                            T,Norm(H),femin,physprops.j,physprops.fe);delete mf;return 2;}
+ physpropclc(H,T,sps,(*mf),physprops,inputpars);
       delete mf;
-      return 2;
-    }
+ }
 
-    physpropclc(H,T,sps,(*mf),physprops,inputpars);
-    delete mf;
-  }
-
-  return 0; // ok we are done with this (HT) point- return ok
+return 0; // ok we are done with this (HT) point- return ok
 }
 
 
@@ -614,340 +500,206 @@ return (physprops.j=testspins.addspincf(sps));  //ok=1
 /*****************************************************************************/
 // here the free energy is calculated for a given (initial) spinconfiguration
 // using the meanfield algorithm 
-double fecalc(Vector Hex, double T, par &inputpars,
-              spincf &sps, mfcf &mf, double &u, testspincf &testspins, qvectors &testqs)
-{ /* on input:
-      T		Temperature[K]
-      Hex	Vector of external magnetic field [T]
-      inputpars	exchange and other parameters
-      sps	initial spinconfiguration
-      testspins	all other testspinconfigurations
-     on return
-      returns	free energy[meV]
-      sps	selfconsistently stabilized spinconfiguration (may be different
-		  from initial spinconfiguration)
-      u		mangetic energy[meV]
+double fecalc(Vector  Hex,double T,par & inputpars,
+             spincf & sps,mfcf & mf,double & u,testspincf & testspins, qvectors & testqs)
+{/*on input:
+    T		Temperature[K]
+    Hex		Vector of external magnetic field [T]
+    inputpars	exchange and other parameters
+    sps		initial spinconfiguration
+    testspins	all other testspinconfigurations
+  on return
+    returns free energy[meV]
+    sps		selfconsistently stabilized spinconfiguration (may be different
+		from initial spinconfiguration)
+    u		mangetic energy[meV]
         
-  */
-  double fe; // free energy 
-  Vector diff(1,inputpars.nofcomponents*inputpars.nofatoms);  //
-  Vector d(1,3),d_rint(1,3);                                  // some vectors
-  Vector xyz(1,3),xyz_rint(1,3);                              //
-  Vector meanfield(1,inputpars.nofcomponents);
-  Vector moment(1,inputpars.nofcomponents);
-  Vector d1(1,inputpars.nofcomponents);
-  char text[60]; // some text variable
-  int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
-  div_t result; // some modulo variable
-  float    sta=1000000; // initial value of standard deviation
-  float staold=2000000; 
-  int slowct;
-  float stepratio=ini.bigstep;
-  float spinchange=0; // initial value of spinchange
-  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
-  Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
-  Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
-  int diagonalexchange=1;
-  FILE * fin_coq;
+ */
+ double fe; // free energy 
+ Vector diff(1,inputpars.nofcomponents*inputpars.nofatoms),d(1,3),d_rint(1,3),xyz(1,3),xyz_rint(1,3);// some vector
+ Vector meanfield(1,inputpars.nofcomponents),moment(1,inputpars.nofcomponents),d1(1,inputpars.nofcomponents);
+ char text[60]; // some text variable
+ int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
+ div_t result; // some modulo variable
+ float    sta=1000000; // initial value of standard deviation
+ float staold=2000000; int slowct;
+ float stepratio=ini.bigstep;
+ float spinchange=0; // initial value of spinchange
+ sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
+ Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
+ Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
+ int diagonalexchange=1;
+ FILE * fin_coq;
  
-// spinconf variable to store old sps
-  spincf spsold(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents); 
-// spinconf variable to store old mf
-  mfcf mfold(mf.na(),mf.nb(),mf.nc(),inputpars.nofatoms,inputpars.nofcomponents);
-  spsold=sps;
+ spincf  spsold(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old sps
+ mfcf  mfold(mf.na(),mf.nb(),mf.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old mf
+ spsold=sps;
  
 // coupling coefficients jj[](a-c) berechnen
 // for (r=0;r<=sdim;++r)
 
-  Matrix * jj; //if (inputpars.diagonalexchange()==0){i=9;}else{i=3;}
-// coupling coeff.variable
-  jj=new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); 
-  if (jj == NULL)
-  {
-    fprintf (stderr, "Out of memory\n");
-    exit (EXIT_FAILURE);
-  }
+ Matrix * jj; //if (inputpars.diagonalexchange()==0){i=9;}else{i=3;}
+  jj= new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); // coupling coeff.variable
+   if (jj == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
 
-  for (r=0; r<=0; ++r) // only distance is important ...
+ for (r=0;r<=0;++r) // only distance is important ...
   {// initialize mfold
-    for(s=0; s<=mfold.in(mfold.na(),mfold.nb(),mfold.nc()); ++s)
-      mfold.mi(s) = 0;
-
-    for(s=0; s<=sdim; ++s)
-      jj[r*(sdim+1)+s] = 0; //clear jj(j,...)
+   for(s=0;s<=mfold.in(mfold.na(),mfold.nb(),mfold.nc());++s){mfold.mi(s)=0;} 
+   for(s=0;s<=sdim;++s){jj[r*(sdim+1)+s]=0;} //clear jj(j,...)
    
-    for(m=1; m<=inputpars.nofatoms; ++m)
-    {
-      if ((*inputpars.jjj[m]).diagonalexchange==0)
-        diagonalexchange=0; // if any ion has anisotropic exchange - calculate anisotropic
-
-      for(l=1; l<=(*inputpars.jjj[m]).paranz; ++l)
-      { //sum up l.th neighbour interaction
-        // 1. transform dn(l) to primitive lattice
-        xyz = (*inputpars.jjj[m]).dn[l]-(*inputpars.jjj[m]).xyz; 
-        d = inputpars.rez*(const Vector&)xyz;
+   for(m=1;m<=inputpars.nofatoms;++m)
+   {if ((*inputpars.jjj[m]).diagonalexchange==0){diagonalexchange=0;} // if any ion has anisotropic exchange - calculate anisotropic
+    for(l=1;l<=(*inputpars.jjj[m]).paranz;++l)
+    {//sum up l.th neighbour interaction
+    // 1. transform dn(l) to primitive lattice
+     xyz=(*inputpars.jjj[m]).dn[l]-(*inputpars.jjj[m]).xyz; 
+     d=inputpars.rez*(const Vector&)xyz;
      
-        for (i=1; i<=3; ++i)
-          d_rint(i)=rint(d(i)); // round relative position to integer numbers (to do 
-                                // something sensible if not integer, i.e. if sublattice
-				// of neighbour has not been identified by par.cpp)
-        i = (int)(sps.ijk(r)[1]+d_rint(1));
-        j = (int)(sps.ijk(r)[2]+d_rint(2));
-        k = (int)(sps.ijk(r)[3]+d_rint(3));
-        while (i<=0) 
-          i += sps.na();
-        result = div(i,sps.na());
-        i = result.rem; // only distance is important ...
-
-        while (j<=0) 
-          j += sps.nb();
-        result = div(j,sps.nb());
-        j = result.rem;
-
-        while (k<=0) 
-          k += sps.nc();
-        result = div(k,sps.nc());
-        k = result.rem;
-
-        s = sps.in(i,j,k); //ijk range here from 0 to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
-
-        // sum up parameter
-        n = (*inputpars.jjj[m]).sublattice[l];
+     for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); //round relative position to integer numbers (to do 
+                                             // something sensible if not integer, i.e. if sublattice
+					     // of neighbour has not been identified by par.cpp)
+	i=(int)(sps.ijk(r)[1]+d_rint(1));
+	j=(int)(sps.ijk(r)[2]+d_rint(2));
+	k=(int)(sps.ijk(r)[3]+d_rint(3));
+        while (i<=0) i+=sps.na();result=div(i,sps.na());i=result.rem; // only distance is important ...
+        while (j<=0) j+=sps.nb();result=div(j,sps.nb());j=result.rem;
+        while (k<=0) k+=sps.nc();result=div(k,sps.nc());k=result.rem;
+	s=sps.in(i,j,k); //ijk range here from 0 to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
+	// sum up parameter
+	n=(*inputpars.jjj[m]).sublattice[l];
 //     myPrintMatrix(stdout,(*inputpars.jjj[m]).jij[l]);
 
-        for(i=1; i<=inputpars.nofcomponents; ++i)
-        {
-          for(j=1;j<=inputpars.nofcomponents;++j)
-          {
-            jj[r*(sdim+1)+s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j) \
-               +=(*inputpars.jjj[m]).jij[l](i,j); 
-          }
-        }
+	for(i=1;i<=inputpars.nofcomponents;++i){for(j=1;j<=inputpars.nofcomponents;++j){
+	  jj[r*(sdim+1)+s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j)+=(*inputpars.jjj[m]).jij[l](i,j); 
+        }}
+
+
 //	  jj[r*(sdim+1)+s](3*(m-1)+1,3*(n-1)+3,3*(m-1)+1,3*(n-1)+3)+=(*inputpars.jjj[m]).jij[l]; 
 	//remark: function par:jij(l) returns exchange constants (*inputpars.jjj[1]).jij[l](1-9)	   	
-      } 
-    }
+    } 
+   }
   }
    
-  if (ini.displayall == 1)   // display spincf if button is pressed
-  {
-    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-    sprintf(text,"fecalc:%i spins, iteration 0",sps.n());
-    sps.eps(fin_coq,text);
-    fclose (fin_coq);
-    sleep(2);
-  //sps.display(text);
-  }
+   
+if (ini.displayall==1)   // display spincf if button is pressed
+ {
+     fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+     sprintf(text,"fecalc:%i spins, iteration 0",sps.n());
+     sps.eps(fin_coq,text);
+     fclose (fin_coq);
+     sleep(2);
+
+// sps.display(text);
+ }
+
 
 // loop for selfconsistency
-  for (r=1; sta>ini.maxstamf; ++r)
-  {
-    if (r>ini.maxnofmfloops)
-    {
-      delete []jj;
-      delete []lnzi;
-      delete []ui;
-      if (verbose==1) 
-        fprintf(stderr,"feDIV!MAXlooP");
-      return 20000;
-    }
+for (r=1;sta>ini.maxstamf;++r)
+{if (r>ini.maxnofmfloops)
+    {delete []jj;delete []lnzi;delete []ui;
+     if (verbose==1) fprintf(stderr,"feDIV!MAXlooP");
+     return 20000;}
+if (spinchange>ini.maxspinchange)
+    {delete []jj;delete []lnzi;delete []ui;
+     if (verbose==1) fprintf(stderr,"feDIV!MAXspinchangE");
+     return 20001;}
 
-    if (spinchange>ini.maxspinchange)
-    {
-      delete []jj;
-      delete []lnzi;
-      delete []ui;
-      if (verbose==1) 
-        fprintf(stderr,"feDIV!MAXspinchangE");
-      return 20001;
-    }
+ //1. calculate mf from sps (and calculate sta)
+ sta=0;
+ for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
+ {mf.mf(i,j,k)=0;
+  for (l=1;l<=inputpars.nofatoms;++l){
+   for (i1=1;i1<=3&&i1<=inputpars.nofcomponents;++i1){
+             mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=Hex(i1)*inputpars.gJ(l)*MU_B;
+				                     }
+				     }
+  for (i1=1;i1<=sps.na();++i1){if (i<i1){di=i-i1+sps.na();}else{di=i-i1;} 
+                               for (j1=1;j1<=sps.nb();++j1){if (j<j1){dj=j-j1+sps.nb();}else{dj=j-j1;}
+			                                    for (k1=1;k1<=sps.nc();++k1){if (k<k1){dk=k-k1+sps.nc();}else{dk=k-k1;}
+    l=sps.in(di,dj,dk);//di dj dk range from 0 to to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
 
-// 1. calculate mf from sps (and calculate sta)
-    sta=0;
-    for (i=1; i<=sps.na(); ++i)
-    {
-      for(j=1; j<=sps.nb(); ++j)
-      {
-        for(k=1; k<=sps.nc(); ++k)
-        {
-          mf.mf(i,j,k) = 0;
-          for (l=1; l<=inputpars.nofatoms; ++l)
-          {
-            for (i1=1; i1<=3 && i1<=inputpars.nofcomponents; ++i1)
-            {
-              mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1] = Hex(i1)*inputpars.gJ(l)*MU_B;
-            }
-          }
-          for (i1=1; i1<=sps.na(); ++i1)
-          {
-            if (i<i1)
-            {
-              di = i - i1 + sps.na();
-            }
-            else
-            {
-              di = i - i1;
-            } 
-            for (j1=1; j1<=sps.nb(); ++j1)
-            {
-              if (j<j1)
-              {
-                dj = j - j1 + sps.nb();
-              }
-              else
-              {
-                dj = j - j1;
-              }
-              for (k1=1; k1<=sps.nc(); ++k1)
-              {
-                if (k<k1)
-                {
-                  dk = k - k1 + sps.nc();
-                }
-                else
-                {
-                  dk = k - k1;
-                }
-
-                l = sps.in(di,dj,dk); //di dj dk range from 0 to to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
-    
-                if (diagonalexchange==0 || inputpars.nofatoms>1)
-                {
-                  mf.mf(i,j,k) += jj[l]*(const Vector&)sps.m(i1,j1,k1);
-                }
-                else
-                { //do the diagonal elements separately to accellerate the sum
-                  for(m1=1; m1<=inputpars.nofatoms*inputpars.nofcomponents; ++m1)
-                  {
-                    mf.mf(i,j,k)(m1) += sps.m(i1,j1,k1)(m1) * jj[l](m1,m1);
-                  }
-                }
-              }
-            }
-          }
-
-          diff = mf.mf(i,j,k) - mfold.mf(i,j,k);
-          sta += diff * diff;
-          diff *= stepratio;
-          mf.mf(i,j,k) = mfold.mf(i,j,k) + diff; //step gently ... i.e. scale change of MF with stepratio
-        }
-      }
-    }
-
-    mfold = mf;      
-    sta = sqrt(sta / sps.n() / inputpars.nofatoms);
-
-    if (staold<sta && stepratio==ini.bigstep)
-    {
-      stepratio = ini.bigstep/10;
-      slowct = 10;
-    } //if sta increases then set stepratio to bigstep
-
-    if (staold>sta && stepratio<ini.bigstep)
-    {
-      --slowct;
-      if (slowct<=0)
-        stepratio=ini.bigstep;
-    } // at least for 10 cycles
-    staold=sta;
+     
+     if (diagonalexchange==0||inputpars.nofatoms>1)
+     {mf.mf(i,j,k)+=jj[l]*(const Vector&)sps.m(i1,j1,k1);
+     }else
+     {//do the diagonal elements separately to accellerate the sum
+      for(m1=1;m1<=inputpars.nofatoms*inputpars.nofcomponents;++m1)
+         {mf.mf(i,j,k)(m1)+=sps.m(i1,j1,k1)(m1)*jj[l](m1,m1);}
+     }
+    }}}
+  diff=mf.mf(i,j,k)-mfold.mf(i,j,k);sta+=diff*diff;
+  diff*=stepratio;mf.mf(i,j,k)=mfold.mf(i,j,k)+diff;//step gently ... i.e. scale change of MF with stepratio
+  }}}
+  mfold=mf;      
+  sta=sqrt(sta/sps.n()/inputpars.nofatoms);
+  if (staold<sta&&stepratio==ini.bigstep){stepratio=ini.bigstep/10;slowct=10;}//if sta increases then set stepratio to bigstep
+  if (staold>sta&&stepratio<ini.bigstep){--slowct;if (slowct<=0)stepratio=ini.bigstep;} // at least for 10 cycles
+  staold=sta;
 
 //2. calculate sps from mf
-    for (i=1; i<=sps.na(); ++i)
-    {
-      for(j=1; j<=sps.nb(); ++j)
-      {
-        for(k=1; k<=sps.nc(); ++k)
-        {
-          diff = sps.m(i,j,k);
-          s = sps.in(i,j,k);
-
-          for(l=1; l<=inputpars.nofatoms; ++l)
-          {
-            int lm1m3;
-            lm1m3 = inputpars.nofcomponents*(l-1);
-            for(m1=1; m1<=inputpars.nofcomponents; ++m1)
-            {
-              d1[m1] = mf.mf(i,j,k)[lm1m3+m1];
-            }
-            moment = (*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l]);
-            for(m1=1; m1<=inputpars.nofcomponents; ++m1)
-            {
-              sps.m(i,j,k)(lm1m3+m1) = moment[m1];
-            }
-          }
-
-          diff -= sps.m(i,j,k);
-          spinchange += sqrt(diff*diff)/sps.n();  
-        }
-      }
-    }
-
-    // treat program interrupts 
-    checkini(testspins,testqs); 
-    if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
-    {
-      fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-      sprintf(text,"fecalc:%i spins, iteration %i sta=%g",sps.n(),r,sta);
-      sps.eps(fin_coq,text);
-      fclose (fin_coq);
-      sleep(2);
-    }
+ for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
+ {diff=sps.m(i,j,k);s=sps.in(i,j,k);
+  for(l=1;l<=inputpars.nofatoms;++l)
+  {int lm1m3;
+   lm1m3=inputpars.nofcomponents*(l-1);
+   for(m1=1;m1<=inputpars.nofcomponents;++m1)
+   {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
+   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l]);
+   for(m1=1;m1<=inputpars.nofcomponents;++m1)
+   {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
   }
+  diff-=sps.m(i,j,k);
+  spinchange+=sqrt(diff*diff)/sps.n();  
+  }}}
+
+  //treat program interrupts 
+  checkini(testspins,testqs); 
+if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
+ {
+      fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+     sprintf(text,"fecalc:%i spins, iteration %i sta=%g",sps.n(),r,sta);
+     sps.eps(fin_coq,text);
+     fclose (fin_coq);
+     sleep(2);
+ }
+}
 
 // calculate free energy fe and energy u
-  fe=0;
-  u=0;
+fe=0;u=0;
+for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
+{s=sps.in(i,j,k);
+ for(l=1;l<=inputpars.nofatoms;++l)
+ {fe-=K_B*T*lnzi[s][l];
+  u+=ui[s][l]; 
+// correction term
+  for(m1=1;m1<=inputpars.nofcomponents;++m1)
+   {d1[m1]=sps.m(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
+  meanfield[m1]=mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+m1];}
+  // subtract external field (only necessary for magnetic field, not for quadrupolar fields,
+  // because the Cf parameters are treated separately in mcalc and not as part of the quadrupolar
+  // field)
+  for(m1=1;m1<=3;++m1){meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
 
-  for (i=1; i<=sps.na(); ++i)
-  {
-    for (j=1; j<=sps.nb(); ++j)
-    {
-      for (k=1; k<=sps.nc(); ++k)
-      {
-        s = sps.in(i,j,k);
-        for(l=1; l<=inputpars.nofatoms; ++l)
-        {
-          fe -= K_B*T * lnzi[s][l];
-          u += ui[s][l]; 
-
-          // correction term
-          for(m1=1; m1<=inputpars.nofcomponents; ++m1)
-          {
-            d1[m1] = sps.m(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
-            meanfield[m1] = mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+m1];
-          }
-
-          // subtract external field (only necessary for magnetic field, not for 
-          // quadrupolar fields, because the Cf parameters are treated separately 
-          // in mcalc and not as part of the quadrupolar field)
-          for(m1=1; m1<=3; ++m1)
-          {
-            meanfield[m1] -= Hex[m1]*inputpars.gJ(l)*MU_B;
-          }
-       
-          // add correction term
-          fe += 0.5*(meanfield*d1);
-          u += 0.5*(meanfield*d1);
-
+  // add correction term
+  fe+=0.5*(meanfield*d1);
+  u+=0.5*(meanfield*d1);
 //  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
-        }
-      }
-    }
-  }
-  fe/=(double)sps.n()*sps.nofatoms; //norm to formula unit
-  u/=(double)sps.n()*sps.nofatoms;
+ }
+}}}
+fe/=(double)sps.n()*sps.nofatoms; //norm to formula unit
+u/=(double)sps.n()*sps.nofatoms;
 
-  if (ini.displayall==1)
-  {
-    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
-    sprintf(text,"fecalc:%i spins, iteration %i, fe=%gmeV",sps.n(),i,fe);
-    sps.eps(fin_coq,text);
-    fclose (fin_coq);
-    sleep(2);
+if (ini.displayall==1)
+ {
+      fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+       sprintf(text,"fecalc:%i spins, iteration %i, fe=%gmeV",sps.n(),i,fe);
+       sps.eps(fin_coq,text);
+      fclose (fin_coq);
+      sleep(2);
 // sps.display(text);
   }
 
-  delete []jj;delete []lnzi;delete []ui;
-  return fe;     
+ delete []jj;delete []lnzi;delete []ui;
+return fe;     
 }
 
