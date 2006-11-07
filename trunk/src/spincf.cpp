@@ -15,9 +15,9 @@
 int spincf::spequal(Vector a,Vector b)
 {// in this function we look if two spins are equal or not (used in order to compare or reduce
  // spinconfigurations
-//if(a*b/Norm(a)/Norm(b)<COSINE){return false;} // this is by the inner product
+ //if(a*b/Norm(a)/Norm(b)<COSINE){return false;} // this is by the inner product
 
-//this is by looking if any of the components of the 2 spins have differen signs
+ //this is by looking if any of the components of the 2 spins have differen signs
  int i;
  for (i=a.Lo();i<=a.Hi();++i)
  {if (fabs(a(i))>SMALL||fabs(b(i))>SMALL)
@@ -290,7 +290,7 @@ nofa=nn1;
 nofb=nn2;    
 nofc=k;
 
-  printf("n1=%i n2=%i n3=%i\n",nofa,nofb,nofc);
+//  printf("n1=%i n2=%i n3=%i\n",nofa,nofb,nofc);
   
   j=fseek(fin_coq,pos,SEEK_SET); if (j!=0) return 0;
 
@@ -450,9 +450,10 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
   // orientation:1 ab 2 ac 3 bc projection
   //             4 ab 5 ac 6 bc side view
   int i,j,k,l;char r1,r2,r3;
+  
   Vector a(1,2);
   Vector b(1,2),c(1,3);
-  float scale,d,bbheight,bbwidth;
+  double scale,d,bbheight,bbwidth,t;
  
  // determine scale factor of moments
   scale=0;
@@ -488,6 +489,8 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
    ddd(7)=0;
    ddd(8)=pa(i)+pb(i)+pc(i);
    min(i)=Min(ddd);max(i)=Max(ddd);
+   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
+   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
   }
   max_min=max-min;    
  
@@ -585,9 +588,9 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
   // plot atoms and moments in region xmin to xmax (quader)
 int i1,j1,k1,i2,k2,j2,i1true,j1true,k1true;
    fprintf(fout,"/Helvetica findfont\n %i scalefont setfont\n",(int)(1000/nofa/nofb/nofc+1));
-i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){
-j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){
-k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){
+i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
    dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
@@ -626,6 +629,189 @@ fprintf(fout,"showpage\n");
   
 
  }
+
+void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z) //print std file to stream
+{int i,j,k,l,ctr=1;
+ double t;
+  // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
+  Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
+  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3);
+  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
+  for (i=1;i<=3;++i)
+  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
+  }
+  pa=p.Column(1);  //primitive magnetic unit cell
+  pb=p.Column(2);
+  pc=p.Column(3);
+  for (i=1;i<=3;++i)
+  {ddd(1)=pa(i);
+   ddd(2)=pb(i);
+   ddd(3)=pc(i);
+   ddd(4)=pa(i)+pb(i);
+   ddd(5)=pa(i)+pc(i);
+   ddd(6)=pb(i)+pc(i);
+   ddd(7)=0;
+   ddd(8)=pa(i)+pb(i)+pc(i);
+   min(i)=Min(ddd);max(i)=Max(ddd);
+   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
+   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
+  }
+  max_min=max-min;    
+
+
+fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
+fprintf(fout,"!Title: %s \n",text);                                                                                         
+fprintf(fout,"SPACEG P 1           \n");
+fprintf(fout,"CELL     %g    %g    %g  90.0000  90.0000 90.0000   DISPLAY MULTIPLE\n",max_min(1),max_min(2),max_min(3));
+fprintf(fout,"BOX   -0.15  1.15   -0.15  1.15    -0.15  1.15 \n");
+
+  // plot atoms in region xmin to xmax (quader)
+int i1,j1,k1,i2,k2,j2,i1true,j1true,k1true;
+i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {//         r1=l+'0';
+         dd(1)=x[l]*abc(1);
+         dd(2)=y[l]*abc(2);
+         dd(3)=z[l]*abc(3);
+         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd+=dd0;
+	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
+            {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
+             i1true=1;j1true=1;k1true=1;       
+
+//	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
+              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
+              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
+              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
+
+fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd(2),dd(3));                                                                                                                              
+	     ++ctr;
+
+	     }
+	  }
+       }}}           
+ }}}}}} 
+
+fprintf(fout," \n");
+fprintf(fout,"{\n");
+fprintf(fout,"LATTICE P\n");
+fprintf(fout,"K     0.00000   0.00000   0.00000\n");
+fprintf(fout,"SYMM  x,y,z\n");
+fprintf(fout,"MSYM  u,v,w,0.0\n");
+
+// plot moments in region xmin to xmax (quader)
+i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {//         r1=l+'0';
+         dd(1)=x[l]*abc(1);
+         dd(2)=y[l]*abc(2);
+         dd(3)=z[l]*abc(3);
+         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd+=dd0;
+	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
+            {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
+             i1true=1;j1true=1;k1true=1;       
+
+//	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
+              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
+              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
+              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
+fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd(1),dd(2),dd(3));
+fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz(1),xyz(2),xyz(3));
+	     ++ctr;
+
+	     }
+	  }
+       }}}           
+ }}}}}}
+fprintf(fout,"}\n");
+} 
+
+void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z) //print std file to stream
+{int i,j,k,l,ctr=1;
+ double alpha,beta,gamma;
+  // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
+  Vector nofabc(1,3),dd(1,3),pa(1,3),pb(1,3),pc(1,3);
+  Matrix p(1,3,1,3);
+  Vector ddd(1,8),xyz(1,3),xyz0(1,3),dd0(1,3);
+  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
+  for (i=1;i<=3;++i)
+  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
+  }
+  pa=p.Column(1);  //primitive magnetic unit cell
+  pb=p.Column(2);
+  pc=p.Column(3);
+
+gamma=180/3.1415926*acos(pa*pb/Norm(pa)/Norm(pb));if (pa*pb<0)gamma=180-gamma;
+beta=180/3.1415926*acos(pa*pc/Norm(pa)/Norm(pc));if (pa*pc<0)beta*=180-beta;
+alpha=180/3.1415926*acos(pb*pc/Norm(pb)/Norm(pc));if (pb*pc<0)alpha*=180-alpha;
+
+
+fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
+fprintf(fout,"!Title: %s \n",text);                                                                                         
+fprintf(fout,"SPACEG P 1           \n");
+fprintf(fout,"CELL     %g    %g    %g  %g %g %g   DISPLAY MULTIPLE\n",Norm(pa),Norm(pb),Norm(pc),alpha,beta,gamma);
+fprintf(fout,"BOX   -0.15  1.15   -0.15  1.15    -0.15  1.15 \n");
+
+  // plot atoms 
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {//         r1=l+'0';
+         dd(1)=x[l]*abc(1);
+         dd(2)=y[l]*abc(2);
+         dd(3)=z[l]*abc(3);
+         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd0=p.Inverse()*dd;
+fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd0(1),dd0(2),dd0(3));
+	     ++ctr;
+
+	     }
+	  }
+       }}      
+
+fprintf(fout," \n");
+fprintf(fout,"{\n");
+fprintf(fout,"LATTICE P\n");
+fprintf(fout,"K     0.00000   0.00000   0.00000\n");
+fprintf(fout,"SYMM  x,y,z\n");
+fprintf(fout,"MSYM  u,v,w,0.0\n");
+
+// plot moments 
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {//         r1=l+'0';
+         dd(1)=x[l]*abc(1);
+         dd(2)=y[l]*abc(2);
+         dd(3)=z[l]*abc(3);
+         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd0=p.Inverse()*dd;
+              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
+              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
+              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
+              xyz0=p.Inverse()*xyz; xyz0(1)*=Norm(pa);xyz0(2)*=Norm(pb);xyz0(3)*=Norm(pc);
+
+
+fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd0(1),dd0(2),dd0(3));
+fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz0(1),xyz0(2),xyz0(3));
+	     ++ctr;
+
+	     }
+	  }
+       }}           
+fprintf(fout,"}\n");
+} 
 
 
 //-----------------------------------------------------------------------

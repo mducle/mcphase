@@ -1,3 +1,5 @@
+#include<vector.h>
+
 #ifndef MYEV
 #define MYEV
 
@@ -10,5 +12,6 @@ void myPrintMatrix(FILE * file,Matrix & M);
 void myPrintVector(FILE * file,Vector & M);
 void myEigenValuesHermitean (ComplexMatrix & M,Vector & lambda,int & sort,int & maxiter);
 void myEigenSystemHermitean (ComplexMatrix & M,Vector & lambda,ComplexMatrix & l,int & sort,int & maxiter);
+void myEigenSystemHermiteanGeneral (ComplexMatrix& a, ComplexMatrix& b, Vector & e, ComplexMatrix & T, int & sort, int & maxiter);
 
 #endif

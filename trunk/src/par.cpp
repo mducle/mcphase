@@ -168,8 +168,8 @@ void par::save (FILE * file)
 void par::savelattice (FILE *file)
 { 
   errno = 0;
-  fprintf(file,"%s",rems[1]);
-  fprintf(file,"%s",rems[2]);
+  fprintf(file,"%s#\n",rems[1]);
+  //fprintf(file,"%s#\n",rems[2]);
   fprintf(file,"# a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
   fprintf(file,"# r1x=%4.6g r2x=%4.6g r3x=%4.6g\n",r[1][1],r[1][2],r[1][3]);
   fprintf(file,"# r1y=%4.6g r2y=%4.6g r3y=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);

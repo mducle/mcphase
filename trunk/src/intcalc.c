@@ -2,47 +2,68 @@
 #define PI 3.1415926535
 #define KB 0.0862     // Boltzmanns constant in mev/K
 
-double intcalc_approx(ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose)
+double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose)
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
- int i,j,i1,j1,k1,l1,i2,j2,k2,l2,s,ss,stau,sstau,ia,ja;
+ int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb;
  double intensity=1.2;
  double QQ,ki,kf;
  complex <double> chileft;
 
  // determine chi
-   ComplexMatrix chi(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
+   ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    
-   
-    for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-     stau=(ini.mf.nb()*ini.mf.nc()*(i1-1)+ini.mf.nc()*(j1-1)+k1-1)*md.nofatoms;
-     s=stau*md.nofcomponents;
+     for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
+
+
+//     stau=(ini.mf.nb()*ini.mf.nc()*(i1-1)+ini.mf.nc()*(j1-1)+k1-1)*md.nofatoms;
+//     s=stau*md.nofcomponents;
      
  for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
-     sstau=(ini.mf.nb()*ini.mf.nc()*(i2-1)+ini.mf.nc()*(j2-1)+k2-1)*md.nofatoms;
-     ss=sstau*md.nofcomponents;
-    for(ia=1;ia<=md.nofatoms;++ia){for(ja=1;ja<=md.nofatoms;++ja){
-    for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
-  chileft=PI*md.lambda(i1,j1,k1)(md.nofcomponents*ia,md.nofcomponents*ia)*md.U(i1,j1,k1)((ia-1)*md.nofcomponents+i,(ia-1)*md.nofcomponents+md.nofcomponents)*Tau(stau+ia,level);
-  chi(s+(ia-1)*md.nofcomponents+i,ss+(ja-1)*md.nofcomponents+j)=
-     chileft*conj(Tau(sstau+ja,level))*conj(md.U(i2,j2,k2)((ja-1)*md.nofcomponents+j,(ja-1)*md.nofcomponents+md.nofcomponents))*md.lambda(i2,j2,k2)(md.nofcomponents*ja,md.nofcomponents*ja);
-//     chileft*Tau.Conjugate().Transpose()(level,sstau+ja)*md.U(i2,j2,k2).Conjugate().Transpose()((ja-1)*md.nofcomponents+md.nofcomponents,(ja-1)*md.nofcomponents+j)*md.lambda(i2,j2,k2)(md.nofcomponents*ja,md.nofcomponents*ja);
+//     sstau=(ini.mf.nb()*ini.mf.nc()*(i2-1)+ini.mf.nc()*(j2-1)+k2-1)*md.nofatoms;
+//     ss=sstau*md.nofcomponents;
+    for(l1=1;l1<=md.nofatoms;++l1){
+    for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
+    for(l2=1;l2<=md.nofatoms;++l2){
+    for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
+      s=index_s(i1,j1,k1,l1,t1,md);
+      ss=index_s(i2,j2,k2,l2,t2,md);
+      b=md.baseindex(i1,j1,k1,l1,t1);
+      bb=md.baseindex(i2,j2,k2,l2,t2);
+        
+    
+    for(i=1;i<=md.nofcomponents;++i){
+    for(j=1;j<=md.nofcomponents;++j){
+  chileft=PI*conj(md.sqrt_gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.U(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
+
+  chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
+     chileft*conj(Tau(ss,level))*conj(md.U(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
+//     chileft*Tau.Conjugate().Transpose()(level,sstau+ja)*md.U(i2,j2,k2).Conjugate().Transpose()((ja-1)*md.nofcomponents+md.nofcomponents,(ja-1)*md.nofcomponents+j)*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*ja,md.nofcomponents*ja);
     }}
-   }}
+   }}}}
   }}}
  }}}
 
 
- //  chi'' to  S (bose factor) ... fluctuaion dissipation theorem
+ //  chi'' to  S (bose factor) ... fluctuation dissipation theorem
+//myPrintComplexMatrix(stdout,chi); 
+//myPrintComplexMatrix(stdout,Tau); 
 
    complex<double> im(0,1.0);
-   ComplexMatrix S(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
+   ComplexMatrix S(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    double bose;
-   if (fabs(en)>SMALL)
+   if (fabs(en)>SMALL*0.1)
    {bose=1.0/(1.0-exp(-en*(1.0/KB/ini.T)));
-   }else{//quasielastic needs special treatment
-   bose=ini.T*KB/SMALL;
+   }else{//quasielastic needs special treatment 
+         bose=ini.T*KB/(SMALL*0.1);
+         //(problem: quasielastic intensity depends on value of SMALL !!)
+	 // in principle this SMALL in denominator has to cancel with epsilon 
+	 // in population matrix Mijkl(i.e. gamma) ... therefore we skip it:
+	 // (for small energies delta_s the md.sqrt_gamma has been set = sqr(SMALL*gamma) and this is
+	 // inserted into the calculation of chi above)
+//   bose=ini.T*KB;   
    }
+  // bose=1.0;
    S=bose*2*chi;
    
  // polarization factor
@@ -62,22 +83,28 @@ double intcalc_approx(ComplexMatrix Tau, int level,double en,inimcdis & ini,par 
  //multiply polarization factor, formfactor and debeywallerfactor
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
  for(l1=1;l1<=md.nofatoms;++l1){
-   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
+ for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
+//   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
+      s=(index_s(i1,j1,k1,l1,t1,md)-1)*md.nofcomponents;
+
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
   for(l2=1;l2<=md.nofatoms;++l2){
-   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
+  for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
+//   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
+      ss=(index_s(i2,j2,k2,l2,t2,md)-1)*md.nofcomponents;
+
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
       S(s+i,ss+j)*=pol(i,j);
       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debeywallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debeywallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
     }}   
-  }
+  }}
   }}}
- }
+ }}
  }}}
 
- // determine dsigma
- //divide by number of crytallographic unit cells  (ini.mf.n()) in magnetic unit cell
+ // determine dsigma in barns per cryst unit cell !
+ //divide by number of crystallographic unit cells  (ini.mf.n()) in magnetic unit cell
 intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
 
 // here should be entered factor  k/k' + absolute scale factor
@@ -100,65 +127,87 @@ return intensity;
 
 
 
-double intcalc(double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double epsilon)
-{int i,j,i1,j1,k1,l1,i2,j2,k2,l2,s,ss;
+double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double epsilon)
+{int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,bmax,bbmax,b,bb;
  double intensity=1.2;
  double QQ,ki,kf;
 
  complex<double> z(en,epsilon);
- complex<double> eps(epsilon,0);
+ complex<double> eps(epsilon/4,0);
  // determine chi
-   ComplexMatrix chi0c(1,md.nofcomponents*md.nofatoms,1,md.nofcomponents*md.nofatoms);
-   ComplexMatrix dd(1,md.nofcomponents*md.nofatoms,1,md.nofcomponents*md.nofatoms);
-   ComplexMatrix cc(1,md.nofcomponents*md.nofatoms,1,md.nofcomponents*md.nofatoms);
-   ComplexMatrix chi(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
-   ComplexMatrix Ac(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
-   ComplexMatrix Acinv(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
-   ComplexMatrix Bc(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
+   ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+   ComplexMatrix Ac(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+   ComplexMatrix Acinv(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+   ComplexMatrix Bc(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    Ac=0;Bc=0;
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-   s=(ini.mf.nb()*ini.mf.nc()*(i1-1)+ini.mf.nc()*(j1-1)+k1-1)*md.nofcomponents*md.nofatoms;
+//   s=(ini.mf.nb()*ini.mf.nc()*(i1-1)+ini.mf.nc()*(j1-1)+k1-1)*md.nofcomponents*md.nofatoms;
+   bmax=md.baseindex_max(i1,j1,k1);
+   ComplexMatrix chi0c(1,md.nofcomponents*bmax,1,md.nofcomponents*bmax);
+   ComplexMatrix dd(1,md.nofcomponents*bmax,1,md.nofcomponents*bmax);
+   ComplexMatrix cc(1,md.nofcomponents*bmax,1,md.nofcomponents*bmax);
    cc=0; dd=0;
-   for(l1=1;l1<=md.nofatoms;++l1){for(i=1;i<=md.nofcomponents;++i){
-   Ac(s+md.nofcomponents*(l1-1)+i,s+md.nofcomponents*(l1-1)+i)=1; // set diagonal elements 1 (make Ac a unit matrix)
-   if (md.delta(i1,j1,k1)(l1)>SMALL)
-    { //normal inelastic intensity
-   cc(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=1.0/(md.delta(i1,j1,k1)(l1)-z);
-   dd(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=1.0/(md.delta(i1,j1,k1)(l1)+z);
-    }else{ 
-     //quasielastic intensity ... artificially we introduce a splitting epsilon !!! compare Jensen 91 p 158
-     if (md.delta(i1,j1,k1)(l1)<0) 
-           {// this is when transition is between the same states ---> no dd
-            cc(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=-eps/z;
-	    dd(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=0.0;
-           }else{
-            cc(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=-eps/z;
-            dd(md.nofcomponents*(l1-1)+i,md.nofcomponents*(l1-1)+i)=eps/z;
-           }
-    }
-   }}
-   chi0c=md.M(i1,j1,k1)*cc+md.M(i1,j1,k1).Transpose()*dd; 
-   for(i=1;i<=md.nofcomponents*md.nofatoms;++i){for(j=1;j<=md.nofcomponents*md.nofatoms;++j){Bc(s+i,s+j)=chi0c(i,j);}}
+   s=(index_s(i1,j1,k1,1,1,md)-1)*md.nofcomponents;
+
+   for(l1=1;l1<=md.nofatoms;++l1){
+   for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
+      b=md.baseindex(i1,j1,k1,l1,t1);   
+   for(i=1;i<=md.nofcomponents;++i)
+   {
+     if (md.delta(i1,j1,k1)(b)>SMALL)
+     { //normal inelastic intensity
+      cc(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=1.0/(md.delta(i1,j1,k1)(b)-z);
+      dd(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=0.0;
+     }
+    else if (md.delta(i1,j1,k1)(b)<-SMALL)
+     {cc(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=0.0;
+      dd(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=1.0/(-md.delta(i1,j1,k1)(b)+z);
+     }
+    else
+     { 
+     //quasielastic intensity ...  artificially we introduce a splitting epsilon !!! compare Jensen 91 p 158
+     // factor 0.5 because every transition is counted as half positive and half negative energy...
+     cc(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=0.5*eps/(eps-z);
+     dd(md.nofcomponents*(b-1)+i,md.nofcomponents*(b-1)+i)=0.5*eps/(eps+z);
+     }
+    }}}
+
+    chi0c=md.M(i1,j1,k1)*cc+md.M(i1,j1,k1).Transpose()*dd; 
+//myPrintComplexMatrix(stdout,cc); 
+    for(i=1;i<=md.nofcomponents*bmax;++i){
+     Ac(s+i,s+i)=1; // set diagonal elements 1 (make Ac a unit matrix)
+    for(j=1;j<=md.nofcomponents*bmax;++j){
+     Bc(s+i,s+j)=chi0c(i,j);
+     }}
+
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
-   ss=(ini.mf.nb()*ini.mf.nc()*(i2-1)+ini.mf.nc()*(j2-1)+k2-1)*md.nofcomponents*md.nofatoms;
-   cc=chi0c*J.mati(J.in(i1,j1,k1),J.in(i2,j2,k2));
-    for(i=1;i<=md.nofcomponents*md.nofatoms;++i){for(j=1;j<=md.nofcomponents*md.nofatoms;++j){
-      Ac(s+i,ss+j)-=cc(i,j);
-    }}   
-  }}}
+//   ss=(ini.mf.nb()*ini.mf.nc()*(i2-1)+ini.mf.nc()*(j2-1)+k2-1)*md.nofcomponents*md.nofatoms;
+     ss=(index_s(i2,j2,k2,1,1,md)-1)*md.nofcomponents;
+     bbmax=md.baseindex_max(i2,j2,k2);
+     ComplexMatrix cc1(1,md.nofcomponents*bmax,1,md.nofcomponents*bbmax);
+  
+  // for(l2=1;l2<=md.nofatoms;++l2)
+  // for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2)
+
+     cc1=chi0c*J.mati(J.in(i1,j1,k1),J.in(i2,j2,k2));
+    for(i=1;i<=md.nofcomponents*bmax;++i){for(j=1;j<=md.nofcomponents*bbmax;++j){
+      Ac(s+i,ss+j)-=cc1(i,j);
+    }}
+   }}}   
  }}}
 
 
+//myPrintComplexMatrix(stdout,Ac); 
  chi=Ac.Inverse()*Bc;
 
-//myPrintComplexMatrix(stdout,Ac); 
 
  // determine chi'' and S (bose factor)
 
    complex<double> im(0,1.0);
-   ComplexMatrix S(1,md.nofcomponents*ini.mf.n()*md.nofatoms,1,md.nofcomponents*ini.mf.n()*md.nofatoms);
+   ComplexMatrix S(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    complex<double> bose;
    bose=1.0/(1.0-exp(-z*(1.0/KB/ini.T)));
+ //  bose=1.0;
    S=bose/(im)*(chi-chi.Transpose().Conjugate());
    
  // polarization factor
@@ -178,21 +227,25 @@ double intcalc(double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector
  //multiply polarization factor, formfactor and debeywallerfactor
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
  for(l1=1;l1<=md.nofatoms;++l1){
-   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
+   for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
+//   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
+      s=(index_s(i1,j1,k1,l1,t1,md)-1)*md.nofcomponents;
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
   for(l2=1;l2<=md.nofatoms;++l2){
-   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
+   for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
+//   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
+      ss=(index_s(i2,j2,k2,l2,t2,md)-1)*md.nofcomponents;
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
       S(s+i,ss+j)*=pol(i,j);
       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debeywallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debeywallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
     }}   
-  }
+  }}
   }}}
- }
+ }}
  }}}
 
- // determine dsigma
+ // determine dsigma in barns / cryst unit
  //divide by number of crytallographic unit cells  (ini.mf.n()) in magnetic unit cell
 intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
 

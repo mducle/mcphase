@@ -124,7 +124,17 @@ abc=0;
      savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,6);
     fclose (fin_coq);
 
+    fin_coq = fopen_errchk ("./spins.fst", "w");
+     savspins.fst(fin_coq,outstr,abc,r,x,y,z);
+    fclose (fin_coq);
+
     
+   fin_coq = fopen_errchk ("./spins_prim.fst", "w");
+     savspins.fstprim(fin_coq,outstr,abc,r,x,y,z);
+    fclose (fin_coq);
+
+    
+
   printf("%s - momentum configuration <J(i)>\n",outstr);
   fprintf(fout,"#%s - momentum configuration <J(i)>\n",outstr);
   savspins.printall(fout,abc,r,x,y,z);

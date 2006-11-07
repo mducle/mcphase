@@ -21,12 +21,16 @@ void inimcdis::errexit() // type info and error exit
     printf ("	       Note: files which must be in current directory -\n");
     printf ("	             ./mcdisp.ini, ./mcphas.j, directory ./results\n");
     printf ("\n");
-    printf ("	       Options: -i     ... calculate neutron intensities\n");
-    printf ("	                -jq    ... calculate J(Q) (fourier transform of exchange)\n");
-    printf ("			-max n ... restrict single ion susceptibility to n lowest lying\n");
-    printf ("			           transitions starting from the ground state\n");
-    printf ("			-r     ... refine energies\n");
-    printf ("			-v    .... verbose\n");
+    printf (" Options: -jq                  ... calculate J(Q) (Fourier transform of exchange)\n");
+    printf ("          -max n               ... restrict single ion susceptibility to n lowest\n");
+    printf ("		                        lying transitions starting from the ground state\n");
+    printf ("	       -minE E              ... an energy range may be given by minE and maxE: only\n");
+    printf ("	       -maxE E                  single ion transitions within this energy range will \n");
+    printf ("		                        be considered\n");
+    printf ("	       -r                   ... refine energies\n");
+    printf ("	       -v                   ... verbose\n");
+    printf ("	       -c                   ... only create single ion transition file ./results/mcdisp.trs and exit\n");
+    printf ("	       -t                   ... read single ion transition file ./results/mcdisp.trs (do not create it)\n");
       exit (EXIT_FAILURE);
 } 
 

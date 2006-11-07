@@ -5,7 +5,9 @@
 
 #define MU_B 0.05788
 #define K_B  0.0862
-#define SMALL 1e-10
+#define SMALL 1e-6   //!!! must match SMALL in mcdisp.c and ionpars.cpp !!!
+                     // because it is used to decide wether for small transition
+		     // energy the matrix Mijkl contains wn-wn' or wn/kT
 #define PI 3.1415926535
 
 // additional
@@ -54,7 +56,7 @@ int strncomp(const char * s1,const char * s2, size_t n)
 Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U)
 {switch (intern_mcalc)
   {case 1: return kramer(T,gjmbH,lnZ,U);break;
-   case 2: return cfield(T,gjmbH,lnZ,U);break;
+   case 2: return (*iops).cfield(T,gjmbH,lnZ,U);break;
    default: (*m)(&J,&T,&gjmbH,&gJ,&ABC,&lnZ,&U);return J;
   }
 }
@@ -77,7 +79,7 @@ Vector & jjjpar::tetan ()
 int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta)
 {switch (intern_mcalc)
   {case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
-   case 2: return cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
    default: return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&mat,&delta);
   }
 }
@@ -215,6 +217,9 @@ jjjpar::jjjpar(FILE * file)
   transitionnumber=1;
   cf_file = fopen_errchk (cffilename, "rb");
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
+  // strip /r (dos line feed) from line if necessary
+  char *token;  
+  while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}  
   // determine the file type
   if(strncmp(instr,"#!",2)!=0)
     {fprintf(stderr,"Error: single ion property file %s does not start with '#!'\n",cffilename);
@@ -274,13 +279,13 @@ jjjpar::jjjpar(FILE * file)
 #endif
     }
    }
+  fclose(cf_file);
+
   magFF=Vector(1,14);
-  Blm=Vector(1,45);Blm=0;
   magFF=0;  magFF[1]=1;
   DWF=0;  
   
-  fclose(cf_file);
-  //start reading again at the beginning of the file
+  //start reading again at the beginning of the file to get formfactors, debye waller factor
   cf_file = fopen_errchk (cffilename, "rb");
 
   while(feof(cf_file)==false)
@@ -303,69 +308,8 @@ jjjpar::jjjpar(FILE * file)
     extract(instr,"FFj2D",magFF[14]);
    // read debeywallerfactor if given    
     extract(instr,"DWF",DWF);
-   // read crystal field parameters 
-   if (intern_mcalc==2){
-   extract(instr,"B2-2",Blm(1));
-   extract(instr,"B2-1",Blm(2));
-   extract(instr,"B20",Blm(3));
-   extract(instr,"B21",Blm(4));
-   extract(instr,"B22",Blm(5));
-   
-   extract(instr,"B3-3",Blm(6));
-   extract(instr,"B3-2",Blm(7));
-   extract(instr,"B3-1",Blm(8));
-   extract(instr,"B30",Blm(9));
-   extract(instr,"B31",Blm(10));
-   extract(instr,"B32",Blm(11));
-   extract(instr,"B32",Blm(12));
-
-   extract(instr,"B4-4",Blm(13));
-   extract(instr,"B4-3",Blm(14));
-   extract(instr,"B4-2",Blm(15));
-   extract(instr,"B4-1",Blm(16));
-   extract(instr,"B40",Blm(17));
-   extract(instr,"B41",Blm(18));
-   extract(instr,"B42",Blm(19));
-   extract(instr,"B43",Blm(20));
-   extract(instr,"B44",Blm(21));
-  
-   extract(instr,"B5-5",Blm(22));
-   extract(instr,"B5-4",Blm(23));
-   extract(instr,"B5-3",Blm(24));
-   extract(instr,"B5-2",Blm(25));
-   extract(instr,"B5-1",Blm(26));
-   extract(instr,"B50",Blm(27));
-   extract(instr,"B51",Blm(28));
-   extract(instr,"B52",Blm(29));
-   extract(instr,"B53",Blm(30));
-   extract(instr,"B54",Blm(31));
-   extract(instr,"B55",Blm(32));
- 
-   extract(instr,"B6-6",Blm(33));
-   extract(instr,"B6-5",Blm(34));
-   extract(instr,"B6-4",Blm(35));
-   extract(instr,"B6-3",Blm(36));
-   extract(instr,"B6-2",Blm(37));
-   extract(instr,"B6-1",Blm(38));
-   extract(instr,"B60",Blm(39));
-   extract(instr,"B61",Blm(40));
-   extract(instr,"B62",Blm(41));
-   extract(instr,"B63",Blm(42));
-   extract(instr,"B64",Blm(43));
-   extract(instr,"B65",Blm(44));
-   extract(instr,"B66",Blm(45));
-  }}    
+  }    
  }
-if (intern_mcalc==2){
-if((*iops).Hcf==(double)0.0){
-// calculation of the cf matrix according 
-fprintf(stderr,"crystal field parameters\n");  
-for(l=1;l<=45;++l){(*iops).Hcf+=Blm(l)*(*(*iops).Olm[l]);
-                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
-		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
-		                }
-                  }
-}}
  
 fprintf(stderr,"\nmagnetic formfactors\n");
 fprintf(stderr," FFj0A=%4.4g  FFj0a=%4.4g FFj0B=0%4.4g FFj0b=%4.4g  FFj0C=%4.4g  FFj0c=%4.4g FFj0D=%4.4g\n",magFF(1),magFF(2),magFF(3),magFF(4),magFF(5),magFF(6),magFF(7));  
@@ -567,7 +511,7 @@ Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
 	}
       else
 	{
-	  jbp = 0;
+	  jbp = ABC[2];
 	}
       jcp = 0;
     }
@@ -588,7 +532,7 @@ Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
 	}
       else
 	{
-	  jbm = 0;
+	  jbm = -ABC[2];
 	}
       jcm = 0;
     }
@@ -676,16 +620,29 @@ if (transitionnumber==2)
          jc = i*ABC[3]; 	
 	}
     }
-// now lets calculate mat
-mat(1,1)=ja*conj(ja)*(nm-np);
-mat(1,2)=ja*conj(jb)*(nm-np);
-mat(1,3)=ja*conj(jc)*(nm-np);
-mat(2,1)=jb*conj(ja)*(nm-np);
-mat(2,2)=jb*conj(jb)*(nm-np);
-mat(2,3)=jb*conj(jc)*(nm-np);
-mat(3,1)=jc*conj(ja)*(nm-np);
-mat(3,2)=jc*conj(jb)*(nm-np);
-mat(3,3)=jc*conj(jc)*(nm-np);
+ if (delta>SMALL)
+ {// now lets calculate mat
+ mat(1,1)=ja*conj(ja)*(nm-np);
+ mat(1,2)=ja*conj(jb)*(nm-np);
+ mat(1,3)=ja*conj(jc)*(nm-np);
+ mat(2,1)=jb*conj(ja)*(nm-np);
+ mat(2,2)=jb*conj(jb)*(nm-np);
+ mat(2,3)=jb*conj(jc)*(nm-np);
+ mat(3,1)=jc*conj(ja)*(nm-np);
+ mat(3,2)=jc*conj(jb)*(nm-np);
+ mat(3,3)=jc*conj(jc)*(nm-np); 
+ }else
+ {// quasielastic scattering needs epsilon * nm / KT ....
+ mat(1,1)=ja*conj(ja)*nm/K_B/T;
+ mat(1,2)=ja*conj(jb)*nm/K_B/T;
+ mat(1,3)=ja*conj(jc)*nm/K_B/T;
+ mat(2,1)=jb*conj(ja)*nm/K_B/T;
+ mat(2,2)=jb*conj(jb)*nm/K_B/T;
+ mat(2,3)=jb*conj(jc)*nm/K_B/T;
+ mat(3,1)=jc*conj(ja)*nm/K_B/T;
+ mat(3,2)=jc*conj(jb)*nm/K_B/T;
+ mat(3,3)=jc*conj(jc)*nm/K_B/T; 
+ }
 }
 else
 { delta=-SMALL; // transition within the same level
@@ -705,7 +662,7 @@ else
 	}
       else
 	{
-	  jbp = 0;
+	  jbp = -ABC[2];
 	}
       jcp = 0;
     }
@@ -726,7 +683,7 @@ else
 	}
       else
 	{
-	  jbm = 0;
+	  jbm = ABC[2];
 	}
       jcm = 0;
     }
@@ -761,252 +718,3 @@ return 3; // kramers doublet has always exactly one transition + 2 levels (quasi
 /**************************************************************************/
 
 
-//------------------------------------------------------------------------------------------------
-// ROUTINE CFIELD for full crystal field + higher order interactions
-//------------------------------------------------------------------------------------------------
-Vector & jjjpar::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
-//void cf(Vector & J,float * T,Vector & gjmbH, double * gJ,Vector & ABC, double * Z,double * U)
-{//ABC not used !!!
-    /*on input
-    T		temperature[K]
-    gJmbH	vector of effective field [meV]
-    gJ          Lande factor
-    ABC         single ion parameter values (A, B, C corresponding to <+|Ja|->,<-|Jb|->,<+|Jc|->/i
-  on output    
-    J		single ion momentum vector <J>
-    Z		single ion partition function
-    U		single ion magnetic energy
-*/
-
-// check dimensions of vector
-if(gjmbH.Hi()>48)
-   {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
-    exit(EXIT_FAILURE);}
-
-//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
-//  of a complex Hermitian matrix z.The real parts of the elements must be
-//  stored in the lower triangle of z,the imaginary parts (of the elements
-//  corresponding to the lower triangle) in the positions
-//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
-//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
-//  True, otherwise  not ordered for sort = False. The real  and imaginary
-//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
-//  The storage requirement is 3*n*n + 4*n complex numbers. 
-//  All matrices and vectors have to be allocated and removed by the user.
-//  They are checked for conformance !
-// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
-// 			   int sort, int maxiter)
-static Vector J(1,gjmbH.Hi());
-   // setup hamiltonian
-   int dj,j;
-   dj=(*iops).Hcf.Rhi();
-   Matrix Ham(1,dj,1,dj);
-   ComplexMatrix z(1,dj,1,dj);
-   ComplexMatrix za(1,dj,1,dj);
-   ComplexMatrix zb(1,dj,1,dj);
-   ComplexMatrix zc(1,dj,1,dj);
-   ComplexMatrix zolm(1,dj,1,dj);    
-
-   Ham=(*iops).Hcf-gjmbH(1)*(*iops).Ja-gjmbH(2)*(*iops).Jb-gjmbH(3)*(*iops).Jc;
-
-   for(j=4;j<=J.Hi();++j){Ham-=gjmbH(j)*(*(*iops).Olm[j-3]);}
-
-/*   int i1,j1; //printout matrix
-   for (i1=1;i1<=dj;++i1){
-    for (j1=1;j1<=dj;++j1) printf ("%4.6g ",(*(*iops).Olm[j])(i1,j1));
-    printf ("\n");
-    }*/
-      
-    
-   // diagonalize
-   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
-   int sort=0;int maxiter=1000000;
-   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
-   // calculate Z and wn (occupation probability)
-     Vector wn(1,dj);
-     double x,y;int i;
-     x=Min(En);
-     for (i=1;i<=dj;++i)
-     {if ((y=(En(i)-x)/K_B/T)<600) wn[i]=exp(-y); 
-      else wn[i]=0.0;
-    //  printf("%g\n",En(i));
-      }
-     double Zs;
-     Zs=Sum(wn);wn/=Zs;
-     lnZs=log(Zs)-x/K_B/T;
-   // calculate U
-     U=En*wn;
-   // calculate Ja,Jb,Jc
-     z=ComplexMatrix(zr,zi);
-     
-     za=(*iops).Jaa*z;
-     zb=(*iops).Jbb*z;
-     zc=(*iops).Jcc*z;
-
-    
-     J=0;
-//    ComplexVector ddd;
-    for (i=1;i<=dj;++i)
-    {
-     J[1]+=wn(i)*real(z.Column(i)*za.Column(i));
-     J[2]+=wn(i)*real(z.Column(i)*zb.Column(i));
-     J[3]+=wn(i)*real(z.Column(i)*zc.Column(i));
-    }
-     
-   for(j=4;j<=J.Hi();++j)
-   {
-    zolm=(*(*iops).OOlm[j-3])*z;
-    for (i=1;i<=dj;++i) J[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));
-   };
-
-
-return J;
-}
-/**************************************************************************/
-
-/**************************************************************************/
-// for mcdisp this routine is needed
-int jjjpar::cfielddm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
-{  /*on input
-    tn      ... number of transition to be computed 
-    ABC[i]	(not used)saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
-    gJ		lande factor
-    T		temperature[K]
-    gjmbH	vector of effective field [meV]
-  on output    
-    delta-+	energy of transition [meV]
-    mat(i,j)	<-|Ji|+><+|Jj|-> (n+-n-),  n+,n-
-    .... occupation number of states (- to + transition chosen according to transitionnumber)
-*/
-
-
-// check dimensions of vector
-if(gjmbH.Hi()>48)
-   {fprintf(stderr,"Error loadable module cfield.so: wrong number of dimensions - check number of columns in file mcphas.j\n");
-    exit(EXIT_FAILURE);}
-
-//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
-//  of a complex Hermitian matrix z.The real parts of the elements must be
-//  stored in the lower triangle of z,the imaginary parts (of the elements
-//  corresponding to the lower triangle) in the positions
-//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
-//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
-//  True, otherwise  not ordered for sort = False. The real  and imaginary
-//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
-//  The storage requirement is 3*n*n + 4*n complex numbers. 
-//  All matrices and vectors have to be allocated and removed by the user.
-//  They are checked for conformance !
-// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
-// 			   int sort, int maxiter)
-
-static Vector J(1,gjmbH.Hi());
-double lnz,u;
-J=cfield(T,gjmbH,lnz,u);  //expectation values <J>
-  int pr;
-  pr=1;
-  if (tn<0) {pr=0;tn*=-1;}
-
-   // setup hamiltonian
-   int dj,j;
-   dj=(*iops).Hcf.Rhi();
-   Matrix Ham(1,dj,1,dj);
-    
-   Ham=(*iops).Hcf-gjmbH(1)*(*iops).Ja-gjmbH(2)*(*iops).Jb-gjmbH(3)*(*iops).Jc;
- for(j=4;j<=gjmbH.Hi();++j){Ham-=gjmbH(j)*(*(*iops).Olm[j-3]);}
-
-/*   int i1,j1; //printout matrix
-    printf ("\n");
-   for (i1=1;i1<=dj;++i1){
-    for (j1=1;j1<=dj;++j1) {printf ("%4.6g ",
-    real(((*(*iops).OOlm[5])-(*iops).Jcc*(*iops).Jcc+(*iops).Jaa*(*iops).Jaa)(i1,j1)));}
-//    real(((*iops).Jcc*(*iops).Jaa+(*iops).Jaa*(*iops).Jcc)(i1,j1)));}
-//    real((*(*iops).OOlm[1])(i1,j1)));}
-    printf ("\n");
-    }
-    printf ("\n");
-   for (i1=1;i1<=dj;++i1){
-    for (j1=1;j1<=dj;++j1) {printf ("%4.6g ",
-    imag(((*(*iops).OOlm[5])-(*iops).Jcc*(*iops).Jcc+(*iops).Jaa*(*iops).Jaa)(i1,j1)));}
-//   imag(((*iops).Jcc*(*iops).Jaa+(*iops).Jaa*(*iops).Jcc)(i1,j1)));}
-//   imag((*(*iops).OOlm[1])(i1,j1)));}
-    printf ("\n");
-    }
-exit(0);      
-*/    
-   // diagonalize
-   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
-   int sort=1;int maxiter=1000000;
-   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
-   
-   
-   
-   
-   // calculate Z and wn (occupation probability)
-     Vector wn(1,dj);double Zs;
-     double x,y;int i,k,l,m;
-     x=Min(En);
-     for (i=1;i<=dj;++i)
-     {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 
-      else wn[i]=0.0;
-//      printf("%g\n",En(i));
-      }
-     Zs=Sum(wn);wn/=Zs;  
-     Zs*=exp(-x/K_B/T);
-   // calculate Ja,Jb,Jc
-     ComplexMatrix z(1,dj,1,dj);
-     ComplexMatrix * zp[gjmbH.Hi()+1];
-     for(l=1;l<=gjmbH.Hi();++l)
-      {zp[l]= new ComplexMatrix(1,dj,1,dj);}
-     z=ComplexMatrix(zr,zi);
-     
-     (*zp[1])=(*iops).Jaa*z;
-     (*zp[2])=(*iops).Jbb*z;
-     (*zp[3])=(*iops).Jcc*z;
-
-     
- for(j=4;j<=gjmbH.Hi();++j)
-    {(*zp[j])=(*(*iops).OOlm[j-3])*z;}
-     
-// calculate mat and delta for transition number tn
-// 1. get i and j from tn
-k=0;
-for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
-{++k;if(k==tn)break;
-}if(k==tn)break;}
-
-// 2. set delta
-delta=En(j)-En(i);
-
-if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dmcalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
-if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
-
-// 3. set mat
-for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=gjmbH.Hi();++m)
-{if(i==j){//take into account thermal expectation values <Jl>
-          mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-J(l))*((z.Column(j)*(*zp[m]).Column(i))-J(m));}
- else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}}
-
-
-
-if (delta/K_B/T>0.000001)
-   { if(pr==1){
-      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
-      printf(" |<%i|Ja|%i>|^2=%4.4g |<%i|Jb|%i>|^2=%4.4g |<%i|Jc|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
-      printf(" n%i-n%i=%4.4g\n",i,j,wn(i)-wn(j));}
-    mat*=(wn(i)-wn(j)); // occupation factor    
-     }else
-   {// quasielastic scattering has not wi-wj but wj*epsilon/kT
-     if(pr==1){
-      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
-      printf(" |<%i|Ja-<Ja>|%i>|^2=%4.4g |<%i|Jb-<Jb>|%i>|^2=%4.4g |<%i|Jc-<Jc>|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
-      printf(" n%i=%4.4g\n",i,wn(i));}
-    mat*=(wn(i)/K_B/T);
-   }
-
-//clean up memory
-     for(l=1;l<=gjmbH.Hi();++l)
-      {delete zp[l];}
-     
-// return number of all transitions     
- return (int)(((*iops).J+1)*(2*(*iops).J+1)); 
-}

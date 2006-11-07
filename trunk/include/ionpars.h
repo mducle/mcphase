@@ -1,4 +1,7 @@
 // declare cfield  module
+extern "C" void getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, double * lande,
+       double * rh2, double * rh4,double * rh6 );
+
 extern "C" void cfield_mcphasnew(char * iontype,double ** Jxr,double ** Jxi,  double ** Jyr, double ** Jyi, double ** Jzr, double ** Jzi,
                               double ** mo22sr, double ** mo22si,
                               double ** mo21sr, double ** mo21si,
@@ -48,7 +51,9 @@ extern "C" void cfield_mcphasnew(char * iontype,double ** Jxr,double ** Jxi,  do
                               double ** mo63cr, double ** mo63ci,
                               double ** mo64cr, double ** mo64ci,
                               double ** mo65cr, double ** mo65ci,
-                              double ** mo66cr, double ** mo66ci,int * dimj, double * alpha,double * beta, double * gamma);
+                              double ** mo66cr, double ** mo66ci,int * dimj, 
+                              double * alpha,double * beta, double * gamma, double * gJ,
+                              double * rh2, double * rh4,double * rh6);
 
 
 extern "C" void cfield_mcphas(char * cf_filename,

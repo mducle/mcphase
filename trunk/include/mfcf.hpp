@@ -43,9 +43,11 @@ class mfcf
     
     mfcf & operator= (const mfcf & op2); // zuweisung
 
-   mfcf (int n1=1,int n2=1,int n3=1, int nofatoms=1,int nofcomponents=3);	//konstruktor mit initialisierung (wenn noetig)
+   
+mfcf (int n1=1,int n2=1,int n3=1, int nofatoms=1,int nofcomponents=3);	//konstruktor mit initialisierung (wenn noetig)
    mfcf (const mfcf & spins);	// kopier-konstruktor
-   ~mfcf ();		//destruktor
+   
+~mfcf ();		//destruktor
 
 };
 

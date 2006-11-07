@@ -24,17 +24,18 @@ class jjjpar
   void (*m)(Vector*,double*,Vector*,double*,Vector*,double*,double*);  
   int  (*dm)(int*,double*,Vector*,double*,Vector*,ComplexMatrix*,float*);
   void *handle;
+
   Vector & kramer (double & T,Vector & H, double & Z,double & U);
   int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
-  Vector & cfield (double & T,Vector & H, double & Z,double & U);
-  int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+
+  ionpars * iops;
   int intern_mcalc;
   char * cffilename;
   Vector ABC;         
-  ionpars * iops;
   Vector magFF; // magnetic formfactor numbers
   double DWF; // DebeyWallerFactor 
-  Vector Blm; // Cf parameters  
+
+
   public:
 
   Vector xyz,J;
@@ -55,7 +56,8 @@ class jjjpar
    jjjpar (FILE * fin); //konstruktor with filehandle
    jjjpar (int n=1,int diag=0,int nofmom=3); // konstructor without file
    jjjpar (const jjjpar & jjjpars);	// kopier-konstruktor
-   ~jjjpar ();		//destruktor
+   
+~jjjpar ();		//destruktor
    void add(jjjpar & b, Vector & abc); // add parameters b to this
    void addpars (int number, jjjpar & addjjj); // enlarge the set of parameters by
                                                         // inserting a new exchange parameters addjjj

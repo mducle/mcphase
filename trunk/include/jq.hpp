@@ -2,6 +2,7 @@
 #include<cstdlib>
 #include<cerrno>
 #include<vector.h>
+#include<mdcf.hpp>
 #include<complex>
 
 #ifndef JQ_H
@@ -13,7 +14,7 @@ class jq
  // number of spins  
    int nofa,nofb,nofc;
    int mxa,mxb,mxc,mx;
-   ComplexMatrix * jj;
+   ComplexMatrix ** jj;
    int iv[4];
   // iindex
     int iin(int i,int j);
@@ -33,9 +34,11 @@ class jq
     int nc(); // returns number of spins
   
 
-   jq (int n1,int n2,int n3, int n,int nc);	//konstruktor 
-   jq (const jq & spins);	// kopier-konstruktor
-   ~jq ();		//destruktor
+   
+jq (int n1,int n2,int n3,mdcf & m);	//konstruktor 
+//   jq (const jq & spins);	// kopier-konstruktor
+   
+~jq ();		//destruktor
 
 };
 

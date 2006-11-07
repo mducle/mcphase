@@ -6,14 +6,21 @@
 
 #define NOF_OLM_MATRICES 45
 #define MAXNOFCHARINLINE 1024
+#define K_B  0.0862
+#define SMALL 1e-6   //!!! must match SMALL in mcdisp.c and ionpars.cpp !!!
+                     // because it is used to decide wether for small transition
+		     // energy the matrix Mijkl contains wn-wn' or wn/kT
 
  ionpars::ionpars (const ionpars & p) //copy constructor
  {J=p.J;
   Ja=p.Ja; Jb=p.Jb; Jc=p.Jc;Hcf=p.Hcf;
   Jaa=p.Jaa; Jbb=p.Jbb; Jcc=p.Jcc;
+  gJ=p.gJ;
   alpha=p.alpha;beta=p.beta;gamma=p.gamma;
+  r2=p.r2;r4=p.r4;r6=p.r6;
+  Blm=p.Blm; // vector of crystal field parameters
   
- int i;
+   int i;
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
 
@@ -26,7 +33,6 @@
  }  
 
 }
- 
 ionpars::ionpars (int dimj) // constructor from dimj
  {
   J=((double)dimj-1)/2;
@@ -38,8 +44,40 @@ ionpars::ionpars (int dimj) // constructor from dimj
   Jbb=ComplexMatrix(1,dimj,1,dimj);
   Jcc=ComplexMatrix(1,dimj,1,dimj);
 
+   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
+
+
+ int i;   
+ for(i=1;i<=NOF_OLM_MATRICES;++i)
+ { Olm [i]= new Matrix(1,dimj,1,dimj); 
+ // define first matrix 
+   OOlm [i] = new ComplexMatrix(1,dimj,1,dimj); 
+ }  
+
+}
+
+ 
+ionpars::ionpars (char * iontype) // constructor from iontype (mind:no matrices filled with values !)
+ {int dimj;
+  getpar(iontype, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
+
+  J=((double)dimj-1)/2;
+  Ja=Matrix(1,dimj,1,dimj);
+  Jb=Matrix(1,dimj,1,dimj);
+  Jc=Matrix(1,dimj,1,dimj);
+  Hcf=Matrix(1,dimj,1,dimj);
+  Jaa=ComplexMatrix(1,dimj,1,dimj);
+  Jbb=ComplexMatrix(1,dimj,1,dimj);
+  Jcc=ComplexMatrix(1,dimj,1,dimj);
+
+   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+
+   Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
+   OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
+
 
  int i;   
  for(i=1;i<=NOF_OLM_MATRICES;++i)
@@ -58,20 +96,128 @@ ionpars::~ionpars(){
   delete []OOlm;
  } //destructor
 
+void ionpars::savBlm(FILE * outfile)
+{
+        fprintf(outfile,"B22S=%g\n",Blm(1));
+        fprintf(outfile,"B21S=%g\n",Blm(2));
+	fprintf(outfile,"B20=%g\n",Blm(3));
+        fprintf(outfile,"B21=%g\n",Blm(4));
+	fprintf(outfile,"B22=%g\n",Blm(5));
+   
+	fprintf(outfile,"B33S=%g\n",Blm(6));
+	fprintf(outfile,"B32S=%g\n",Blm(7));
+	fprintf(outfile,"B31S=%g\n",Blm(8));
+	fprintf(outfile,"B30=%g\n",Blm(9));
+   fprintf(outfile,"B31=%g\n",Blm(10));
+   fprintf(outfile,"B32=%g\n",Blm(11));
+   fprintf(outfile,"B32=%g\n",Blm(12));
+
+   fprintf(outfile,"B44S=%g\n",Blm(13));
+   fprintf(outfile,"B43S=%g\n",Blm(14));
+   fprintf(outfile,"B42S=%g\n",Blm(15));
+   fprintf(outfile,"B41S=%g\n",Blm(16));
+   fprintf(outfile,"B40=%g\n",Blm(17));
+   fprintf(outfile,"B41=%g\n",Blm(18));
+   fprintf(outfile,"B42=%g\n",Blm(19));
+   fprintf(outfile,"B43=%g\n",Blm(20));
+   fprintf(outfile,"B44=%g\n",Blm(21));
+  
+   fprintf(outfile,"B55S=%g\n",Blm(22));
+   fprintf(outfile,"B54S=%g\n",Blm(23));
+   fprintf(outfile,"B53S=%g\n",Blm(24));
+   fprintf(outfile,"B52S=%g\n",Blm(25));
+   fprintf(outfile,"B51S=%g\n",Blm(26));
+   fprintf(outfile,"B50=%g\n",Blm(27));
+   fprintf(outfile,"B51=%g\n",Blm(28));
+   fprintf(outfile,"B52=%g\n",Blm(29));
+   fprintf(outfile,"B53=%g\n",Blm(30));
+   fprintf(outfile,"B54=%g\n",Blm(31));
+   fprintf(outfile,"B55=%g\n",Blm(32));
+ 
+   fprintf(outfile,"B66S=%g\n",Blm(33));
+   fprintf(outfile,"B65S=%g\n",Blm(34));
+   fprintf(outfile,"B64S=%g\n",Blm(35));
+   fprintf(outfile,"B63S=%g\n",Blm(36));
+   fprintf(outfile,"B62S=%g\n",Blm(37));
+   fprintf(outfile,"B61S=%g\n",Blm(38));
+   fprintf(outfile,"B60=%g\n",Blm(39));
+   fprintf(outfile,"B61=%g\n",Blm(40));
+   fprintf(outfile,"B62=%g\n",Blm(41));
+   fprintf(outfile,"B63=%g\n",Blm(42));
+   fprintf(outfile,"B64=%g\n",Blm(43));
+   fprintf(outfile,"B65=%g\n",Blm(44));
+   fprintf(outfile,"B66=%g\n",Blm(45));
+
+}
+
 ionpars::ionpars(FILE * cf_file) 
 //constructor with commands from file handle (filename of cf parameters etc)
 { 
 static int pr=1;
-  FILE * tryfile;
+//  FILE * tryfile;
   int dimj;complex<double> im(0,1);
-  int i,j,dj=30; //30 ... maximum number of 2j+1
+  int i,j,l,dj=30; //30 ... maximum number of 2j+1
   char instr[MAXNOFCHARINLINE];
   char iontype[MAXNOFCHARINLINE];
-//  char * cf_filename;
+  
+   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
 
-  // read in lines until  IONTYPE=
-  while(fgets(instr,MAXNOFCHARINLINE,cf_file)!=NULL&&
-        (i=extract(instr,"IONTYPE",iontype,(size_t)MAXNOFCHARINLINE))==1);
+  // read in lines and get IONTYPE=  and CF parameters Blm
+   while(feof(cf_file)==false)
+  {fgets(instr, MAXNOFCHARINLINE, cf_file);
+   if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+        extract(instr,"IONTYPE",iontype,(size_t)MAXNOFCHARINLINE);
+        extract(instr,"B22S",Blm(1));
+        extract(instr,"B21S",Blm(2));
+	extract(instr,"B20",Blm(3));
+        extract(instr,"B21",Blm(4));
+	extract(instr,"B22",Blm(5));
+   
+	extract(instr,"B33S",Blm(6));
+	extract(instr,"B32S",Blm(7));
+	extract(instr,"B31S",Blm(8));
+	extract(instr,"B30",Blm(9));
+   extract(instr,"B31",Blm(10));
+   extract(instr,"B32",Blm(11));
+   extract(instr,"B32",Blm(12));
+
+   extract(instr,"B44S",Blm(13));
+   extract(instr,"B43S",Blm(14));
+   extract(instr,"B42S",Blm(15));
+   extract(instr,"B41S",Blm(16));
+   extract(instr,"B40",Blm(17));
+   extract(instr,"B41",Blm(18));
+   extract(instr,"B42",Blm(19));
+   extract(instr,"B43",Blm(20));
+   extract(instr,"B44",Blm(21));
+  
+   extract(instr,"B55S",Blm(22));
+   extract(instr,"B54S",Blm(23));
+   extract(instr,"B53S",Blm(24));
+   extract(instr,"B52S",Blm(25));
+   extract(instr,"B51S",Blm(26));
+   extract(instr,"B50",Blm(27));
+   extract(instr,"B51",Blm(28));
+   extract(instr,"B52",Blm(29));
+   extract(instr,"B53",Blm(30));
+   extract(instr,"B54",Blm(31));
+   extract(instr,"B55",Blm(32));
+ 
+   extract(instr,"B66S",Blm(33));
+   extract(instr,"B65S",Blm(34));
+   extract(instr,"B64S",Blm(35));
+   extract(instr,"B63S",Blm(36));
+   extract(instr,"B62S",Blm(37));
+   extract(instr,"B61S",Blm(38));
+   extract(instr,"B60",Blm(39));
+   extract(instr,"B61",Blm(40));
+   extract(instr,"B62",Blm(41));
+   extract(instr,"B63",Blm(42));
+   extract(instr,"B64",Blm(43));
+   extract(instr,"B65",Blm(44));
+   extract(instr,"B66",Blm(45));
+
+	}}
   
   
  // instr[strspn(instr," \t")]=='#');
@@ -302,10 +448,8 @@ if (pr==1) printf("#using cfield ...\n");
   mo65cr,mo65ci,
   mo66cr,mo66ci,
 
-  &dimj,&alpha,&beta,&gamma);
+  &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6);
 
-  Hcf= Matrix(1,dimj,1,dimj); 
-  Hcf=0;
 
 
 if (pr==1) printf("#end using cfield\n");
@@ -562,6 +706,18 @@ if(i<j){(*Olm[45])(i,j)=(mo66ci[j])[i];}else{(*Olm[45])(i,j)=(mo66cr[i])[j];}
    delete []mo65cr;delete []mo65ci;
    delete []mo66cr;delete []mo66ci;
    
+  Hcf= Matrix(1,dimj,1,dimj); 
+  Hcf=0;
+
+   if(Hcf==(double)0.0){
+   // calculation of the cf matrix according 
+   fprintf(stderr,"crystal field parameters\n");  
+   for(l=1;l<=45;++l){Hcf+=Blm(l)*(*Olm[l]);
+                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
+		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
+		                }
+                  }
+   }
    
 //ATTENTION FOR NDCU2 the AXES xyz are parallel to cab
 Matrix dummy(1,dimj,1,dimj);
@@ -591,4 +747,280 @@ printf("#\n");
 }
 
 pr=0;
+}
+
+
+//------------------------------------------------------------------------------------------------
+// ROUTINE CFIELD for full crystal field + higher order interactions
+//------------------------------------------------------------------------------------------------
+Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
+{//ABC not used !!!
+    /*on input
+    T		temperature[K]
+    gJmbH	vector of effective field [meV]
+    gJ          Lande factor
+    ABC         single ion parameter values (A, B, C corresponding to <+|Ja|->,<-|Jb|->,<+|Jc|->/i
+  on output    
+    J		single ion momentum vector <J> (if T>0 thermal exp value <J>T 
+                                                if T<0 the program asks for w_n and calculates
+						       exp value <J>=sum_n w_n <n|J|n>
+						       
+    Z		single ion partition function
+    U		single ion magnetic energy
+*/
+
+// check dimensions of vector
+if(gjmbH.Hi()>48)
+   {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
+    exit(EXIT_FAILURE);}
+
+//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
+//  of a complex Hermitian matrix z.The real parts of the elements must be
+//  stored in the lower triangle of z,the imaginary parts (of the elements
+//  corresponding to the lower triangle) in the positions
+//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
+//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
+//  True, otherwise  not ordered for sort = False. The real  and imaginary
+//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
+//  The storage requirement is 3*n*n + 4*n complex numbers. 
+//  All matrices and vectors have to be allocated and removed by the user.
+//  They are checked for conformance !
+// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
+// 			   int sort, int maxiter)
+static Vector JJ(1,gjmbH.Hi());
+   // setup hamiltonian
+   int dj,j;
+   dj=Hcf.Rhi();
+   Matrix Ham(1,dj,1,dj);
+   ComplexMatrix z(1,dj,1,dj);
+   ComplexMatrix za(1,dj,1,dj);
+   ComplexMatrix zb(1,dj,1,dj);
+   ComplexMatrix zc(1,dj,1,dj);
+   ComplexMatrix zolm(1,dj,1,dj);    
+
+   Ham=Hcf-gjmbH(1)*Ja-gjmbH(2)*Jb-gjmbH(3)*Jc;
+
+   for(j=4;j<=JJ.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);}
+
+/*   int i1,j1; //printout matrix
+   for (i1=1;i1<=dj;++i1){
+    for (j1=1;j1<=dj;++j1) printf ("%4.6g ",(*Olm[j])(i1,j1));
+    printf ("\n");
+    }*/
+      
+    
+   // diagonalize
+   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
+   int sort=0;int maxiter=1000000;
+   if (T<0) sort=1;
+   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
+
+   // calculate Z and wn (occupation probability)
+     Vector wn(1,dj);
+     double x,y;int i;
+     x=Min(En);
+     double Zs;
+
+     if (T>0)
+     { for (i=1;i<=dj;++i)
+       {if ((y=(En(i)-x)/K_B/T)<600) wn[i]=exp(-y); 
+        else wn[i]=0.0;
+       }
+       Zs=Sum(wn);wn/=Zs;
+ 
+       lnZs=log(Zs)-x/K_B/T;
+     } 
+     else
+     { printf ("Temperature T<0: please choose probability distribution of states by hand\n");
+                         printf ("Number   Energy     Excitation Energy\n");
+     for (i=1;i<=dj;++i) printf ("%i    %4.4g meV   %4.4g meV\n",i,En(i),En(i)-x);
+     char instr[MAXNOFCHARINLINE];
+     for (i=1;i<=dj;++i)
+      {printf("eigenstate %i: %4.4g meV %4.4g meV  - please enter probability w(%i):",i,En(i),En(i)-x,i);
+       fgets(instr, MAXNOFCHARINLINE, stdin);
+ 
+       wn(i)=strtod(instr,NULL);
+      }
+       Zs=Sum(wn);wn/=Zs;
+ 
+       lnZs=log(Zs);
+                         printf ("\n\nNumber   Energy     Excitation Energy   Probability\n");
+     for (i=1;i<=dj;++i) printf ("%i    %4.4g meV   %4.4g meV %4.4g  \n",i,En(i),En(i)-x,wn(i));
+     }
+
+   // calculate U
+     U=En*wn;
+   // calculate Ja,Jb,Jc
+     z=ComplexMatrix(zr,zi);
+     
+     za=Jaa*z;
+     zb=Jbb*z;
+     zc=Jcc*z;
+
+    
+     JJ=0;
+//    ComplexVector ddd;
+    for (i=1;i<=dj;++i)
+    {
+     JJ[1]+=wn(i)*real(z.Column(i)*za.Column(i));
+     JJ[2]+=wn(i)*real(z.Column(i)*zb.Column(i));
+     JJ[3]+=wn(i)*real(z.Column(i)*zc.Column(i));
+    }
+     
+   for(j=4;j<=JJ.Hi();++j)
+   {
+    zolm=(*OOlm[j-3])*z;
+    for (i=1;i<=dj;++i) JJ[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));
+   };
+  
+
+return JJ;
+}
+/**************************************************************************/
+
+/**************************************************************************/
+// for mcdisp this routine is needed
+int ionpars::cfielddm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
+{  /*on input
+    tn      ... number of transition to be computed 
+    ABC[i]	(not used)saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
+    gJ		lande factor
+    T		temperature[K]
+    gjmbH	vector of effective field [meV]
+  on output    
+    delta-+	energy of transition [meV]
+    mat(i,j)	<-|Ji|+><+|Jj|-> (n+-n-),  n+,n-
+    .... occupation number of states (- to + transition chosen according to transitionnumber)
+*/
+
+
+// check dimensions of vector
+if(gjmbH.Hi()>48)
+   {fprintf(stderr,"Error loadable module cfield.so: wrong number of dimensions - check number of columns in file mcphas.j\n");
+    exit(EXIT_FAILURE);}
+
+//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
+//  of a complex Hermitian matrix z.The real parts of the elements must be
+//  stored in the lower triangle of z,the imaginary parts (of the elements
+//  corresponding to the lower triangle) in the positions
+//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
+//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
+//  True, otherwise  not ordered for sort = False. The real  and imaginary
+//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
+//  The storage requirement is 3*n*n + 4*n complex numbers. 
+//  All matrices and vectors have to be allocated and removed by the user.
+//  They are checked for conformance !
+// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
+// 			   int sort, int maxiter)
+
+static Vector JJ(1,gjmbH.Hi());
+double lnz,u;
+JJ=cfield(T,gjmbH,lnz,u);  //expectation values <J>
+  int pr;
+  pr=1;
+  if (tn<0) {pr=0;tn*=-1;}
+
+   // setup hamiltonian
+   int dj,j;
+   dj=Hcf.Rhi();
+   Matrix Ham(1,dj,1,dj);
+    
+   Ham=Hcf-gjmbH(1)*Ja-gjmbH(2)*Jb-gjmbH(3)*Jc;
+ for(j=4;j<=gjmbH.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);}
+
+/*   int i1,j1; //printout matrix
+    printf ("\n");
+   for (i1=1;i1<=dj;++i1){
+    for (j1=1;j1<=dj;++j1) {printf ("%4.6g ",
+    real(((*OOlm[5])-Jcc*Jcc+Jaa*Jaa)(i1,j1)));}
+//    real((Jcc*Jaa+Jaa*Jcc)(i1,j1)));}
+//    real((*OOlm[1])(i1,j1)));}
+    printf ("\n");
+    }
+    printf ("\n");
+   for (i1=1;i1<=dj;++i1){
+    for (j1=1;j1<=dj;++j1) {printf ("%4.6g ",
+    imag(((*OOlm[5])-Jcc*Jcc+Jaa*Jaa)(i1,j1)));}
+//   imag((Jcc*Jaa+Jaa*Jcc)(i1,j1)));}
+//   imag((*OOlm[1])(i1,j1)));}
+    printf ("\n");
+    }
+exit(0);      
+*/    
+   // diagonalize
+   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
+   int sort=1;int maxiter=1000000;
+   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
+   
+   
+   
+   
+   // calculate Z and wn (occupation probability)
+     Vector wn(1,dj);double Zs;
+     double x,y;int i,k,l,m;
+     x=Min(En);
+     for (i=1;i<=dj;++i)
+     {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 
+      else wn[i]=0.0;
+//      printf("%4.4g\n",En(i));
+      }
+     Zs=Sum(wn);wn/=Zs;  
+     Zs*=exp(-x/K_B/T);
+   // calculate Ja,Jb,Jc
+     ComplexMatrix z(1,dj,1,dj);
+     ComplexMatrix * zp[gjmbH.Hi()+1];
+     for(l=1;l<=gjmbH.Hi();++l)
+      {zp[l]= new ComplexMatrix(1,dj,1,dj);}
+     z=ComplexMatrix(zr,zi);
+     
+     (*zp[1])=Jaa*z;
+     (*zp[2])=Jbb*z;
+     (*zp[3])=Jcc*z;
+
+     
+ for(j=4;j<=gjmbH.Hi();++j)
+    {(*zp[j])=(*OOlm[j-3])*z;}
+     
+// calculate mat and delta for transition number tn
+// 1. get i and j from tn
+k=0;
+for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
+{++k;if(k==tn)break;
+}if(k==tn)break;}
+
+// 2. set delta
+delta=En(j)-En(i);
+
+if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dmcalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
+if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
+
+// 3. set mat
+for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=gjmbH.Hi();++m)
+{if(i==j){//take into account thermal expectation values <Jl>
+          mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-JJ(l))*((z.Column(j)*(*zp[m]).Column(i))-JJ(m));}
+ else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}}
+
+
+
+if (delta>SMALL)
+   { if(pr==1){
+      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+      printf(" |<%i|Ja|%i>|^2=%4.4g |<%i|Jb|%i>|^2=%4.4g |<%i|Jc|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
+      printf(" n%i-n%i=%4.4g\n",i,j,wn(i)-wn(j));}
+    mat*=(wn(i)-wn(j)); // occupation factor    
+     }else
+   {// quasielastic scattering has not wi-wj but wj*epsilon/kT
+     if(pr==1){
+      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+      printf(" |<%i|Ja-<Ja>|%i>|^2=%4.4g |<%i|Jb-<Jb>|%i>|^2=%4.4g |<%i|Jc-<Jc>|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
+      printf(" n%i=%4.4g\n",i,wn(i));}
+    mat*=(wn(i)/K_B/T);
+   }
+
+//clean up memory
+     for(l=1;l<=gjmbH.Hi();++l)
+      {delete zp[l];}
+     
+// return number of all transitions     
+ return (int)((J+1)*(2*J+1)); 
 }

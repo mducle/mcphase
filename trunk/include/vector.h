@@ -1219,6 +1219,7 @@ inline void MpQuantile (const Matrix& a, int m, double q, double &qq, double &st
   MpQuantile (a.Store(), a.Elements(), (unsigned) m, q, qq, stdv); 
 }
 
+
 #endif
 
 //----------------------------------------------------------------------------//

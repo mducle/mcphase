@@ -48,7 +48,8 @@ class spincf
                       //returns position of atom l at lattice site (i j k) (Angstrom)
     void invert();// inverts all spins (AND higher order moments)
     void reduce();// reduces spinconfiguration
-    void spinfromq (int n1,int n2, int n3,Vector & qvector,
+    void 
+spinfromq (int n1,int n2, int n3,Vector & qvector,
          Vector & nettom,Vector & momentq0, Vector & phi);
 
     void print(FILE * fout);
@@ -56,16 +57,20 @@ class spincf
     void eps(FILE * fout);
     void eps(FILE * fout,char * text);
     void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation);
+    void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
+    void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
     int  load(FILE * fin_coq);	
      
     
     spincf & operator= (const spincf & op2); // zuweisung
     int operator== (spincf & op2); // vergleich
 
-   spincf (int n1=1,int n2=1,int n3=1,int nofatoms=1,int nofcomponents=3);
+   
+spincf (int n1=1,int n2=1,int n3=1,int nofatoms=1,int nofcomponents=3);
                                    //konstruktor mit initialisierung (wenn noetig)
    spincf (const spincf & spins);	// kopier-konstruktor
-   ~spincf ();		//destruktor
+   
+~spincf ();		//destruktor
 
 };
 

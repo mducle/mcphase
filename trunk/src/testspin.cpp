@@ -84,6 +84,7 @@ if (nofatoms!=na||nofcomponents!=nm)
         {delete configurations[i];
 	break;
 	}
+      printf("n1=%i n2=%i n3=%i\n",(*configurations[i]).na(),(*configurations[i]).nb(),(*configurations[i]).nc());
       configurations[i]->reduce();
       fout = fopen_errchk ("./results/.spins.eps", "w");
       sprintf(text,"Testspinconfiguration No %i",i);

@@ -5,6 +5,7 @@
 void checkini(testspincf & testspins,qvectors & testqs)
 {struct stat filestatus;
  static time_t last_modify_time;
+ static int washere=0;
  int loaderr;
   errno = 0;
 
@@ -13,8 +14,10 @@ void checkini(testspincf & testspins,qvectors & testqs)
               ini.savfilename, strerror (errno));exit (EXIT_FAILURE);
      }
 
-
- if (filestatus.st_mtime!=last_modify_time) //check if file has been modified
+  if(washere==0){washere=1;last_modify_time=filestatus.st_mtime;}
+  
+   
+    if (filestatus.st_mtime!=last_modify_time) //check if file has been modified
     {again:
      last_modify_time=filestatus.st_mtime;
      fprintf(stdout,"mcphas.ini has been modified - reading new mcphas.ini\n");
@@ -70,6 +73,8 @@ int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
  mfcf * mf;
  FILE * felog; // logfile for q dependence of fe
  FILE * fin_coq;
+
+if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check mcphas.ini !");exit(EXIT_FAILURE);}
 
  srand(time(0)); // initialize random number generator
  checkini(testspins,testqs); // check if user pressed a button
@@ -248,7 +253,7 @@ else // if yes ... then
                     fclose (fin_coq);
 		}
  //check if fecalculation gives again correct result
-   if (physprops.fe>femin+0.0001){fprintf(stderr,"Warning htcalc.c: at T=%g K /  H= %g Tfemin=%4.9g was calc.(conf no %i),\n but recalculation  gives fe= %4.9gmeV -> no structure saved\n",
+   if (physprops.fe>femin+(0.00001*fabs(femin))){fprintf(stderr,"Warning htcalc.c: at T=%g K /  H= %g Tfemin=%4.9g was calc.(conf no %i),\n but recalculation  gives fe= %4.9gmeV -> no structure saved\n",
                             T,Norm(H),femin,physprops.j,physprops.fe);delete mf;return 2;}
  physpropclc(H,T,sps,(*mf),physprops,inputpars);
       delete mf;

@@ -12,31 +12,39 @@
 
 #define MAXNOFSPINS  200
 
+// returns sum of all components of intvector
+int sum(IntVector & v)
+ {int i,sum=0;
+ for (i=v.Lo();i<=v.Hi();++i)
+ {sum+=v(i);}
+  return sum;
+}
+
 // returns md of spin [i=na,j=nb,k=nc] 
 ComplexMatrix & mdcf::U(int na, int nb, int nc)
-{ return s[in(na,nb,nc)];
+{ return (*s[in(na,nb,nc)]);
 }
 ComplexMatrix & mdcf::M(int na, int nb, int nc)
-{ return m[in(na,nb,nc)];
+{ return (*m[in(na,nb,nc)]);
 }
-ComplexMatrix & mdcf::lambda(int na, int nb, int nc)
-{ return l[in(na,nb,nc)];
+ComplexMatrix & mdcf::sqrt_gamma(int na, int nb, int nc)
+{ return (*l[in(na,nb,nc)]);
 }
 Vector & mdcf::delta(int na, int nb, int nc)
-{ return d[in(na,nb,nc)];
+{ return (*d[in(na,nb,nc)]);
 }
 // the same but for spin number "i"
 ComplexMatrix & mdcf::Ui(int i)
-{ return s[i];
+{ return (*s[i]);
 }
 ComplexMatrix & mdcf::Mi(int i)
-{ return m[i];
+{ return (*m[i]);
 }
-ComplexMatrix & mdcf::lambdai(int i)
-{ return l[i];
+ComplexMatrix & mdcf::sqrt_gammai(int i)
+{ return (*l[i]);
 }
 Vector  & mdcf::deltai(int i)
-{ return d[i];
+{ return (*d[i]);
 }
 // get index ijk=iv(1-3)  of spinconfiguration number in 
 int * mdcf::ijk(int in)
@@ -68,6 +76,117 @@ int mdcf::nc()
 
 /**************************************************************************/
 
+//constructors
+mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
+{  int i,j,k,i1;
+   nofa=n1;nofb=n2;nofc=n3;
+   mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
+   nofatoms=n;nofcomponents=nc;
+   
+//dimension arrays
+  s = new ComplexMatrix * [mxa*mxb*mxc+1];//(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  if (s == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  m = new ComplexMatrix * [mxa*mxb*mxc+1];
+  if (m == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  l = new ComplexMatrix * [mxa*mxb*mxc+1];
+  if (l == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  d = new Vector * [mxa*mxb*mxc+1]; //(1,nofatoms);
+  if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+  nt= new IntVector [mxa*mxb*mxc+1](1,nofatoms);
+  if (nt == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+}
+ 
+// has to be called before mdcf object can be used for calculation
+void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)
+{      
+      nt[in(i,j,k)]=notr;
+     s[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     m[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     l[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     d[in(i,j,k)]= new Vector(1,sum(nt[in(i,j,k)]));
+      
+}
+
+int mdcf::baseindex(int i, int j, int k, int l, int tn)
+{// the baseindex is used to number the rows an columns of the
+ // matrices associated with the crystallographic unit number ijk
+ // it starts at one and combines indices l (atom number) and t (number of
+ // transition for this atom) into a single index bi, its maximum value is
+ // baseindex_max
+  int bi=0;
+  int i1;
+for(i1=1;i1<=l;++i1)
+{bi+=nt[in(i,j,k)](i1);}
+bi-=nt[in(i,j,k)](l);
+bi+=tn;
+return bi;
+}
+
+int mdcf::baseindex_max(int i, int j, int k)
+{return sum(nt[in(i,j,k)]);}
+
+int mdcf::noft(int i, int j, int k,int l)
+{return nt[in(i,j,k)](l);}
+
+//destruktor
+mdcf::~mdcf ()
+{int i,j,k;
+ for (i=1;i<=nofa;++i){
+ for (j=1;j<=nofb;++j){
+ for (k=1;k<=nofc;++k){
+ delete s[in(i,j,k)];
+ delete m[in(i,j,k)];
+ delete l[in(i,j,k)];
+ delete d[in(i,j,k)];
+ }}}
+ delete []s;delete []m;delete []d;delete []l;delete []nt;
+}
+
+
+
+/*
+//kopier-konstruktor
+mdcf::mdcf (const mdcf & p)
+{ int i,j,k;
+  nofa=p.nofa;nofb=p.nofb;nofc=p.nofc;
+  mxa=p.mxa; mxb=p.mxb; mxc=p.mxc;
+  nofatoms=p.nofatoms;nofcomponents=p.nofcomponents;
+//dimension arrays
+  s = new ComplexMatrix[mxa*mxb*mxc+1]; //(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  if (s == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  m = new ComplexMatrix[mxa*mxb*mxc+1];
+  if (m == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  l = new ComplexMatrix[mxa*mxb*mxc+1];
+  if (l == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  d = new Vector[mxa*mxb*mxc+1];//(1,nofatoms);
+  if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+  nt = new IntVector[mxa*mxb*mxc+1](1,nofatoms);
+  if (nt == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+
+
+
+ for (i=1;i<=nofa;++i)
+  {for (j=1;j<=nofb;++j)
+    {for (k=1;k<=nofc;++k)
+     {
+      nt[in(i,j,k)]=p.nt[in(i,j,k)];
+
+      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      d[in(i,j,k)]= Vector(1,sum(nt[in(i,j,k)]),1,sum(nt[in(i,j,k)]));
+
+      d[in(i,j,k)]=p.d[in(i,j,k)];
+      s[in(i,j,k)]=p.s[in(i,j,k)];
+      m[in(i,j,k)]=p.m[in(i,j,k)];
+      l[in(i,j,k)]=p.l[in(i,j,k)];
+     } 
+    }
+  }           
+
+}
+*/
+/*
 //zuweisung
 mdcf & mdcf::operator= (const mdcf & op2)
 {int i,j,k;
@@ -76,83 +195,39 @@ mdcf & mdcf::operator= (const mdcf & op2)
  nofatoms=op2.nofatoms;
  nofcomponents=op2.nofcomponents;
   
-  delete[]s;delete []m;delete []d;delete []l;
+  delete[]s;delete []m;delete []d;delete []l;delete[]nt;
 //dimension arrays
-  s = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  s = new ComplexMatrix[mxa*mxb*mxc+1];//(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
   if (s == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  m = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  m = new ComplexMatrix[mxa*mxb*mxc+1];
   if (m == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  l = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  l = new ComplexMatrix[mxa*mxb*mxc+1];
   if (l == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  d = new Vector[mxa*mxb*mxc+1](1,nofatoms);
+  d = new Vector[mxa*mxb*mxc+1];//(1,nofatoms);
   if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+  nt = new IntVector[mxa*mxb*mxc+1](1,nofatoms);
+  if (nt == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
 
   for (i=1;i<=nofa;++i)
   {for (j=1;j<=nofb;++j)
     {for (k=1;k<=nofc;++k)
-     {s[in(i,j,k)]=op2.s[in(i,j,k)];
+     {
+      nt[in(i,j,k)]=op2.nt[in(i,j,k)];
+      
+      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+      d[in(i,j,k)]= Vector(1,sum(nt[in(i,j,k)]),1,sum(nt[in(i,j,k)]));
+           
+      d[in(i,j,k)]=op2.d[in(i,j,k)];
+
+      s[in(i,j,k)]=op2.s[in(i,j,k)];
       m[in(i,j,k)]=op2.m[in(i,j,k)];
       l[in(i,j,k)]=op2.l[in(i,j,k)];
-      d[in(i,j,k)]=op2.d[in(i,j,k)];
      } 
     }
   }           
   return *this;
 }
 
-
-
-//constructors
-mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
-{  nofa=n1;nofb=n2;nofc=n3;
-   mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
-   nofatoms=n;nofcomponents=nc;
-//dimension arrays
-  s = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (s == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  m = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (m == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  l = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (l == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  d = new Vector[mxa*mxb*mxc+1](1,nofatoms);
-  if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-
-}
-
-//kopier-konstruktor
-mdcf::mdcf (const mdcf & p)
-{ int i,j,k;
-  nofa=p.nofa;nofb=p.nofb;nofc=p.nofc;
-  mxa=p.mxa; mxb=p.mxb; mxc=p.mxc;
-  nofatoms=p.nofatoms;nofcomponents=p.nofcomponents;
-//dimension arrays
-  s = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (s == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  m = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (m == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  l = new ComplexMatrix[mxa*mxb*mxc+1](1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
-  if (l == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  d = new Vector[mxa*mxb*mxc+1](1,nofatoms);
-  if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-
- for (i=1;i<=nofa;++i)
-  {for (j=1;j<=nofb;++j)
-    {for (k=1;k<=nofc;++k)
-     {s[in(i,j,k)]=p.s[in(i,j,k)];
-      m[in(i,j,k)]=p.m[in(i,j,k)];
-      l[in(i,j,k)]=p.l[in(i,j,k)];
-      d[in(i,j,k)]=p.d[in(i,j,k)];
-     } 
-    }
-  }           
-
-}
-
-
-//destruktor
-mdcf::~mdcf ()
-{
- delete []s;delete []m;delete []d;delete []l;
-}
-
-
+*/

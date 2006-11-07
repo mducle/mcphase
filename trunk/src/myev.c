@@ -1,3 +1,5 @@
+#include<myev.h>
+
 #define VERYSMALL 1e-04
 
 // subs to be able to check and directly diagonalize hermitean
@@ -99,3 +101,73 @@ void myEigenSystemHermitean (ComplexMatrix & M,Vector & lambda,ComplexMatrix & l
    return;
 }
 
+
+void myEigenSystemHermiteanGeneral (ComplexMatrix& a, ComplexMatrix& b, Vector & e, ComplexMatrix & T, int & sort, int & maxiter)
+{ // this sub diagonalizes M and puts eigenvalues to lambda, the eigenvectors to l
+  Matrix mata(a.Rlo(),a.Rhi(),a.Clo(),a.Chi());
+  Matrix matb(b.Rlo(),b.Rhi(),b.Clo(),b.Chi());
+  Matrix zr(T.Rlo(),T.Rhi(),T.Clo(),T.Chi());
+  Matrix zi(T.Rlo(),T.Rhi(),T.Clo(),T.Chi());
+  ComplexVector x(T.Rlo(),T.Rhi());
+  complex<double> ii(0,1);  
+  int i1,j1;
+
+  //check if a,b it is hermitean
+   if (NormFro(a-a.Conjugate().Transpose())>VERYSMALL)
+   {fprintf(stderr,"myEigenSystemHermiteanGeneral: ERROR-matrix a not hermitian\n");
+    //printout matrix
+    myPrintComplexMatrix(stderr,a);
+    getchar();
+   }
+   if (NormFro(b-b.Conjugate().Transpose())>VERYSMALL)
+   {fprintf(stderr,"myEigenSystemHermiteanGeneral: ERROR-matrix b not hermitian\n");
+    //printout matrix
+    myPrintComplexMatrix(stderr,b);
+    getchar();
+   }
+
+
+  // put matrix to format needed for library diagonalize function
+   for(i1=a.Rlo();i1<=a.Rhi();++i1){for(j1=a.Clo();j1<=a.Chi();++j1){
+    mata(j1,i1)=imag(a(i1,j1)); 
+    mata(i1,j1)=real(a(i1,j1));
+   }}
+
+   for(i1=b.Rlo();i1<=b.Rhi();++i1){for(j1=b.Clo();j1<=b.Chi();++j1){
+    matb(j1,i1)=imag(b(i1,j1)); 
+    matb(i1,j1)=real(b(i1,j1));
+   }}
+
+//
+//  Driver routine for the generalized hermitan eigenvalue problem:
+//
+//                     A * z = e * B * z
+//
+//  The real part of the  complex  hermitean matrices a[lo..hi,lo..hi] and
+//  b[lo..hi,lo..hi]  must be stored in  the lower triangle, the imaginary
+//  parts must be stored in the strict upper triangle. The eigenvalues are
+//  returned in e[lo..hi] in ascending numerical order if the sort flag is 
+//  set to  True,  otherwise not  ordered  for sort = False. The real  and 
+//  imaginary parts of the eigenvectors are returned in  the columns of zr
+//  and zi. C.f. comments on Chreduce(), Chreback() and the 
+//  EigenSystemHermitean()  routine for the complex Hermitean problem 
+//  (file cheigen.c)
+//  All matrices and vectors have to be allocated and removed by the user.
+//  They are checked for conformance !
+//  
+//  References:
+//
+//  B.T.Smith et al: Matrix Eigensystem Routines
+//  EISPACK Guide,Springer,Heidelberg,New York 1976.
+EigenSystemHermiteanGeneral (mata, matb, e,zr, zi,sort, maxiter);
+  T=ComplexMatrix(zi,zr);
+// normalize eigenvectors ( this is not automatically done);
+  for(i1=T.Clo();i1<=T.Chi();++i1)
+   {x=T.Column(i1);
+    x=x/Norm(x);
+    for(j1=T.Rlo();j1<=T.Rhi();++j1) {T(j1,i1)=x(j1);}
+   }
+
+   return;
+
+}

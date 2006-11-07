@@ -110,7 +110,7 @@ double physproperties::save (int verbose, int htfailed, par & inputpars)
   if (washere==0)
   {fout = fopen_errchk ("./results/mcphas.fum","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout, "#1mev/ion=96.48mJ/mol\n");
    fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc[mb/ion]}\n");
    fclose(fout);
@@ -144,7 +144,7 @@ double physproperties::save (int verbose, int htfailed, par & inputpars)
   if (washere==0)
   {fout = fopen_errchk ("./results/mcphas.xyt","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout, "#x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] phasnumber-j   period-key ");
            for(i1=1;i1<=nofcomponents;++i1)
 	      {fprintf(fout,"<J%c> ",'a'-1+i1);}
@@ -187,7 +187,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   if (washere==0)  //printout file header
   {  fout = fopen_errchk (filename,"w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout, "# sublattice %i (x=%g y=%g z=%g)\n",l,(*inputpars.jjj[l]).xyz(1),(*inputpars.jjj[l]).xyz(2),(*inputpars.jjj[l]).xyz(3));
    fprintf (fout, "# correlation fuction <JJ(%g %g %g)>\n",(*inputpars.jjj[l]).dn[i](1),(*inputpars.jjj[l]).dn[i](2),(*inputpars.jjj[l]).dn[i](3));
    fprintf (fout, "#x     y     T[K]  H[T]   Ha[T] Hb[T] Hc[T]  ");
@@ -225,28 +225,28 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   {//neutrons
    fout = fopen_errchk ("./results/mcphas.hkl","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout, "#Neutron Intensity - Mind: only structure+polarizationfactor+formfactor+debeywallerfactor - no lorentzfactor is  taken into account\n");
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  int       h   k   l   int       h   k   l   int ...}\n");
    fclose(fout);
    //xray a component
    fout = fopen_errchk ("./results/mcphasa.hkl","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - a component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||a       h   k   l   FT||a       h   k   l   FT||a ...}\n");
    fclose(fout);
    //xray b component
    fout = fopen_errchk ("./results/mcphasb.hkl","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - b component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||b       h   k   l   FT||b       h   k   l   FT||b ...}\n");
    fclose(fout);
    //xray a component
    fout = fopen_errchk ("./results/mcphasc.hkl","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - c component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||c       h   k   l   FT||c       h   k   l   FT||c ...}\n");
    fclose(fout);
@@ -295,7 +295,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   if (washere==0)
   {  fout = fopen_errchk ("./results/mcphas.sps","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmomentum-components\n");
@@ -322,7 +322,7 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
   if (washere==0)
   {  fout = fopen_errchk ("./results/mcphas.mf","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
    inputpars.rems[2]=" ";
    inputpars.savelattice(fout);inputpars.saveatoms(fout);

@@ -95,7 +95,7 @@ int main (int argc, char **argv)
   if (argc < 5)
     { printf (" program charges - display charges at HT point\n\
                 use as: charges T Ha Hb Hc [file.mf]\n");
-      printf ("\n ... to view chargeplots type: java javaview chrgplot.jvx\n\n");
+      printf ("\n ... to view chargeplots type: java javaview charges.jvx\n\n");
       printf ("mind: 1)the 4f wavefunction R4f(r) is taken the same for all RE.\n");
       printf ("      2) the coordinate system is xyz||cab\n");
       exit (1);

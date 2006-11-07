@@ -33,7 +33,8 @@ int main (int argc, char **argv)
   Vector h(1,3);Vector mmax1(1,3);
   xvsav=0;yvsav=0;
   
-  ini.exit_mcphas=0;ini.print(); // if exit was 1 - save parameters and set exit=0
+  if (ini.exit_mcphas!=0)
+  {ini.exit_mcphas=0;ini.print();} // if exit was 1 - save parameters and set exit=0
   
 // check command line
   for (im=1;im<=argc-1;++im)

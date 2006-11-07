@@ -131,6 +131,7 @@ inline long abs (long x){return(x<0)?-x:x;}
   extern char* gcvt (double __value, size_t __ndigit, char *__buf);
   void usleep(unsigned long usec);
   }
+
 */
 inline char *econvert (double value,int ndigit,int *decpt,int *sign,char *buf)
    { return strcpy(buf, ecvt(value,(size_t)ndigit,decpt,sign)); }
