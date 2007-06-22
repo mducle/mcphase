@@ -1,0 +1,2 @@
+#!/bin/bash
+java -jar $MCPHASE_DIR/jar/McpExplorer.jar $1 $MCPHASE_DIR
