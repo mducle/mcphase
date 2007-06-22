@@ -108,7 +108,7 @@ else
  while($line=<Fin1>)
   {
    if ($line=~/^\s*#/) {;}
-   else{@numbers=split(" ",$line);
+   else{$line=~s/D/E/g;@numbers=split(" ",$line);
             $i=0;foreach(@par){$par[$i]=$numbers[$i];++$i}
             $sta=$numbers[$i]; #sta at input parameter position
        $staorigin=$sta;$i=0;$minimum=1;
@@ -218,6 +218,7 @@ sub sta {local $SIG{INT}='IGNORE';
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
 				    system "./ccccccc.ccc > ./cccccc1.ccc";
+                            system "chmod 755 ./ccccccc.ccc";
 				    open (Fincc,"./cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
 				    system "rm ./ccccccc.ccc ./cccccc1.ccc";

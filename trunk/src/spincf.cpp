@@ -244,7 +244,7 @@ void spincf::spinfromq (int n1,int n2, int n3,Vector & qvector,Vector & nettom,
         {for (rrc=1;rrc<=nofc;++rrc)
              	{rr(1)=rra-1;rr(2)=rrb-1;rr(3)=rrc-1;
 		 for(l=1;l<=nofcomponents*nofatoms;++l)
-	          {mom[in(rra,rrb,rrc)](l)=copysign(nettom(l),qv*(0.1+
+	          {mom[in(rra,rrb,rrc)](l)=copysign(nettom(l),qv*(0.01+
 		  copysign(1.0,momentq0(l)+cos(phi(l)+qvector*2.0*3.141529*rr)))
 				                    )                    ;	
                   }

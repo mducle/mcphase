@@ -1,15 +1,15 @@
-DECLARE SUB Inputline (n!, D1#(), col1%, d2$(), col2%)
+DECLARE SUB Inputline (n!, d1#(), col1%, d2$(), col2%)
 DECLARE SUB iteratefiles (file1$)
 DECLARE SUB analizecommand (file1$)
 DECLARE SUB headerinput (text$(), j!, n!)
 PRINT "ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC ADDC"
 IF LTRIM$(COMMAND$) = "" GOTO 333
 DATA "*************************************************************************"
-DATA "  program ADDC - use it like ADDC *.* 23"                        
+DATA "  program ADDC - use it like ADDC *.* 23"                       
 DATA "    (means ADD col 2 and 3 point by point) -                             "
 DATA " ---> the result is written in file *.* column 2                         "
 DATA " format of file                                                          "
-DATA ""                                                                  
+DATA ""                                                                 
 DATA " { header: this is the                                                   "
 DATA "   file header delimited                                                 "
 DATA "   by brackets after this header there follow 3 or more data columns }   "
@@ -19,7 +19,7 @@ DATA "  .    .     .     .  .  .                                               "
 DATA "  .    .     .                                                           "
 DATA "  .    .     .                                                           "
 DATA " 32 2412.34 324.2                                                        "
-DATA ""                                                                  
+DATA ""                                                                 
 DATA "*************************************************************************"
 DIM text$(300), xm#(30), d2$(30)
 ' analyse command string aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -55,7 +55,10 @@ IF col% = -1 GOTO 223
 
  'ADD and write result to file
  xm#(ii%) = xm#(jj%) + xm#(ii%)
- FOR coll% = 1 TO col%: PRINT #2, xm#(coll%); : NEXT
+ FOR coll% = 1 TO col%
+nn$ = STR$(xm#(coll%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$; : NEXT
+
  FOR coll% = 1 TO col2%: PRINT #2, " {" + d2$(coll%) + "} "; : NEXT
  PRINT #2,
 WEND'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -89,7 +92,7 @@ SUB headerinput (text$(), j, n)
 
 END SUB
 
-SUB Inputline (n, D1#(), col1%, d2$(), col2%)
+SUB Inputline (n, d1#(), col1%, d2$(), col2%)
 'input data point line on #n as string and split into numbers
 ' determine col1% and save data columns in D1#(1...col1%)
 'comments in {} are stored in d2$
@@ -126,7 +129,7 @@ ELSE
  WHILE LEN(ala$) > 0
     col1% = col1% + 1
     ala$ = LTRIM$(ala$) + " "
-    D1#(col1%) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
+    d1#(col1%) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
     ala$ = LTRIM$(RIGHT$(ala$, LEN(ala$) - INSTR(ala$, " ")))
  WEND
 END IF

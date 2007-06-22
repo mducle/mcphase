@@ -58,7 +58,7 @@ $ii=0;$sta=0;
   while($line=<Fin>)
   {
        if ($line=~/^\s*#/) {}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
            	$T0=$numbers[$colT-1];
 		$cpexp=$numbers[$colcp-1];
             ($cpclc)=cp(); # CALCULATE cp !!!!

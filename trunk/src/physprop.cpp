@@ -1,6 +1,6 @@
 // methods for class parameters 
 #include "physprop.hpp"
-#include "../version"
+#include "../../version"
  // *************************************************************************
  // ************************ physproperties *********************************
  // *************************************************************************
@@ -112,6 +112,7 @@ double physproperties::save (int verbose, int htfailed, par & inputpars)
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    fprintf (fout, "#1mev/ion=96.48mJ/mol\n");
+   fprintf (fout, "#note: moments and energies are given per ion - not per formula unit !\n");
    fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc[mb/ion]}\n");
    fclose(fout);
       }

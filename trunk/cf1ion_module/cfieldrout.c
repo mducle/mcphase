@@ -436,7 +436,6 @@ DOUBLE omegan6n(n)
  
 /*------------------------*/
  
-
 /*------------------------------------------------------------------------------
  function for extracting some important parameters of ions - for INTERNAL 
  class ionpars

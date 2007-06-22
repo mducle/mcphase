@@ -62,7 +62,7 @@ int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
  // returns 1 if too maxnofspinconfigurations is exceeded 
  // returns 2 if no spinconfiguration has been found at ht point
  */
- int i,ii,iii,j,k,tryrandom,nr,rr,ri;
+ int i,ii,iii,j,k,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
  Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms),nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
@@ -141,9 +141,27 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	       spsmin=sps;	   
                  // display spinstructure
                 if (verbose==1)
-                {
-                    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+                {Vector abc(1,3);
+		 abc(1)=inputpars.a;
+		 abc(2)=inputpars.b;
+		 abc(3)=inputpars.c;
+		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+		 for (is=1;is<=inputpars.nofatoms;++is)
+		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
+		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
                      sprintf(text,"fe=%g,fered=%g<femin=%g:T=%gK, |H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT,  %i spins",fe,fered,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
+                    fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                    fclose (fin_coq);
+		   
+                    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
                      sps.eps(fin_coq,text);
                     fclose (fin_coq);
 		}
@@ -247,8 +265,26 @@ else // if yes ... then
       physprops.fe=fecalc(H ,T,inputpars,sps,(*mf),physprops.u,testspins,testqs); 
              // display spinstructure
                 if (verbose==1)
-                {fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+                {Vector abc(1,3);
+		 abc(1)=inputpars.a;
+		 abc(2)=inputpars.b;
+		 abc(3)=inputpars.c;
+		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+		 for (is=1;is<=inputpars.nofatoms;++is)
+		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
+		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
                      sprintf(text,"recalculated: fe=%g,femin=%g:T=%gK,|H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT, %i spins",physprops.fe,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
+                    fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                    fclose (fin_coq);
+		 fin_coq = fopen_errchk ("./results/.spins.eps", "w");
                      sps.eps(fin_coq,text);
                     fclose (fin_coq);
 		}
@@ -277,7 +313,7 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
 // thermal expansion - magnetostricton correlation-functions
 // according to each neighbour given in mcphas.j a correlation
 // function is calculated - up to ini.nofspincorrs neighbours
- int nmax,i1,j1,k1,l1,i2,j2,k2;Vector xyz(1,3),d(1,3),d_rint(1,3);
+ int nmax,i1,j1,k1,l1,i2,j2,k2,is;Vector xyz(1,3),d(1,3),d_rint(1,3);
  nmax=ini.nofspincorrs;
  for (l=1;l<=inputpars.nofatoms;++l){if(nmax>(*inputpars.jjj[l]).paranz){nmax=(*inputpars.jjj[l]).paranz;}}
 
@@ -389,13 +425,13 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
 	   //calculate intensity using polarization factor (a^*.a-|a.q/|q||^2)
            
 	   if (Q==0.0) // tests showed that a*a is square of norm(a) !!! (therefore no conjugate !!!) changed 12.4.03 !!
-	    {in=abs((complex<double>)a*a);}    
+	    {in=abs((complex<double>)(a*a));}    
            else       
 	    {in=abs((complex<double>)(a*a)-(a.Conjugate()*qeuklid)*(a*qeuklid)/(qeuklid*qeuklid));}
 
            in/=sps.n()*sps.n()*sps.nofatoms*sps.nofatoms;
-           //fprintf(stdout,"%i %i %i %g %g\n",qh,qk,ql,in,real(a(1)));
-           //not implemented: lorentzfactor, formfactor !!
+           //fprintf(stdout,"%i %i %i %g %g %g\n",qh,qk,ql,in,real(a(1)),imag(a(1)));
+           //not implemented: lorentzfactor
 
            if (in>0.0001&&ini.maxnofhkls>0)
 	    {if(j<ini.maxnofhkls)
@@ -440,8 +476,26 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
       physprops.mf=mf;
 
 // display spinstructure
-   fin_coq = fopen_errchk ("./results/.spins.eps", "w");
+           Vector abc(1,3);
+		 abc(1)=inputpars.a;
+		 abc(2)=inputpars.b;
+		 abc(3)=inputpars.c;
+		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+		 for (is=1;is<=inputpars.nofatoms;++is)
+		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
+		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
     sprintf(text,"physpropclc:T=%gK, |H|=%gT, Ha=%gT, Hb=%gT, Hc=%gT  %i spins",T,Norm(H),H(1),H(2),H(3),sps.n());
+                    fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                    fclose (fin_coq);
+                    fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                    fclose (fin_coq);
+   fin_coq = fopen_errchk ("./results/.spins.eps", "w");
     sps.eps(fin_coq,text);
    fclose (fin_coq);
 

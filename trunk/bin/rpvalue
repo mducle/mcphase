@@ -18,7 +18,7 @@ $col2=$ARGV[0];shift @ARGV;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
             $rpvalue+=abs($numbers[$col1-1]-$numbers[$col2-1]);
             $nofpoints+=abs($numbers[$col1-1]);
            }

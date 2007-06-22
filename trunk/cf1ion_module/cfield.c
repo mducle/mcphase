@@ -95,6 +95,7 @@ extern INT create_nn();              /* definiert in EINGABE.C*/
  
 extern ITERATION *read_Akq();        /* definiert in EINGABE.C*/
 extern ITERATION *read_Bkq();        /* definiert in EINGABE.C*/
+extern ITERATION *read_Bkqnew();        /* definiert in EINGABE.C*/
 extern ITERATION *read_Dkq();        /* definiert in EINGABE.C*/
 extern ITERATION *read_Lkq();        /* definiert in EINGABE.C*/
 extern ITERATION *read_Vkq();        /* definiert in EINGABE.C*/
@@ -142,7 +143,7 @@ IONEN IONENIMP[]={
 /* 10 */   { "Er3+"  , 11 , 6.0/5  , 16  , 60 , 13860 },
 /* 11 */   { "Tm3+"  , 12 , 7.0/6  , 13  , 60 ,  7560 },
 /* 12 */   { "Yb3+"  , 13 , 8.0/7  ,  8  , 60 ,  1260 },
-/* 13 */   { "U4+"   , 15 , 4.0/5  ,  9  , 60 ,  1260 }
+/* 13 */   { "U4+"   ,  2 , 4.0/5  ,  9  , 60 ,  1260 }
 };
 #define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )
  
@@ -613,9 +614,9 @@ main(argc,argv)
     KRISTALLFELD *kristallfeld,*init_iteration();
     EWPROBLEM    *ewproblem,   *solve();
     SETUP        *setup;
-    CHAR         c,cc,cs,input_modus,*filename,*name,*ion,*einheit;
+    CHAR         c,cc,cs,input_modus,*filename,*name,*ion,*einheit,*filenameB;
     INFO         *info;
-    INT          naechste_nachbarn,symmetrienr,l,m,dimj,zeinheit,k,q;
+    INT          naechste_nachbarn,symmetrienr,l,m,dimj,zeinheit,k,q,i;
     INT          einheitnr_in,einheitnr_out,ionennr;
     DOUBLE       theta,phi,Bx,By,Bz,temperatur,anf_temp,end_temp,a_tof();
     DOUBLE       dummy,lambda,anf_feld,end_feld,temp;
@@ -1167,13 +1168,18 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
     c=='o'||c=='O'||c=='b'||c=='B' ){
  
                 if(argc<3) r_error(c);
- 
-                cs = VALUE(argv[2],1);
+                 
+                cs = VALUE(argv[2],0);
+                if (cs!='-')   /*take 2nd argument as filename */
+                 {filenameB= argv[2];if(argc<4) r_error(c);
+                  cs=VALUE(argv[3],1);i=1;} 
+                else  
+                 {cs = VALUE(argv[2],1);i=0;}
                 switch(cs){
                   case 's':
-                  case 'S': if( argc != 5 )     read_error(1,(FILE*)0,"");
-                            filename     = argv[3];
-                            symmetrienr  = a_toi(argv[4],0,5);
+                  case 'S': if( argc != 5+i )     read_error(1,(FILE*)0,"");
+                            filename     = argv[3+i];
+                            symmetrienr  = a_toi(argv[4+i],0,5);
                             if(symmetrienr>8||symmetrienr<0)
                                 read_error(6,(FILE*)0,"");
  
@@ -1201,17 +1207,17 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                   case 'x' :
  
                        if( c=='o'||c=='O')
-                           if( argc!= 3 ) r_kq_error(c,cs);
+                           if( argc!= 3+i ) r_kq_error(c,cs);
  
                        if( c=='r'||c=='R'||c=='o'||c=='O'){
                                if( cs=='x'||cs=='X' )
-                                 {if( argc != 3) r_kq_error(c,cs);}
+                                 {if( argc != 3+i) r_kq_error(c,cs);}
                                else
-                                 { if( argc != 4 && argc!= 3) r_kq_error(c,cs);}
+                                 { if( argc != 4 +i&& argc!= 3+i) r_kq_error(c,cs);}
  
  
-                               switch(argc){
-                                  case 4: symmetrienr  = a_toi(argv[3],0,5);
+                               switch(argc-i){
+                                  case 4: symmetrienr  = a_toi(argv[3+i],0,5);
                                           if(symmetrienr>8||symmetrienr<0)
                                               read_error(6,(FILE*)0,"");
                                           break;
@@ -1223,23 +1229,23 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                        }
                        else{
                                if( cs=='x'||cs=='X' ){
-                                 if( argc != 6) r_kq_error(c,cs);}
+                                 if( argc != 6+i) r_kq_error(c,cs);}
                                else
-                                 { if( argc != 7 && argc!= 6) r_kq_error(c,cs);}
+                                 { if( argc != 7+i && argc!= 6+i) r_kq_error(c,cs);}
  
-                               switch(argc){
+                               switch(argc-i){
                                   case 7:
                                        if( c!='s' && c!='S' ){
-                                       symmetrienr  = a_toi(argv[3],0,5);
+                                       symmetrienr  = a_toi(argv[3+i],0,5);
                                           if(symmetrienr>8||symmetrienr<0)
                                               read_error(6,(FILE*)0,"");
                                        }
                                        else   symmetrienr  = NICHTIMP;
                                       if( c=='s' || c=='S' ){
-                                          anf_temp     = a_tof(argv[3],0,5);
+                                          anf_temp     = a_tof(argv[3+i],0,5);
                                           if(anf_temp<=0.0)
                                              read_error(60,(FILE*)0,"");
-                                          end_temp     = a_tof(argv[4],0,5);
+                                          end_temp     = a_tof(argv[4+i],0,5);
                                           if(end_temp<=0.0)
                                              read_error(61,(FILE*)0,"");
                                           if(anf_temp == end_temp)
@@ -1249,8 +1255,8 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                              anf_temp = end_temp;
                                              end_temp = dummy;
                                           }
-                                          lambda = a_tof(argv[5],0,5);
-                                          theta  = a_tof(argv[6],0,5);
+                                          lambda = a_tof(argv[5+i],0,5);
+                                          theta  = a_tof(argv[6+i],0,5);
                                           nametheta = argv[6];
                                           lesetheta = JA;
                                           fptheta=fopen(nametheta,"rb");
@@ -1258,10 +1264,10 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                           fclose(fptheta);
                                       }
                                       if( c=='m' || c=='M' ){
-                                          anf_feld     = a_tof(argv[4],0,5);
+                                          anf_feld     = a_tof(argv[4+i],0,5);
                                           if(anf_feld<0.0)
                                              read_error(64,(FILE*)0,"");
-                                          end_feld     = a_tof(argv[5],0,5);
+                                          end_feld     = a_tof(argv[5+i],0,5);
                                           if(end_feld<0.0)
                                              read_error(65,(FILE*)0,"");
                                           if(end_feld < anf_feld){
@@ -1269,7 +1275,7 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                              anf_feld = end_feld;
                                              end_feld = dummy;
                                           }
-                                          temp   = a_tof(argv[6],0,5);
+                                          temp   = a_tof(argv[6+i],0,5);
                                           if(temp == 0.0)
                                              read_error(63,(FILE*)0,"");
  
@@ -1281,10 +1287,10 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                               symmetrienr  = NICHTIMP;
  
                                       if( c=='s' || c=='S' ){
-                                          anf_temp     = a_tof(argv[3],0,5);
+                                          anf_temp     = a_tof(argv[3+i],0,5);
                                           if(anf_temp<=0.0)
                                              read_error(60,(FILE*)0,"");
-                                          end_temp     = a_tof(argv[4],0,5);
+                                          end_temp     = a_tof(argv[4+i],0,5);
                                           if(end_temp<=0.0)
                                              read_error(61,(FILE*)0,"");
                                           if(end_temp < anf_temp){
@@ -1292,15 +1298,15 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                              anf_temp = end_temp;
                                              end_temp = dummy;
                                           }
-                                          lambda = a_tof(argv[5],0,5);
+                                          lambda = a_tof(argv[5+i],0,5);
                                           theta  = 0.0;
                                       }
  
                                 if( c=='m' || c=='M' ||c=='k'||c=='K' ){
-                                          anf_feld     = a_tof(argv[3],0,5);
+                                          anf_feld     = a_tof(argv[3+i],0,5);
                                           if(anf_feld<0.0)
                                              read_error(64,(FILE*)0,"");
-                                          end_feld     = a_tof(argv[4],0,5);
+                                          end_feld     = a_tof(argv[4+i],0,5);
                                           if(end_feld<0.0)
                                              read_error(65,(FILE*)0,"");
                                           if(anf_feld == end_feld)
@@ -1310,7 +1316,7 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                              anf_feld = end_feld;
                                              end_feld = dummy;
                                           }
-                                          temp   = a_tof(argv[5],0,5);
+                                          temp   = a_tof(argv[5+i],0,5);
                                           if(temp == 0.0)
                                              read_error(63,(FILE*)0,"");
                                       }
@@ -1367,8 +1373,13 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                           cs = AKQ;
                                           break;
                                case 'B' :
-                               case 'b' : kristallfeld=init_iteration(BKQNAME,
-                                          symmetrienr,BKQ );
+                               case 'b' : if(i==0)
+                                          {kristallfeld=init_iteration(BKQNAME,
+                                          symmetrienr,BKQ );}
+                                          else
+                                          {kristallfeld=init_iteration(filenameB,
+                                          symmetrienr,BKQ );}
+                                          
                                           ewproblem=solve(setup,
                                           (EWPROBLEM*)0,NEIN,
                                           kristallfeld,BKQ);
@@ -5097,7 +5108,7 @@ if(c=='r'||c=='R'){
     printf("\n");
     printf("%s -r[ead] -s[ingleion] \n",PROGRAMMNAME);
     printf("%s -r[ead] -A[kq] [symmetrienummer] \n",PROGRAMMNAME);
-    printf("%s -r[ead] -B[kq] [symmetrienummer] \n",PROGRAMMNAME);
+    printf("%s -r[ead] [filename] -B[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -D[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -L[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -V[kq] [symmetrienummer] \n",PROGRAMMNAME);
@@ -5147,7 +5158,7 @@ if(c=='s'||c=='S'){
   printf("\n");
   printf("%s -s[uszept] -s[ingleion] \n",PROGRAMMNAME);
   printf("%s -s[uszept] -A[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
-  printf("%s -s[uszept] -B[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
+  printf("%s -s[uszept] [filename] -B[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
   printf("%s -s[uszept] -D[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
   printf("%s -s[uszept] -L[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
   printf("%s -s[uszept] -V[kq] anf_temp end_temp lambda [theta]||[filename.type]\n",s);
@@ -5170,7 +5181,7 @@ if(c=='m'||c=='M'){
   printf("\n");
   printf("%s -m[oment] -s[ingleion] \n",PROGRAMMNAME);
   printf("%s -m[oment] -A[kq] [symmetrienr] anf_feld end_feld temp\n",s);
-  printf("%s -m[oment] -B[kq] [symmetrienr] anf_feld end_feld temp\n",s);
+  printf("%s -m[oment] [filename] -B[kq] [symmetrienr] anf_feld end_feld temp\n",s);
   printf("%s -m[oment] -D[kq] [symmetrienr] anf_feld end_feld temp\n",s);
   printf("%s -m[oment] -L[kq] [symmetrienr] anf_feld end_feld temp\n",s);
   printf("%s -m[oment] -V[kq] [symmetrienr] anf_feld end_feld temp\n",s);

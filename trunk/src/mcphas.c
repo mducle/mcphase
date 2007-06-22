@@ -23,11 +23,13 @@ int main (int argc, char **argv)
 { FILE * fin=NULL;
   int im,j,l;
   int nofstapoints=0;
+  int options=1; // this integer indicates how many command strings belong to options (=1+number of option-strings)
   float x,y,dumm;
   double z,u;
   double T;
   float nn[20];nn[0]=19;
   double sta=0;
+  double stamax=1e33;
   Vector xv(0,3),xvsav(0,3);
   Vector yv(0,3),yvsav(0,3);
   Vector h(1,3);Vector mmax1(1,3);
@@ -38,8 +40,11 @@ int main (int argc, char **argv)
   
 // check command line
   for (im=1;im<=argc-1;++im)
-  {if (strcmp(argv[im],"-v")==0) verbose=1;     // set verbose mode on
+  {if (strcmp(argv[im],"-v")==0) {verbose=1;if (options<im)options=im;}// set verbose mode on
    if (strcmp(argv[im],"-h")==0) ini.errexit(); // display help message
+   if (strcmp(argv[im],"-stamax")==0&&im+1<=argc-1)
+                                 {stamax=strtod (argv[im+1], NULL); // read stamax
+                                  if (options<im)options=im+1;}
   }
 
 // as class par load  parameters from file
@@ -66,7 +71,7 @@ T=0.0;h=0;
 // transform mmax to contain saturation moments [muB] 
 for(l=1;l<=inputpars.nofatoms;++l){for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax(3*(l-1)+im)*=inputpars.gJ(l);}}
 
-if (argc>1&&strncmp(argv[argc-1],"-",1)!=0){ini.xv=0;ini.yv=0;fin=fopen_errchk (argv[argc-1],"rb");}   //input from file
+if (argc>options&&strncmp(argv[argc-1],"-",1)!=0){ini.xv=0;ini.yv=0;fin=fopen_errchk (argv[argc-1],"rb");}   //input from file
 // loop different H /T points in phase diagram
 for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
  { //begin initialize display file
@@ -114,8 +119,11 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
        switch (j)
        {case 0:
             //save physical properties of HT-point
-	    sta=(sta*nofstapoints+physprop.save (verbose,j,inputpars))/(nofstapoints+1);
+	    //sta=(sta*nofstapoints+physprop.save (verbose,j,inputpars))/(nofstapoints+1);
+          // 12.3.07 fancy calculation above substituted by normal summing of sta
+          sta+=physprop.save (verbose,j,inputpars);
 	    ++nofstapoints;
+          if (sta>stamax){fprintf(stdout,"stamax=%g exceeded - exiting\n",stamax);goto endproper;}
 	      break; 
 	 case 1: goto endproper;
 	      break;
@@ -131,7 +139,7 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
  }  
 endproper:
   testspins.save();testqs.save();
-   if(argc>1&&strncmp(argv[argc-1],"-",1)!=0) fclose(fin);
+   if(argc>options&&strncmp(argv[argc-1],"-",1)!=0) fclose(fin);
 fprintf(stdout,"sta=%g\n",sta);
 
 #ifdef linux 

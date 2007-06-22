@@ -183,28 +183,28 @@ addj.o: addj.c ../include/par.hpp  ../include/martin.h ../include/vector.h
 # make  binaries (link .o files)
 
 cond: cond.o paramete.o $(VOBS) martin.o
-	g77  -Wall  -o ../bin/cond cond.o paramete.o $(VOBS) martin.o $(LFLAGS)
+	g77  -Wall  -o ../cond cond.o paramete.o $(VOBS) martin.o $(LFLAGS)
 
 coq2jjj: coq2jjj.o paramete.o $(VOBS) martin.o
-	g77  -Wall  -o ../bin/coq2jjj coq2jjj.o paramete.o $(VOBS) martin.o $(LFLAGS)
+	g77  -Wall  -o ../coq2jjj coq2jjj.o paramete.o $(VOBS) martin.o $(LFLAGS)
 
 jjj2j: jjj2j.o par.o jjjpar.o $(CFIELDOBJS) martin.o $(VOBS) ionpars.o
-	g77  -Wall  -o ../bin/jjj2j jjj2j.o par.o jjjpar.o $(CFIELDOBJS) martin.o $(VOBS) ionpars.o $(LFLAGS)
+	g77  -Wall  -o ../jjj2j jjj2j.o par.o jjjpar.o $(CFIELDOBJS) martin.o $(VOBS) ionpars.o $(LFLAGS)
 
 mcdisp: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS)  $(CFIELDOBJS)
-	g77  -Wall  -o ../bin/mcdisp   mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o $(VOBS) ionpars.o  $(CFIELDOBJS) mfcf.o  $(LFLAGS)
+	g77  -Wall  -o ../mcdisp   mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o $(VOBS) ionpars.o  $(CFIELDOBJS) mfcf.o  $(LFLAGS)
 
 mcphasit: $(OBJS) $(VOBS)   $(CFIELDOBJS)
-	g77  -Wall  -o ../bin/mcphasit  $(OBJS)  $(VOBS)   $(CFIELDOBJS) $(LFLAGS)
+	g77  -Wall  -o ../mcphasit  $(OBJS)  $(VOBS)   $(CFIELDOBJS) $(LFLAGS)
 
 spins: spincf.o spins.o $(VOBS) martin.o
-	g77  -Wall  -o ../bin/spins spincf.o spins.o $(VOBS) martin.o $(LFLAGS)
+	g77  -Wall  -o ../spins spincf.o spins.o $(VOBS) martin.o $(LFLAGS)
 
 singleion:  singleion.o martin.o  jjjpar.o  $(VOBS) par.o  $(CFIELDOBJS) ionpars.o
-	g77  -Wall  -o ../bin/singleion singleion.o martin.o  jjjpar.o  $(VOBS) par.o  $(CFIELDOBJS) ionpars.o  $(LFLAGS)
+	g77  -Wall  -o ../singleion singleion.o martin.o  jjjpar.o  $(VOBS) par.o  $(CFIELDOBJS) ionpars.o  $(LFLAGS)
 
 addj: addj.o par.o martin.o  $(VOBS) jjjpar.o $(CFIELDOBJS) ionpars.o
-	g77  -Wall  -o ../bin/addj addj.o par.o martin.o  $(VOBS) jjjpar.o $(CFIELDOBJS) ionpars.o  $(LFLAGS)
+	g77  -Wall  -o ../addj addj.o par.o martin.o  $(VOBS) jjjpar.o $(CFIELDOBJS) ionpars.o  $(LFLAGS)
 
 
 clean: 

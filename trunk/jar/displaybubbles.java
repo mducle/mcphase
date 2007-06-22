@@ -18,7 +18,7 @@ public class displaybubbles extends Panel implements Runnable {
  public void stop(){myThread = null;}
 
  public void run(){ while(myThread!=null){
-    try{Thread.sleep(500);
+    try{Thread.sleep(5000);
        }catch(Exception ignored){}
        // here do something
 
@@ -111,7 +111,7 @@ public class displaybubbles extends Panel implements Runnable {
 
       Double p = new Double(0.0);
       
-//      System.out.println(sx+" "+sy);
+      System.out.println(sx+" "+sy+" "+sint);
 //      p.valueOf(strLine);
 //    double[] myDatax = {p.parseDouble(sx)};
 //    double[] myDatay = {p.parseDouble(sy)};
@@ -119,7 +119,7 @@ public class displaybubbles extends Panel implements Runnable {
       Datum d = new Datum(p.parseDouble(sx), p.parseDouble(sy), p.parseDouble(sint),0,null);
       //ds.getGc().setMarkerSize((int)p.parseDouble(sint));
       ds.addDatum(d);}
-      catch(NumberFormatException e){;}
+      catch(NumberFormatException e){System.exit(1);}
     }   
   
     //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};

@@ -4,11 +4,11 @@ DECLARE SUB headerinput (text$(), j!, n!)
 PRINT "EXP EXP EXP EXP EXP EXP EXP EXP EXP EXP EXP EXP EXP"
 IF LTRIM$(COMMAND$) = "" GOTO 333
 DATA "*************************************************************************"
-DATA "  program EXP - use it like EXP *.* 2"          
+DATA "  program EXP - use it like EXP *.* 2"         
 DATA "    (means EXPonentiate col 2:col2 = exp(col2) -                                "
 DATA " ---> the result is written in file *.*                                  "
 DATA " format of file                                                          "
-DATA ""                                                                
+DATA ""                                                               
 DATA " { header: this is the                                                   "
 DATA "   file header delimited                                                 "
 DATA "   by brackets after this header there follow 3 or more data columns }   "
@@ -18,7 +18,7 @@ DATA "  .    .     .                                                           "
 DATA "  .    .     .    .  .   .                                               "
 DATA "  .    .     .                                                           "
 DATA " 32 2412.34 324.2                                                        "
-DATA ""                                                                
+DATA ""                                                               
 DATA "*************************************************************************"
 DIM text$(300), xm#(30), d2$(30)
 
@@ -57,7 +57,9 @@ WHILE EOF(1) = 0
  xm#(jj%) = EXP(xm#(jj%))
 
  'write result to file
- FOR coll% = 1 TO col%: PRINT #2, xm#(coll%); : NEXT:
+ FOR coll% = 1 TO col%
+nn$ = STR$(xm#(coll%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$; : NEXT
  FOR coll% = 1 TO col2%: PRINT #2, " {"; d2$(coll%); "} "; : NEXT:
  PRINT #2,
 

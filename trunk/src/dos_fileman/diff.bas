@@ -3,7 +3,7 @@ DECLARE SUB headerinput (text$(), j!, n!)
 PRINT "DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF DIFF"
 IF LTRIM$(COMMAND$) = "" GOTO 333
 DATA "*************************************************************************"
-DATA "  program diff - use it like diff *.* 23"                       
+DATA "  program diff - use it like diff *.* 23"                     
 DATA "    (23 means differentiate 3rd columns with respect to second column) - "
 DATA " ---> the result is written in file *.*,                                 "
 DATA " the differentiation is done point by point unless you enter             "
@@ -28,8 +28,8 @@ DIM text$(300), x#(30, 100), xm#(30)
 
 'aaaaa analyse command string (get filename$ - ii% - jj% and interval) aaaaaa
 A$ = LCASE$(RTRIM$(LTRIM$(COMMAND$)))
-I = INSTR(LCASE$(A$), "stp=")      'check if option stp is used
-IF I > 0 THEN interval = ABS(VAL(RIGHT$(A$, LEN(A$) - I - 3))): A$ = RTRIM$(LEFT$(A$, I - 1))
+i = INSTR(LCASE$(A$), "stp=")      'check if option stp is used
+IF i > 0 THEN interval = ABS(VAL(RIGHT$(A$, LEN(A$) - i - 3))): A$ = RTRIM$(LEFT$(A$, i - 1))
 
 filename$ = RTRIM$(LEFT$(A$, LEN(A$) - 2))
 jj% = ASC(RIGHT$(A$, 1)) MOD 48: ii% = ASC(MID$(A$, LEN(A$) - 1, 1)) MOD 48  'get column numbers
@@ -56,16 +56,16 @@ PRINT #2, "by program diff.bas}"
 
 
 REM input data columns >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-I = 0: x#(ii%, I) = 0: x#(ii%, 1) = 0
+i = 0: x#(ii%, i) = 0: x#(ii%, 1) = 0
 
 'input column y until abs(x#(ii%,i)-x#(ii%,1))>interval iiiiiiiiiiii
-4 WHILE ABS(x#(ii%, I) - x#(ii%, 1)) <= interval
+4 WHILE ABS(x#(ii%, i) - x#(ii%, 1)) <= interval
      IF EOF(1) <> 0 GOTO 5
 INPUT #1, ala$        'input data point line as string and split into numbers
           col% = 0: WHILE LEN(ala$) > 0: ala$ = LTRIM$(ala$) + " ": col% = col% + 1
-x#(col%, I + 1) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
+x#(col%, i + 1) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
           ala$ = LTRIM$(RIGHT$(ala$, LEN(ala$) - INSTR(ala$, " "))): WEND
- I = I + 1: IF I > 99 THEN PRINT "ERROR - stp too big - program diff terminated !!!!": END
+ i = i + 1: IF i > 99 THEN PRINT "ERROR - stp too big - program diff terminated !!!!": END
   WEND
 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 
@@ -73,14 +73,14 @@ x#(col%, I + 1) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
 ' for the untouched columns just take the average of the intervaldddd
 FOR coll% = 1 TO col%
  IF coll% <> jj% THEN
-  xm#(coll%) = 0: FOR k% = 1 TO I: xm#(coll%) = xm#(coll%) + x#(coll%, k%): NEXT: xm#(coll%) = xm#(coll%) / I
+  xm#(coll%) = 0: FOR k% = 1 TO i: xm#(coll%) = xm#(coll%) + x#(coll%, k%): NEXT: xm#(coll%) = xm#(coll%) / i
  END IF
 NEXT coll%
 
 ' differentiate column jj% with respect to col ii%
-ym# = 0: FOR k% = 1 TO I: ym# = ym# + x#(jj%, k%): NEXT: ym# = ym# / I
-xym# = 0: FOR k% = 1 TO I: xym# = xym# + x#(ii%, k%) * x#(jj%, k%): NEXT: xym# = xym# / I
-xxm# = 0: FOR k% = 1 TO I: xxm# = xxm# + x#(ii%, k%) * x#(ii%, k%): NEXT: xxm# = xxm# / I
+ym# = 0: FOR k% = 1 TO i: ym# = ym# + x#(jj%, k%): NEXT: ym# = ym# / i
+xym# = 0: FOR k% = 1 TO i: xym# = xym# + x#(ii%, k%) * x#(jj%, k%): NEXT: xym# = xym# / i
+xxm# = 0: FOR k% = 1 TO i: xxm# = xxm# + x#(ii%, k%) * x#(ii%, k%): NEXT: xxm# = xxm# / i
 
 ' here calculate the slope of the column jj% with respect to column ii%
 xm#(jj%) = (xym# - ym# * xm#(ii%)) / (xxm# - xm#(ii%) * xm#(ii%))
@@ -90,17 +90,19 @@ IF washere% = 0 THEN
 washere% = 1: FOR coll% = 1 TO col%: IF coll% <> jj% THEN PRINT #2, x#(coll%, 1);  ELSE PRINT #2, xm#(coll%);
 NEXT: PRINT #2,
 END IF
-FOR coll% = 1 TO col%: PRINT #2, xm#(coll%); : NEXT: PRINT #2,
+FOR coll% = 1 TO col%:
+nn$ = STR$(xm#(coll%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$; : NEXT: PRINT #2,
 'ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 
 'delete first point of interval
-FOR k% = 1 TO I - 1: FOR coll% = 1 TO col%
+FOR k% = 1 TO i - 1: FOR coll% = 1 TO col%
 x#(coll%, k%) = x#(coll%, k% + 1)
 NEXT coll%: NEXT k%
-I = I - 1
+i = i - 1
 GOTO 4 '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-5 FOR coll% = 1 TO col%: IF coll% <> jj% THEN PRINT #2, x#(coll%, I);  ELSE PRINT #2, xm#(coll%);
+5 FOR coll% = 1 TO col%: IF coll% <> jj% THEN PRINT #2, x#(coll%, i);  ELSE PRINT #2, xm#(coll%);
 NEXT: PRINT #2,
 CLOSE 1, 2
 SHELL "copy diff.dif " + filename$
@@ -112,7 +114,7 @@ PRINT "column "; ii%;
 IF INSTR(COMMAND$, "*") <> 0 GOTO 999
 
 END
-333 FOR I = 1 TO 22: READ A$: PRINT A$: NEXT I: END
+333 FOR i = 1 TO 22: READ A$: PRINT A$: NEXT i: END
 
 SUB analizecommand (file1$)
 STATIC washere%
@@ -143,15 +145,15 @@ SUB headerinput (text$(), j, n)
 '*********************************************************************
 
 1 INPUT #n, A$
-   I = INSTR(A$, "{"): IF I > 0 GOTO 2 ELSE GOTO 1     'look for "{"
-2 text$(1) = RIGHT$(A$, LEN(A$) - I)
-  j = 1: I = INSTR(text$(j), "}"): IF I > 0 GOTO 3  'look for "}" in first line
+   i = INSTR(A$, "{"): IF i > 0 GOTO 2 ELSE GOTO 1     'look for "{"
+2 text$(1) = RIGHT$(A$, LEN(A$) - i)
+  j = 1: i = INSTR(text$(j), "}"): IF i > 0 GOTO 3  'look for "}" in first line
                                             
    FOR j = 2 TO 300
    INPUT #n, text$(j)
-   I = INSTR(text$(j), "}"): IF I > 0 GOTO 3      'look for "}"
+   i = INSTR(text$(j), "}"): IF i > 0 GOTO 3      'look for "}"
    NEXT j: PRINT "text in data file too long": END
-3 text$(j) = LEFT$(text$(j), I - 1)
+3 text$(j) = LEFT$(text$(j), i - 1)
 
 END SUB
 

@@ -86,7 +86,7 @@ else
   if ($line1=~/^\s*#/) {print $line1;}
   else
   {# get x-values from file 3 
-             @numbers1=split(" ",$line1);
+             $line1=~s/D/E/g;@numbers1=split(" ",$line1);
 	     $T=$numbers1[$d1-1];
 	     $yd=$numbers1[$d2-1];
 	

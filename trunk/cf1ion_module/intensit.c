@@ -1192,16 +1192,14 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
          fprintf(fp,t02,VALUE(feld,i),VALUE(z_s,i) );
 
     if( !null(b_norm,macheps) ||  !null(bmol_norm,macheps) )
-    {
-    
+    {    
      printf("Berechne Betrag des magnetisches Moments fuer B in [%2g,%2g,%2g] ... \n", b1,b2,b3);
      printf("writing results to %s ... \n",MAGNETM);
      if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
      fprintf(fp,t04,datensatz_nr,anz_feld,ionname,b1,b2,b3);
      for( i=1; i<= anz_feld; ++i )
          fprintf(fp,t02,VALUE(feld,i),sqrt( VALUE(x_s,i)*VALUE(x_s,i)+VALUE(y_s,i)*VALUE(y_s,i)+VALUE(z_s,i)*VALUE(z_s,i) ) );
- 
-  }
+   }
  
     t01="\n%s was not stored. Magnetic Moment is zero.\n";
     if( datensatz_nr <= 0 && anz_daten == 0)  printf(t01,MAGNETM);
@@ -1261,8 +1259,7 @@ DOUBLE magnetm(mat_Ji,setup,ewproblem,kristallfeld,Bx,By,Bz,t)
     Bymol        = B2MOL(iteration);
     Bzmol        = B3MOL(iteration);
  
- 
- 
+  
     HMAG(iteration) = calc_iBmag( bmag,gj,myB,Bx,By,Bz,Bxmol,Bymol,Bzmol);
 
     ewproblem       = solve(setup,ewproblem,NEIN,kristallfeld,art);

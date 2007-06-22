@@ -21,8 +21,8 @@ $file2=$ARGV[0];shift @ARGV;
        else{
               while(($line2=<Fin2>)=~/^\s*#/){print Fout2 $line2;}
 
-             @numbers1=split(" ",$line1);
-             @numbers2=split(" ",$line2);
+             $line1=~s/D/E/g;@numbers1=split(" ",$line1);
+             $line2=~s/D/E/g;@numbers2=split(" ",$line2);
 	     
            	       $store=$numbers1[$col1-1];
 		       $numbers1[$col1-1]=$numbers2[$col2-1];

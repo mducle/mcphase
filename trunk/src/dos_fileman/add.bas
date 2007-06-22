@@ -11,8 +11,8 @@ DATA "     means function y1(x1)=col3(col1) in file *1.* is added              "
 DATA "      to function y2(x2)=col1(col2) in file *2.* ...                     "
 DATA "     the result is written into the col3 of file *1.*                    "
 DATA " linear interpolation is used to match the x1 and x2 axis !!!!!          "
-DATA "options:  /noex0   ... do not extrapolate and delete datapoints "                                            
-DATA "          /noex1   ... do not extrapolate and add nothing to datapoints"                                    
+DATA "options:  /noex0   ... do not extrapolate and delete datapoints "                                          
+DATA "          /noex1   ... do not extrapolate and add nothing to datapoints"                                  
 DATA " file formats                                                            "
 DATA " { header: this is the                                                   "
 DATA "   file header delimited                                                 "
@@ -124,7 +124,9 @@ WEND
 d1#(y1%) = d1#(y1%) + interpoly2
 
 'save the datapoint
-17 FOR coll% = 1 TO col1%: PRINT #3, d1#(coll%); : NEXT: PRINT #3,
+17 FOR coll% = 1 TO col1%:
+nn$ = STR$(d1#(coll%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #3, " " + nn$; : NEXT: PRINT #3,
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 16 ' input next d1 value

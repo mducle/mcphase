@@ -146,7 +146,7 @@ PRINT #1, x0 + gwidth - gwidth / 50; " mm "; y; " mm "; " lineto"
 PRINT #1, "stroke"
 PRINT #1, x0; " mm "; y - 1; " mm "; " moveto"
 PRINT #1, "(";
-PRINT #1, USING "##.##^^^^"; ytick(i);
+PRINT #1, USING "##.####^^^^"; ytick(i);
 PRINT #1, ") RightAllign"
 NEXT i
     ' yminorticks und scale

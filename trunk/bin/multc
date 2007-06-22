@@ -18,7 +18,7 @@ $coly=$ARGV[0];shift @ARGV;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
            	  $i=0;$numbers[$coly-1]*=$numbers[$colx-1];
 		  foreach (@numbers)
 		  {++$i;print Fout $numbers[$i-1]." ";}     

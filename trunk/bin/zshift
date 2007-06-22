@@ -20,9 +20,13 @@ $delta=1e22;
    {@numbers=split(" ",$line);
         if (($d=abs($numbers[$colx-1]-$constx))<$delta)
 	{$delta=$d;
-	 $const=-$numbers[$coly-1];}    
+	 $const=-$numbers[$column-1];
+       # print $numbers[$colx-1]." $const\n";
+        }    
         
+ 
    }
+ 
   close Fin;
    open (Fin, $file);  
    open (Fout, ">range.out");
@@ -50,7 +54,7 @@ $delta=1e22;
       system "del range.out"; 
      }
 
-   print ">\n";
+   print "> shifted by $const\n";
    }
 
 #\end{verbatim} 

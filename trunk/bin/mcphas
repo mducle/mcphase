@@ -22,7 +22,7 @@ cat << EOF > results/.spins.eps
 1 1 1 1 1 1 1 1 1 1 1 1 1
 EOF
 
-java PostscriptViewer results/.spins.eps &
+java PostscriptViewer results/.spins.eps results/.spins3dab.eps results/.spins3dac.eps results/.spins3dbc.eps &
  #displayspins  &
  spinid=$!
   
@@ -35,6 +35,9 @@ java PostscriptViewer results/.spins.eps &
  kill $javaid $magid $spinid
  rm -f ./results/.mcphas.fum
  rm -f ./results/.spins.eps
+ rm -f ./results/.spins3dab.eps
+ rm -f ./results/.spins3dac.eps
+ rm -f ./results/.spins3dbc.eps
  rm -f ./results/.mag.gnu
  rm -f ./results/.gv;
  cp -f mcphas.j ./results

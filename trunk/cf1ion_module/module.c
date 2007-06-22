@@ -448,24 +448,15 @@ if(gjmbH.Hi()>12)
      (*zp[1])=iops.Jaa*z;
      (*zp[2])=iops.Jbb*z;
      (*zp[3])=iops.Jcc*z;
-     if(gjmbH.Hi()>=4){(*zp[4])=iops.OO20*z;
-}
-     if(gjmbH.Hi()>=5){(*zp[5])=iops.OO22*z;
-}
-     if(gjmbH.Hi()>=6){(*zp[6])=iops.OO40*z;
-}
-     if(gjmbH.Hi()>=7){(*zp[7])=iops.OO42*z;
-}
-     if(gjmbH.Hi()>=8){(*zp[8])=iops.OO44*z;
-}
-     if(gjmbH.Hi()>=9){(*zp[9])=iops.OO60*z;
-}
-     if(gjmbH.Hi()>=10){(*zp[10])=iops.OO62*z;
-}
-     if(gjmbH.Hi()>=11){(*zp[11])=iops.OO64*z;
-}
-     if(gjmbH.Hi()>=12){(*zp[12])=iops.OO66*z;
-}
+     if(gjmbH.Hi()>=4){(*zp[4])=iops.OO20*z;}
+     if(gjmbH.Hi()>=5){(*zp[5])=iops.OO22*z;}
+     if(gjmbH.Hi()>=6){(*zp[6])=iops.OO40*z;}
+     if(gjmbH.Hi()>=7){(*zp[7])=iops.OO42*z;}
+     if(gjmbH.Hi()>=8){(*zp[8])=iops.OO44*z;}
+     if(gjmbH.Hi()>=9){(*zp[9])=iops.OO60*z;}
+     if(gjmbH.Hi()>=10){(*zp[10])=iops.OO62*z;}
+     if(gjmbH.Hi()>=11){(*zp[11])=iops.OO64*z;}
+     if(gjmbH.Hi()>=12){(*zp[12])=iops.OO66*z;}
 
 // calculate mat and delta for transition number tn
 // 1. get i and j from tn
@@ -478,17 +469,14 @@ for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
 delta=En(j)-En(i);
 
 if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dmcalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
-
 if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
 
 
 // 3. set mat
 for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=gjmbH.Hi();++m)
 {if(i==j){//take into account thermal expectation values <Jl>
-          mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-J(l))*((z.Column(j)*(*zp[m]).Column(i))-J(m));
-}
- else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));
-}}
+          mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-J(l))*((z.Column(j)*(*zp[m]).Column(i))-J(m));}
+ else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}}
 
 if (delta/K_B/T>0.000001)
    {mat*=(wn(i)-wn(j)); // occupation factor    
@@ -507,8 +495,7 @@ if (delta/K_B/T>0.000001)
      for(l=1;l<=gjmbH.Hi();++l)
       {delete zp[l];}
      
-return (int)((iops.J+1)*(2*iops.J+1)); 
-// return number of all transitions
+return (int)((iops.J+1)*(2*iops.J+1)); // return number of all transitions
 //return (int)(2*iops.J); // only exc from groundstate are counted
 }
 

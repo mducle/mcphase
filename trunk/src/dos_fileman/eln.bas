@@ -234,9 +234,12 @@ PRINT "                         ovalltemp="; ovalltemp; " A^2 lorentz-type="; lo
 'input section 2 *********************************************************
 DIM d1#(10), d2$(4)
 a$ = "#"
-WHILE (LEFT$(LTRIM$(a$), 1) = "#")
+WHILE (LEFT$(LTRIM$(a$), 1) = "#" AND a = 0 AND b = 0 AND c = 0)
 aa = SEEK(1): INPUT #1, a$
  CALL getvar(a$, "nat", nat)
+ CALL getvar(a$, " a", a)
+ CALL getvar(a$, " b", b)
+ CALL getvar(a$, " c", c)
 WEND
 SEEK 1, aa
 PRINT "             section 2 - nat="; nat

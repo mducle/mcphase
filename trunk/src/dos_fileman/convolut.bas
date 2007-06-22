@@ -20,7 +20,7 @@ DATA "   convolution is done according to the formula:             "
 DATA "    conv(x')=sum_{x} col3(x)*f(x'-x)"
 DATA " "
 DATA " format of file                                                          "
-DATA ""                                         
+DATA ""                                       
 DATA " { header: this is the                                                  "
 DATA "   file header delimited                                                "
 DATA "   by brackets after this header there follow 2 or more data columns }  "
@@ -155,7 +155,11 @@ bk = bk - .12783 * klammer ^ 4
 bk = bk + .0041838 * klammer ^ 5
 'y#(i%) = y#(i%) + bk
 END IF
-PRINT #2, x#(i%); y#(i%)
+nn$ = STR$(x#(i%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$;
+nn$ = STR$(y#(i%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$
+
 NEXT i%
 IF h% >= 999 GOTO 22
 

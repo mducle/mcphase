@@ -2,7 +2,7 @@
 #include "inimcdis.hpp"
 #include <martin.h>
 #include <cstring>
-#include "../version"
+#include "../../version"
 
 #define MAXNOFCHARINLINE 1024
 

@@ -18,7 +18,7 @@ EOF
  spinid=$!
  
  #start calculation program
- mcdispit $1 $2 $3 $4 $5 $6 $7 $8 $9
+ mcdispit $@
 
  #kill all processes
  kill $spinid
@@ -30,5 +30,5 @@ EOF
 
 else
 # do not do a calculation - only print version / help screen
- mcdispit $1 $2 $3 $4 $5 $6;
+ mcdispit $@;
 fi

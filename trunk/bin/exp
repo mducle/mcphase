@@ -17,7 +17,7 @@ $column=$ARGV[0];shift @ARGV;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
            	  $i=0;++$j;
 		  foreach (@numbers)
 		  {++$i;

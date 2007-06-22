@@ -193,6 +193,7 @@ sub sta {local $SIG{INT}='IGNORE';
 				    open (Foutcc, ">./ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
+				    system "chmod 755 ./ccccccc.ccc";
 				    system "./ccccccc.ccc > ./cccccc1.ccc";
 				    open (Fincc,"./cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;

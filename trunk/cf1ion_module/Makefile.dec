@@ -101,7 +101,7 @@ cfield: cfield.o  $(VECOBJS) $(CFOBJS)
 	 intensit.o kopmlex.o matrix.o stevens.o theta.o  
 
 
-#	g++  -Wall -o ../bin/cfield $^
+#	g++  -Wall -o ../cfield $^
 
 module.o: module.c 
 	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) 

@@ -116,7 +116,9 @@ IF INSTR(LCASE$(COMMAND$), "/b") = 0 THEN  'no option b has been entered bbbbbbb
  END IF
  washere% = 1              'printout datapoint on correct file
  IF col% > 0 OR col2% > 0 THEN
-  FOR i% = 1 TO col%: PRINT #1, d#(i%); : NEXT i%:
+  FOR i% = 1 TO col%:
+nn$ = STR$(d#(i%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$; : NEXT i%:
   FOR i% = 1 TO col2%: PRINT #1, "{"; d2$(i%); "}"; : NEXT i%: PRINT #1,
  END IF
  CLOSE 1

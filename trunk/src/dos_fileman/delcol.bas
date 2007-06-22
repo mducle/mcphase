@@ -57,7 +57,11 @@ WHILE EOF(1) = 0
   END IF
 
  'write result to file
- FOR coll% = 1 TO col%: IF coll% < jl% OR coll% > ju% THEN PRINT #2, xm#(coll%);
+ FOR coll% = 1 TO col%:
+ IF coll% < jl% OR coll% > ju% THEN
+  nn$ = STR$(xm#(coll%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+  PRINT #2, " " + nn$;
+ END IF
  NEXT:
  FOR coll% = 1 TO col2%: PRINT #2, " {" + d2$(coll%) + "} "; : NEXT
  PRINT #2,

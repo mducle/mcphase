@@ -57,6 +57,7 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U)
 {switch (intern_mcalc)
   {case 1: return kramer(T,gjmbH,lnZ,U);break;
    case 2: return (*iops).cfield(T,gjmbH,lnZ,U);break;
+   case 3: return brillouin(T,gjmbH,lnZ,U);break;
    default: (*m)(&J,&T,&gjmbH,&gJ,&ABC,&lnZ,&U);return J;
   }
 }
@@ -80,6 +81,7 @@ int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delt
 {switch (intern_mcalc)
   {case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
    case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
    default: return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&mat,&delta);
   }
 }
@@ -233,19 +235,29 @@ jjjpar::jjjpar(FILE * file)
       while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
       if(i!=3){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n");
               fprintf(stderr,"\n#!kramer\n#comment lines ..\n#matrix elements\nparamnames= |<+-|Ja|-+>| |<+-|Jb|-+>| |<+-|Jc|+->|\nparams=2 3 1\n\n",cffilename);exit(EXIT_FAILURE);}
-      // now we have the numbers corresponding to vector ABC() in nn[]
+      // now we have the numbers corresponding to the vector ABC() in nn[]
       ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];}
       fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n",ABC(1),ABC(2),ABC(3));
     }
-  else 
-  {if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
-    {intern_mcalc=2;fprintf (stderr,"#[internal]\n");
+  else
+    {if(strncmp(instr,"#!brillouin ",12)==0||strncmp(instr,"#!brillouin\n",12)==0)
+     {intern_mcalc=3;fprintf (stderr,"[internal]\n");
+      // input all  lines starting with comments
+      while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
+      if(i!=1){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n");
+              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n#matrix elements\nparamnames= J\nparams=3.5\n\n",cffilename);exit(EXIT_FAILURE);}
+      // now we have the numbers corresponding to the vector ABC() in nn[]
+      ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];}
+      fprintf(stderr," ... Brillouin function with J=S=%g\n",ABC(1));
+     }
+     else 
+     {if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
+     {intern_mcalc=2;fprintf (stderr,"#[internal]\n");
      iops=new ionpars(cf_file);  
      // get 1ion parameters - operator matrices
-
-    }
-    else
-    {   
+     }
+     else
+     {   
 #ifdef __linux__
   instr[1]='=';
   extract(instr,"#",modulefilename,(size_t)MAXNOFCHARINLINE);
@@ -279,6 +291,7 @@ jjjpar::jjjpar(FILE * file)
 #endif
     }
    }
+  }
   fclose(cf_file);
 
   magFF=Vector(1,14);
@@ -717,4 +730,188 @@ return 3; // kramers doublet has always exactly one transition + 2 levels (quasi
 }
 /**************************************************************************/
 
+//------------------------------------------------------------------------------------------------
+//routine mcalc for kramers doublet
+//------------------------------------------------------------------------------------------------
+Vector & jjjpar::brillouin (double & T, Vector & gjmbH, double & lnZ, double & U)
+{ /*on input
+    ABC(1)  J=S....Spin quantum number
+    gJ		lande factor
+    T		temperature[K]
+    gjmbH	vector of effective field [meV]
+  on output    
+    J		single ion momentum vector <J>
+    Z		single ion partition function
+    U		single ion magnetic energy
+*/
 
+// check dimensions of vector
+if(J.Hi()!=3||gjmbH.Hi()!=3||ABC.Hi()!=1)
+   {fprintf(stderr,"Error loadable module brillouin.so: wrong number of dimensions - check number of columns in file mcphas.j or number of parameters in single ion property file\n");
+    exit(EXIT_FAILURE);}
+    
+double JJ,K_BT,XJ,gmhkt,Jav,gmh,Z,X;
+
+// program brillouin function for S=J=ABC(1)
+JJ=ABC[1];
+K_BT=T*K_B;
+gmh=Norm(gjmbH);
+gmhkt=gmh/K_BT;
+X=exp(gmhkt);
+XJ=exp(JJ*gmhkt);
+
+//printf("1-X=%g gmh=%g",1-X,gmh);
+
+if (X==1.0){Z=2*JJ+1;Jav=0;}
+else
+{Z=(XJ*X-1/XJ)/(X-1.0);
+ Jav=JJ*(XJ*X*X-1/XJ)+(JJ+1)*X*(1.0/XJ-XJ);
+ Jav/=(X-1);
+ Jav/=(XJ*X-1/XJ);
+}
+//for (i=-JJ*2;i<=+0.000001;++i)
+//{dd=i*gmhkt;
+// if (dd<-700){expp=0;}else{expp=exp(dd);}
+// Z += expp; //this is not yet Z, a factor exp(J gJ Heff/kT) is missing
+//}
+
+
+//Jav=0;
+//for (i=-JJ*2;i<=+0.000001;++i)
+//{dd=i*gmhkt;
+// if (dd<-700){expp=0;}else{expp=exp(dd);}
+// Jav+=(JJ+i)*expp/Z;
+//}
+//Z*=exp(JJ*gmhkt); //this is now the correct Z
+
+
+U=-gmh*Jav;
+
+
+lnZ=log(Z);
+
+if (gmh>0)
+{ J[1] = Jav*gjmbH(1)/gmh;
+  J[2] = Jav*gjmbH(2)/gmh;
+  J[3] = Jav*gjmbH(3)/gmh;
+ }
+ else
+ {J=0;}
+//  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
+return J;
+}
+/**************************************************************************/
+// for mcdisp this routine is needed
+int jjjpar::brillouindm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
+{ 
+  /*on input
+    tn          transition-number
+    ABC(1)      S=J spin quantum number
+    g_J		lande factor
+    T		temperature[K]
+    gjmbH	vector of effective field [meV]
+  on output    
+    delta	splittings [meV] 
+    mat(i,j)	transition matrix elements ...
+*/
+// NOT IMPLEMENTED
+// printf("Error: external module brillouin.c has not implemented dmcalc function");exit(EXIT_FAILURE);
+// return 1; 
+static Vector J(1,3);
+int pr;
+
+  pr=1;
+  if (tn<0) {pr=0;tn*=-1;}
+
+  double JJ,K_BT,XJ,gmhkt,gmh,Z,R,X,sinth,hxxyy,jjkt;
+  complex <double> i(0,1),bx,by,bz;
+
+// program brillouin function for S=J=ABC(1)
+  JJ=ABC[1];
+  K_BT=T*K_B;
+  gmh=Norm(gjmbH);
+  gmhkt=gmh/K_BT;
+  X=exp(gmhkt);
+  XJ=exp(JJ*gmhkt);
+// calculate Z and R
+if (X==1.0){Z=2*JJ+1;R=0;}
+else
+{Z=(XJ*X-1/XJ)/(X-1.0);
+ R=JJ*(1/XJ-XJ*X*X)+(JJ+1)*X*(XJ-1.0/XJ);
+ R/=0.5*(X-1)*(X-1);
+}
+
+// calculate coefficients bx,by,bz
+ hxxyy=gjmbH(1)*gjmbH(1)+gjmbH(2)*gjmbH(2);
+ if (hxxyy/gjmbH(3)/gjmbH(3)>SMALL*SMALL)
+ {sinth=sqrt(hxxyy)/gmh;
+  bx=-gjmbH(2)+i*gjmbH(1)*gjmbH(3)/gmh;
+  bx/=2*gmh*sinth;
+  by=gjmbH(1)+i*gjmbH(2)*gjmbH(3)/gmh;
+  by/=2*gmh*sinth;
+  }
+ else
+ {sinth=0;by=0.5;
+  if(gjmbH(3)>0)
+  {bx=0.5*i;}
+  else
+  {bx=-0.5*i;}
+ }
+  bz=-i*sinth*0.5;
+// -----------------------------------------
+
+if (tn==2) // transition to finite energy
+ {delta=gmh; //set delta !!!
+
+ if (delta>SMALL)
+  {// now lets calculate mat
+  mat(1,1)=bx*conj(bx)*(-R/Z);
+  mat(1,2)=bx*conj(by)*(-R/Z);
+  mat(1,3)=bx*conj(bz)*(-R/Z);
+  mat(2,1)=by*conj(bx)*(-R/Z);
+  mat(2,2)=by*conj(by)*(-R/Z);
+  mat(2,3)=by*conj(bz)*(-R/Z);
+  mat(3,1)=bz*conj(bx)*(-R/Z);
+  mat(3,2)=bz*conj(by)*(-R/Z);
+  mat(3,3)=bz*conj(bz)*(-R/Z);
+  } else
+  {// quasielastic scattering needs epsilon * nm / KT ....
+  jjkt=0.6666667*JJ*(JJ+1)/K_BT;
+  mat(1,1)=bx*conj(bx)*jjkt;
+  mat(1,2)=bx*conj(by)*jjkt;
+  mat(1,3)=bx*conj(bz)*jjkt;
+  mat(2,1)=by*conj(bx)*jjkt;
+  mat(2,2)=by*conj(by)*jjkt;
+  mat(2,3)=by*conj(bz)*jjkt;
+  mat(3,1)=bz*conj(bx)*jjkt;
+  mat(3,2)=bz*conj(by)*jjkt;
+  mat(3,3)=bz*conj(bz)*jjkt;
+  }
+ }
+ else
+ { delta=-SMALL; // tn=1 ... transition within the same level
+   if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/K_BT/(2*JJ+1);}
+   else {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
+         jjkt+=JJ*JJ/X/XJ;
+	 jjkt+=(JJ*JJ+2*JJ+1)*X/XJ;
+	 jjkt-=(JJ+1)*(JJ+1)*XJ;
+	 jjkt+=(2*JJ*JJ+2*JJ-1)*XJ*X;
+	 jjkt-=JJ*JJ*XJ*X*X;
+	 jjkt*=X/(1-X)/(1-X);
+	 jjkt/=(1/XJ-X*XJ)*K_BT;}
+ // now lets calculate mat
+ mat(1,1)=gjmbH(1)*gjmbH(1)*jjkt;
+ mat(1,2)=gjmbH(1)*gjmbH(2)*jjkt;
+ mat(1,3)=gjmbH(1)*gjmbH(3)*jjkt;
+ mat(2,1)=gjmbH(2)*gjmbH(1)*jjkt;
+ mat(2,2)=gjmbH(2)*gjmbH(2)*jjkt;
+ mat(2,3)=gjmbH(2)*gjmbH(3)*jjkt;
+ mat(3,1)=gjmbH(3)*gjmbH(1)*jjkt;
+ mat(3,2)=gjmbH(3)*gjmbH(2)*jjkt;
+ mat(3,3)=gjmbH(3)*gjmbH(3)*jjkt;
+ }
+if (pr==1) printf ("delta=%4.6g meV\n",delta);
+
+return 2;
+// brillouin function has 2 effective transitions
+}

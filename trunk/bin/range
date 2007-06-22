@@ -19,7 +19,7 @@ $max=$ARGV[0];   shift @ARGV;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
 #          print $numbers[$column-1]."\n";
           if ($min<$numbers[$column-1]&&$numbers[$column-1]<$max)
            	  {print Fout $line;}  

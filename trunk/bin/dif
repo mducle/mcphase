@@ -19,7 +19,7 @@ $coly=$ARGV[0];shift @ARGV;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
             if (!@numbers1){@numbers1=@numbers;}
                  unless(0==($numbers[$colx-1]-$numbers1[$colx-1]))
 		  {@numout=@numbers;

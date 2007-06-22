@@ -16,7 +16,7 @@
 #define MAXNOFCHARINLINE 1024
 
 #include <mcdisp.h>
-#include "../version"
+#include "../../version"
 #include "myev.c"
 #include "intcalc.c"
 
@@ -272,7 +272,8 @@ if (do_verbose==1){
 
 //initialize output files
   errno = 0;
-  printf("saving mcdisp.qom and mcdisp.qei\n");
+if (do_jqfile==0)
+{ printf("saving mcdisp.qom and mcdisp.qei\n");
   fout = fopen_errchk ("./results/mcdisp.qom","w");
   foutqei = fopen_errchk ("./results/mcdisp.qei","w");
   fprintf (fout, "#{%s ",MCDISPVERSION);
@@ -298,7 +299,7 @@ if (do_verbose==1){
           fprintf (foutdstot, "for fast algorithm  vs summing dsigma for diff energies");
                      }  
           fprintf (foutdstot, "\n");
-
+}
  
 // initialize file with jq matrix
 if (do_jqfile==1)
@@ -430,7 +431,7 @@ if (do_verbose==1){
                   myPrintComplexMatrix(stdout,md.sqrt_gamma(i1,j1,k1));
                   fprintf(stdout,"sqr(gamma_s=%i%i%i)=\n",i2,j2,k2);
                   myPrintComplexMatrix(stdout,md.sqrt_gamma(i2,j2,k2));
-                  fprintf(stdout,"sqr(gamma_s)*L(s=%i%i%i,s''=%i%i%i)*sqr(gamma_s'')=\n",i1,j1,k1,i2,j2,k2);
+                  fprintf(stdout,"sqr(gamma_s)*U(s)*J(s=%i%i%i,s''=%i%i%i)*U(s'')*sqr(gamma_s'')=\n",i1,j1,k1,i2,j2,k2);
                   myPrintComplexMatrix(stdout,Jl.mati(s,ss)); 
                  }
   }}}
@@ -518,10 +519,10 @@ if (do_jqfile==1){
        else           {if(Tn(i2)>jq0)
                          {jqsta+=(Tn(i2)-jq0)*(Tn(i2)-jq0);}
                       }
-                 }
-
-
- if(do_verbose==1){fprintf(stdout,"diagonalizing %ix%i matrix A...\n",ini.mf.n()*inputpars.nofatoms,ini.mf.n()*inputpars.nofatoms);
+ }
+ else
+ {// no jqfile but excitations to be calculated
+ if(do_verbose==1){fprintf(stdout,"diagonalizing %ix%i matrix A...\n",dimA,dimA);
                            myPrintComplexMatrix(stdout,Ac); 
                    }
    // diagonalize Ac to get energies  and eigenvectors !!!
@@ -652,21 +653,24 @@ diffint=0;
 	             fprintf (foutdstot, " %4.4g ",totint);
                      }  
 
-   fprintf (foutdstot, "\n");
-
-   
-                 
+   fprintf (foutdstot, "\n");              
    fprintf (fout, "\n");
+   }
    if (ini.hkllist==1){hkl(1)=(double)counter;}
 }}}
+    if (do_jqfile==1) 
+     {fprintf(jqfile,"sta=%g\n",jqsta);fclose(jqfile);}
+    else
+     {
     fprintf (fout, "#sta= %8.6g \n",sta);
     fprintf (foutqei, "#sta= %8.6g \n",sta);
     fprintf (stdout, "#sta= %8.6g \n",sta);
    
     fclose(foutqei);
-    fclose(fout);if (do_jqfile==1) {fprintf(jqfile,"sta=%g\n",jqsta);fclose(jqfile);}
+    fclose(fout);
                  if (do_Erefine==1){fclose(foutds);}
     fclose(foutdstot);
+     }
 }
 
 //*************************************************************************************************
@@ -682,7 +686,7 @@ for (i=1;i<=argc-1;++i){
 		                                                epsilon=strtod(argv[i+1],NULL);++i;
 							        fprintf(stdout,"epsilon= %g\n",epsilon);
 				     }		
-         else {if(strcmp(argv[i],"-jq")==0) do_jqfile=1;       
+         else {if(strcmp(argv[i],"-jq")==0) {do_jqfile=1;minE=SMALL;maxlevels=1;}       
           else {if(strcmp(argv[i],"-t")==0) do_readtrs=1;       
            else {if(strcmp(argv[i],"-c")==0) do_createtrs=1;       
             else {if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"-verbose")==0) do_verbose=1;       

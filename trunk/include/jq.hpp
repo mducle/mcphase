@@ -34,11 +34,9 @@ class jq
     int nc(); // returns number of spins
   
 
-   
-jq (int n1,int n2,int n3,mdcf & m);	//konstruktor 
+   jq (int n1,int n2,int n3,mdcf & m);	//konstruktor 
 //   jq (const jq & spins);	// kopier-konstruktor
-   
-~jq ();		//destruktor
+   ~jq ();		//destruktor
 
 };
 

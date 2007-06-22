@@ -68,7 +68,10 @@ WHILE EOF(1) = 0
  IF col% = -1 GOTO 22
 'write result to file
 IF col% > 0 OR col2% > 0 THEN
- FOR coll% = 1 TO col%: PRINT #2, xm#(coll%); : NEXT
+ FOR coll% = 1 TO col%
+nn$ = STR$(xm#(coll%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$;
+NEXT
  FOR coll% = 1 TO col2%: PRINT #2, "{"; d2$(coll%); "}"; : NEXT: PRINT #2,
 END IF
 

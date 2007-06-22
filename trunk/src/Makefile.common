@@ -43,7 +43,8 @@ ifdef DEBUG
 CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG  -fpermissive -march=pentium 
 #CFLAGS  =       -c -g  -DDEBUG -Wall $(INCLDIRS)
 else
-CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
+#CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
+CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr  -fpermissive -march=pentium 
 endif
 
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium

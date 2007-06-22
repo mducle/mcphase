@@ -39,8 +39,7 @@ extern  int inputline (FILE * fin_coq, float *nn);
 // parname=3 23 542 23
 // returns:0 .... it is a comment line (starting with #) or parameter parname not found
 //         n .... number of numbers read
-extern int inputparline (char * parname, FILE * fin_coq, float *nn)
-;
+extern int inputparline (char * parname, FILE * fin_coq, float *nn);
 
 // return integer of floating number (like basic integer function)
 extern  float integer (float s);

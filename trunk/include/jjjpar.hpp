@@ -27,6 +27,8 @@ class jjjpar
 
   Vector & kramer (double & T,Vector & H, double & Z,double & U);
   int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+  Vector & brillouin (double & T,Vector & H, double & Z,double & U);
+  int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
 
   ionpars * iops;
   int intern_mcalc;

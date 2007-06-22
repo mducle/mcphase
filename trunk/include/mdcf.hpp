@@ -47,15 +47,13 @@ class mdcf
     int noft(int i, int j, int k, int l); // returns number of transitions of ion l in cryst unit ijk
 //    mdcf & operator= (const mdcf & op2); // zuweisung
 
-   
-mdcf (int n1,int n2,int n3,int n,int nc);	//konstruktor
+   mdcf (int n1,int n2,int n3,int n,int nc);	//konstruktor
 
 // initialisierung 
     void set_noftransitions (int i, int j, int k, IntVector & notr);
 
 //   mdcf (const mdcf & spins);	// kopier-konstruktor
-   
-~mdcf ();		//destruktor
+   ~mdcf ();		//destruktor
 
 };
 

@@ -187,8 +187,16 @@ ELSE
 END IF
 
 nul#(l, m) = 0
-a(l, m) = ht# * tetan(l) * cnst(l, m)
+a(l, m) = ht#
 NEXT m: NEXT l
+
+PRINT "thermal expectation value of Olms"
+PRINT #9, "thermal expectation value of Olms"
+FOR l = 2 TO 6 STEP 2: FOR m = -l TO l
+PRINT USING "O## ##=##.###^^^^ "; l, m, a(l, m);
+PRINT #9, USING "O## ##=##.###^^^^ "; l, m, a(l, m);
+a(l, m) = a(l, m) * tetan(l) * cnst(l, m)
+NEXT m: PRINT : PRINT #9, : NEXT l
   
 PRINT "expansion coefficients for charge density"
 PRINT #9, "expansion coefficients for charge density"
@@ -1644,10 +1652,10 @@ FOR i = 1 TO col%: PRINT #9, USING "    ###"; i; : NEXT i
 PRINT #9,
  FOR i = 1 TO row%: PRINT #9, USING "##.#"; i;
     FOR l = 1 TO col%
-     IF ABS(ar#(l, i)) > .0001 THEN PRINT #9, USING "###.###"; ar#(l, i); :             ELSE PRINT #9, "  0    ";
+     IF ABS(ar#(l, i)) > .0001 THEN PRINT #9, USING "###.###"; ar#(l, i); :               ELSE PRINT #9, "  0    ";
     NEXT l: PRINT #9, : PRINT #9, "    ";
     FOR l = 1 TO col%
-     IF ABS(ac#(l, i)) > .0001 THEN PRINT #9, " +i"; : PRINT #9, USING "#.##"; ac#(l, i); :              ELSE PRINT #9, "       ";
+     IF ABS(ac#(l, i)) > .0001 THEN PRINT #9, " +i"; : PRINT #9, USING "#.##"; ac#(l, i); :                ELSE PRINT #9, "       ";
     NEXT l: PRINT #9,
 NEXT i
 
