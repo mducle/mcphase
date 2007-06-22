@@ -3,11 +3,8 @@ cat << EOF > results/.spins.eps
 0 0 0 0 0 0 0 0 0 0 0 0 0
 1 1 1 1 1 1 1 1 1 1 1 1 1
 EOF
-cat << EOF > results/.gv
-watchFileFrequency=501
-EOF
 
-gv -watch  results/.spins.eps -ad ./results/.gv -antialias -quiet &
+java PostscriptViewer  results/.spins.eps &
 gvid=$!
 trap  "kill $gvid" SIGTERM
 wait $gvid

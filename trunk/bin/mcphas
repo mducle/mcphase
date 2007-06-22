@@ -16,7 +16,14 @@ EOF
  # displaymag   & 
  java displaymag 2 11 ./results/.mcphas.fum 2 12 ./results/.mcphas.fum 2 13 ./results/.mcphas.fum  &
  magid=$!
- displayspins  &
+
+cat << EOF > results/.spins.eps
+0 0 0 0 0 0 0 0 0 0 0 0 0
+1 1 1 1 1 1 1 1 1 1 1 1 1
+EOF
+
+java PostscriptViewer results/.spins.eps &
+ #displayspins  &
  spinid=$!
   
  sleep 5 s

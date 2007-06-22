@@ -24,13 +24,13 @@ my ($a,$b,$c,$nofatoms) = @{$latt};
  print "primitive lattice[A]:".$p."\n";
 
     $r=0;
-# determine $nmin,$nmax by looking at a cube with side 2rmax
+# determine $nmin,$nmax by looking at a cube with side 3rmax
      $inv=matinv($p); #invert primitive lattice
      #loop all corner points
   for ($i1=-1;$i1<=1;$i1+=2){
   for ($i2=-1;$i2<=1;$i2+=2){
   for ($i3=-1;$i3<=1;$i3+=2){
-    $n=inner($inv , pdl[$i1*$rmax,$i2*$rmax,$i3*$rmax]); 
+    $n=inner($inv , pdl[$i1*$rmax*1.5,$i2*$rmax*1.5,$i3*$rmax*1.5]); 
     if (($n->at(0))<$n1min) {$n1min=int($n->at(0))-1;}
     if (($n->at(1))<$n2min) {$n2min=int($n->at(1))-1;}
     if (($n->at(2))<$n3min) {$n3min=int($n->at(2))-1;}
@@ -110,14 +110,20 @@ sub getinteraction {
    # calculate classical dipole interaction
 my $c = $gJ * $gJ * .927405 * .927405 / 16.02183;  #[meV A^3]
 
-$jaa = $c * (3 * $rx * $rx -$r *$r) /$r /$r /$r /$r /$r;
-$jbb = $c * (3 * $ry * $ry -$r *$r) /$r /$r /$r /$r /$r;
-$jcc = $c * (3 * $rz * $rz -$r *$r) /$r /$r /$r /$r /$r;
+$jaa = $c * (3 * $rx * $rx -$r *$r) /$r /$r /$r /$r /$r
+;
+$jbb = $c * (3 * $ry * $ry -$r *$r) /$r /$r /$r /$r /$r
+;
+$jcc = $c * (3 * $rz * $rz -$r *$r) /$r /$r /$r /$r /$r
+;
 
 
-$jab = $c * (3 * $rx * $ry) /$r /$r /$r /$r /$r;
-$jbc = $c * (3 * $ry * $rz) /$r /$r /$r /$r /$r;
-$jac = $c * (3 * $rx * $rz) /$r /$r /$r /$r /$r;
+$jab = $c * (3 * $rx * $ry) /$r /$r /$r /$r /$r
+;
+$jbc = $c * (3 * $ry * $rz) /$r /$r /$r /$r /$r
+;
+$jac = $c * (3 * $rx * $rz) /$r /$r /$r /$r /$r
+;
    $jba=$jab;
    $jcb=$jbc;
    $jca=$jac;

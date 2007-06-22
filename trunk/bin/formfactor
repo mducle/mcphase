@@ -4,7 +4,7 @@
 
 
 unless ($#ARGV >=0) 
-{print " program formfactor used to calculate the formfactor for a ion described in paramater file *.*";
+{print " program formfactor used to calculate the formfactor for a ion described in single ion paramater file *.*";
  print " usage: formfactor  *.*  \n *.* .. filenname\n";
  exit 0;}
  
@@ -38,6 +38,7 @@ unless ($#ARGV >=0)
    print ">\n";
    print "IONTYPE=$IONTYPE\n";
    if ($IONTYPE=~/.*Pr3+/){$gJ=0.8;}
+   if ($IONTYPE=~/.*Yb3+/){$gJ=1.143;}
    if ($gJ==0) {print "ion not recognized\n exiting ...\n"; exit(1);}
    print "|Q|(1/A)  F(Q) |F(Q)|^2\n";
   for($Q=0;$Q<10;$Q+=0.1)

@@ -3,17 +3,26 @@
 $Tmin=$ARGV[0];
 $Tmax=$ARGV[1];
 $deltaT=$ARGV[2];
-unless($#ARGV==2)
+unless($#ARGV>=2)
   {print "Program cpcalc - calculates specific heat from output file cfield.out\n";
-   print "             use as :  cpcalc tmin tmax deltat\n"; 
+   print "             use as :  cpcalc tmin tmax deltat [-option]\n"; 
    print "             alternatively \n";
-   print "             use as: cpcalc col1 col2 datafile\n";
+   print "             use as: cpcalc col1 col2 datafile [-option]\n";
    print "                     (take cp-data from datafile and calculate\n";
    print "                      standard deviation)\n";
    print "     output is written to stdout, energies have to be given in meV,\n";
    print "     temperatures tmin tmax deltat in Kelvin\n";
+   print "     Options: -s   .... calculate entropy  (J/molK) instead of cp\n";
+   print "              -f   .... calculate free energy (J/mol) instead of cp\n";
+   print "              -u   .... calculate magnetic energy (J/mol) instead of cp\n";
+   print "              -z   .... calculate partition sum instead of cp\n";
    exit(1);
   }
+      $cptext="cp(J/molK)";
+      if($ARGV[3]=~/-f/){$cptext="f(J/mol)";}
+       if($ARGV[3]=~/-z/){$cptext="z";}
+       if($ARGV[3]=~/-u/){$cptext="u(J/mol)";}
+       if($ARGV[3]=~/-s/){$cptext="s(J/molK)";}
 
 unless (open (Fin,"cfield.out")) {print "ERROR cpcalc: file cfield.out not found\n";exit(1);}
 
@@ -45,7 +54,7 @@ $colT=$Tmin;
 $colcp=$Tmax;
 $ii=0;$sta=0;
 # read temperatures and calculate cp + comp to experiment
-  print  "# T(K)  cpclc(mJ/molK) cpexp(mJ/molK)\n";
+  print  "# T(K)  $cptext  exp-$cpctext\n";
   while($line=<Fin>)
   {
        if ($line=~/^\s*#/) {}
@@ -63,7 +72,7 @@ $ii=0;$sta=0;
   close Fin;
 }
 else
-{print  "# T(K)  cpclc(mJ/molK)\n";
+{print  "# T(K)  $cptext\n";
  for($T0=$Tmin;$T0<$Tmax;$T0+=$deltaT)
  {($cpclc)=cp();
   print "$T0  $cpclc\n";
@@ -93,6 +102,10 @@ $T=$T0+$dT/2;
             $Um*=1.38066*6.023; # magnetic energy in J per mol
          
 	 $cpc=($Up-$Um)/$dT;  	    
-         #$f=$T*log($Z)*1.38066*6.023;
+       if($ARGV[3]=~/-f/){$cpc=-$T*log(0.5*($Zm+$Zp))*1.38066*6.023;}
+       if($ARGV[3]=~/-z/){$cpc=0.5*($Zm+$Zp);}
+       if($ARGV[3]=~/-u/){$cpc=0.5*($Um+$Up);}
+       if($ARGV[3]=~/-s/){$cpc=0.5*($Um+$Up)/$T0+log(0.5*($Zm+$Zp))*1.38066*6.023;}
+
 return $cpc;
 }

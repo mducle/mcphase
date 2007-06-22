@@ -107,7 +107,7 @@ sub get_detector_data_2D {
      if ($in==5) {$xtext='\frh';}
      if ($in==6) {$xtext='\frk';}
      if ($in==7) {$xtext='\frl';}
-     $ytext='\frEnergy [meV]';
+     $ytext='\frEnergy (meV)';
      
      # calculate limits
      $x0=min(($info->{'Numeric Data'})->slice("$xcol,:"));         
