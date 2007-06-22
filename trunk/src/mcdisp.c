@@ -16,7 +16,7 @@
 #define MAXNOFCHARINLINE 1024
 
 #include <mcdisp.h>
-#include "../../version"
+#include "../version"
 #include "myev.c"
 #include "intcalc.c"
 

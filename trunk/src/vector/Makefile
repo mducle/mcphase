@@ -45,7 +45,7 @@ INCLUDE= ../../include
 	${CC} -c ${COPTS} -I ${INCLUDE} $<
 
 .cc.o: 
-	${CCC} -c ${CCOPTS} -I ${INCLUDE} $<
+	${CCC} -c ${CCOPTS} -fPIC -I ${INCLUDE} $<
 
 
 

@@ -21,7 +21,7 @@ vpath %.o  ./ ./vector ../cf1ion_module
 
 #---------------------------------------------------------------------
 #  Operating system
-OSTYPE=$(shell uname -o)
+OSTYPE=$(shell uname)
 #  (linux windows)
 ifeq ($(OSTYPE),Linux)
 LINUX = linux

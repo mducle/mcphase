@@ -78,7 +78,7 @@ cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS)
 	g++  -Wall -o cfield.so $^ -shared 
 
 cfield: cfield.o  $(VECOBJS) $(CFOBJS)
-	g++  -Wall -o ../cfield $^ 
+	g++  -Wall -o ../bin/cfield $^ 
 
 module.o: module.c 
 	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) 

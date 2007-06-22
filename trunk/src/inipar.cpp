@@ -1,6 +1,6 @@
 // methods for class inipar 
 #include "inipar.hpp"
-#include "../../version"
+#include "../version"
 #include <martin.h>
 #include <cstring>
 
