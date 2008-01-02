@@ -233,12 +233,23 @@ float rnd(float z){return  z*rand()/RAND_MAX;};
 double copysign(double a,double b)
 {//if fabs(a)
  //return a*a/fabs(a)*b/fabs(b);
+#ifdef CYGWIN
+ return copysign(a,b);
+#else
  return _copysign(a,b);
+#endif
 }
 // */
 //sleep function
 void sleep(int a)
-{_sleep(a*100);}
+{
+#ifdef CYGWIN
+#include<unistd.h>
+  return usleep(a*1000);
+#else
+  return _sleep(a*1000);
+#endif
+}
 
 #endif
 
