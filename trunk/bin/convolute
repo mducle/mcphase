@@ -207,6 +207,7 @@ else
   } 
  close Fin3;
   $stanorm=0;
+  if ($areadata==0) {print "Error reading data points or area below data points zero\n";}
   $scale=$areacalc/$areadata;
  $ii=0;
  open (Fin3, $file3);

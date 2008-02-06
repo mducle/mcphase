@@ -103,7 +103,7 @@ if ($searchlevel==0)
        { if ($minimum==1&&$sta!=0)
         {#the input parameters are probably a (local) minimum - so save a file
           ($sta)=sta();
-        last if ($sta==0);
+#        last if ($sta==0);
        if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
                                         system ("copy ".$file.".par ".$file.".parmin.$searchlevel");}
@@ -170,10 +170,11 @@ else
   }
   close Fin1;
 }
-close Fout;
 $hours=(time-$starttime)/3600;
 $estimate=$hours*2*$#par;
 print "$pointcounter points calculated in  $hours h.\n Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+print Fout "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+close Fout;
  foreach (@ARGV) {$file=$_; system ("copy ".$file.".parmin.$searchlevel ".$file);}
 
 exit 0;

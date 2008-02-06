@@ -158,10 +158,11 @@ else
   }
   close Fin1;
 }
-close Fout;
 $hours=(time-$starttime)/3600;
 $estimate=$hours*2*$#par;
 print "$pointcounter points calculated in  $hours h.\n Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+print Fout "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+close Fout;
  foreach (@ARGV) {$file=$_; system ("cp ".$file.".parmin.$searchlevel  ".$file);}
 
 exit 0;

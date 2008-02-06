@@ -28,7 +28,7 @@ $coly=$ARGV[0];shift @ARGV;
            }
       }
       close Fin;
-      print Fout $command;
+#      print Fout $command;
       close Fout;
        unless (rename "range.out",$file)
      {unless(open (Fout, ">$file"))     

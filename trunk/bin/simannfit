@@ -6,6 +6,9 @@ unless ($#ARGV >0)
  print " ... there must exist a program calcsta, the output of which\n";
  print " contains 'sta = 249' - this program is called from this output\n";
  print " at every iteration step and  the standard sta deviation is minimzed\n";
+ print " simannfit gives as a parameter a maximum number for sta - if during the\n";
+ print " calculation of sta in calcsta this number is exceeded calcsta can exit (saves time)\n";
+ print " at every iteration step and  the standard sta deviation is minimzed\n";
  print " option -t sets time limit until program end (in seconds)\n";
  print " option -s gives maximal number of interation steps to be done\n";
  exit 0;}
@@ -56,7 +59,10 @@ sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$pare
  } print "starting fit ...\n";
 #*******************************************************************************
 # fitting loop
+$rnd=1;$stasave=1e20;
  ($sta)=sta();$stps=1;$noofupdates=0;$stepnumber=0;
+if($sta>0)
+{
 $SIG{INT} = \&catch_zap;
 while($sta>0)
 {  $stasave=$sta;
@@ -68,6 +74,7 @@ while($sta>0)
 	       if ($par[$i]>$parmax[$i]) {$par[$i]=$parmax[$i];}
                write STDOUT;
 	       ++$i;}
+ $rnd=rand;
    ($sta)=sta(); # CALCULATE sta !!!!
    ++$stepnumber;
    print " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
@@ -76,9 +83,9 @@ while($sta>0)
  if ($stepnumber>$maxstep){$sta=0;}
  if ($sta==0) {#recover ol pars
       @par=@parsav; 
+      ($sta)=sta(); # CALCULATE sta !!!!
       }
  last if ($sta==0);
- $rnd=rand;
  if ($sta>$stasave)
   {if($rnd>exp(-($sta-$stasave)/$stattemp))
      {#recover ol pars
@@ -113,11 +120,12 @@ while($sta>0)
    print "   sta of stored parameters=$sta\n";
   }	       
  print "*";
-}	       
+ }	       
 
    print "best fit:\n";
    $i=0;foreach(@par){write STDOUT;++$i;}
    ($sta)=sta(); # CALCULATE sta !!!!
+}
    print "      sta=$sta\n";
 # move files
  foreach (@ARGV)
@@ -193,7 +201,7 @@ sub sta {local $SIG{INT}='IGNORE';
 				    open (Foutcc, ">./ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
-				    system "chmod 755 ./ccccccc.ccc";
+                            system "chmod 755 ./ccccccc.ccc"; 
 				    system "./ccccccc.ccc > ./cccccc1.ccc";
 				    open (Fincc,"./cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
@@ -210,7 +218,8 @@ sub sta {local $SIG{INT}='IGNORE';
      {die "\n error:perhaps (perl rename cannot cross filesystems) \n";}
  }
 # print "#call routine calcsta to calculate standard deviation\n";
- system ("./calcsta > simannfit.sta");
+$staboundary=$stasave-log($rnd)*$stattemp;
+ system ("./calcsta $staboundary > simannfit.sta");
  open (Fin,"simannfit.sta"); 
  while($line=<Fin>){
            if($line=~/^.*sta\s*=/) {($sta)=($line=~m|sta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);} 

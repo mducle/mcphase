@@ -5,14 +5,37 @@ use PDL::Slatec;
 
 unless ($#ARGV>=0) 
 {print " program to create table with neighbors from mcphas.j \n\n";
-print " usage: makenn 23.3 \n\n";
+print " usage: makenn 23.3 [options] \n\n";
 print " meaning take mcphas.j, generate all neighbors within sphere of 23.3A and\n";
 print " put them into makenn.j, in interaction columns put the classical dipole interaction\n";
 print " the output values are sorted by ascending distance\n";
-print " perl packages to use\n";
+print " option -rkky A(meV) kf(1/A) calculates the rkky interaction\n";
+print "              according to J(R)=A.cos(2.kf.R)/(2.kf.R)^3\n";
+print "              kf should be the Fermi wavevector (usually\n";
+print "              between 1-2 A^-1 depending on the electrondensity^0.333)\n";
+print " option -kaneyoshi A(meV) D(A) alpha  calculates the kaneyoshi\n";
+print  "             parametrization for the Bethe-Slater\n";
+print "              curve: J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2]\n";
+print "              with D corresponding to the orbital radius\n";
+print "              the exponential alpha is conveniently put to  about 1\n";
+print " option -d puts to the last column the distance of the neighbors (A)\n";
  exit 0;}
 
 my ($rmax) = $ARGV[0];
+$rkky=0;$calcdist=0;
+shift @ARGV; 
+$_=$ARGV[0];
+if(/-rkky/)
+  {$rkky=1;shift @ARGV; $scale=$ARGV[0];shift @ARGV;$kf=$ARGV[0];shift @ARGV;
+   print "calculating RKKY interaction J(R)=A.cos(2.kf.R)/(2.kf.R)^3 for scale A=$scale meV and kf=$kf A^-1\n";}
+if(/-kaneyoshi/)
+  {$rkky=2;shift @ARGV; $scale=$ARGV[0];shift @ARGV;$D=$ARGV[0];shift @ARGV;$aa=$ARGV[0];shift @ARGV;
+   print "calculating kaneyoshi parametrization for the Bethe-Slater curve\n";
+   print "J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2] for scale A=$scale meV kf=$D A^-1  alpha=$aa\n";}
+$_=$ARGV[0];
+if(/-d/)
+  {$calcdist=1;print "putting distance of neighbors (A) to last column of makenn.j\n";}
+
 my ($latt,$p) = getlattice("./mcphas.j");
 my ($a,$b,$c,$nofatoms) = @{$latt};
  print "rmax=".$rmax." A\n";
@@ -25,7 +48,8 @@ my ($a,$b,$c,$nofatoms) = @{$latt};
 
     $r=0;
 # determine $nmin,$nmax by looking at a cube with side 3rmax
-     $inv=matinv($p); #invert primitive lattice
+     $inv=matinv(transpose($p)); #invert primitive lattice
+# print "inverted primitive lattice[A]:".$inv."\n";
      #loop all corner points
   for ($i1=-1;$i1<=1;$i1+=2){
   for ($i2=-1;$i2<=1;$i2+=2){
@@ -37,6 +61,8 @@ my ($a,$b,$c,$nofatoms) = @{$latt};
     if (($n->at(0))>$n1max) {$n1max=int($n->at(0))+1;}
     if (($n->at(1))>$n2max) {$n2max=int($n->at(1))+1;}
     if (($n->at(2))>$n3max) {$n3max=int($n->at(2))+1;}
+#    print"corner $i1 $i2 $i3 coordinates in prim bases:$n\n";
+ #   print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
   }}}
 print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
@@ -46,6 +72,7 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
  for ($nnn=1;$nnn<=$nofatoms;++$nnn)    
  {   my $gJ=$gJ[$nnn];
      my ($rn)=new PDL ();
+     my ($an)=new PDL ();
 
      my ($xn)=new PDL();    
      my ($yn)=new PDL();    
@@ -63,6 +90,7 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
      my ($Jcb)=new PDL();    
      my ($Jcc)=new PDL();    
 
+
   for ($n1=$n1min;$n1<=$n1max;++$n1){ 
   for ($n2=$n2min;$n2<=$n2max;++$n2){ 
   for ($n3=$n3min;$n3<=$n3max;++$n3){  
@@ -77,6 +105,7 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 #       print $r."   ($x,$y,$z,$n1,$n2,$n3\n";
 #   if ($r<=$rmax && $r>0 && $x>=0 && $y>=0 && $z>=0){#save neighbour jjj format
    if ($r<=$rmax && $r>0){#save neighbour j format
+    $an=$an->append( pdl ([$nz]));
     $rn=$rn->append( pdl ([$r]));
     $xn=$xn->append( pdl ([$xx]));
     $yn=$yn->append( pdl ([$yy]));
@@ -92,13 +121,11 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
     $Jbc=$Jbc->append( pdl ([$jbc]));
     $Jca=$Jca->append( pdl ([$jca]));
     $Jcb=$Jcb->append( pdl ([$jcb]));
-    $Jcc=$Jcc->append( pdl ([$jcc]));
-
-                        }
+    $Jcc=$Jcc->append( pdl ([$jcc]));                         }
     }}}}  
    $n= qsorti($rn);
-   $nofneighbours[$nnn]=(($rn->dims)[0]);
-   printneighbourlist($h,$l,$nofneighbours[$nnn],$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb);   
+   $nofneighbours[$nnn]=(($rn->dims)[0]-1);
+   printneighbourlist($h,$l,$nofneighbours[$nnn],$n,$an,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb);   
  }
 
  endprint($h,$l);   
@@ -108,6 +135,46 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 sub getinteraction {
    my ($gJ,$r,$rx,$ry,$rz)=@_;
    # calculate classical dipole interaction
+if ($rkky==1)
+{$jaa = $scale*cos(2*$kf*$r)/8/$kf/$kf/$kf/$r/$r/$r
+;
+
+$jbb =$jaa
+;
+$jcc =$jaa
+;
+
+$jab = 0
+;
+$jbc =0
+;
+$jac =0
+;
+$jba=0;
+   $jcb=0;
+   $jca=0;
+}
+elsif($rkky==2)
+{my ($xx)=$r*$r/$D/$D;
+$jaa= $scale*(-$xx+$xx*$xx)*exp(-$aa*$xx);
+
+
+$jbb =$jaa
+;
+$jcc =$jaa
+;
+
+$jab = 0
+;
+$jbc =0
+;
+$jac =0
+;
+$jba=0;  $jcb=0;
+   $jca=0;
+}
+else
+{
 my $c = $gJ * $gJ * .927405 * .927405 / 16.02183;  #[meV A^3]
 
 $jaa = $c * (3 * $rx * $rx -$r *$r) /$r /$r /$r /$r /$r
@@ -127,7 +194,7 @@ $jac = $c * (3 * $rx * $rz) /$r /$r /$r /$r /$r
    $jba=$jab;
    $jcb=$jbc;
    $jca=$jac;
-      
+}     
  return ([$jaa,$jab,$jac,$jba,$jbb,$jbc,$jca,$jcb,$jcc]);  
 }
 
@@ -193,7 +260,8 @@ sub printlattice {
 }
 
 sub printneighbourlist {
-  my ($h,$l,$nofn,$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb)=@_;   
+  my ($h,$l,$nofn,$n,$an,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb)=@_;   
+     if ($nofn=="-1"){$nofn="0";}
      print $l ("#*************************************************************************\n");
      my $stopheader=0;
      my $stopprint=0;
@@ -201,20 +269,37 @@ sub printneighbourlist {
      {#next if /^\s*#/;
       last if /^#.*\Q**********\E/;
       $text=$_;
-      if (/^.*\Qnofneighbours=\E/){$text=~s!\Qnofneighbours=\E\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
-      if (/^.*\Qdiagonalexchange=\E/){$text=~s!\Qdiagonalexchange=\E\s*\d+!diagonalexchange=0!;$stopheader=1;}
+     if (/^.*\Qnofneighbours=\E/){$text=~s!\Qnofneighbours=\E\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
+     if (/^.*\Qdiagonalexchange=\E/){
+      if ($rkky>=1)
+       {$text=~s!\Qdiagonalexchange=\E\s*\d+!diagonalexchange=1!;$stopheader=1;}
+      else
+       {$text=~s!\Qdiagonalexchange=\E\s*\d+!diagonalexchange=0!;$stopheader=1;}
+      }
+
       if ($stopprint==0){print $l ($text);}
       $stopprint=$stopheader;
      }
      print $l ("#x[a]      y[b]      z[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
-     print $l ("# it follows output of classical DD interaction generated by makenn\n");
- for ($n1=0;$n1<(($rn->dims)[0]);++$n1)
+if ($rkky==1)
+{print $l ("# it follows output of RKKY interaction according to J(R)=A.cos(2.kf.R)/(2.kf.R)^3 with A=$scale meV and kf=$kf A^-1 generated by makenn\n");}
+elsif ($rkky==2)
+{print $l ("# kaneyoshi parametrization for the Bethe-Slater curve J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2] for scale A=$scale meV kf=$D A^-1  alpha=$aa\n");}
+else
+{print $l ("# it follows output of classical DD interaction generated by makenn\n");}
+
+ for ($n1=1;$n1<(($rn->dims)[0]);++$n1)
 # the position xyz is relative position (not absolute coordinate of neighbour)
  {print $l ($xn->index($n)->at($n1)." ".$yn->index($n)->at($n1)." ".$zn->index($n)->at($n1))." ";
  print $l ($Jaa->index($n)->at($n1)." ".$Jbb->index($n)->at($n1)." ".$Jcc->index($n)->at($n1))." ";
- print $l ($Jab->index($n)->at($n1)." ".$Jba->index($n)->at($n1)." ".$Jac->index($n)->at($n1))." ";
- print $l ($Jca->index($n)->at($n1)." ".$Jbc->index($n)->at($n1)." ".$Jcb->index($n)->at($n1))."\n";
+ if ($rkky==0)
+  { print $l ($Jab->index($n)->at($n1)." ".$Jba->index($n)->at($n1)." ".$Jac->index($n)->at($n1))." ";
+    print $l ($Jca->index($n)->at($n1)." ".$Jbc->index($n)->at($n1)." ".$Jcb->index($n)->at($n1))." ";
   }
+ $ddd=$an->index($n)->at($n1);
+ if ($calcdist==1) {print $l ($rn->index($n)->at($n1)." a".$ddd);}
+  print $l "\n";
+ }
 }
 
 sub endprint {

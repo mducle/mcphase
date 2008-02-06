@@ -17,14 +17,13 @@ $delta=1e22;
    print "<".$file;
    open (Fin, $file);
    while($line=<Fin>)
-   {@numbers=split(" ",$line);
+   {$line=~s/D/E/g;@numbers=split(" ",$line);
         if (($d=abs($numbers[$colx-1]-$constx))<$delta)
 	{$delta=$d;
 	 $const=-$numbers[$column-1];
        # print $numbers[$colx-1]." $const\n";
         }    
-        
- 
+         
    }
  
   close Fin;
@@ -33,7 +32,7 @@ $delta=1e22;
    while($line=<Fin>)
      {
        if ($line=~/^\s*#/) {print Fout $line;}
-       else{@numbers=split(" ",$line);
+       else{$line=~s/D/E/g;@numbers=split(" ",$line);
            	  $i=0;++$j;
 		  foreach (@numbers)
 		  {++$i;
