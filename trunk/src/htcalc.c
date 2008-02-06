@@ -79,10 +79,15 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
  srand(time(0)); // initialize random number generator
  checkini(testspins,testqs); // check if user pressed a button
  if (ini.logfevsQ==1) {felog=fopen_errchk("./results/mcphas.log","a");
-               fprintf(felog,"#Logging of h k l fe[meV] T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
+               fprintf(felog,"#Logging of h k l fe[meV] spinconf_nr n1xn2xn3 T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
                fclose(felog);
 	      }
-	      
+ if (verbose==1)
+ { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
+   fprintf(fin_coq,"time(s) log(iteration) log(sta) spinchange stepratio\n");
+   fclose(fin_coq);	      
+   printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
+ }
 
  j=-testqs.nofqs()+(int)rint(rnd(testspins.n+testqs.nofqs())); 
     //begin with j a random number, j<0 means test spinconfigurations 
@@ -147,9 +152,9 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 		 abc(3)=inputpars.c;
 		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
 		 for (is=1;is<=inputpars.nofatoms;++is)
-		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
- 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
-		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
+		   {x[is]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is]=(*inputpars.jjj[is]).xyz[2];
+		    z[is]=(*inputpars.jjj[is]).xyz[3];}
                      sprintf(text,"fe=%g,fered=%g<femin=%g:T=%gK, |H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT,  %i spins",fe,fered,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
                      sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
@@ -216,7 +221,9 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
                     {inmax=in;qs=qt;}
                    }}}
                    felog=fopen_errchk("./results/mcphas.log","a");
-                   fprintf(felog,"%g %g %g %g\n",qs(1),qs(2),qs(3),fe);
+                   if (verbose==1||fe>10000){fprintf(felog,"#");}
+                   fprintf(felog,"%10.6g %10.6g %10.6g %10.6g %3i %3i %3i %3i \n",qs(1),qs(2),qs(3),fe,j,sps.na(),sps.nb(),sps.nc());
+                   if (verbose==1&&fe<20000){sps.print(felog);}
 	           fclose(felog);
                   delete []mq;
                  }
@@ -271,9 +278,9 @@ else // if yes ... then
 		 abc(3)=inputpars.c;
 		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
 		 for (is=1;is<=inputpars.nofatoms;++is)
-		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
- 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
-		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
+		   {x[is]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is]=(*inputpars.jjj[is]).xyz[2];
+		    z[is]=(*inputpars.jjj[is]).xyz[3];}
                      sprintf(text,"recalculated: fe=%g,femin=%g:T=%gK,|H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT, %i spins",physprops.fe,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
                      sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
@@ -482,9 +489,9 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
 		 abc(3)=inputpars.c;
 		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
 		 for (is=1;is<=inputpars.nofatoms;++is)
-		   {x[is+1]=(*inputpars.jjj[is]).xyz[1];
- 		    y[is+1]=(*inputpars.jjj[is]).xyz[1];
-		    z[is+1]=(*inputpars.jjj[is]).xyz[1];}
+		   {x[is]=(*inputpars.jjj[is]).xyz[1];
+ 		    y[is]=(*inputpars.jjj[is]).xyz[2];
+		    z[is]=(*inputpars.jjj[is]).xyz[3];}
     sprintf(text,"physpropclc:T=%gK, |H|=%gT, Ha=%gT, Hb=%gT, Hc=%gT  %i spins",T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
                      sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
@@ -581,14 +588,22 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
  div_t result; // some modulo variable
  float    sta=1000000; // initial value of standard deviation
- float staold=2000000; int slowct;
- float stepratio=ini.bigstep;
+ float staold=2000000; int slowct=10;
+ float bigstep;
+ float smallstep;
+ 
+ bigstep=fmodf(ini.bigstep-0.0001,1.0);
+ if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
+
+ float stepratio=smallstep;
+
  float spinchange=0; // initial value of spinchange
  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
  Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
  Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
  int diagonalexchange=1;
  FILE * fin_coq;
+ time_t time_of_last_output=0; 
  
  spincf  spsold(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old sps
  mfcf  mfold(mf.na(),mf.nb(),mf.nc(),inputpars.nofatoms,inputpars.nofcomponents); // spinconf variable to store old mf
@@ -601,43 +616,56 @@ double fecalc(Vector  Hex,double T,par & inputpars,
   jj= new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); // coupling coeff.variable
    if (jj == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
 
- for (r=0;r<=0;++r) // only distance is important ...
-  {// initialize mfold
+   // initialize mfold with zeros
    for(s=0;s<=mfold.in(mfold.na(),mfold.nb(),mfold.nc());++s){mfold.mi(s)=0;} 
-   for(s=0;s<=sdim;++s){jj[r*(sdim+1)+s]=0;} //clear jj(j,...)
+   for(s=0;s<=sdim;++s){jj[s]=0;} //clear jj(j,...)
    
    for(m=1;m<=inputpars.nofatoms;++m)
    {if ((*inputpars.jjj[m]).diagonalexchange==0){diagonalexchange=0;} // if any ion has anisotropic exchange - calculate anisotropic
     for(l=1;l<=(*inputpars.jjj[m]).paranz;++l)
-    {//sum up l.th neighbour interaction
-    // 1. transform dn(l) to primitive lattice
-     xyz=(*inputpars.jjj[m]).dn[l]-(*inputpars.jjj[m]).xyz; 
+    {//sum up l.th neighbour interaction of atom m
+                                             // atom m = sublattice m
+	n=(*inputpars.jjj[m]).sublattice[l]; // n set to sublattice of neighbor l
+
+    // determine s (index of difference between crystal unit cells in the magnetic supercell)
+    // start with calculating the difference vector of origins of crystal unit cells
+                   // bugfix GdVO3: sign of 2nd term changed and last term added 12.12.07
+     xyz=(*inputpars.jjj[m]).dn[l]+(*inputpars.jjj[m]).xyz-(*inputpars.jjj[n]).xyz; 
+ 
+    // transform distance vector to primitive lattice
      d=inputpars.rez*(const Vector&)xyz;
      
      for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); //round relative position to integer numbers (to do 
                                              // something sensible if not integer, i.e. if sublattice
 					     // of neighbour has not been identified by par.cpp)
-	i=(int)(sps.ijk(r)[1]+d_rint(1));
-	j=(int)(sps.ijk(r)[2]+d_rint(2));
-	k=(int)(sps.ijk(r)[3]+d_rint(3));
+        
+        i=(int)(d_rint(1));
+	j=(int)(d_rint(2));
+	k=(int)(d_rint(3));
+        // here we have the difference between crystal unitc cells ijk in the magnetic
+        // supercell given by the indices i j k: if they point out of the magnetic supercell
+        // they are folded back into it in the next 3 lines: this is allowed  because it is 
+        // irrelevant for the mean field summation
+        // where the neighbor actually sits, but only on which sublattice it sits...
         while (i<=0) i+=sps.na();result=div(i,sps.na());i=result.rem; // only distance is important ...
         while (j<=0) j+=sps.nb();result=div(j,sps.nb());j=result.rem;
         while (k<=0) k+=sps.nc();result=div(k,sps.nc());k=result.rem;
+      // s is determined from a vector ijk connecting the different crystal unit cells
 	s=sps.in(i,j,k); //ijk range here from 0 to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
-	// sum up parameter
-	n=(*inputpars.jjj[m]).sublattice[l];
-//     myPrintMatrix(stdout,(*inputpars.jjj[m]).jij[l]);
 
+        //     myPrintMatrix(stdout,(*inputpars.jjj[m]).jij[l]);
+
+	// sum up the contribution of the interaction parameter to the interaction matrix jj[s] to be
+        // used in the meanfield calculation below
 	for(i=1;i<=inputpars.nofcomponents;++i){for(j=1;j<=inputpars.nofcomponents;++j){
-	  jj[r*(sdim+1)+s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j)+=(*inputpars.jjj[m]).jij[l](i,j); 
+	  jj[s](inputpars.nofcomponents*(m-1)+i,inputpars.nofcomponents*(n-1)+j)+=(*inputpars.jjj[m]).jij[l](i,j); 
+
+	//remark: function par:jij(l) returns exchange constants (*inputpars.jjj[1]).jij[l](1-9)	   	
         }}
 
-
-//	  jj[r*(sdim+1)+s](3*(m-1)+1,3*(n-1)+3,3*(m-1)+1,3*(n-1)+3)+=(*inputpars.jjj[m]).jij[l]; 
-	//remark: function par:jij(l) returns exchange constants (*inputpars.jjj[1]).jij[l](1-9)	   	
     } 
    }
-  }
+  
    
    
 if (ini.displayall==1)   // display spincf if button is pressed
@@ -658,7 +686,7 @@ for (r=1;sta>ini.maxstamf;++r)
     {delete []jj;delete []lnzi;delete []ui;
      if (verbose==1) fprintf(stderr,"feDIV!MAXlooP");
      return 20000;}
-if (spinchange>ini.maxspinchange)
+ if (spinchange>ini.maxspinchange)
     {delete []jj;delete []lnzi;delete []ui;
      if (verbose==1) fprintf(stderr,"feDIV!MAXspinchangE");
      return 20001;}
@@ -676,8 +704,12 @@ if (spinchange>ini.maxspinchange)
                                for (j1=1;j1<=sps.nb();++j1){if (j<j1){dj=j-j1+sps.nb();}else{dj=j-j1;}
 			                                    for (k1=1;k1<=sps.nc();++k1){if (k<k1){dk=k-k1+sps.nc();}else{dk=k-k1;}
     l=sps.in(di,dj,dk);//di dj dk range from 0 to to sps.na()-1,sps.nb()-1,sps.nc()-1 !!!!
-
+                       // and index a difference between crystal unit cell positions in the
+                       // magnetic supercell
      
+     // here the contribution of the crystal unit cell i1 j1 k1 (i1,j1,k1 indicate the
+     // position of the crystal unit cell in the magnetic supercell) to the mean field
+     // of the crystal unit cell i j k is calculated by one matrix multiplication
      if (diagonalexchange==0||inputpars.nofatoms>1)
      {mf.mf(i,j,k)+=jj[l]*(const Vector&)sps.m(i1,j1,k1);
      }else
@@ -691,8 +723,12 @@ if (spinchange>ini.maxspinchange)
   }}}
   mfold=mf;      
   sta=sqrt(sta/sps.n()/inputpars.nofatoms);
-  if (staold<sta&&stepratio==ini.bigstep){stepratio=ini.bigstep/10;slowct=10;}//if sta increases then set stepratio to bigstep
-  if (staold>sta&&stepratio<ini.bigstep){--slowct;if (slowct<=0)stepratio=ini.bigstep;} // at least for 10 cycles
+
+  bigstep=fmodf(ini.bigstep-0.0001,1.0);
+  if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
+
+  if (staold<sta&&stepratio==bigstep){stepratio=smallstep;slowct=10;}//if sta increases then set stepratio to bigstep
+  if (staold>sta&&stepratio<bigstep){--slowct;if (slowct<=0)stepratio=bigstep;} // at least for 10 cycles
   staold=sta;
 
 //2. calculate sps from mf
@@ -721,6 +757,16 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
      fclose (fin_coq);
      sleep(2);
  }
+   //for verbose mode do some outputs
+ if (verbose==1)
+ {if (time(0)-time_of_last_output>2)
+  {time_of_last_output=time(0);
+   fin_coq= fopen_errchk ("./results/.fe_status.dat","a");
+   fprintf(fin_coq,"%i %g %g %g %g\n",time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio);
+   fclose(fin_coq);
+  }
+ }
+
 }
 
 // calculate free energy fe and energy u

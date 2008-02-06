@@ -22,8 +22,15 @@ par::par (char *filejjj)
   fin_coq = fopen_errchk (filejjj, "rb");
 
  // input file header ------------------------------------------------------------------
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);rems[1]=new char[strlen(instr)+1];strcpy(rems[1],instr);
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);rems[2]=new char[strlen(instr)+1];strcpy(rems[2],instr);
+  fgets (instr, MAXNOFCHARINLINE, fin_coq);instr[0]='#';
+   // inserted 12.11.07 in order to format output correctly (characterstring 13 spoiled output string)
+   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
+   rems[1]=new char[strlen(instr)+2];strcpy(rems[1],instr);
+  fgets (instr, MAXNOFCHARINLINE, fin_coq);instr[0]='#';
+   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;}
+   rems[2]=new char[strlen(instr)+2];strcpy(rems[2],instr);
+//for(i=1;i<=strlen(instr);++i)fprintf (stdout,"%i ",instr[i]);fprintf (stdout,"\n");
+
   instr[0]='#';a=0;b=0;c=0;
  while (strstr(instr,"*******")==NULL&&instr[strspn(instr," \t")]=='#') 
   {fgets(instr,MAXNOFCHARINLINE,fin_coq);
@@ -44,7 +51,7 @@ par::par (char *filejjj)
   
   
   rez=r.Inverse();
-  rems[3]=new char[strlen(instr)+1];strcpy(rems[3],instr);
+  rems[3]=new char[strlen(instr)+2];strcpy(rems[3],instr);
   
   //read parameter sets for every atom 
   jjj=new jjjpar * [nofatoms+1];
@@ -52,7 +59,7 @@ par::par (char *filejjj)
   for(i=1;i<=nofatoms;++i)  
   {jjj[i]=new jjjpar(fin_coq);  
    gJ(i)=(*jjj[i]).gJ;
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);rems[3+i]=new char[strlen(instr)+1];strcpy(rems[3+i],instr);}
+  fgets (instr, MAXNOFCHARINLINE, fin_coq);rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);}
 
   nofcomponents=(*jjj[1]).nofcomponents;
   //determine sublattices
@@ -94,7 +101,7 @@ par::par(const par & p)
   
 //dimension arrays
   for (i=1;i<=3;++i)
-  {rems[i] = new char[strlen(p.rems[i])+1];
+  {rems[i] = new char[strlen(p.rems[i])+2];
    strcpy(rems[i],p.rems[i]);}
 
   jjj=new jjjpar * [nofatoms+1];
@@ -124,7 +131,7 @@ int par::newatom(jjjpar * p) //creates new atom from an existing and returns its
                   nnn[nofatoms]=new jjjpar((*p));// use copy constructor to create new atom parameter set    
 //                   nnn[nofatoms]=new jjjpar(1,0,nofcomponents);
 //		  (*nnn[nofatoms])=(*p1.jjj[nofatoms]); // add the new atom
-                  rems[3+nofatoms]=new char[strlen(rems[2+nofatoms])+1];
+                  rems[3+nofatoms]=new char[strlen(rems[2+nofatoms])+2];
 		  strcpy(rems[3+nofatoms],rems[2+nofatoms]);
 		  delete []jjj;
 		  jjj=nnn;                        
@@ -168,8 +175,8 @@ void par::save (FILE * file)
 void par::savelattice (FILE *file)
 { 
   errno = 0;
-  fprintf(file,"%s#\n",rems[1]);
-  //fprintf(file,"%s#\n",rems[2]);
+  fprintf(file,"%s",rems[1]);
+  fprintf(file,"%s",rems[2]);
   fprintf(file,"# a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
   fprintf(file,"# r1x=%4.6g r2x=%4.6g r3x=%4.6g\n",r[1][1],r[1][2],r[1][3]);
   fprintf(file,"# r1y=%4.6g r2y=%4.6g r3y=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);

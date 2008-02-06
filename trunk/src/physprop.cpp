@@ -1,6 +1,6 @@
 // methods for class parameters 
 #include "physprop.hpp"
-#include "../version"
+#include "../../version"
  // *************************************************************************
  // ************************ physproperties *********************************
  // *************************************************************************
@@ -309,7 +309,7 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
    fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %i %i %i \n",
             x,y,T,Norm(H),H[1],H[2],H[3],sps.n()*sps.nofatoms,sps.nofatoms,sps.nofcomponents);
    if (htfailed!=0){sps.spinfromq(1,1,1,null1,null,null,null);}
-    sps.print(fout);
+    sps.print(fout);fprintf(fout,"\n");
    fclose(fout);
     if((fout=fopen("./fit/mcphas.sps","rb"))!=NULL)
     {// some measured data should be fitted
@@ -336,8 +336,8 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
      fout = fopen_errchk ("./results/mcphas.mf","a");
 fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %i %i %i\n",
             x,y,T,Norm(H),H[1],H[2],H[3],mf.n()*mf.nofatoms,mf.nofatoms,mf.nofcomponents);
-   if (htfailed!=0){sps.print(fout);}else
-    {mf.print(fout);}
+   if (htfailed!=0){sps.print(fout);fprintf(fout,"\n");}else
+    {mf.print(fout);fprintf(fout,"\n");}
    fclose(fout);
     if((fout=fopen("./fit/mcphas.mf","rb"))!=NULL)
     {// some measured data should be fitted

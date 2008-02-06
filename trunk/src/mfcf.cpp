@@ -145,7 +145,7 @@ void mfcf::print(FILE * fout) //print spinconfiguration to stream
    }
  fprintf(fout,"\n"); //new line to separate ab planes
  }
- fprintf(fout,"\n"); //new line to end configuration
+// fprintf(fout,"\n"); //new line to end configuration - removed aug 07
                
 }
 

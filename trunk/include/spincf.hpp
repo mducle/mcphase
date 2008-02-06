@@ -61,7 +61,7 @@ spinfromq (int n1,int n2, int n3,Vector & qvector,
     void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
     int  load(FILE * fin_coq);	
      
-    
+    spincf & operator + (const spincf & op2); // addition    
     spincf & operator= (const spincf & op2); // zuweisung
     int operator== (spincf & op2); // vergleich
 

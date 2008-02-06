@@ -16,17 +16,30 @@
 #define MAXNOFCHARINLINE 1024
 
 #include <mcdisp.h>
-#include "../version"
+#include "../../version"
 #include "myev.c"
 #include "intcalc.c"
 
-int index_s(int i,int j,int k,int l, int t, mdcf & md)
+int index_s(int i,int j,int k,int l, int t, mdcf & md,inimcdis & ini)
 {int s=0,i1,j1,k1;
- for(i1=1;i1<=i;++i1){for(j1=1;j1<=j;++j1){for(k1=1;k1<=k;++k1){
+// calculates the index of the Matrix A given 
+// ijk ... index of crystallographic unit cell in magnetic unit cell
+// l   ... number of atom in crystallographic cell
+// t   ... transitionnumber
+ for(i1=1;i1<i;++i1){
+ for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
  s+=md.baseindex_max(i1,j1,k1);
  }}}
- s+=md.baseindex(i,j,k,l,t)-md.baseindex_max(i,j,k);
-return s;
+ i1=i;
+ for(j1=1;j1<j;++j1){for(k1=1;k1<=ini.mf.nc();++k1){
+ s+=md.baseindex_max(i1,j1,k1);
+ }}
+ j1=j;
+ for(k1=1;k1<k;++k1){
+ s+=md.baseindex_max(i1,j1,k1);
+ }
+ s+=md.baseindex(i,j,k,l,t);
+ return s;
 }
 
 void sortE(Vector & d,ComplexMatrix & z)
@@ -170,7 +183,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
  }
   if (do_createtrs==1){fprintf(stdout,"single ion transition file ./results/mcdisp.trs created - please comment transitions which should not enter the calculation and restart with option -t\n");exit(0);}
 
-  printf("reading ./results/mcdisp.trs\n");
+  printf("\nreading ./results/mcdisp.trs\n\n");
 // read transitions to beconsidered from file
  for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   fin = fopen_errchk ("./results/mcdisp.trs","rb");
@@ -281,7 +294,7 @@ if (do_jqfile==0)
           fprintf (fout, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] > intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
   fprintf (foutqei, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqei);
-          fprintf (foutqei, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutqei, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
           foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot","w");
           printf("saving mcdisp.dsigma.tot\n");
@@ -348,15 +361,19 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
  // calculate Js,ss(Q) summing up contributions from the l=1-paranz parameters
    int sl,sll,sublat;
    for(ll=1;ll<=inputpars.nofatoms;++ll){for(l=1;l<=(*inputpars.jjj[ll]).paranz;++l)
-   { //sum up l.th neighbour interaction
+   { //sum up l.th neighbour interaction of crystallographic atom ll
      // 1. transform dn(l) to primitive lattice
     xyz=(*inputpars.jjj[ll]).dn[l];
     d=inputpars.rez*(const Vector&)xyz;
     for (i=1;i<=3;++i)d_rint(i)=rint(d(i));
    
-   //2. sum up parameter
+   //2. in order to sum up we must take into account that the magnetic unit cell is
+   //   larger than the crystallographic one - the ll-l neighbor interaction contributes
+   //   to many different components of Js,ss(q) ... note s,ss runs over all the atoms
+   //   in the magnetic supercell
          for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-         s=J.in(i1,j1,k1);
+         s=J.in(i1,j1,k1); 
+
          //next 2 lines special for treatment of assymetry in Rcu2 
 	 // i.e. if j1 is 2n then  say: the neighbour is at -d, this ensures that
 	 // for half of the atoms the interaction is counted at negative distances
@@ -364,7 +381,8 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 	 // a difference, because atoms at +-0.5c are not equal 
 	 sd=-1;if (inputpars.r[2][1]==0.5&&(double)j1/2.0==integer(1.0*j1/2)) sd=1;
   	// if (inputpars.r[2][1]==0.0&&(double)(i1+j1)/2.0==integer(1.0*(i1+j1)/2)) sd=1;
-         //calc ss (check in which magnetic cell ss neighbour lies)	 
+
+         //calc ss (check in which magnetic cell ss the neighbour l-ll lies)	 
          i=(int)(i1+sd*d_rint(1)-1); // calculate 
 	 j=(int)(j1+sd*d_rint(2)-1);
 	 k=(int)(k1+sd*d_rint(3)-1);
@@ -398,8 +416,9 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
             jsss(ini.nofcomponents*(md.baseindex(i1,j1,k1,ll,tl)-1)+m,ini.nofcomponents*(md.baseindex(i,j,k,sl,tll)-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
            }} // but orbitons should be treated correctly by extending 3 to n !!
 	  }} 
-          J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d));// increase Js,ss(q)=0
-//          Jl.mati(s,ss)+=jsss*exp(ipi*sd*(q*d));// increase Js,ss(q)=0
+// increase Js,ss(q) taking into account the phase factors for the distance l-ll
+          J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d));
+
           ++nofneighbours; // count neighbours summed up
 	 }}}
       
@@ -444,6 +463,7 @@ for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.m
  }}}
 
 // calculate Ac
+if(do_verbose==1){fprintf(stdout,"calculating matrix A\n");}
 // Ac  is the matrix A which is given in manual chapter 9.2.1 (eq (30) ff) 
 // -- diagonalization gives omega_r and Tau
    ComplexMatrix Ac(1,dimA,1,dimA);
@@ -458,10 +478,13 @@ for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.m
 
     for(l1=1;l1<=inputpars.nofatoms;++l1){
      for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
-      s=index_s(i1,j1,k1,l1,t1,md);
+      s=index_s(i1,j1,k1,l1,t1,md,ini);
       b=md.baseindex(i1,j1,k1,l1,t1);
       if(md.delta(i1,j1,k1)(b)<0){Lambda(s,s)=-1;}else{Lambda(s,s)=+1;}
       Ac(s,s)=md.delta(i1,j1,k1)(b)*Lambda(s,s);
+      if(do_verbose==1){fprintf(stdout,"i=%i j=%i k=%i atomnr=%i trans=%i ... s=%i ",i1,j1,k1,l1,t1,s);
+                        fprintf(stdout,"lambda(%i,%i)xdelta(%i)=%g + i %g\n",s,s,s,real(Ac(s,s)),imag(Ac(s,s)));
+                       }
       }}
 
    for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
@@ -471,8 +494,8 @@ for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.m
      for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
     for(l2=1;l2<=inputpars.nofatoms;++l2){ 
      for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
-      s=index_s(i1,j1,k1,l1,t1,md);
-      ss=index_s(i2,j2,k2,l2,t2,md);
+      s=index_s(i1,j1,k1,l1,t1,md,ini);
+      ss=index_s(i2,j2,k2,l2,t2,md,ini);
       b=md.baseindex(i1,j1,k1,l1,t1);
       bb=md.baseindex(i2,j2,k2,l2,t2);
      Ac(s,ss)-=Jl.mati(Jl.in(i1,j1,k1),Jl.in(i2,j2,k2))(ini.nofcomponents*(b-1)+ini.nofcomponents,ini.nofcomponents*(bb-1)+ini.nofcomponents);
@@ -569,7 +592,7 @@ if (do_jqfile==1){
    // calculate and printout intensities [the energies have already
    // been printed out above, so any refinement of energies during intcalc
    // is not included in the output file]
-
+  double QQ;
   double diffint=0;
   if(do_verbose==1){fprintf(stdout,"\ncalculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
@@ -585,10 +608,10 @@ diffint=0;
                    //if(En(i)-maxdownshift-SMALL<md.delta(i1,j1,k1)(l1)&&md.delta(i1,j1,k1)(l1)<=En(i)-SMALL){maxdownshift=md.delta(i1,j1,k1)(l1)+SMALL-En(i);}
 		   //}
 		   //}}} 
-		     ints(i)=intcalc_approx(dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose);
+		     ints(i)=intcalc_approx(dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g ",ints(i));
-                     fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),En(i),ints(i));
+                     fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i));
                  if(do_verbose==1){fprintf(stdout, " %4.4g ",ints(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);}
 		   }

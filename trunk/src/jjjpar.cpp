@@ -762,7 +762,7 @@ XJ=exp(JJ*gmhkt);
 
 //printf("1-X=%g gmh=%g",1-X,gmh);
 
-if (X==1.0){Z=2*JJ+1;Jav=0;}
+if (X<=1.000001){Z=2*JJ+1;Jav=0;}
 else
 {Z=(XJ*X-1/XJ)/(X-1.0);
  Jav=JJ*(XJ*X*X-1/XJ)+(JJ+1)*X*(1.0/XJ-XJ);

@@ -48,6 +48,7 @@ int main (int argc, char **argv)
   }
 
 // as class par load  parameters from file
+ if(verbose==1){printf("reading parameters from file mcphas.j\n");}
  par inputpars("./mcphas.j");
  Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
   Vector h1(1,inputpars.nofcomponents);

@@ -2,12 +2,12 @@
 #define PI 3.1415926535
 #define KB 0.0862     // Boltzmanns constant in mev/K
 
-double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose)
+double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
  int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb;
  double intensity=1.2;
- double QQ,ki,kf;
+ double ki,kf;
  complex <double> chileft;
 
  // determine chi
@@ -26,8 +26,8 @@ double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis 
     for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
     for(l2=1;l2<=md.nofatoms;++l2){
     for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
-      s=index_s(i1,j1,k1,l1,t1,md);
-      ss=index_s(i2,j2,k2,l2,t2,md);
+      s=index_s(i1,j1,k1,l1,t1,md,ini);
+      ss=index_s(i2,j2,k2,l2,t2,md,ini);
       b=md.baseindex(i1,j1,k1,l1,t1);
       bb=md.baseindex(i2,j2,k2,l2,t2);
         
@@ -85,13 +85,13 @@ double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis 
  for(l1=1;l1<=md.nofatoms;++l1){
  for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
 //   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
-      s=(index_s(i1,j1,k1,l1,t1,md)-1)*md.nofcomponents;
+      s=(index_s(i1,j1,k1,l1,t1,md,ini)-1)*md.nofcomponents;
 
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
   for(l2=1;l2<=md.nofatoms;++l2){
   for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
 //   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
-      ss=(index_s(i2,j2,k2,l2,t2,md)-1)*md.nofcomponents;
+      ss=(index_s(i2,j2,k2,l2,t2,md,ini)-1)*md.nofcomponents;
 
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
       S(s+i,ss+j)*=pol(i,j);
@@ -109,15 +109,25 @@ intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI;
 
 // here should be entered factor  k/k' + absolute scale factor
 if (ini.ki==0)
-{ki=sqrt(ini.kf*ini.kf+0.4811*en);
-intensity*=ini.kf/ki;
+{if (ini.kf*ini.kf+0.4811*en<0)
+ {fprintf(stderr,"warning mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with kf=const=%g/A at (%g,%g,%g)\n",en,ini.kf,hkl(1),hkl(2),hkl(3));
+  intensity=0;
+ }
+ else
+ { 
+ ki=sqrt(ini.kf*ini.kf+0.4811*en);
+ intensity*=ini.kf/ki;
+ }
 }
 else
 {if (ini.ki*ini.ki-0.4811*en<0)
-   {fprintf(stderr,"ERROR mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with ki=const=%g/A at (%g,%g,%g)",en,ini.ki,hkl(1),hkl(2),hkl(3));
-                            exit(EXIT_FAILURE);}
-kf=sqrt(ini.ki*ini.ki-0.4811*en);
-intensity*=kf/ini.ki;
+ {fprintf(stderr,"warning mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with ki=const=%g/A at (%g,%g,%g)\n",en,ini.ki,hkl(1),hkl(2),hkl(3));
+    intensity=0;
+ }
+ else
+ {kf=sqrt(ini.ki*ini.ki-0.4811*en);
+  intensity*=kf/ini.ki;
+ }
 }
 
 
@@ -147,7 +157,7 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
    ComplexMatrix dd(1,md.nofcomponents*bmax,1,md.nofcomponents*bmax);
    ComplexMatrix cc(1,md.nofcomponents*bmax,1,md.nofcomponents*bmax);
    cc=0; dd=0;
-   s=(index_s(i1,j1,k1,1,1,md)-1)*md.nofcomponents;
+   s=(index_s(i1,j1,k1,1,1,md,ini)-1)*md.nofcomponents;
 
    for(l1=1;l1<=md.nofatoms;++l1){
    for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
@@ -182,7 +192,7 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
 
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
 //   ss=(ini.mf.nb()*ini.mf.nc()*(i2-1)+ini.mf.nc()*(j2-1)+k2-1)*md.nofcomponents*md.nofatoms;
-     ss=(index_s(i2,j2,k2,1,1,md)-1)*md.nofcomponents;
+     ss=(index_s(i2,j2,k2,1,1,md,ini)-1)*md.nofcomponents;
      bbmax=md.baseindex_max(i2,j2,k2);
      ComplexMatrix cc1(1,md.nofcomponents*bmax,1,md.nofcomponents*bbmax);
   
@@ -229,12 +239,12 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
  for(l1=1;l1<=md.nofatoms;++l1){
    for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
 //   s=((((i1-1)*ini.mf.nb()+(j1-1))*ini.mf.nc()+(k1-1))*md.nofatoms+(l1-1))*md.nofcomponents;
-      s=(index_s(i1,j1,k1,l1,t1,md)-1)*md.nofcomponents;
+      s=(index_s(i1,j1,k1,l1,t1,md,ini)-1)*md.nofcomponents;
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
   for(l2=1;l2<=md.nofatoms;++l2){
    for(t2=1;t2<=md.noft(i2,j2,k2,l2);++t2){
 //   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
-      ss=(index_s(i2,j2,k2,l2,t2,md)-1)*md.nofcomponents;
+      ss=(index_s(i2,j2,k2,l2,t2,md,ini)-1)*md.nofcomponents;
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
       S(s+i,ss+j)*=pol(i,j);
       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debeywallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
@@ -251,15 +261,23 @@ intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI;
 
 // here should be entered factor  k/k' + absolute scale factor
 if (ini.ki==0)
-{ki=sqrt(ini.kf*ini.kf+0.4811*en);
-intensity*=ini.kf/ki;
+{if (ini.kf*ini.kf+0.4811*en<0)
+   {fprintf(stderr,"warning mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with kf=const=%g/A at (%g,%g,%g)\n",en,ini.kf,hkl(1),hkl(2),hkl(3));
+    intensity=0;}
+ else
+ { ki=sqrt(ini.kf*ini.kf+0.4811*en);
+   intensity*=ini.kf/ki;
+ }
 }
 else
 {if (ini.ki*ini.ki-0.4811*en<0)
-   {fprintf(stderr,"ERROR mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with ki=const=%g/A at (%g,%g,%g)",en,ini.ki,hkl(1),hkl(2),hkl(3));
-                            exit(EXIT_FAILURE);}
-kf=sqrt(ini.ki*ini.ki-0.4811*en);
-intensity*=kf/ini.ki;
+   {fprintf(stderr,"warning mcdisp - calculation of intensity: energy transfer %g meV cannot be reached with ki=const=%g/A at (%g,%g,%g)\n",en,ini.ki,hkl(1),hkl(2),hkl(3));
+    intensity=0;}
+ else
+ { 
+  kf=sqrt(ini.ki*ini.ki-0.4811*en);
+  intensity*=kf/ini.ki;
+ }
 }
 
 

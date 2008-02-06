@@ -225,6 +225,11 @@ return;
 
   
 // create spinconfig from qvector, momentq0
+// n1 n2 n3 .. periodicity of supercell
+// nettom .... saturation moment (positive)
+// qvector ... wave vector in units of reciprocal lattice
+// momentq0 .. ferromagnetic component (between 0 and 1)
+// phi ....... phase (for each component)
 void spincf::spinfromq (int n1,int n2, int n3,Vector & qvector,Vector & nettom, 
        Vector & momentq0, Vector & phi)
 { int rra,rrb,rrc,qv;
@@ -244,9 +249,13 @@ void spincf::spinfromq (int n1,int n2, int n3,Vector & qvector,Vector & nettom,
         {for (rrc=1;rrc<=nofc;++rrc)
              	{rr(1)=rra-1;rr(2)=rrb-1;rr(3)=rrc-1;
 		 for(l=1;l<=nofcomponents*nofatoms;++l)
-	          {mom[in(rra,rrb,rrc)](l)=copysign(nettom(l),qv*(0.01+
-		  copysign(1.0,momentq0(l)+cos(phi(l)+qvector*2.0*3.141529*rr)))
-				                    )                    ;	
+	          {
+//		  mom[in(rra,rrb,rrc)](l)=copysign(nettom(l),qv*(0.01+
+//		  copysign(1.0,momentq0(l)+cos(phi(l)+qvector*2.0*3.141529*rr)))
+//				                    )                    ;	
+		  mom[in(rra,rrb,rrc)](l)=nettom(l)*qv*(0.01+
+		  momentq0(l)+cos(phi(l)+qvector*2.0*3.141529*rr))
+				                                        ;	
                   }
 	         }
 	}
@@ -829,7 +838,7 @@ void spincf::print(FILE * fout) //print spinconfiguration to stream
    }
  fprintf(fout,"\n"); //new line to separate ab planes
  }
- fprintf(fout,"\n"); //new line to end spinconfiguration
+// fprintf(fout,"\n"); //new line to end spinconfiguration - removed aug 07
 }               
 
 void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z) //print spinconfiguration to stream
@@ -892,6 +901,33 @@ spincf & spincf::operator= (const spincf & op2)
   {for (j=1;j<=nofb;++j)
     {for (k=1;k<=nofc;++k)
      {mom[in(i,j,k)]=op2.mom[in(i,j,k)];} 
+    }
+  }           
+  return *this;
+}
+
+//addition
+spincf & spincf::operator + (const spincf & op2)
+{int i,j,k;
+ if (nofa!=op2.nofa||nofb!=op2.nofb||nofc!=op2.nofc||nofatoms!=op2.nofatoms||nofcomponents!=op2.nofcomponents)
+ {fprintf (stderr,"Error in adding spincfonfigurations - not equal dimension\n");
+ exit (EXIT_FAILURE);}
+ 
+// nofa=op2.nofa; nofb=op2.nofb; nofc=op2.nofc;
+// mxa=op2.mxa; mxb=op2.mxb; mxc=op2.mxc;
+// nofatoms=op2.nofatoms;
+// wasstable=op2.wasstable;
+// nofcomponents=op2.nofcomponents;
+//  delete []mom;
+//dimension arrays
+//  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+//  if (mom == NULL)
+//    {fprintf (stderr, "Out of memory\n");
+//      exit (EXIT_FAILURE);}
+ for (i=1;i<=nofa;++i)
+  {for (j=1;j<=nofb;++j)
+    {for (k=1;k<=nofc;++k)
+     {mom[in(i,j,k)]+=op2.mom[in(i,j,k)];} 
     }
   }           
   return *this;

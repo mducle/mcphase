@@ -15,7 +15,7 @@
 #include <martin.h>
 
 
-int index_s(int i, int j, int k, int l, int t, mdcf & md);
+int index_s(int i, int j, int k, int l, int t, mdcf & md,inimcdis & ini);
 
 
 
