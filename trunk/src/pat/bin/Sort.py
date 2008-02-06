@@ -25,15 +25,18 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 from xydata import *
 
 def rev_sort(x,y):
   if x>y: return -1
   else: return 0
 
-#$Log$
-CVS_ID="$Id$"
+#$Log: Sort.py,v $
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+CVS_ID="$Id: Sort.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=1

@@ -1,2 +1,21 @@
-1.0.0:
-   Base version
+2005-10-31
+1.0.0:   Base version
+2005-12-08
+bin/Theview.py, lib/thegrafic.py added
+2005-12-14
+1.0.1: Some errors corrected
+bin/Look.py: Values not in table are silently skipped -> Warning printed on sterr
+install.py: Version check added
+2005-12-18
+1.0.2:
+lib/*.py some errors corrected, doc continued
+bin/Mean.py added
+2006-01-04
+1.1.0:
+Grafic frontend 'Pat.py' developed
+lib/wid.py added
+bin/Pat.py added
+2007-05-02
+1.1.1:
+CTime.py added
+TheCal.py added

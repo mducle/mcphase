@@ -15,7 +15,7 @@
           -h: Print this help message
   RESULT:
     The operation defined by the character is performed:
-    y1(x1) = y1(x1) <op> y2(x1). 
+    y1(x1) = y1(x1) <op> y2(x2). 
     x(File1) and x(File2) need not be same, linear interpolation is used to get
     the value y2(x1) from y2(x2).
     Columns not involved in the operation are unchanged.
@@ -33,14 +33,18 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 from xydata import *
 
 #$Log: Fileop.py,v $
-#Revision 1.1  2004/08/04 11:28:31  herbie
+#Revision 1.2  2005/12/19 09:14:57  herbie
 #*** empty log message ***
 #
-CVS_ID="$Id: Fileop.py,v 1.1 2004/08/04 11:28:31 herbie Exp $"
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+#
+CVS_ID="$Id: Fileop.py,v 1.2 2005/12/19 09:14:57 herbie Exp $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=1

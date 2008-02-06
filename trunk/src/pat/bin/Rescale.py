@@ -25,8 +25,11 @@ from SysLog import *
 from stdfunc import *
 from grafic import *
 
-#$Log:$
-CVS_ID="$Id:$"
+#$Log: Rescale.py,v $
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+CVS_ID="$Id: Rescale.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 
 iDbg=0
 S=SysLog(iDbg,sys.argv[0],2)

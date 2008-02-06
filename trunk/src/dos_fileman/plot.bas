@@ -332,6 +332,11 @@ PRINT USING "-###%"; 100 * SEEK(n) / LOF(n); : LOCATE 24, 1
 
 aa = SEEK(n)
 LINE INPUT #n, ala$
+WHILE INSTR(ala$, CHR$(9)) > 0  'abandon tabs
+ i% = INSTR(ala$, CHR$(9))
+ ala$ = LEFT$(ala$, i% - 1) + " " + MID$(ala$, i% + 1)
+WEND
+
 'treat comments in input line
 klauf% = INSTR(ala$, "{")
 klzu% = INSTR(ala$, "}")

@@ -3,11 +3,18 @@ from array import *
 from formula import *
 from stdfunc import *
 import string,sys
+
 #$Log: NumTab.py,v $
-#Revision 1.1  2004/08/04 11:30:10  herbie
+#Revision 1.3  2006/01/04 14:41:36  herbie
 #*** empty log message ***
 #
-CVS_ID="$Id: NumTab.py,v 1.1 2004/08/04 11:30:10 herbie Exp $"
+#Revision 1.2  2005/12/19 09:13:05  herbie
+#*** empty log message ***
+#
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
+#
+CVS_ID="$Id: NumTab.py,v 1.3 2006/01/04 14:41:36 herbie Exp herbie $"
 
 class NumTable:
    """Represents a numerical table where you can perform (mathematical) 
@@ -43,7 +50,6 @@ class NumTable:
      for i in line_list:
          if type(i) != StringType:
             raise ValueError (i,'Must be a string')
-
          l=i.strip().split()
          if lc==0:
            nco=len(l)
@@ -57,7 +63,7 @@ class NumTable:
            try: t=string.atof(l[n])
            except: raise ValueError (l[n],'Must be a string representing a float')
            self.LL[n].append(l[n])
-         lc+=1  
+         lc+=1
 # -----------------
    def SetDelim(self,d):
      """ Changes the line delimiter.
@@ -74,6 +80,7 @@ class NumTable:
         and the size (precision) of a column.
 	For internal use only.
      """
+     self.ColDesc=[]
      for i in range(len(self.LL)):
        ct={'type':'int',  # 'int' or 'float' or 'exp'
     	   'size':-1,     # max number of digits (incl sign or .)
@@ -99,6 +106,25 @@ class NumTable:
          if sz > self.ColDesc[i]['size']: self.ColDesc[i]['size']=sz
          if dd > self.ColDesc[i]['decd']: self.ColDesc[i]['decd']=dd
          if tp < self.ColDesc[i]['type']: self.ColDesc[i]['type']=tp
+# -----------------
+   def GetColumnFormat(self,i,exact=0):
+     """Returns the format specifier for the column
+     """
+     self.SetColumnSpec()
+     
+     if self.ColDesc[i]["type"]=='int':
+     	if not exact:  n="%%%dd" % self.ColDesc[i]['size']
+        else: n="%%d"
+     if self.ColDesc[i]["type"]=='float':
+     	if not exact: n="%%%d.%df" % (self.ColDesc[i]['size']+2,self.ColDesc[i]['decd'])
+        elif exact==1: n="%%.%df" % (self.ColDesc[i]['decd'])
+        elif exact==2: n="%%.%dg" % (self.ColDesc[i]['size'])
+     if self.ColDesc[i]["type"]=='gexp':
+     	if not exact: n="%%%d.%de" % (self.ColDesc[i]['size']+6,self.ColDesc[i]['size'])
+     	elif exact==1: n="%%.%de" % (self.ColDesc[i]['decd'])
+        elif exact==2: n="%%.%dg" % (self.ColDesc[i]['decd'])
+     
+     return n
 # -----------------
    def __str__(self): return self.LL.__str__()
 # -----------------

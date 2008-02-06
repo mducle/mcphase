@@ -7,7 +7,7 @@ DATA "*********************************************************************"
 DATA "this program is designed to AVERAGE data by deleting close data points"
 DATA "use as:
 DATA " AVERAGE *.* 4 [options] .... takes 4 points and averages data
-DATA "			       option  
+DATA "			       option 
 DATA "			                middle point is taken
 DATA "			       /av      points are averaged
 DATA "			       /med     median of points is calculated and kept
@@ -92,7 +92,9 @@ FOR coll% = 1 TO col%
 NEXT coll%
 
 'write result to file
- FOR coll% = 1 TO col%: PRINT #2, xm#(coll%); : NEXT: PRINT #2,
+ FOR coll% = 1 TO col%
+nn$ = STR$(xm#(coll%)): MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+PRINT #2, " " + nn$; : NEXT: PRINT #2,
 'ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
                        
 GOTO 4 '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

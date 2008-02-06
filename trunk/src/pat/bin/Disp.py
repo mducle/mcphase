@@ -36,15 +36,18 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 try: from thefile import *
 except: pass
 from thefile import *
 from xydata import *
 from grafic import *
 
-#$Log:$
-CVS_ID="$Id:$"
+#$Log: Disp.py,v $
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+CVS_ID="$Id: Disp.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 
 iSet=1
 iDbg=0

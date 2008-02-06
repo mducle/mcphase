@@ -3,10 +3,13 @@ import math,string,sys
 from re import *
 
 #$Log: formula.py,v $
-#Revision 1.1  2004/08/04 11:13:51  herbie
+#Revision 1.2  2005/12/19 09:13:05  herbie
 #*** empty log message ***
 #
-CVS_ID="$Id: formula.py,v 1.1 2004/08/04 11:13:51 herbie Exp $"
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
+#
+CVS_ID="$Id: formula.py,v 1.2 2005/12/19 09:13:05 herbie Exp $"
 
 class Formula:
   """Allowed formulas

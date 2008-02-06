@@ -1,5 +1,5 @@
 #! /usr/bin/env /usr/bin/python
-"""Usage: Plotp [-x #[,...]] [-y #[,...]] [-v] [-h]  (File1 or -) File2 ...
+"""Usage: Plot [-x #[,...]] [-y #[,...]] [-v] [-h]  (File1 or -) File2 ...
         -x #,...:             
         -y #,...#: (int) number of x-, y-columns used for the plot
 	        Numbers separated by commas can be specified, refering 
@@ -36,7 +36,7 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 try: from thefile import *
 except: pass
 try: from sxsfile import *
@@ -44,8 +44,11 @@ except: pass
 from xydata import *
 from grafic import *
 
-#$Log:$
-CVS_ID="$Id:$"
+#$Log: Plot.py,v $
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+CVS_ID="$Id: Plot.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 
 iSet=1
 iDbg=0

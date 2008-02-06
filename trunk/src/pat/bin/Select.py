@@ -17,11 +17,11 @@
     RESULT:
     Selects the specified rows/columns of a file.
     EXAMPLE: 
-    Select -c 2:3 -r 1:50 Data.cnt
+    Select -c 2,3 -r 1,50 Data.cnt
       Writes column 2 and 3 and the rows from 1 - 50 of the file Data.cnt
       to stdout
 
-    Select -c 1 -f 2:30.5 Data.cnt
+    Select -f 1,2.,30.5 Data.cnt
       Writes all rows with values between 2 and 3.5 in coumn 1 to stdout
 """
 import sys,string,os
@@ -36,13 +36,19 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 try: from sxsfile import *
 except: pass
 from xydata import *
 
-#$Log$
-CVS_ID="$Id$"
+#$Log: Select.py,v $
+#Revision 1.2  2006/01/04 14:45:31  herbie
+#*** empty log message ***
+#
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+CVS_ID="$Id: Select.py,v 1.2 2006/01/04 14:45:31 herbie Exp herbie $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=1

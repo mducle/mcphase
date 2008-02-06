@@ -2,10 +2,13 @@ import sys,types,string
 from pprint import *
 
 #$Log: spline.py,v $
-#Revision 1.1  2004/02/24 14:19:07  herbie
-#Initial version
+#Revision 1.2  2005/12/19 09:13:05  herbie
+#*** empty log message ***
 #
-CVS_ID="$Id: spline.py,v 1.1 2004/02/24 14:19:07 herbie Exp $"
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
+#
+CVS_ID="$Id: spline.py,v 1.2 2005/12/19 09:13:05 herbie Exp $"
 
 class SplineTable:
   """ Class for cubic spline interpolation

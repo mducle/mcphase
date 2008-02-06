@@ -90,7 +90,7 @@ DATA "Y",0.775
 DATA "Zr",0.716
 
 'magnetic formfactors (international tables)
-3 DATA 7
+3 DATA 8
 '       ^----number of elements
 'DATA "symbol",gJ(Landeefactor),
 '     ff(i,1...7)= <j0(kr)>-terms A,a,B,b,C,c,D
@@ -109,6 +109,12 @@ DATA 0.9809, 18.063, 1.8413, 7.769, 0.9905, 2.845, 0.012
 '     ff(i,8..14)= <j2(kr)>-terms A,a,B,b,C,c,D
 'ffCe(8) = .9809: ffCe(9) = 18.063: ffCe(10) = 1.8413: ffCe(11) = 7.769
 'ffCe(12) = .9905: ffCe(13) = 2.845: ffCe(14) = .012
+
+DATA "Pr3+", 0.8
+'gJ=0.8
+
+DATA 0.0504, 24.9989, 0.2572, 12.0377, 0.7142, 5.0039, -0.0219
+DATA 0.8734, 18.9876, 1.5594, 6.0872,  0.8142, 2.4150, 0.0111
 
 DATA "Dy3+",1.33333
 DATA 0.1157, 15.073, 0.327, 6.799, 0.5821, 3.02, -0.0249
@@ -232,7 +238,7 @@ PRINT "             section 1 - lambda="; lambda; " A thetamax="; thetamax; "deg
 PRINT "                         ovalltemp="; ovalltemp; " A^2 lorentz-type="; lorenz
 
 'input section 2 *********************************************************
-DIM d1#(10), d2$(4)
+DIM d1#(40), d2$(4)
 a$ = "#"
 WHILE (LEFT$(LTRIM$(a$), 1) = "#" AND a = 0 AND b = 0 AND c = 0)
 aa = SEEK(1): INPUT #1, a$

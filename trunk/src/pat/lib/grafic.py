@@ -3,7 +3,7 @@ from qt import *
 
 try: locale()['MOD_ftypes']
 except:
- from datafile import *
+ from asciifile import *
  try: from thefile import *
  except: pass
  try: from sxsfile import *
@@ -16,6 +16,15 @@ from time import *
 from stdfunc import *
 from math import *
 from string import *
+
+#$Log: grafic.py,v $
+#Revision 1.2  2006/01/04 14:41:36  herbie
+#*** empty log message ***
+#
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
+#
+CVS_ID="$Id: grafic.py,v 1.2 2006/01/04 14:41:36 herbie Exp herbie $"
 
 SCREEN=QPoint(0,0)
 END_CLOSE = 1
@@ -41,6 +50,9 @@ COLORS = [Qt.black,   Qt.red,        Qt.darkGreen, Qt.blue, Qt.cyan,
 iP=0
 
 B=QRect(10,20, 90, 20) # button prototype
+# ---------------------------------------
+def PrintRect(R,N=0,f=sys.stderr):
+    f.write("%s: x:%d y:%d w:%d h:%d\n" % (N,R.x(),R.y(),R.width(),R.height()))
 # ---------------------------------------
 def IsDFileObj(obj):
     try: fn=obj.FileName
@@ -240,7 +252,9 @@ def DrawData(p, plot_obj, ppars):
     else: itop=1.5              
    
     EffA=QRect(iChx*(yDig+3)+ppars['rect'].x(),itop*iChy+ppars['rect'].y(),\
-               ppars['rect'].width()-(yDig+5)*iChx,ppars['rect'].height()-(2+itop)*iChy)
+    	       ppars['rect'].width()-(yDig+5)*iChx,ppars['rect'].height()-(2+itop)*iChy)
+    #EffA=QRect(iChx*(yDig+7)+ppars['rect'].x(),itop*iChy+ppars['rect'].y(),\
+    #           ppars['rect'].width()-(yDig+9)*iChx,ppars['rect'].height()-(2+itop)*iChy)
 #    print "y:",EffA.height()/iChy
 #    print "x:",EffA.width()/iChx
 #    p.drawRect(ppars['rect'])
@@ -267,6 +281,7 @@ def DrawData(p, plot_obj, ppars):
     p.drawText(ppars['rect'].x()+4*iChx,ppars['rect'].y()+(int)((itop+3.)*iChy/4),ppars['y_label'])
     # y-Axis ticks
     ir=len(ya.scale)
+    #print ya.scale
     for i in range(ir):
        tick=EffA.y()+EffA.height()-(i*EffA.height()/(ir-1))
        p.drawLine(EffA.x()-iChx/2,tick,EffA.x(),tick)
@@ -277,6 +292,7 @@ def DrawData(p, plot_obj, ppars):
                ppars['rect'].y()+ppars['rect'].height()-5,ppars['x_label'])
     # x-Axis ticks
     ir=len(xa.scale)
+    #print xa.scale
     for i in range(ir):
        tick=EffA.x()+(i*EffA.width()/(ir-1))
        p.drawLine(tick,EffA.height()+EffA.y(),tick,EffA.height()+EffA.y()+iChy/4)
@@ -419,7 +435,7 @@ class ShowWid(QWidget):
 
   def InitPlot(self):
      self.setCaption(str(self.TD[0].FileName))
-     self.setGeometry(SCREEN.x()-self.w-10,0,self.w,self.h);
+     self.setGeometry(SCREEN.x()-self.w-30,30,self.w,self.h);
 
      self.iColX=self.TD[0].iCx
      self.iColY=self.TD[0].iCy
@@ -501,8 +517,8 @@ class ShowWid(QWidget):
 #      self.PPar["font"]=QFont("sansserif",iF);
       self.PPar["font"]=QFont("sansserif",self.FontSize);
 #      print "Fontsize:",iF
-      self.PPar["rect"].setRect(3,3,self.width()-3,self.height()-3);
-      DrawData(paint,self.TD,self.PPar);
+      self.PPar["rect"].setRect(3,3,self.width()-3,self.height()-3)
+      DrawData(paint,self.TD,self.PPar)
 
       paint.setFont(QFont("sanserif",8))
       paint.drawText(3,self.height()-3,str(self.TD[0].FileName))
@@ -1315,7 +1331,7 @@ class RescaleWid(QWidget):
 
      self.pm = QPixmap(self.Filename)
      img=self.pm.convertToImage()
-     if img.width()>self.PlotF.width() or img.heigth()>self.PlotF.heigth():
+     if img.width()>self.PlotF.width() or img.height()>self.PlotF.height():
         nimg=img.smoothScale(self.PlotF.width(),self.PlotF.height(),QImage.ScaleMin)
      else: nimg=img
      

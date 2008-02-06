@@ -1,9 +1,9 @@
 This package was written by Herbert MUELLER
-<herbie(at)ifp(dot)tuwien(dot)ac(dot)at> 2004-2005
+<herbie(at)ifp(dot)tuwien(dot)ac(dot)at> 2004-2007
 It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
 
 0. Copyright:
-   Copyright (C) 2004-2005 H. Mueller
+   Copyright (C) 2004-2007 H. Mueller
    Pat homepage: http://www.ifp.tuwien.ac.at/pat/
 
    Pat is free software under the terms of the GNU General Public License.
@@ -32,7 +32,7 @@ It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
    Typical short example:
    
    ---------------------------
-   Measurement of a falling body
+   Measurement of a falling specimen
    1st column: time [s]
    2nd column: distance [m]
    0   0
@@ -65,6 +65,7 @@ It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
      Integ.py: Numerical integration
     Intpol.py: Interpolate one value from a table
       Look.py: Interpolate all values of data file from a table file
+      Mean.py: Calculate the mean value in bins with size of delta x.
      Merge.py: Merge two data files
     Select.py: Obtain a part from a data file
       Sort.py: Sort columns
@@ -85,7 +86,42 @@ It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
        Disp.py: Detailed graphic display with the possibility to change data
     Rescale.py: Get a data file from a x/y-plot (jpeg, png, ...)
 
-2. Special Addons:
+   For friends of mouse clicks and graphic interfaces:
+       Since version 1.1.0 some commands can be started from a graphic front end.
+
+        Pat.py: Offers some of the tools with a graphic interface.
+
+       Note: Not all commands and not all options are provided by this interface.
+             I hope the frontend can be handled intuitive and it is self-explaning.
+
+2. Examples:
+
+   Calc.py -f c2=c2*5.2 mymeas.dat
+   Multiply the second column of mymeas.dat with 5.2 and send the result to stdout.
+
+   Deriv.py -n 5 result.dat > deriv_result.dat
+   Calculate the derivative dy/dx (y: column 2 x: column 1) by using 5 neighbour points
+   and write the result to the file deriv_result.dat. Column 2 of deriv_result.dat contains
+   the derivation.
+
+   Exchg.py -c 1,5 data1.prn | Integ.py > integ_data1.prn
+   Swap column 1 and 5 of data1.prn, build the integral y.dx (x: column1, y: column 2)
+   and write the result to integ_data1.prn. Column 2 of integ_data1.prn contains
+   the integral.
+
+   Fileop.y -f - -x 2,2 -y 3,4 signal.dat zero.dat > result.dat
+   Calculate y(x) = y3(x2) of signal.dat minus y4(x3) of signal.dat and save the result
+   in result.dat. The x values are column 2 of signal.dat and column 2 of zero.dat.
+   The y values are column 3 of signal.dat and column 4 of zero.dat. the x-values of the
+   two files need not to be exactlxy the same values, linear interpolation is used
+   to get the value  y4(x2) from y4(x3).
+
+   echo "270.0" | Intpol -c calib_table.dat
+   Takes the  x-value 270.0  (from stdin).
+   Prints x and the interpolated y value for x to stdout.
+   Column 1 (x) and column 2 (y) of calib_table.dat are used as interpolation table    
+    
+3. Special Addons:
 
    a. Thermal Expansion 
      For my thermal expansion experiment some special functions have been
@@ -106,6 +142,11 @@ It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
   
   This add ons are not included in the standard version
 
-3. Installation:
+4. Installation:
 
    Follow the instructions in the file INSTALL.
+
+   The command line tools are adapted to work under Windows (TM) too. 
+
+   The graphic frontend Pat.py is only roughly tested to work under Linux and X.
+   It is not adapted to work under Windows (TM), but may be this will follow.

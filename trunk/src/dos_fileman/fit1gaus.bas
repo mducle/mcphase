@@ -42,17 +42,14 @@ IF speed = 0 THEN speed = 1
 
 999 CALL iteratefiles(filename$)
 
-IF RIGHT$(filename$, 4) = ".mrc" OR RIGHT$(filename$, 4) = ".rcp" THEN
-   PRINT "you should never ever change data in *.rcp files": PLAY "dgdgdg"
-22 INPUT "do you really want to continue (Y/N)"; ala$: IF LCASE$(ala$) = "n" THEN END
-   IF LCASE$(ala$) <> "y" GOTO 22
-END IF
 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 'oooooooooooooooooo OPEN FILES oooooooooooooooooooooooooooooooooooooooooooooo
 'open input file and input file header
 OPEN "i", 1, filename$: CALL headerinput(text$(), j, 1)
 firstvalue = SEEK(1)
+IF EOF(1) <> 0 THEN PRINT "no data points in file "; filename$; " - exiting": END
+CALL inputline(1, d1#(), col%, d2$(), col2%)
 'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 
@@ -70,13 +67,13 @@ OPEN "i", 1, filename$: CALL headerinput(text$(), j, 1)
 
 ' open output file and write fileheader
 OPEN "o", 2, "FIT1GAUS.lin"
-PRINT #2, "{";
+PRINT #2, "#{";
 PRINT #2, "fitp:";
 FOR i% = 1 TO par#(0): PRINT #2, USING "##.###^^^^"; par#(i%); : NEXT i%
 PRINT #2, USING "sta=##.###^^^^"; sta#
 FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
-PRINT #2, DATE$; " "; TIME$; " column"; jj%; "FIT1GAUS calc. with respect to column"; ii%;
-PRINT #2, "fit put into column"; col% + 1
+PRINT #2, "#"; DATE$; " "; TIME$; " column"; jj%; "FIT1GAUS calc. with respect to column"; ii%;
+PRINT #2, "#fit put into column"; col% + 1;
 PRINT #2, "calculation done by program FIT1GAUS.bas";
 PRINT #2, "}"
 
@@ -100,7 +97,7 @@ CLOSE 1, 2
 'loglogloglogloglogloglogloglogloglogloglogloglogloglogloglogloglogloglog
 'write fit to logfile
 OPEN "a", 1, "fit1gaus.log"
-IF LOF(1) < 2 THEN PRINT #1, "{par#(1) vs par#(2) vs ... vs sta vs av(1)(average of columns 1) vs av(2) vs ... vs filename (logfile of fit1gaus.log)}"
+IF LOF(1) < 2 THEN PRINT #1, "#{par#(1) vs par#(2) vs ... vs sta vs av(1)(average of columns 1) vs av(2) vs ... vs filename (logfile of fit1gaus.log)}"
 FOR i% = 1 TO par#(0): PRINT #1, par#(i%); : NEXT i%
 PRINT #1, sta#;
 FOR i% = 1 TO colmax%: PRINT #1, av#(i%); : av#(i%) = 0: NEXT i%
@@ -200,13 +197,15 @@ REM input data columns >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  IF d1#(ii%) > xmax THEN xmax = d1#(ii%)
  IF d1#(jj%) < ymin THEN ymin = d1#(jj%)
  IF d1#(jj%) > ymax THEN ymax = d1#(jj%): xmid = d1#(ii%)
- IF n = 0 THEN weight = 1 ELSE weight = EXP(-(d1#(jj%) - bkg) * (d1#(jj%) - bkg) / bkg / bkg)
+ IF n = 0 OR bkg = 0 THEN weight = 1 ELSE weight = EXP(-(d1#(jj%) - bkg) * (d1#(jj%) - bkg) / bkg / bkg)
 
- bkg = (bkg * n + weight * d1#(jj%)) / (n + weight): IF bkg = 0 THEN bkg = 1
+ IF n + weight <> 0 THEN bkg = (bkg * n + weight * d1#(jj%)) / (n + weight)
+ IF bkg = 0 THEN bkg = 1
  n = n + weight
  WEND
+IF xmax - xmin < 1E-10 THEN PRINT "error - all points have equal x": END
 
-FOR trytwice% = 1 TO 2
+FOR trytwice% = 1 TO 3
 
 222 SEEK #1, firstvalue
 sumxy = 0
@@ -236,15 +235,16 @@ IF trytwice% = 1 AND n < 8 THEN firstvalue = -1: GOTO 6699
 
 IF INSTR(COMMAND$, "/B") > 0 THEN
  IF n < 2 THEN bkg = bkg * .9: fwhm = xmax - xmin: GOTO 222
- IF ABS(sumy / bkg / n) < .01 THEN bkg = bkg * .9: fwhm = xmax - xmin: GOTO 222
+ IF bkg <> 0 AND n <> 0 THEN
+  IF ABS(sumy / bkg / n) < .01 THEN bkg = bkg * .9: fwhm = xmax - xmin: GOTO 222
+ END IF
 END IF
 
 '2 ... fwhm
-sigma = SQR(ABS((sumxxy / sumy - sumxy * sumxy / sumy / sumy)))
+IF sumy <> 0 THEN sigma = SQR(ABS((sumxxy / sumy - sumxy * sumxy / sumy / sumy)))
 fwhm = SQR(8 * LOG(2)) * sigma
-
-par#(2) = fwhm
-parstp(2) = sigma / SQR(2 * n)
+IF fwhm > 0 THEN par#(2) = fwhm ELSE fwhm = .1
+IF n > 0 THEN parstp(2) = sigma / SQR(2 * n) ELSE parstp(2) = fwhm / 10
 parmax(2) = xmax - xmin
 parmin(2) = 0
 
@@ -254,10 +254,10 @@ IF sigma = 0 AND INSTR(COMMAND$, "/B") > 0 THEN bkg = bkg * .9: fwhm = xmax - xm
 '1...center
 'par#(1) = RND(1) * (xmax - xmin) + xmin
 'par#(1) = xmid
-par#(1) = sumxy / sumy
+IF sumy <> 0 THEN par#(1) = sumxy / sumy ELSE par#(1) = sumxy
 parmax(1) = xmax
 parmin(1) = xmin
-parstp(1) = fwhm / SQR(8 * LOG(2) * n)
+IF n > 0 THEN parstp(1) = fwhm / SQR(8 * LOG(2) * n) ELSE parstp(1) = fwhm / 10
 
 '3 ... height
 par#(3) = area / fwhm * 2 * SQR(LOG(2) / 3.1415)
@@ -273,6 +273,7 @@ IF INSTR(COMMAND$, "/B") > 0 THEN
  parmax(4) = bkg + SQR(sumyy) / n
  parmin(4) = bkg - SQR(sumyy) / n
 END IF
+IF area < 0 THEN bkg = 0
 NEXT trytwice%
 
 6699 END SUB
@@ -296,19 +297,24 @@ SUB headerinput (text$(), j, n)
 ' input file header of measurement file opened with #n
 ' the file header inputted has then j lines and is stored in text$(1-j)
 '*********************************************************************
-
-1 INPUT #n, a$
-   i = INSTR(a$, "{"): IF i > 0 GOTO 2 ELSE GOTO 1     'look for "{"
-2 text$(1) = RIGHT$(a$, LEN(a$) - i)
-  j = 1: i = INSTR(text$(j), "}"): IF i > 0 GOTO 3  'look for "}" in first line
-                                            
-   FOR j = 2 TO 300
-   INPUT #n, text$(j)
-   i = INSTR(text$(j), "}"): IF i > 0 GOTO 3      'look for "}"
+   j = 0
+   IF EOF(1) <> 0 THEN PRINT "no data points in file "; filename$; " - exiting": END
+   LINE INPUT #n, a$
+   IF LEFT$(LTRIM$(a$), 1) = "#" THEN i = 0: GOTO 2
+   i = INSTR(a$, "{")    'look for "{"
+   IF i = 0 THEN SEEK #1, 1: GOTO 1
+2  j = j + 1: text$(j) = RIGHT$(a$, LEN(a$) - i)
+   k = INSTR(text$(j), "}"): IF k > 0 THEN i = k: GOTO 3'look for "}" in first line
+   k = j + 1
+   FOR j = k TO 300
+   IF EOF(1) <> 0 THEN PRINT "no data points in file "; filename$; " - exiting": END
+   f = SEEK(1): LINE INPUT #n, text$(j)
+   IF LEFT$(LTRIM$(text$(j)), 1) <> "#" AND i = 0 THEN SEEK #1, f: j = j - 1: GOTO 1
+   k = INSTR(text$(j), "}"): IF k > 0 THEN i = k: GOTO 3   'look for "}"
    NEXT j: PRINT "text in data file too long": END
 3 text$(j) = LEFT$(text$(j), i - 1)
 
-END SUB
+1 END SUB
 
 SUB inputline (n, d1#(), col1%, d2$(), col2%)
 'input data point line on #n as string and split into numbers
@@ -323,6 +329,8 @@ a$ = INKEY$: IF a$ <> "" THEN IF ASC(a$) = 27 THEN END
 
 aa = SEEK(n)
 LINE INPUT #n, ala$
+IF LEFT$(LTRIM$(ala$), 1) = "#" THEN col1% = 0: col2% = 1: d2$(1) = ala$: GOTO 111
+
 WHILE INSTR(ala$, CHR$(9)) > 0  'abandon tabs
  i% = INSTR(ala$, CHR$(9))
  ala$ = LEFT$(ala$, i% - 1) + " " + MID$(ala$, i% + 1)
@@ -351,7 +359,8 @@ ELSE
     ala$ = LTRIM$(RIGHT$(ala$, LEN(ala$) - INSTR(ala$, " ")))
  WEND
 END IF
-END SUB
+
+111 END SUB
 
 SUB iteratefiles (file1$)
 STATIC washere%, path$
@@ -507,6 +516,7 @@ IF min(3) <> max(3) THEN    'make 3d-plot
  yp = height - 5 - (s(2, j) - mins(2)) / (maxs(2) - mins(2)) * ysmax - (s(3, j) - mins(3)) / (maxs(3) - mins(3)) * COS(alpha) * zsmax
 ELSE   'make 2d plot
  xp = 5 + (s(1, j) - mins(1)) / (maxs(1) - mins(1)) * xsmax
+ IF maxs(2) = mins(2) THEN maxs(2) = mins(2) + 1
  yp = height - 5 - (s(2, j) - mins(2)) / (maxs(2) - mins(2)) * ysmax
 END IF
 

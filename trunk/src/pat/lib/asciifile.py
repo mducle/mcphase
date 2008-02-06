@@ -5,23 +5,32 @@ from array import *
 from stdfunc import *
 from NumTab import *
 from filepar import *
-import string,sys
+import string,sys,os
 
 try: locale()['MOD_ftypes']
 except: MOD_ftypes={"the":0,"sxs":0};
-#print "datafile", MOD_ftypes
+#print "asciifile", MOD_ftypes
 
-#$Log$
-CVS_ID="$Id$"
+#$Log: datafile.py,v $
+#Revision 1.3  2006/01/04 14:41:36  herbie
+#*** empty log message ***
+#
+#Revision 1.2  2005/12/19 09:13:05  herbie
+#*** empty log message ***
+#
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
+#
+#CVS_ID="$Id: datafile.py,v 1.3 2006/01/04 14:41:36 herbie Exp herbie $"
 
 FT_ASCII=10
 FT_SPLINE=20
 FT_SXSMulti=30
 FT_THECAP=40
-FILE_T={'10': ['Ascii',10],
-        '20': ['Spline',20],
-        '30': ['SXS Multi set',30],
-        '40': ['THE Cap',40]
+FILE_T={'10': ['Ascii',10],             # General Ascii file
+        '20': ['Spline',20],            # Spline file; see spline.py
+        '30': ['SXS Multi set',30],     # Soft x-ray spectroscopy; see sxsfile.py
+        '40': ['THE Cap',40]            # Thermal expansion; thefile.py
        }
 
 def CheckFileType(File):
@@ -32,6 +41,7 @@ def CheckFileType(File):
    fp=None
    if type(File) == StringType: fp=open(File,"r")
    if type(File) == FileType: fp=File
+   if os.name!='posix' and type(File) == InstanceType: fp=File
    if fp == None: raise TypeError
 
    l=fp.readline()
@@ -49,6 +59,7 @@ def CheckFileType(File):
 
    if type(File)==StringType: fp.close()
    if type(File) == FileType: fp.seek(0,0)
+   if os.name!='posix' and type(File) == InstanceType: fp=File
 
    return (FT_ASCII,LineT)
 
@@ -56,6 +67,18 @@ class AsciiFile:
      """A data file that contains some text lines on top followed by
         a numeric table:
         Rows with the same number columns of numbers separated by blancs
+	The following data object are availabe:
+	
+	   self.DeLim: One of DOS_END, UNIX_END (defined in stdfunc.py)
+        self.LineType: One of LT_UNIX, LT_DOS (defined in stdfunc.py)
+           self.FText: List of strings representing the header or text lines
+            self.Nums: NubTable object representing the data columns
+           self.ColId: List of strings representing the description of the data columns;
+	               each list element the corresponding column
+             self.iCx: Number of x column, if y=f(x) operation or plots performed
+             self.iCy: Number of y column, if y=f(x) operation or plots performed
+        self.FileName: filename
+            self.Info: A string giving some (short) info text (for plotting)
      """
      def __init__(self,filename):
         """ Initialize variables with 'empty' values.
@@ -95,6 +118,7 @@ class AsciiFile:
            raise ValueError("Unsupported # of data sets %d" % iSet)
         if File == None: fp=open(self.FileName,"r")
         if type(File) == FileType: fp=File; fp.seek(0,0)
+        if os.name!='posix' and type(File) == InstanceType: fp=File
         buf=fp.readlines()  # Read all lines from file
         fp.close()
 
@@ -109,7 +133,7 @@ class AsciiFile:
         else: self.Info='No info available'
 
         for i in range(0,len(self.Nums)):
-           self.ColId.append('Column %d' % i)
+           self.ColId.append('Column %d' % (i+1))
 
         self.FileType=FT_ASCII
         self.nSets=1
@@ -219,15 +243,17 @@ class AsciiFile:
              if self.FText[i].find(p[0]+'=') == 0:
                 self.FText[i]='%s=%s' % (p[0],p[1])
 
-     def Write(self,fOut=sys.stdout,Sort=None):
+     def Write(self,fOut=sys.stdout,Sort=None,Comment=None):
         """ Write complete data file to destination
 	    paramters:
 	      fOut: Destination file-object
 	      Sort: Sort order (see NumTab.py)
 	"""
+	c=''
+	if Comment: c="#"
         for i in self.FText:
-            fOut.write("%s%s" % (i,self.DeLim))
-        self.Nums.Write(fOut,Align=1,Sort=Sort)
+            fOut.write("%s%s%s" % (c,i,self.DeLim))
+        return self.Nums.Write(fOut,Align=1,Sort=Sort)
 
      def InsTextPar(self,index,val):
        """Insert line in text after line were index is found
@@ -242,6 +268,9 @@ class AsciiFile:
        elif type(index) == IntType:
          self.FText.insert(index+1,val)
        else: raise TypeError("Index must be string or int")
+
+     def InfoText(self):
+         return self.FileName
 
 #     def Write(self,fOut=sys.stdout,Sort=None):
 #        for i in self.FText:

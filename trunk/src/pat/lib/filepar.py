@@ -3,17 +3,13 @@ import sys
 from pprint import *
 
 #$Log: filepar.py,v $
-#Revision 1.3  2004/12/22 16:13:18  herbie
+#Revision 1.2  2005/12/19 09:13:05  herbie
 #*** empty log message ***
 #
-#Revision 1.2  2004/08/04 11:19:51  herbie
-#FindFromDic added
-#__init__: source can be a filname or list
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
 #
-#Revision 1.1  2004/02/24 14:19:07  herbie
-#Initial version
-#
-CVS_ID="$Id: filepar.py,v 1.3 2004/12/22 16:13:18 herbie Exp $"
+CVS_ID="$Id: filepar.py,v 1.2 2005/12/19 09:13:05 herbie Exp $"
 
 #NoFile = 'Input file not found'
 

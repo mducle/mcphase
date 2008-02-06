@@ -3,19 +3,16 @@ from math import *
 import types,sys
 
 #$Log: RoundRobin.py,v $
-#Revision 1.4  2004/08/04 12:14:51  herbie
-#Print added
+#Revision 1.3  2006/07/11 11:57:52  herbie
+#Print ctrl added
 #
-#Revision 1.3  2004/03/11 10:21:25  herbie
-#MaxDev added
+#Revision 1.2  2005/12/19 09:13:05  herbie
+#*** empty log message ***
 #
-#Revision 1.2  2004/02/27 11:32:49  herbie
-#Mean added
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
 #
-#Revision 1.1  2004/02/24 14:19:07  herbie
-#Initial version
-#
-CVS_ID="$Id: RoundRobin.py,v 1.4 2004/08/04 12:14:51 herbie Exp $"
+CVS_ID="$Id: RoundRobin.py,v 1.3 2006/07/11 11:57:52 herbie Exp herbie $"
 
 __all__=['RoundRobin']
 
@@ -68,19 +65,34 @@ class RoundRobin(list):
    
    GetSize=list.__len__
 
-   def Print(self,last_n=None,fh=None):
-     """Print(self,last_n=None)
+   def Print(self,last_n=None,fh=None,ctrl=None):
+     """Print(self,last_n=None,ctrl=None)
         Prints time/values data pairs
            last_n: The number of last data points to be printed (None: all)
-               fh: File handle for printing (None: stdout)
+               fh: File handle for printing (None: stdout) or string
+	     ctrl: Controls output
+	           None: First point has time zero
+		      1: Time in UNIX timestamp (secs since 1.1.1970)
+		      2: Last value has time zero; others negative
      """
-     if last_n == None: last_n=len(self)-1
-     if last_n < 1 or last_n >= len(self):
-        raise IndexError, 'last_n must be 1 - %d' % (len(self)-1)
+     if last_n == None: last_n=len(self)#-1
+     if last_n < 1 or last_n > len(self):
+        raise IndexError, 'last_n must be 1 - %d (%d)' % (len(self)-1,last_n)
         return 0
      if fh==None: fh=sys.stdout
+     if type(fh) == types.StringType: r=''
+     else: r=None
      for i in range(len(self)-last_n,len(self)):
-       fh.write("%.2f  %f\n" % (self[i][0]-self[0][0],self[i][1]))
+       if not ctrl:
+           a="%.2f  %f\n" % (self[i][0]-self[0][0],self[i][1])
+       elif ctrl == 1:
+           a="%.2f  %f\n" % (self[i][0],self[i][1])
+       else: 
+           a="%.2f  %f\n" % (self[i][0]-self[-1][0],self[i][1])
+           
+       if type(fh) == types.StringType: r+=a
+       else: fh.write(a)
+     return r
 
    def GetRate(self,last_n=None):
      """ GetRate(self,last_n=None)
@@ -146,7 +158,7 @@ class RoundRobin(list):
         return (0,0)
      
      for i in self:
-        if i[0] == tim: return i[1]
+        if i[0] == tim: return (i[1],0)
         if i[0] > tim:
            k=(i[1]-v[1])/(i[0]-v[0])
            d=i[1]-k*i[0]
@@ -160,7 +172,7 @@ class RoundRobin(list):
 	 Calculates mean value and mean deviation (sigma)
 	 Parameters:
 	  last_n: The number of last data points over that
-		  will the mean value is calculated
+		  the mean value is calculated
 		  If omitted the whole archive size is used
 	 Return: A tuple; first: mean value
 			 second: mean deviation
@@ -183,7 +195,7 @@ class RoundRobin(list):
 	 Calculates max deviation
 	 Parameters:
 	  last_n: The number of last data points over that
-		  will the maximal deviation is calculated
+		  the maximal deviation is calculated
 		  If omitted the whole archive size is used
 	 Return: A tuple; first: max-min
 			 second: max

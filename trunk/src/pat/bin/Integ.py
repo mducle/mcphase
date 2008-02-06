@@ -27,14 +27,18 @@ sys.path.append(path)
 from getopt import *
 from SysLog import *
 from stdfunc import *
-from dfile import *
+from asciifile import *
 from xydata import *
 
 #$Log: Integ.py,v $
-#Revision 1.1  2004/08/04 11:28:31  herbie
+#Revision 1.2  2006/01/04 14:45:31  herbie
 #*** empty log message ***
 #
-CVS_ID="$Id: Integ.py,v 1.1 2004/08/04 11:28:31 herbie Exp $"
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
+#
+#
+CVS_ID="$Id: Integ.py,v 1.2 2006/01/04 14:45:31 herbie Exp herbie $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=1

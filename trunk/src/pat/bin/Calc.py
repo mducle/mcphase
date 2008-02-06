@@ -34,13 +34,13 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 
 #$Log: Calc.py,v $
-#Revision 1.1  2004/08/04 11:26:03  herbie
-#*** empty log message ***
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
 #
-CVS_ID="$Id: Calc.py,v 1.1 2004/08/04 11:26:03 herbie Exp $"
+CVS_ID="$Id: Calc.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=1

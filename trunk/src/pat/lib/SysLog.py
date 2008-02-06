@@ -1,20 +1,22 @@
-import sys, syslog, string
+import sys, string
+
+SyslogHere=1
+# Only operating systems have syslog
+try: import syslog
+except: SyslogHere=0
 
 #$Log: SysLog.py,v $
-#Revision 1.4  2004/12/22 16:07:26  herbie
+#Revision 1.3  2006/01/04 14:41:36  herbie
 #*** empty log message ***
 #
-#Revision 1.3  2004/08/04 11:16:04  herbie
-#log independenly to stderr or syslog added
+#Revision 1.2  2005/12/19 09:13:05  herbie
+#*** empty log message ***
 #
-#Revision 1.2  2004/05/26 13:53:13  herbie
-#Log mask added
-#
-#Revision 1.1  2004/02/24 12:23:26  herbie
-#Initial version
+#Revision 1.1  2005/12/15 08:57:36  herbie
+#Initial revision
 #
 
-CVS_ID="$Id: SysLog.py,v 1.4 2004/12/22 16:07:26 herbie Exp $"
+CVS_ID="$Id: SysLog.py,v 1.3 2006/01/04 14:41:36 herbie Exp herbie $"
 
 LOG_LEVEL=-1
 
@@ -37,7 +39,7 @@ def SLog(level, suffix, msg, StdErr=1):
     """
     global LOG_LEVEL
     if LOG_LEVEL >= level:
-       if StdErr & 1:
+       if StdErr & 1 and SyslogHere:
          syslog.openlog(suffix)
          syslog.syslog(msg)
          syslog.closelog()
@@ -97,7 +99,7 @@ class SysLog :
          """
          if self.LogLevel >= 0:
             if self.LogLevel >= level:
-               if self.StdErr & 1:
+               if self.StdErr & 1 and SyslogHere:
                   syslog.openlog(self.LogSuffix)
                   syslog.syslog(msg)
                   syslog.closelog()
@@ -105,7 +107,7 @@ class SysLog :
                   sys.stderr.write(self.LogSuffix+": "+msg+"\n")
          else:
             if (abs(self.LogLevel) & level) or (level == 0):
-               if self.StdErr & 1:
+               if self.StdErr & 1 and SyslogHere:
                   syslog.openlog(self.LogSuffix)
                   syslog.syslog(msg)
                   syslog.closelog()

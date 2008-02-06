@@ -1,6 +1,15 @@
 from math import *
 from decimal import *
 
+#$Log: axis.py,v $
+#Revision 1.2  2006/04/26 12:25:35  herbie
+##.#e+-## representation improved
+#
+#Revision 1.1  2005/12/15 08:56:43  herbie
+#Initial revision
+#
+CVS_ID="$Id: axis.py,v 1.2 2006/04/26 12:25:35 herbie Exp herbie $"
+
 class axis:
    """ Scales an axis
    """
@@ -23,7 +32,8 @@ class axis:
 
       if not (typ=='y' or typ == 'x'):
         raise ValueError('Typ (%s) must be "x" or "y"' % typ)
-
+	
+      self.exp=0
       self.scale=None
       lgDelta=[None,None]
    
@@ -90,7 +100,13 @@ class axis:
             if brk: break
 
          pMM=(Delta,floor(float(min_max[0])/Delta)*Delta,ceil(float(min_max[1])/Delta)*Delta)
-#         print pMM
+
+	 if pMM[2]>0:
+	    if pMM[2] <= 1.e-3 or pMM[2] >= 1.e4: self.exp=1
+
+	 if pMM[1]<0:
+	    if fabs(pMM[1]) <= 1.e-3 or fabs(pMM[1]) >= 1.e4: self.exp=1
+         #print pMM,self.exp
          self.scale=self.scale_list(pMM)
 #         return 'No scale y'
 
@@ -105,12 +121,12 @@ class axis:
        if v == 0: return (1,'f')
        l=fabs(log10(fabs(v)))
        f='f' 
-       if l > self.nsig: r=1;f='e'
+       if l > self.nsig or self.exp: r=1;f='e'
        else: r=int(l+1)
        if v<0:r+=1
        return (r,f)
 
-   def right_digits(self,v):
+   def right_digits(self,v,exp=0):
        """ Calculates max. number of digits right from decimal point
 	   parameters:
 	    v: value (float)
@@ -118,23 +134,31 @@ class axis:
        """
        if v == 0: return 0
        l=fabs(log10(fabs(v))) 
-       if l > self.nsig: return self.nsig-1
+       #if l > self.nsig: return self.nsig-1
        t=log10(fabs(self.delta))
+       r=0
+       if l > self.nsig or exp:
+         d=self.delta*10**-floor(t)
+         t=log10(fabs(d))
+         #print v,d,t,self.delta
+	 r=int(log10((self.max-self.min)/self.delta)+.3)
+         #print v,d,t,(self.max-self.min)/self.delta,r
+       #print v,t
        if t<0: return int(ceil(-t))
-       else: return 0
+       else: return r
 
-   def all_digits(self,v):
+   def all_digits(self,v,exp=0):
        """ Calculates max. number of digits including decimal point
 	   parameters:
 	    v: value (float)
 	   return: tuple (number of all digits including dp, 'f' or 'e' )
        """
-       r=self.right_digits(v)
+       r=self.right_digits(v,exp)
        if r: r+=1  # decimal point
        rr=self.left_digits(v)
        r+=rr[0]
        if v:
-         if fabs(log10(fabs(v))) > self.nsig: r+=4 # exponential repr 1.234E-05
+         if fabs(log10(fabs(v))) > self.nsig or exp: r+=4 # exponential repr 1.234E-05
        return (r,rr[1])
 
    def scale_list(self,a):
@@ -154,20 +178,21 @@ class axis:
      r=[]
      for j in range(steps+1):
          v=a[1]+j*a[0]
-         rd=self.right_digits(v)
+         rd=self.right_digits(v,self.exp)
          ld=self.left_digits(v)
-         ad=self.all_digits(v)
+         ad=self.all_digits(v,self.exp)
          f="%%%d.%d%s" % (ad[0],rd,ad[1])
-         r.append((self.make_number(v),f,v))
+	 #print v,rd,ld,ad,f
+         r.append((self.make_number(v,self.exp),f,v))
      return list(r)
 
-   def make_number(self,v):
+   def make_number(self,v,exp=0):
      """ Makes a number (string) from a value (float)
          containing the correct numbers of digits left/right from decimal point
      """
-     rd=self.right_digits(v)
+     rd=self.right_digits(v,exp)
      ld=self.left_digits(v)
-     ad=self.all_digits(v)
+     ad=self.all_digits(v,exp)
      f="%%%d.%d%s" % (ad[0],rd,ad[1])
      return (f % v).strip()
    

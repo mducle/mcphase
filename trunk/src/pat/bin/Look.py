@@ -17,7 +17,7 @@
     A table lookup is performed:
     For all x-values of the Data file a table lookup (cubic spline)
     in the x-values are performed and the corresponding y-values of the
-    Data file are replaced by the interpolated y-valuesof the Table file
+    Data file are replaced by the interpolated y-values of the Table file
     Columns not involved in the operation are unchanged.
     1st x: x-column of DataFile (data values)
     2nd x: x-column of TableFile (data values)
@@ -40,14 +40,15 @@ sys.path.append(path)
 
 from SysLog import *
 from stdfunc import *
-from datafile import *
+from asciifile import *
 from xydata import *
 
 #$Log: Look.py,v $
-#Revision 1.1  2004/08/04 11:28:31  herbie
-#*** empty log message ***
+#Revision 1.1  2005/12/15 09:16:48  herbie
+#Initial revision
 #
-CVS_ID="$Id: Look.py,v 1.1 2004/08/04 11:28:31 herbie Exp $"
+#
+CVS_ID="$Id: Look.py,v 1.1 2005/12/15 09:16:48 herbie Exp $"
 ID=string.join(CVS_ID.split()[1:4])
 
 iSet=[1,1]
@@ -129,6 +130,9 @@ if Type[0][0] == FT_THECAP or Type[0][0] == FT_SXSMulti:
 
 if LineT !=1: DF.SetDelim(LineT/2)
 
-DF[0].Write(sys.stdout,Sort=w[0])
-
+n=DF[0].Write(sys.stdout,Sort=w[0])
+d=len(DF[0].Nums[0]) - n[0]
+if d != 0:
+   S.Log(0,"%d values not in table; skipped" % d)
+   
 sys.exit(EXIT_SUCCESS)
