@@ -56,7 +56,7 @@ Includedateien holen
                                 define
 -----------------------------------------------------------------------------*/
  
-#define NR_RE 28
+#define NR_RE 29
  
 /*----------------------------------------------------------------------------
 Extern definierte Funktionen
@@ -94,7 +94,8 @@ DOUBLE alpha_J[NR_RE]={
 /* 4f_11: Ho2+ */    1.0 * 2*2/3/3/5/5/7    ,
 /* 4f_12: Er2+ */    1.0 * 1/3/3/11         ,
 /* 4f_13: Tm2+ */    1.0 * 2/3/3/7          ,
-/* 4f_14: Yb2+ */    1.0 * 0               
+/* 4f_14: Yb2+ */    1.0 * 0                ,
+/* 3d_2 : V3+  */    1.0 * 0  
 };
 /*----------------------------------------------------------------------------
                                  beta_J
@@ -128,7 +129,8 @@ DOUBLE beta_J[NR_RE]={
 /* 4f_11: Ho2+ */  1.0 * 2/3/3/5/7/11/13                ,
 /* 4f_12: Er2+ */   1.0 * 2*2*2/3/3/3/3/5/11/11          ,
 /* 4f_13: Tm2+ */  -1.0 * 2/3/5/7/11                     ,
-/* 4f_14: Yb2+ */  1.0 * 0                              
+/* 4f_14: Yb2+ */  1.0 * 0                              ,
+/* 3d_2 : V3+  */    1.0 * 0  
 };
 /*----------------------------------------------------------------------------
                                 gamma_J
@@ -162,7 +164,8 @@ DOUBLE gamma_J[NR_RE]={
 /* 4f_11: Ho2+ */ 1.0 * 2*2*2/3/3/3/7/11/11/13/13         ,
 /* 4f_12: Er2+ */ -1.0 * 5/3/3/3/3/7/11/11/13              ,
 /* 4f_13: Tm2+ */ 1.0 * 2*2/3/3/3/7/11/13                 ,
-/* 4f_14: Yb2+ */ 1.0 * 0                                 
+/* 4f_14: Yb2+ */ 1.0 * 0                                 ,
+/* 3d_2 : V3+  */    1.0 * 0  
 };
 /*----------------------------------------------------------------------------
                                info_thetakq()
@@ -228,6 +231,8 @@ s="Dy2+";a=x*alpha_J[23];b=y*beta_J[23];c=z*gamma_J[23];fprintf(fp,text,s,a,b,c)
 s="Ho2+";a=x*alpha_J[24];b=y*beta_J[24];c=z*gamma_J[24];fprintf(fp,text,s,a,b,c);
 s="Er2+";a=x*alpha_J[25];b=y*beta_J[25];c=z*gamma_J[25];fprintf(fp,text,s,a,b,c);
 s="Tm2+";a=x*alpha_J[26];b=y*beta_J[26];c=z*gamma_J[26];fprintf(fp,text,s,a,b,c);
+s="Yb2+";a=x*alpha_J[27];b=y*beta_J[27];c=z*gamma_J[27];fprintf(fp,text,s,a,b,c);
+s="V3+";a=x*alpha_J[28];b=y*beta_J[28];c=z*gamma_J[28];fprintf(fp,text,s,a,b,c);
     fclose(fp);
 }
 /*----------------------------------------------------------------------------
@@ -263,7 +268,8 @@ DOUBLE r2[NR_RE]={
 /* 4f_11: Ho2+ */   0.866               ,
 /* 4f_12: Er2+ */   0.824               ,
 /* 4f_13: Tm2+ */   0.785               ,
-/* 4f_14: Yb2+ */   0.750               
+/* 4f_14: Yb2+ */   0.750               ,
+/* 3d_2 : V3+  */   4                     /* just estimate !*/ 
 };
 /*----------------------------------------------------------------------------
                                       4
@@ -298,7 +304,8 @@ DOUBLE r4[NR_RE]={
 /* 4f_11: Ho2+ */   2.169               ,
 /* 4f_12: Er2+ */   1.979               ,
 /* 4f_13: Tm2+ */   1.819               ,
-/* 4f_14: Yb2+ */   1.677               
+/* 4f_14: Yb2+ */   1.677               ,
+/* 3d_2 : V3+  */   16                     /* just estimate !*/ 
 };
 /*----------------------------------------------------------------------------
                                       6
@@ -333,7 +340,8 @@ DOUBLE r6[NR_RE]={
 /* 4f_11: Ho2+ */  12.920               ,
 /* 4f_12: Er2+ */  11.450               ,
 /* 4f_13: Tm2+ */  10.240               ,
-/* 4f_14: Yb2+ */   9.232               
+/* 4f_14: Yb2+ */   9.232               ,
+/* 3d_2 : V3+  */  64                     /* just estimate !*/ 
 };
 /*----------------------------------------------------------------------------
                                   info_rn()
@@ -394,6 +402,8 @@ info_rn()          /* Liste der <r > n=2,4,6 ausgeben */
     s="Ho2+";a=r2[24];b=r4[24];c=r6[24];fprintf(fp,textfw,s,a,b,c);
     s="Er2+";a=r2[25];b=r4[25];c=r6[25];fprintf(fp,textfw,s,a,b,c);
     s="Tm2+";a=r2[26];b=r4[26];c=r6[26];fprintf(fp,textfw,s,a,b,c);
+    s="Yb2+";a=r2[27];b=r4[27];c=r6[27];fprintf(fp,textfw,s,a,b,c);
+    s="V3+ ";a=r2[28];b=r4[28];c=r6[28];fprintf(fp,textfw,s,a,b,c);
     fprintf(fp,"\n");
     fprintf(fp,"-----------------------------------------------------------\n");
     fprintf(fp,"|              2   o 2       4   o 4       6   o 6        |\n");
@@ -427,6 +437,8 @@ info_rn()          /* Liste der <r > n=2,4,6 ausgeben */
     s="Ho2+";a=r2[24]*a2;b=r4[24]*a4;c=r6[24]*a6;fprintf(fp,sextfw,s,a,b,c);
     s="Er2+";a=r2[25]*a2;b=r4[25]*a4;c=r6[25]*a6;fprintf(fp,sextfw,s,a,b,c);
     s="Tm2+";a=r2[26]*a2;b=r4[26]*a4;c=r6[26]*a6;fprintf(fp,sextfw,s,a,b,c);
+    s="Yb2+";a=r2[27]*a2;b=r4[27]*a4;c=r6[26]*a6;fprintf(fp,sextfw,s,a,b,c);
+    s="V3+ ";a=r2[28]*a2;b=r4[28]*a4;c=r6[26]*a6;fprintf(fp,sextfw,s,a,b,c);
     fprintf(fp,"\n");
     fprintf(fp,"-----------------------------------------------------------\n");
     fprintf(fp,"|                 2                 4                  6  |\n");
@@ -505,6 +517,8 @@ info_rn()          /* Liste der <r > n=2,4,6 ausgeben */
     s="Ho2+";a=r2[24]*a2*alpha_J[24];b=r4[24]*a4*beta_J[ 24];c=r6[24]*a6*gamma_J[24];fprintf(fp,sextfw ,s,a,b,c);
     s="Er2+";a=r2[25]*a2*alpha_J[25];b=r4[25]*a4*beta_J[ 25];c=r6[25]*a6*gamma_J[25];fprintf(fp,sextfw ,s,a,b,c);
     s="Tm2+";a=r2[26]*a2*alpha_J[26];b=r4[26]*a4*beta_J[ 26];c=r6[26]*a6*gamma_J[26];fprintf(fp,sextfw ,s,a,b,c);
+    s="YB2+";a=r2[27]*a2*alpha_J[27];b=r4[27]*a4*beta_J[ 27];c=r6[27]*a6*gamma_J[27];fprintf(fp,sextfw ,s,a,b,c);
+    s="V3+ ";a=r2[28]*a2*alpha_J[28];b=r4[28]*a4*beta_J[ 28];c=r6[28]*a6*gamma_J[28];fprintf(fp,sextfw ,s,a,b,c);
     fclose(fp);
 }
 /*------------------------------------------------------------------------------

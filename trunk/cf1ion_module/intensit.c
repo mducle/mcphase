@@ -107,7 +107,7 @@ INT output( setup,ewproblem,kristallfeld,modus )
     MATRIX    *aJtb2,*aJtb_2();
     VEKTOR    *ew,*v,*ev_ir,*ev_ks;
     ITERATION *iteration;
-    FILE      *fopen(),*fp;
+    FILE      *fopen(),*fp,*ewev;
     DOUBLE    temperatur,re,im,energie,gesamte_intensitaet;
     DOUBLE    gj,shift,j,mj,zu_summe,zustandssumme(),faktor;
     DOUBLE    Bx,By,Bz,anf_temp,end_temp,lambda;
@@ -122,9 +122,9 @@ INT output( setup,ewproblem,kristallfeld,modus )
     INT       dimj,zeile,spalte,i,k,r,s,q,ze,sp,first_line,ps_null;
     DOUBLE    theta;
  
- 
     if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
         fp=fopen(FILENAME(kristallfeld),"w");
+	
         write_titlecom(fp);
 t01="#-------------------------------------------------------------- \n";
 t02="#                          O U T P U T                         |\n";
@@ -443,6 +443,16 @@ fprintf(fp,t28);fprintf(fp,t29);
 }
  
 if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+    ewev=fopen("levels.cef","w"); /* output also  in uncommented format */
+    i=1;
+    for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
+       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
+       fprintf(ewev,"%i %g\n",i,
+       RV(ew,(INT)R(entartung,zeile,1))
+       *EINHEITIMP[einheitnr_in].fek*EINHEITIMP[einheitnr_out].fke,
+                  VALUE(gi,zeile));
+       ++i;  
+       }
     j = (dimj -1)/2.0;
     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
        for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
@@ -455,45 +465,56 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
                 im = is_null(im,1.0/1000);
  
                 mj = i - j - 1;
+                             fprintf(ewev,"%+g",re);
+                             if( im!=0 ){fprintf(ewev,"%+gi ",im);}
+                             else       {fprintf(ewev," ");}
+
+
                 if( re!=0.0 || im!=0.0 )
                    if( first_line ){
                        first_line = NEIN;
                        if( re==0.0 )
-                          fprintf(fp,t37,zeile,spalte,im,j,mj);
+                          {fprintf(fp,t37,zeile,spalte,im,j,mj);
+			  }
                        if( im==0.0 )
-                          fprintf(fp,t36,zeile,spalte,re,j,mj);
+                         {fprintf(fp,t36,zeile,spalte,re,j,mj);
+			  }
                        if( re!=0.0 && im!=0.0 ){
                           if( im>0 )
-                            fprintf(fp,t31p,zeile,spalte,re,im,j,mj);
+                            {fprintf(fp,t31p,zeile,spalte,re,im,j,mj);
+			    }
                           else
-                            fprintf(fp,t31m,zeile,spalte,re,ABSD(im),j,mj);
+                            {fprintf(fp,t31m,zeile,spalte,re,ABSD(im),j,mj);
+			    }
                        }
                    }else{
                            if( re==0.0 ){
                              if( im>0 )
-                                 fprintf(fp,t39p,im,j,mj);
+                                 {fprintf(fp,t39p,im,j,mj);}
                              else
-                                 fprintf(fp,t39m,ABSD(im),j,mj);
+                                 {fprintf(fp,t39m,ABSD(im),j,mj);}
                            }
                            if( im==0.0 ){
                               if( re>0 )
-                                  fprintf(fp,t38p,re,j,mj);
+                                  {fprintf(fp,t38p,re,j,mj);}
                               else
-                                  fprintf(fp,t38m,ABSD(re),j,mj);
+                                 {fprintf(fp,t38m,ABSD(re),j,mj);}
                            }
                            if( re!=0.0 && im!=0.0 ){
                               if( im>0 )
-                                 fprintf(fp,t32p,re,im,j,mj);
+                                 {fprintf(fp,t32p,re,im,j,mj);}
                               else if( re>0.0 )
-                                 fprintf(fp,t32m,re,ABSD(im),j,mj);
+                                 {fprintf(fp,t32m,re,ABSD(im),j,mj);}
                               else
-                                 fprintf(fp,t32mm,ABSD(re),ABSD(im),j,mj);
+                                 {fprintf(fp,t32mm,ABSD(re),ABSD(im),j,mj);}
                            }
                         }
              }
+	     fprintf(ewev,"\n");
              fprintf(fp,t43);
        }
     fprintf(fp,t44);
+    fclose(ewev); /*close short output file */  
 }
  
  
