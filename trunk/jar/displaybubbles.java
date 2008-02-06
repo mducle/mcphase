@@ -1,11 +1,15 @@
 import java.awt.*;
+import java.awt.image.*;
 import java.awt.event.*;
 import javachart.chart.*;
 import java.io.*;
 import java.lang.*;
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 public class displaybubbles extends Panel implements Runnable {
  public BubbleChart chart = new BubbleChart("displaybubbles");
+ Button bRot=new Button("save displaybubbles.jpg");                       //erstellt einen Button
  Thread myThread = null;
  static   double vals[]={0.,1.};
  static String[] file;
@@ -163,6 +167,30 @@ public class displaybubbles extends Panel implements Runnable {
  for (int i=0;i<file.length;++i)
       { chart.addDataset(file[i]+s.valueOf(i),vals,vals);
    }  
+    bRot.addActionListener(new ActionListener(){
+    public void actionPerformed(ActionEvent ed){
+    try{
+         FileOutputStream fos=new FileOutputStream("displaybubbles.jpg");
+         BufferedImage image= new BufferedImage(chart.getWidth(),chart.getHeight(), BufferedImage.TYPE_INT_RGB); 
+         Graphics g=image.getGraphics();
+         paint(g);
+         JPEGImageEncoder encoder= JPEGCodec.createJPEGEncoder(fos); 
+         encoder.encode(image);
+         fos.close();
+    }    catch (FileNotFoundException e)
+    {
+         System.out.println("File not found: " + e.getLocalizedMessage());
+         //EntSession.CWatch("Konfigurationsdatei cti_listener.ini nicht gefunden!");
+    }
+         //Sonstiger Dateifehler
+         catch (IOException e)
+    {
+         System.out.println("Dateifehler: " + e.getLocalizedMessage());
+         //EntSession.CWatch("Fehler beim Zugriff auf Datei cti_listener.ini!");
+    }
+
+      }
+                                                 });
  }
 
 
@@ -211,6 +239,8 @@ public class displaybubbles extends Panel implements Runnable {
 	    public void windowClosing(WindowEvent e) {System.exit(0);}
 	});
  myPanel.initChart();
+       myFrame.add(myPanel.bRot);                                          //fügt dem JFrame den Button hinzu
+       myFrame.pack();
  myFrame.add(myPanel);
  myFrame.setSize(300,300);
  myFrame.setVisible(true);

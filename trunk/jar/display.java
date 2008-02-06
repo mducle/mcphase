@@ -1,13 +1,17 @@
 import java.awt.*;
+import java.awt.image.*;
 import java.awt.event.*;
 import javachart.chart.*;
 import java.io.*;
 import java.lang.*;
 import java.util.StringTokenizer;
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 
 public class display extends Panel implements Runnable {
  public LineChart chart = new LineChart("display");
+ Button bRot=new Button("save display.jpg");                       //erstellt einen Button
  Thread myThread = null;
  static double vals[]={0.,1.};
  static String[] file;
@@ -138,17 +142,46 @@ public class display extends Panel implements Runnable {
 
        //  
         repaint();
+
+
+
  }}
+
 
  protected void initChart(){ 
  String s="";
  for (int i=0;i<file.length;++i)
    {   chart.addDataset(file[i]+s.valueOf(i),vals,vals);
    }  
+
+    bRot.addActionListener(new ActionListener(){
+    public void actionPerformed(ActionEvent ed){
+    try{
+         FileOutputStream fos=new FileOutputStream("display.jpg");
+         BufferedImage image= new BufferedImage(chart.getWidth(),chart.getHeight(), BufferedImage.TYPE_INT_RGB); 
+         Graphics g=image.getGraphics();
+         paint(g);
+         JPEGImageEncoder encoder= JPEGCodec.createJPEGEncoder(fos); 
+         encoder.encode(image);
+         fos.close();
+    }    catch (FileNotFoundException e)
+    {
+         System.out.println("File not found: " + e.getLocalizedMessage());
+         //EntSession.CWatch("Konfigurationsdatei cti_listener.ini nicht gefunden!");
+    }
+         //Sonstiger Dateifehler
+         catch (IOException e)
+    {
+         System.out.println("Dateifehler: " + e.getLocalizedMessage());
+         //EntSession.CWatch("Fehler beim Zugriff auf Datei cti_listener.ini!");
+    }
+
+      }
+                                                 });
  }
 
 
- 
+
  public void update(Graphics g){paint(g);}
 
  public void paint(Graphics g){try{chart.paint(this,g);}catch(ArrayIndexOutOfBoundsException e){;}}
@@ -184,16 +217,21 @@ public class display extends Panel implements Runnable {
  title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" ";
 }
 
- Frame myFrame = new Frame(title);
  display myPanel = new display();
-	myFrame.addWindowListener(new WindowAdapter() {
+         myPanel.initChart();
+ 
+
+ 
+ Frame myFrame = new Frame(title);
+       myFrame.addWindowListener(new WindowAdapter() {
 	    public void windowClosing(WindowEvent e) {System.exit(0);}
 	});
- myPanel.initChart();
- myFrame.add(myPanel);
- myFrame.setSize(300,300);
- myFrame.setVisible(true);
- myPanel.start();	
+       myFrame.add(myPanel.bRot);                                          //fügt dem JFrame den Button hinzu
+       myFrame.pack();
+       myFrame.add(myPanel);
+       myFrame.setSize(300,300);
+       myFrame.setVisible(true);
+       myPanel.start();	
 
 //	frame = new JFrame("FileChooserDemo");
 //	frame.addWindowListener(new WindowAdapter() {
@@ -204,8 +242,6 @@ public class display extends Panel implements Runnable {
 //	frame.setVisible(true);
 
 //	panel.updateState();
-
-
  }
 
  static private String FirstWord(String strSource)
@@ -248,5 +284,8 @@ public class display extends Panel implements Runnable {
 
     return(strSource);
  }
+
+
+
 
 }
