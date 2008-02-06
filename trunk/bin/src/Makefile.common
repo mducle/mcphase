@@ -26,12 +26,12 @@
 ###########################################################################
 
 # C compiler  ############################################################ 
-CC= gcc -pipe
+CC= gcc -pipe #-m32
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -mcpu=i486
 COPTS= -DDEBUG 
 
 # C++ compiler ##########################################################
-CCC= g++ 
+CCC= g++ #-m32
 #CCC= g++ 
 
 
@@ -40,11 +40,11 @@ CCC= g++
 
 #                       Optimizer or ANSI standard?
 ifdef DEBUG
-CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG  -fpermissive -march=pentium 
+CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG  -fpermissive #-march=pentium 
 #CFLAGS  =       -c -g  -DDEBUG -Wall $(INCLDIRS)
 else
 #CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
-CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr  -fpermissive -march=pentium 
+CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr  -fpermissive #-march=pentium 
 endif
 
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium

@@ -1,10 +1,10 @@
 # Makefile for all McPhase
 
-include src/Makefile.common
+include bin/src/Makefile.common
 
-cfdir = cf1ion_module
-mcpdir = src
-vecdir = src/vector
+cfdir = bin/cf1ion_module
+mcpdir = bin/src
+vecdir = bin/src/vector
 
 all: vector cfield mcphase
 

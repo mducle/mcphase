@@ -99,7 +99,7 @@ VOBS = ivector.o imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o cmatrix.o cma
 CFIELDOBJS= cfieldrout.o diahermx.o eingabe.o intensit.o komplex.o matrix.o stevens.o  \
 	theta.o ortho.o mb11a.o minima.o spline.o va05a.o
 
-LINKER= g++
+LINKER= $(CCC)
 #OBJS := $(patsubst %.c,%.o,$(wildcard ./src/*.c)) \
 #	$(patsubst %.cpp,%.o,$(wildcard ./src/*.cpp)) 
 #---------------------------------------------------------------------
@@ -112,88 +112,88 @@ all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins addj singleion charg
 # compile sources 
 
 martin.o:  martin.c martin.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 	
 paramete.o: paramete.cpp paramete.hpp martin.h vector.h 
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 par.o: par.cpp par.hpp jjjpar.hpp martin.h vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 jjjpar.o: jjjpar.cpp jjjpar.hpp martin.h vector.h myev.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 testspin.o: testspin.cpp testspin.hpp spincf.hpp martin.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 spincf.o: spincf.cpp spincf.hpp vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 chargedensity.o: chargedensity.cpp chargedensity.hpp vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 
 mfcf.o: mfcf.cpp mfcf.hpp vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 mdcf.o: mdcf.cpp mdcf.hpp vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 jq.o: jq.cpp jq.hpp vector.h
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 inipar.o: inipar.cpp inipar.hpp martin.h vector.h 
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 ionpars.o: ionpars.cpp ionpars.hpp
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 inimcdis.o: inimcdis.cpp inimcdis.hpp martin.h vector.h mfcf.hpp
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 physprop.o: physprop.cpp physprop.hpp spincf.hpp vector.h mfcf.hpp martin.h par.hpp
-	g++  $(CFLAGS)  $< 
+	$(CCC)  $(CFLAGS)  $< 
 
 qvectors.o: qvectors.cpp qvectors.hpp spincf.hpp martin.h vector.h inipar.hpp myev.c
-	g++  $(CFLAGS)  $<
+	$(CCC)  $(CFLAGS)  $<
 
 mcphas.o: mcphas.c $(INCL) htcalc.c 
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 mcdisp.o: mcdisp.c  myev.c intcalc.c jq.hpp mdcf.hpp $(INCL) 
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 cond.o: cond.c paramete.hpp martin.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 coq2jjj.o: coq2jjj.c paramete.hpp martin.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 jjj2j.o: jjj2j.c par.hpp jjj2j.h jjjpar.hpp vector.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 spins.o: spins.c spincf.hpp  martin.h vector.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 singleion.o: singleion.c par.hpp  martin.h vector.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h ionpars.hpp
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 pointc.o:  pointc.c  martin.h vector.h ionpars.hpp 
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 addj.o: addj.c par.hpp  martin.h vector.h
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 ifdef LINUX
 
 inimenu.o: inimenu.c
-	g++ $(CFLAGS) $<
+	$(CCC) $(CFLAGS) $<
 
 endif
 
@@ -201,43 +201,43 @@ endif
 # make  binaries (link .o files)
 
 cond: cond.o paramete.o $(VOBS) martin.o
-	$(LINKER)  -Wall  -o ../bin/cond $^ $(LFLAGS)
+	$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
 
 coq2jjj: coq2jjj.o paramete.o $(VOBS) martin.o
-	$(LINKER)  -Wall  -o ../bin/coq2jjj $^ $(LFLAGS)
+	$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
 
 jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) ionpars.o
-	$(LINKER)  -Wall  -o ../bin/jjj2j $^ $(LFLAGS)
+	$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
 
 mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS)  $(CFIELDOBJS)
-	$(LINKER)  -Wall  -o ../bin/mcdispit   $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS)
 
 mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) ionpars.o
-	$(LINKER)  -Wall  -o ../bin/mcphasit  $^ $(LFLAGS)
+	$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
 
 spins: spincf.o spins.o martin.o  $(VOBS)
-	$(LINKER)  -Wall  -o ../bin/spins $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
 singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o
-	$(LINKER)  -Wall  -o ../bin/singleion $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
 charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o
-	$(LINKER)  -Wall  -o ../bin/charges $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
 chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../bin/chrgplt $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
 pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o 
-	$(LINKER)  -Wall  -o ../bin/pointc $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
 
 addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) ionpars.o
-	$(LINKER)  -Wall  -o ../bin/addj $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
 
 
 ifdef LINUX
 
 inimenu: inimenu.o inipar.o martin.o $(VOBS)
-	$(LINKER)  -Wall  -o ../bin/inimenu $^  $(LFLAGS)
+	$(LINKER)  -Wall  -o ../inimenu $^  $(LFLAGS)
 
 endif
 
