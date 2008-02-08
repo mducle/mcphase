@@ -33,7 +33,7 @@ class par
 
   //jjjpar 
    
-par (char *filejjj);	//konstruktor
+par (const char *filejjj);	//konstruktor
    par (const par & pars);	// kopier-konstruktor
    
 ~par ();		//destruktor

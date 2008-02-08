@@ -99,7 +99,7 @@ VOBS = ivector.o imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o cmatrix.o cma
 CFIELDOBJS= cfieldrout.o diahermx.o eingabe.o intensit.o komplex.o matrix.o stevens.o  \
 	theta.o ortho.o mb11a.o minima.o spline.o va05a.o
 
-LINKER= $(CCC)
+LINKER= $(CCC) $(LDFLAGS)
 #OBJS := $(patsubst %.c,%.o,$(wildcard ./src/*.c)) \
 #	$(patsubst %.cpp,%.o,$(wildcard ./src/*.cpp)) 
 #---------------------------------------------------------------------
@@ -112,50 +112,50 @@ all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins addj singleion charg
 # compile sources 
 
 martin.o:  martin.c martin.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 	
 paramete.o: paramete.cpp paramete.hpp martin.h vector.h 
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 par.o: par.cpp par.hpp jjjpar.hpp martin.h vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 jjjpar.o: jjjpar.cpp jjjpar.hpp martin.h vector.h myev.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 testspin.o: testspin.cpp testspin.hpp spincf.hpp martin.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 spincf.o: spincf.cpp spincf.hpp vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 chargedensity.o: chargedensity.cpp chargedensity.hpp vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 
 mfcf.o: mfcf.cpp mfcf.hpp vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 mdcf.o: mdcf.cpp mdcf.hpp vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 jq.o: jq.cpp jq.hpp vector.h
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 inipar.o: inipar.cpp inipar.hpp martin.h vector.h 
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 ionpars.o: ionpars.cpp ionpars.hpp
 	$(CCC) $(CFLAGS) $<
 
 inimcdis.o: inimcdis.cpp inimcdis.hpp martin.h vector.h mfcf.hpp
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 physprop.o: physprop.cpp physprop.hpp spincf.hpp vector.h mfcf.hpp martin.h par.hpp
-	$(CCC)  $(CFLAGS)  $< 
+	$(CCC) $(CFLAGS) $< 
 
 qvectors.o: qvectors.cpp qvectors.hpp spincf.hpp martin.h vector.h inipar.hpp myev.c
-	$(CCC)  $(CFLAGS)  $<
+	$(CCC) $(CFLAGS) $<
 
 mcphas.o: mcphas.c $(INCL) htcalc.c 
 	$(CCC) $(CFLAGS) $<

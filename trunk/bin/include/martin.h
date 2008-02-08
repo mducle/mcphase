@@ -13,16 +13,16 @@
 // extract parameter 'parameter'  from string instr (z.B. "blabla dmin=0.2 blabla") -
 // output: var ... value of parameter
 // returns 1 on error and 0 if successful
-extern  int extract(char * instr,char * parameter,double & var);
+extern  int extract(char * instr,const char * parameter,double & var);
 
 // extract a variable named [parmeter] into var out of a string [instr]
-extern   int extract(char * instr,char * parameter,int & var);
-extern   int extract(char * instr,char * parameter,float & var);
-extern   int extract(char * instr,char * parameter,char * var, size_t n);
+extern   int extract(char * instr,const char * parameter,int & var);
+extern   int extract(char * instr,const char * parameter,float & var);
+extern   int extract(char * instr,const char * parameter,char * var, size_t n);
 
 
 // open file: like fopen but with error check 
-extern  FILE * fopen_errchk (char * filename, char * mode);
+extern  FILE * fopen_errchk (const char * filename, const char * mode);
 // get string instr: like fgets but with error check
 extern  char * fgets_errchk (char * instr,int size, FILE * file);
 
@@ -39,7 +39,7 @@ extern  int inputline (FILE * fin_coq, float *nn);
 // parname=3 23 542 23
 // returns:0 .... it is a comment line (starting with #) or parameter parname not found
 //         n .... number of numbers read
-extern int inputparline (char * parname, FILE * fin_coq, float *nn);
+extern int inputparline (const char * parname, FILE * fin_coq, float *nn);
 
 // return integer of floating number (like basic integer function)
 extern  float integer (float s);

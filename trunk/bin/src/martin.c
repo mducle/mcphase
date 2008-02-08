@@ -15,7 +15,7 @@
 // extract parameter 'parameter'  from string instr (z.B. "blabla dmin=0.2 blabla") -
 // output: var ... value of parameter
 // returns 1 on error and 0 if successful
-  int extract(char * instr,char * parameter,double & var)
+  int extract(char * instr,const char * parameter,double & var)
 { //const char delimiters[] = " =:\n";
   char *token;
   
@@ -36,12 +36,12 @@
 }
 // same for in and double 
 // extract a variable named [parmeter] into var out of a string [instr]
-  int extract(char * instr,char * parameter,int & var)
+  int extract(char * instr,const char * parameter,int & var)
       {double dd;if(0==extract(instr,parameter,dd)){var=(int)dd;return 0;}else{return 1;}}
-  int extract(char * instr,char * parameter,float & var)
+  int extract(char * instr,const char * parameter,float & var)
       {double dd;if(0==extract(instr,parameter,dd)){var=(float)dd;return 0;}else{return 1;}}
 //the same for a string ... maximal n characters are copied
-  int extract(char * instr,char * parameter,char * var,size_t n)
+  int extract(char * instr,const char * parameter,char * var,size_t n)
 { const char delimiters[] = " \n";
   char *token;
   
@@ -63,7 +63,7 @@
 
 
 //open a file: similar fopen but with error check 
-FILE * fopen_errchk (char * filename, char * mode)
+FILE * fopen_errchk (const char * filename, const char * mode)
 { FILE *file;
  
   errno = 0;
@@ -161,7 +161,7 @@ if(i>=(int)nn[0])
 // parname=3 23 542 23
 // returns:0 .... it is a comment line (starting with #) or parameter parname not found
 //         n .... number of numbers read
-int inputparline (char * parname, FILE * fin_coq, float *nn)
+int inputparline (const char * parname, FILE * fin_coq, float *nn)
 {
   char instr[maxnofcharinline];
   char delimiters[] = " \n";

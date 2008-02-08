@@ -29,4 +29,4 @@ clean:
 		bin/mcdispit bin/singleion bin/cfield \
 		bin/cond bin/jjj2j bin/mcphasit bin/spins \
                 bin/chrgplt bin/pointc \
-                cf1ion_module/cfield.so
+                bin/cf1ion_module/cfield.so

@@ -193,7 +193,7 @@ void inipar::print () // printout initial parameters to file
 }
 
 //constructor ... load initial parameters from file
-inipar::inipar (char * file)
+inipar::inipar (const char * file)
 { savfilename= new char [strlen(file)+1];
   strcpy(savfilename,file);
   xv=Vector(0,3);yv=Vector(0,3);zero=Vector(0,3);

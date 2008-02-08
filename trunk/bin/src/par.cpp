@@ -12,7 +12,7 @@
 
 
 //constructor 
-par::par (char *filejjj)
+par::par (const char *filejjj)
 { int i,j,n,l;
   FILE *fin_coq;
   char instr[MAXNOFCHARINLINE];

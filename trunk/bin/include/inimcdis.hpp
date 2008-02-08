@@ -36,7 +36,7 @@ class inimcdis
   mfcf mf;
   
    void inimcdis::errexit();
-  inimcdis (char * file,char * spinfile); //constructor
+  inimcdis (const char * file,const char * spinfile); //constructor
   inimcdis (const inimcdis & p);//kopier-konstruktor
  ~inimcdis ();//destruktor
 };

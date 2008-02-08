@@ -67,7 +67,7 @@ class inipar
    void print();
    void errexit();
    int load();
-  inipar (char * file); //constructor
+  inipar (const char * file); //constructor
   inipar (const inipar & p);//kopier-konstruktor
  ~inipar ();//destruktor
 };

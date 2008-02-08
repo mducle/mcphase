@@ -28,7 +28,7 @@ void testspincf::save();
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 
 // remember filename for later on save of the list (savfile)
-  testspincf (int nofconf, char * file,char * savfile, int nofatoms, int nofcomponents); //constructor
+  testspincf (int nofconf, const char * file, const char * savfile, int nofatoms, int nofcomponents); //constructor
   testspincf (const testspincf & p);//kopier-konstruktor
  ~testspincf ();//destruktor
 };

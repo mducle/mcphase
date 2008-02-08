@@ -25,13 +25,27 @@
 # Intel Pentium PC, use -m486 for 486 CPU or -mpentium for Pentium Systems
 ###########################################################################
 
+# Checks for operating system types and architecture
+ifeq ($(shell uname),Linux)
+LINOPTS =-fPIC
+ifeq ($(shell uname -m),x86_64)
+ARCHFLAG=-fPIC
+else
+ARCHFLAG=-march=pentium
+endif
+endif
+
 # C compiler  ############################################################ 
-CC= gcc -pipe #-m32
+CC= gcc -pipe $(ARCHFLAG)
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -mcpu=i486
 COPTS= -DDEBUG 
+ifdef PROFILE
+COPTS=-pg
+LDFLAGS=-pg 
+endif
 
 # C++ compiler ##########################################################
-CCC= g++ #-m32
+CCC= g++ $(ARCHFLAG)
 #CCC= g++ 
 
 
@@ -40,11 +54,15 @@ CCC= g++ #-m32
 
 #                       Optimizer or ANSI standard?
 ifdef DEBUG
-CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG  -fpermissive #-march=pentium 
+CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG -fpermissive 
 #CFLAGS  =       -c -g  -DDEBUG -Wall $(INCLDIRS)
 else
 #CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
-CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr  -fpermissive #-march=pentium 
+ifdef PROFILE
+CCOPTS  = -g -pg -fforce-addr -fpermissive
+else
+CCOPTS  = -g -fomit-frame-pointer -fforce-addr -fpermissive
+endif
 endif
 
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium

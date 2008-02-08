@@ -156,7 +156,7 @@ ionpars::ionpars(FILE * cf_file)
 static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
-  int i,j,l,dj=30; //30 ... maximum number of 2j+1
+  int i=0,j,l,dj=30; //30 ... maximum number of 2j+1
   char instr[MAXNOFCHARINLINE];
   char iontype[MAXNOFCHARINLINE];
   

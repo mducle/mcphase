@@ -38,10 +38,6 @@ include ../Makefile.common
 
 INCLUDE= ../../include
 
-ifeq ($(shell uname),Linux)
-LINOPTS = -fPIC
-endif
-
 .SUFFIXES: .cc .o
 
 .c.o: 

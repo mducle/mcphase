@@ -35,7 +35,7 @@ void inimcdis::errexit() // type info and error exit
 } 
 
 //constructor ... load initial parameters from file
-inimcdis::inimcdis (char * file,char * spinfile)
+inimcdis::inimcdis (const char * file,const char * spinfile)
 { float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
   char instr[MAXNOFCHARINLINE];
   int i,j;

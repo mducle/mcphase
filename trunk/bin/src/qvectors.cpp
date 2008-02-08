@@ -82,7 +82,7 @@ int qvectors::nc (int i) // returns period for i.th qvector
         v               verbose switch
 */
 qvectors::qvectors (inipar & ini,Matrix & rz,
-                    Vector & mmax, char * savfile, int na,int nmm,int v)
+                    Vector & mmax, const char * savfile, int na,int nmm,int v)
 { savfilename= new char [strlen(savfile)+1];
   strcpy(savfilename,savfile);
   verbose=v;

@@ -700,7 +700,7 @@ diffint=0;
 // main program
 int main (int argc, char **argv)
 {int i,do_Erefine=0,do_jqfile=0,do_verbose=0,maxlevels=100,do_createtrs=0,do_readtrs=0;
- char * spinfile="mcdisp.mf"; //default spin-configuration-input file
+ const char * spinfile="mcdisp.mf"; //default spin-configuration-input file
  double epsilon; //imaginary part of omega to avoid divergence
  double minE=-100000.0,maxE=+100000.0;
 // check command line and initialize parameters ini
