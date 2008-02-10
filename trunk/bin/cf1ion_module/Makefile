@@ -75,13 +75,13 @@ cfieldrout.o: cfieldrout.c
 
 
 cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) $(LDFLAGS)-Wall -o cfield.so $^ -shared
+	$(CCC) -Wall -o cfield.so $^ -shared $(LDFLAGS)
 
 cfield: cfield.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) $(LDFLAGS)-Wall -o ../cfield $^ 
+	$(CCC) -Wall -o ../cfield $^ $(LDFLAGS)
 
 module.o: module.c 
-	$(CCC) $(LDFLAGS)-Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) 
+	$(CCC) -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) $(LDFLAGS)
 
 clean:
 	rm -vf ./*.o ./*.info ./*.parameter ./*.output

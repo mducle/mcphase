@@ -36,8 +36,8 @@
 //----------------------------------------------------------------------------//
 
 // error messages for vector and matrix functions
-static char *NonSquareMatrix  = "non square double matrix";
-static char *NonConformMatrix = "non conformant matrix or vector";
+static const char *NonSquareMatrix  = "non square double matrix";
+static const char *NonConformMatrix = "non conformant matrix or vector";
 static double Zero = 0.0;
 
 //----------------------------------------------------------------------------//

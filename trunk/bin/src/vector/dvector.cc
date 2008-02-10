@@ -40,8 +40,8 @@ void sort (int n, double*, double *, double *);
 // error messages for vector and matrix functions
 //----------------------------------------------------------------------------//
 
-static char *NonConformVector = "non conformant matrix or vector";
-static char *AllocationFail   = "Vector: allocation failure";
+static const char *NonConformVector = "non conformant matrix or vector";
+static const char *AllocationFail   = "Vector: allocation failure";
 static double Zero = 0.0;
 
 //----------------------------------------------------------------------------//

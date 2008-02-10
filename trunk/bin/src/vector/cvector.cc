@@ -31,8 +31,8 @@
 // error messages for vector and matrix functions
 //----------------------------------------------------------------------------//
 
-static char *NonConformVector = "non conformant complex matrix or vector";
-static char *AllocationFail   = "ComplexVector: allocation failure";
+static const char *NonConformVector = "non conformant complex matrix or vector";
+static const char *AllocationFail   = "ComplexVector: allocation failure";
 static complex<double> Zero(0,0);
 
 

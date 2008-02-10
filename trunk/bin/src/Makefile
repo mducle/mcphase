@@ -58,7 +58,7 @@ XLIBS= -ldl
 #XLIBS=           -L/usr/X11/lib -lX11 -lXext -lc -lXpm -ldl
 #EZLIB=           -ljpeg -ldl
 endif
-LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm 
+LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
 
 
 #---------------------------------------------------------------------

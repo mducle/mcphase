@@ -34,7 +34,7 @@ void Decompose (Matrix& A, IntVector& Index, int &d)
     int i,imax = 0,j,k;
     double big,dum,sum,temp,*ap;
 
-    char *sing = "Decompose: matrix is singular";
+    static const char *sing = "Decompose: matrix is singular";
 
     // lowest and highest column index of the matrix
     int lo = A.Clo();

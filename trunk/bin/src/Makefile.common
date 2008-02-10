@@ -29,7 +29,7 @@
 ifeq ($(shell uname),Linux)
 LINOPTS =-fPIC
 ifeq ($(shell uname -m),x86_64)
-ARCHFLAG=-fPIC
+ARCHFLAG=-fPIC -fopenmp
 else
 ARCHFLAG=-march=pentium
 endif
@@ -37,6 +37,7 @@ endif
 
 # C compiler  ############################################################ 
 CC= gcc -pipe $(ARCHFLAG)
+#CC=icc
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -mcpu=i486
 COPTS= -DDEBUG 
 ifdef PROFILE
@@ -46,6 +47,7 @@ endif
 
 # C++ compiler ##########################################################
 CCC= g++ $(ARCHFLAG)
+#CCC=$(CC)
 #CCC= g++ 
 
 
@@ -63,6 +65,12 @@ CCOPTS  = -g -pg -fforce-addr -fpermissive
 else
 CCOPTS  = -g -fomit-frame-pointer -fforce-addr -fpermissive
 endif
+endif
+
+ifeq ($(CC),icc)
+CCOPTS= -openmp -fPIC# -D "__sync_fetch_and_add(ptr,addend)=_InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(ptr)), addend)"
+COPTS=$(CCOPTS)
+LDFLAGS= -openmp -lstdc++
 endif
 
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium

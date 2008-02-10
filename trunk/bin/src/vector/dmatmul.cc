@@ -35,7 +35,7 @@
 #define LT(A) (A.attribute == LowerTriangular)
 #define GM(A) (A.attribute == General)
 
-static char *NonSquareMatrix  = "non square double matrix";
+static const char *NonSquareMatrix  = "non square double matrix";
 
 inline void checksquare (const Matrix &M)
 {

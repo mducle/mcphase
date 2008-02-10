@@ -21,8 +21,8 @@
 // error messages for vector and matrix functions
 //----------------------------------------------------------------------------//
 
-static char *NonSquareMatrix  = "non square matrix";
-static char *NonConformMatrix = "non conformant matrix or vector";
+static const char *NonSquareMatrix  = "non square matrix";
+static const char *NonConformMatrix = "non conformant matrix or vector";
 static int Zero = 0;
 
 //----------------------------------------------------------------------------//

@@ -36,8 +36,8 @@
 // error messages for vector and matrix functions
 //----------------------------------------------------------------------------//
 
-static char *NonSquareMatrix  = "non square complex matrix";
-static char *NonConformMatrix = "non conformant complex matrix or vector";
+static const char *NonSquareMatrix  = "non square complex matrix";
+static const char *NonConformMatrix = "non conformant complex matrix or vector";
 
 const complex<double> Zero(0.0,0.0);
 

@@ -21,10 +21,10 @@ class testspincf
                             //configurations
 
 // add spinconfiguration sps to list
-int  testspincf::addspincf(spincf & sps);
+int  addspincf(spincf & sps);
 
 // print out table of all configurations
-void testspincf::save();
+void save();
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 
 // remember filename for later on save of the list (savfile)

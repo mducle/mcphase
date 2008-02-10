@@ -20,6 +20,7 @@ Includedateien holen
 #include <math.h>           /* damit sqrt in define_j.c definiert wird */
 #define pi (4.0*atan(1.0))  /* atan() braucht <math.h>                 */
 #include "types.c"          /* benutze Datentypen laden                */
+#include <string.h>
 /*----------------------------------------------------------------------------
 extern definierte Dateien
 -----------------------------------------------------------------------------*/

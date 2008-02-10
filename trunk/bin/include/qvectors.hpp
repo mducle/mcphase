@@ -56,7 +56,7 @@ class qvectors
     Vector & phi(int i); // phase
        
     //save table of all qvectors on file
-    void qvectors::save();
+    void save();
     
     //constructor - generate set of qvectors
     /* input 

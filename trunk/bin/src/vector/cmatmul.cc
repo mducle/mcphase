@@ -37,7 +37,7 @@
 
 const complex<double> Zero(0.0,0.0);
 
-static char *NonSquareMatrix  = "non square complex matrix";
+static const char *NonSquareMatrix  = "non square complex matrix";
 
 
 //inline void checksquare (const ComplexMatrix& M)

@@ -22,8 +22,8 @@
 // error messages for vector and matrix functions
 //----------------------------------------------------------------------------//
 
-static char *NonConformVector = "non conformant integer vector";
-static char *AllocationFail   = "integer vector allocation failure";
+static const char *NonConformVector = "non conformant integer vector";
+static const char *AllocationFail   = "integer vector allocation failure";
 static int Zero = 0;
 
 
