@@ -36,10 +36,10 @@ INCLUDE= ../../include
 .SUFFIXES: .cc .o
 
 .c.o: 
-	${CC} -c ${COPTS}  -I ${INCLUDE} $<
+	${CC} -c ${COPTS} -I ${INCLUDE} $<
 
 .cc.o: 
-	${CCC} -c ${CCOPTS}   -I ${INCLUDE} $<
+	${CCC} -c ${CCOPTS} -I ${INCLUDE} $<
 
 ###########################################################################
 ###########################################################################
@@ -75,13 +75,13 @@ cfieldrout.o: cfieldrout.c
 
 
 cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) -Wall -o cfield.so $^ -shared $(LDFLAGS)
+	$(CCC) $(CCOPTS) -Wall -o cfield.so $^ -shared $(LDFLAGS)
 
 cfield: cfield.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) -Wall -o ../cfield $^ $(LDFLAGS)
+	$(CCC) $(CCOPTS) -Wall -o ../cfield $^ $(LDFLAGS)
 
 module.o: module.c 
-	$(CCC) -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) $(LDFLAGS)
+	$(CCC) $(CCOPTS) -Wall -c module.c $(INCLDIRS) $(LDFLAGS)
 
 clean:
 	rm -vf ./*.o ./*.info ./*.parameter ./*.output

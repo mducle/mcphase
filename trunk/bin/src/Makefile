@@ -58,8 +58,11 @@ XLIBS= -ldl
 #XLIBS=           -L/usr/X11/lib -lX11 -lXext -lc -lXpm -ldl
 #EZLIB=           -ljpeg -ldl
 endif
+ifdef OMP
 LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
-
+else
+LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm
+endif
 
 #---------------------------------------------------------------------
 # RCS options

@@ -29,7 +29,12 @@
 ifeq ($(shell uname),Linux)
 LINOPTS =-fPIC
 ifeq ($(shell uname -m),x86_64)
-ARCHFLAG=-fPIC -fopenmp
+ifdef OMP
+ARCHFLAG=-fopenmp
+endif
+ifdef B32
+ARCHFLAG=-m32
+endif
 else
 ARCHFLAG=-march=pentium
 endif
@@ -40,8 +45,9 @@ CC= gcc -pipe $(ARCHFLAG)
 #CC=icc
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -mcpu=i486
 COPTS= -DDEBUG 
+COPTS=$(LINOPTS)
 ifdef PROFILE
-COPTS=-pg
+COPTS=-pg $(LINOPTS)
 LDFLAGS=-pg 
 endif
 
@@ -56,14 +62,14 @@ CCC= g++ $(ARCHFLAG)
 
 #                       Optimizer or ANSI standard?
 ifdef DEBUG
-CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG -fpermissive 
+CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG -fpermissive $(LINOPTS)
 #CFLAGS  =       -c -g  -DDEBUG -Wall $(INCLDIRS)
 else
 #CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
 ifdef PROFILE
-CCOPTS  = -g -pg -fforce-addr -fpermissive
+CCOPTS  = -g -pg -fforce-addr -fpermissive $(LINOPTS)
 else
-CCOPTS  = -g -fomit-frame-pointer -fforce-addr -fpermissive
+CCOPTS  = -g -fomit-frame-pointer -fforce-addr -fpermissive $(LINOPTS)
 endif
 endif
 
