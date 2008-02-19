@@ -33,7 +33,7 @@ ifdef OMP
 ARCHFLAG=-fopenmp
 endif
 ifdef B32
-ARCHFLAG=-m32
+ARCHFLAG=-m32 -march=pentium
 endif
 else
 ARCHFLAG=-march=pentium

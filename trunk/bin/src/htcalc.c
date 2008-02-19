@@ -595,7 +595,7 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  bigstep=fmodf(ini.bigstep-0.0001,1.0);
  if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
 
- float stepratio=smallstep;
+ float stepratio=1.0;
 
  float spinchange=0; // initial value of spinchange
  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
@@ -726,7 +726,7 @@ for (r=1;sta>ini.maxstamf;++r)
 
   bigstep=fmodf(ini.bigstep-0.0001,1.0);
   if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
-
+  if (r==1) {stepratio=smallstep;} //in first loop initialize stepratio to smallstep
   if (staold<sta&&stepratio==bigstep){stepratio=smallstep;slowct=10;}//if sta increases then set stepratio to bigstep
   if (staold>sta&&stepratio<bigstep){--slowct;if (slowct<=0)stepratio=bigstep;} // at least for 10 cycles
   staold=sta;
