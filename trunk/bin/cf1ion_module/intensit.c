@@ -63,9 +63,6 @@ extern EINHEIT   EINHEITIMP[];   /* definiert in CFIELD.C*/
 extern DOUBLE    alpha_J[];      /* definiert in THETA.C */
 extern DOUBLE     beta_J[];      /* definiert in THETA.C */
 extern DOUBLE    gamma_J[];      /* definiert in THETA.C */
-extern DOUBLE         r2[];      /* definiert in THETA.C */
-extern DOUBLE         r4[];      /* definiert in THETA.C */
-extern DOUBLE         r6[];      /* definiert in THETA.C */
 extern DOUBLE    omegan0n();      /* definiert in CFIELD.C*/
 extern DOUBLE    omegan1n();      /* definiert in CFIELD.C*/
 extern DOUBLE    omegan2n();      /* definiert in CFIELD.C*/
@@ -121,6 +118,8 @@ INT output( setup,ewproblem,kristallfeld,modus )
     INT       ionennr,elektronen4f,e_4f,anz_niveaus;
     INT       dimj,zeile,spalte,i,k,r,s,q,ze,sp,first_line,ps_null;
     DOUBLE    theta;
+    KOMPLEX *mat_Jx(),*mat_Jy(),*mat_Jz();
+    DOUBLE magnetm();
  
     if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
         fp=fopen(FILENAME(kristallfeld),"w");
@@ -277,12 +276,12 @@ t06="#                        CF     mag_ex    mag_mol              |\n";
 t07="#                                                              |\n";
 t08="#--------------------------------------------------------------|\n";
 t09="#                                                              |\n";
-t10="#  H        =   g  my   J  B                                   |\n";
+t10="#  H        = - g  my   J  B                                   |\n";
 t11="#   mag_ex       J   B  -  - ex                                |\n";
 t12="#                                                              |\n";
 t13="#--------------------------------------------------------------|\n";
 t14="#                                                              |\n";
-t15="#  H        =   2 ( g - 1 ) my   J  B                          |\n";
+t15="#  H        = - 2 ( g - 1 ) my   J  B                          |\n";
 t16="#   mag_mol          J        B  -  - mol                      |\n";
 t17="#                                                              |\n";
 t18="#--------------------------------------------------------------|\n";
@@ -341,7 +340,7 @@ t01="#-------------------------------------------------------------- \n";
 t02="# Energy Eigenvalues are in  %6s.          	            |\n";
 t03="#--------------------------------------------------------------|\n";
 t04="# Number of different energy levels       : %2d                 |\n";
-t05="# Energy shift  (Eshift)                  : %15.2f |\n";
+t05="# Energy shift  (Eshift)                  : %17.4f             |\n";
 t06="#                                                              |\n";
 t07="# Because of the calibration freedom the smallest energy       |\n";
 t08="# eigenvalue is shifted to zero. You can get the energy        |\n";
@@ -443,33 +442,16 @@ fprintf(fp,t28);fprintf(fp,t29);
 }
  
 if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
-    ewev=fopen("levels.cef","w"); /* output also  in uncommented format */
-    i=1;
-    for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
-       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
-       fprintf(ewev,"%i %g\n",i,
-       RV(ew,(INT)R(entartung,zeile,1))
-       *EINHEITIMP[einheitnr_in].fek*EINHEITIMP[einheitnr_out].fke,
-                  VALUE(gi,zeile));
-       ++i;  
-       }
     j = (dimj -1)/2.0;
     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
        for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
              v = MXSP( ev , (INT)R(entartung,zeile,spalte) );
- 
              first_line = JA;
              for( i=1 ; i<=VRDIM(v) ; ++i ){
                 re = RV(v,i);im = IV(v,i);
                 re = is_null(re,1.0/1000);
                 im = is_null(im,1.0/1000);
- 
                 mj = i - j - 1;
-                             fprintf(ewev,"%+g",re);
-                             if( im!=0 ){fprintf(ewev,"%+gi ",im);}
-                             else       {fprintf(ewev," ");}
-
-
                 if( re!=0.0 || im!=0.0 )
                    if( first_line ){
                        first_line = NEIN;
@@ -510,18 +492,69 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
                            }
                         }
              }
-	     fprintf(ewev,"\n");
              fprintf(fp,t43);
        }
+    ewev=fopen("levels.cef","w"); /* output also  in uncommented format with states to be used in mcdiff.in */
+    fprintf(ewev,"#J=value {atom-file}  <Ja>(=<Jy>) <Jb>(=<Jz>) <Jc>(=<Jx>)\n");
+    fprintf(ewev,"# Eigenvalues [%s] and eigenvectors [as columns]\n",EINHEITIMP[einheitnr_out].einheit); 
+    fprintf(ewev,"J= %4.1f {%s} %6.3f %6.3f %6.3f\n",j,INFILE(kristallfeld),
+  magnetm(mat_Jy,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur)/gj,
+  magnetm(mat_Jz,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur)/gj,
+  magnetm(mat_Jx,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur)/gj);
+
+    fprintf(ewev,"#Real Part\n");
+    for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
+       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
+       fprintf(ewev,"%g ",
+       RV(ew,(INT)R(entartung,zeile,1))
+       *EINHEITIMP[einheitnr_in].fek*EINHEITIMP[einheitnr_out].fke);
+       }
+    fprintf(ewev,"\n");
+    for( i=1 ; i<=VRDIM(v) ; ++i ){
+     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
+       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
+             v = MXSP( ev , (INT)R(entartung,zeile,spalte) );
+                re = RV(v,i);im = IV(v,i);
+                re = is_null(re,1.0/1000);
+                im = is_null(im,1.0/1000);
+                             fprintf(ewev,"%+6.5f ",re);
+                        }
+	     fprintf(ewev,"\n");
+             }
+    fprintf(ewev,"#Imaginary Part\n");
+    for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
+       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
+       fprintf(ewev,"0.00000 ");
+       }
+    fprintf(ewev,"\n");
+    for( i=1 ; i<=VRDIM(v) ; ++i ){
+     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
+       for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
+             v = MXSP( ev , (INT)R(entartung,zeile,spalte) );
+                re = RV(v,i);im = IV(v,i);
+                re = is_null(re,1.0/1000);
+                im = is_null(im,1.0/1000);
+                             fprintf(ewev,"%+6.5f ",im);
+             }
+	     fprintf(ewev,"\n");
+       }
+
+
     fprintf(fp,t44);
     fclose(ewev); /*close short output file */  
+    printf("Results levels.cef written ...\n");
 }
  
  
  
 if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
  
-fprintf(fp,"#\n#\n");
+fprintf(fp,"#\n");
+fprintf(fp,"#magnetic moment(mb/f.u.): mx=%6.3f my=%6.3f mz=%6.3f\n", 
+  magnetm(mat_Jx,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur),
+  magnetm(mat_Jy,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur),
+  magnetm(mat_Jz,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur));
+fprintf(fp,"#\n");
 t01="#-------------------------------------------------------------- \n";
 t02="#                                                              |\n";
 t03="#                  M A T R I X  E L E M E N T                  |\n";
@@ -728,7 +761,7 @@ fprintf(fp,t01);fprintf(fp,t02,einheit_out);fprintf(fp,t03);
          fprintf(fp,"%6.2f %6.2f\n",energie,R(aJtb2,ze,sp));
         }
     }
-  
+
     free_mx(aJtb2);
 
 
@@ -797,7 +830,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
   theta      = THETA(            kristallfeld);
   namethetafile = NAMETHETAFILE( kristallfeld);
   lesethetafile = LESETHETAFILE( kristallfeld);
- 
+
   if(NUMMERIERUNG(setup)==JA)  datensatz_nr = 0;
  
   macheps      = ewproblem->eps_machine;
@@ -828,7 +861,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
        VALUE(temp,i) = temp_step*(DOUBLE)(i-1)+anf_temp;
  
  
-  t01="%5d%5d %s\n";
+  t01="#%5d%5d %s\n";
   t02="%10.5e %10.5e\n";
  
   printf("calculating inverse Susceptibility in [100] ... \n");
@@ -844,7 +877,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
                  ++anz_daten;
   if( anz_daten != 0 ){
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
-    t03="Paramagnetische inverse Suszeptibilitaet in [100] (in mol/emu)";
+    t03="Paramagnetic inverse Susceptibility in [100] (in mol/emu)";
     fprintf(fp,t01,datensatz_nr,anz_daten,t03);
     for( i=1; i<= anz_temp; ++i )
        if( !is_equal(VALUE(x_s,i),0.0,macheps) && VALUE(x_s,i) >0.0 ){
@@ -939,6 +972,11 @@ if( anz_daten != 0 ){
  if( datensatz_nr<= 0 && anz_daten == 0)
      printf(t01,SUSZEPT);
  
+  raus_kommentar(fp,anf_temp,end_temp,lambda,theta,lesethetafile,
+                 namethetafile);
+ 
+  fclose(fp);
+
   free_(x_s);
   free_(y_s);
   free_(z_s);
@@ -948,10 +986,6 @@ if( anz_daten != 0 ){
      free_(ff);
   }
  
-  raus_kommentar(fp,anf_temp,end_temp,lambda,theta,lesethetafile,
-                 namethetafile);
- 
-  fclose(fp);
 }
 /*----------------------------------------------------------------------------
                                    raus_kpoly()
@@ -1238,7 +1272,8 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
                                 magnetm()
 -----------------------------------------------------------------------------*/
 /*          ---                                         */
-/* m  = -g  >    w   <ir|J |ir>     c=x,y,z             */
+/* (-) removed from this formula MR 28.9.08 */
+/* m  =  g  >    w   <ir|J |ir>     c=x,y,z             */
 /*  c     j ---   i       c                             */
 /*         i,r                                          */
 /*                                                         */
@@ -1317,8 +1352,8 @@ modus) with repeated calls leading to different entartungen */
     if( sumi!= 0.0 )
       printf("\n imaginary part m_c = %e is not zero!\n",sumi);
  
- 
-    return(-gj*sumr);
+ /* (-) removed from this formula MR 28.9.08 */
+    return(gj*sumr);
  
 }
 /*----------------------------------------------------------------------------
@@ -1348,11 +1383,12 @@ t03="#|    of the Rare Earth Ion at the Temperature temp and in      |\n";
 t04="#|    Field range : anf_feld until end_feld                     |\n";
 t05="# -------------------------------------------------------------- \n";
 t06="#|                                                              |\n";
-t07="#|  The magntic Moment  m     is                                |\n";
+t07="#|  The magnetic Moment  m    is                                |\n";
 t08="#|                       i                                      |\n";
 t09="#|                                                              |\n";
 t10="#|                  ----                                        |\n";
-t11="#|  m   =  - g  *   >     w   <n| J |n>     with   i = a,b,c    |\n";
+/* minus removed from this formula MR 24.9.08 */
+t11="#|  m   =    g  *   >     w   <n| J |n>     with   i = a,b,c    |\n";
 t12="#|   i        J     ----   n       i                            |\n";
 t13="#|                    n                                         |\n";
 t14="#|                                                              |\n";
@@ -1599,7 +1635,7 @@ t40="#|                                                              |\n";
 t41="#|  E       :   Crystal Field energy to the state |m> in Kelvin |\n";
 t42="#|   m                                                          |\n";
 t43="#|                                                              |\n";
-t44="#|  g       :   Lande factor                                     |\n";
+t44="#|  g       :   Lande factor                                    |\n";
 t45="#|   J                                                          |\n";
 t46="#|                                                              |\n";
 t47="#|  T       :   Temperature in Kelvin                           |\n";
@@ -1623,7 +1659,7 @@ t64="#|    for T > theta  is  1/X   proportional to  T + theta .     |\n";
 t65="#|                            i                                 |\n";
 t66="#|                                                              |\n";
 t67="# -------------------------------------------------------------- \n";
-t68="#|    The susceptabilityu of the polycrsyalline sample comes    |\n";
+t68="#|    The susceptability  of the polycrsyalline sample comes    |\n";
 t69="#|    from                                                      |\n";
 t70="#|                                                              |\n";
 t71="#|            1                                                 |\n";
@@ -1633,8 +1669,8 @@ t74="#|                                                              |\n";
 t75="#|                                                              |\n";
 t76="#|                                                              |\n";
 t77="# -------------------------------------------------------------- \n";
-t78="#| start temperature : %4.0f                                     |\n";
-t79="#| End temperature     : %4.0f                                     |\n";
+t78="#| start temperature : %4.0f                                    |\n";
+t79="#| end temperature     : %4.0f                                  |\n";
 t80="#|                                                              |\n";
 t81="#| lambda            : %7.2f mol/emu                          |\n";
 t82="#| theta             : %7.2f Kelvin                           |\n";
@@ -1732,6 +1768,7 @@ fprintf(fp,t81,lambda);
 if(lesethetafile == NEIN ) fprintf(fp,t82,theta);
 else                       fprintf(fp,t83,namethetafile);
 fprintf(fp,t84);
+
 }
 /*----------------------------------------------------------------------------
                                    printspalte()
@@ -1932,47 +1969,47 @@ t26="#    W     =   %16.6f                                |\n";
        case 'W' :
                   f2 = A0_BOHR * A0_BOHR;
                   if( zwei_j >= 2 ){
-                     v20r /= alpha_J[ e_4f ] * r2[ e_4f ];
-                     v21r /= alpha_J[ e_4f ] * r2[ e_4f ];
-                     v22r /= alpha_J[ e_4f ] * r2[ e_4f ];
+                     v20r /= alpha_J[ e_4f ] * r2(ionennr);
+                     v21r /= alpha_J[ e_4f ] * r2(ionennr);
+                     v22r /= alpha_J[ e_4f ] * r2(ionennr);
  
-                     v20i /= alpha_J[ e_4f ] * r2[ e_4f ];
-                     v21i /= alpha_J[ e_4f ] * r2[ e_4f ];
-                     v22i /= alpha_J[ e_4f ] * r2[ e_4f ];
+                     v20i /= alpha_J[ e_4f ] * r2(ionennr);
+                     v21i /= alpha_J[ e_4f ] * r2(ionennr);
+                     v22i /= alpha_J[ e_4f ] * r2(ionennr);
                   }
  
                   f4 = f2 * f2;
                   if( zwei_j >= 4 ){
-                     v40r /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v41r /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v42r /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v43r /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v44r /=  beta_J[ e_4f ] * r4[ e_4f ];
+                     v40r /=  beta_J[ e_4f ] * r4(ionennr);
+                     v41r /=  beta_J[ e_4f ] * r4(ionennr);
+                     v42r /=  beta_J[ e_4f ] * r4(ionennr);
+                     v43r /=  beta_J[ e_4f ] * r4(ionennr);
+                     v44r /=  beta_J[ e_4f ] * r4(ionennr);
  
-                     v40i /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v41i /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v42i /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v43i /=  beta_J[ e_4f ] * r4[ e_4f ];
-                     v44i /=  beta_J[ e_4f ] * r4[ e_4f ];
+                     v40i /=  beta_J[ e_4f ] * r4(ionennr);
+                     v41i /=  beta_J[ e_4f ] * r4(ionennr);
+                     v42i /=  beta_J[ e_4f ] * r4(ionennr);
+                     v43i /=  beta_J[ e_4f ] * r4(ionennr);
+                     v44i /=  beta_J[ e_4f ] * r4(ionennr);
                   }
  
                   f6 = f4 * f2;
                   if( zwei_j >= 6 ){
-                     v60r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v61r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v62r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v63r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v64r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v65r /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v66r /= gamma_J[ e_4f ] * r6[ e_4f ];
+                     v60r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v61r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v62r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v63r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v64r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v65r /= gamma_J[ e_4f ] * r6(ionennr);
+                     v66r /= gamma_J[ e_4f ] * r6(ionennr);
  
-                     v60i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v61i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v62i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v63i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v64i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v65i /= gamma_J[ e_4f ] * r6[ e_4f ];
-                     v66i /= gamma_J[ e_4f ] * r6[ e_4f ];
+                     v60i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v61i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v62i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v63i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v64i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v65i /= gamma_J[ e_4f ] * r6(ionennr);
+                     v66i /= gamma_J[ e_4f ] * r6(ionennr);
                   }
  
        case BKQ :

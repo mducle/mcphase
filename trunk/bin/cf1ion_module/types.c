@@ -58,7 +58,7 @@ extern FREE free();
 /*****************************************************************************/
 /*   Version          ********************************************************/
 /*****************************************************************************/
-#define VERSION 5.3  /********************************************************/
+#define VERSION 5.4  /********************************************************/
 /*****************************************************************************/
  
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -545,12 +545,17 @@ typedef struct ionen{              /* Ionen implementieren */
     INT     dimj;                  /* dimj = 2*J+1 */
     INT     f4;                    /* F(4) fuer x,W Parameter */
     INT     f6;                    /* F(6) fuer x,W Parameter */
- 
+    DOUBLE  r2;                    /* <r2> */
+    DOUBLE  r4;                    /* <r4> */
+    DOUBLE  r6;                    /* <r6> */
 }IONEN;
  
 #define E4f(implement_ionnr)   IONENIMP[implement_ionnr].elektronen_in_vier_f
 #define F4( implement_ionnr)   IONENIMP[implement_ionnr].f4
 #define F6( implement_ionnr)   IONENIMP[implement_ionnr].f6
+#define r2( implement_ionnr)   IONENIMP[implement_ionnr].r2
+#define r4( implement_ionnr)   IONENIMP[implement_ionnr].r4
+#define r6( implement_ionnr)   IONENIMP[implement_ionnr].r6
 #define e4f(umgebung)          E4f( IONENNR(umgebung) ) /* Elektronen in 4f  */
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
  
@@ -1072,9 +1077,11 @@ typedef struct _kristallfeld{
     CHAR      parameterart; /* eingabeparameterart merken */
     CHAR     *filename;     /* filename des outputs */
     CHAR     *namethetafile;/* filename von theta(T)*/
+    CHAR     *infile;       /* filename des intputfiles */
     INT      lesethetafile;
 }KRISTALLFELD;              /* nach Tabelle  -i s             */
  
+#define INFILE(           s)  ((s)-> infile  )
 #define FILENAME(           s)  ((s)-> filename  )
 #define EFVERSION(          s)  ((s)-> efversion)
 #define IS_SUSZEPT(         s)  ((s)-> is_suszept)

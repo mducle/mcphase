@@ -20,15 +20,11 @@ Includedateien holen
 #include <math.h>           /* damit sqrt in define_j.c definiert wird */
 #define pi (4.0*atan(1.0))  /* atan() braucht <math.h>                 */
 #include "types.c"          /* benutze Datentypen laden                */
-#include <string.h>
 /*----------------------------------------------------------------------------
 extern definierte Dateien
 -----------------------------------------------------------------------------*/
  
  
-extern DOUBLE r2[];      /* definiert in theta.c */
-extern DOUBLE r4[];      /* definiert in theta.c */
-extern DOUBLE r6[];      /* definiert in theta.c */
 extern DOUBLE alpha_J[]; /* definiert in theta.c */
 extern DOUBLE beta_J[];  /* definiert in theta.c */
 extern DOUBLE gamma_J[]; /* definiert in theta.c */
@@ -433,8 +429,8 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     tabelle = TABELLE_ALLOC(1);
     t01 = "===============================================================\n";
     t02 = "|                                                             |\n";
-    t03 = "|Crystal Field paramter  L    in  %6s    in which              |\n";
-    t04 = "|                         kq                                  |\n";
+    t03 = "|Crystal Field paramter L    in  %6s    in which              |\n";
+    t04 = "|                        kq                                   |\n";
     t05 = "|                                                             |\n";
     t06 = "|        ---            ---                                   |\n";
     t07 = "| H   =  >   L   Z   +  >    L   Z   +   L     Z              |\n";
@@ -458,7 +454,7 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t26 = "|         |   k,-|q|         k,|q|                            |\n";
     t27 = "|          \\                                 .                |\n";
     t28 = "|                                                             |\n";
-    t29 = "|  The L-Parameter are therefore real.                          |\n";
+    t29 = "|  The L-Parameter are therefore real.                        |\n";
     t30 = "|                                                             |\n";
     t31 = "|  The Tensor operator  Z   , Which are the quantised         |\n";
     t32 = "|                         kq                                  |\n";
@@ -477,18 +473,18 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t45 = "|          \\                                                  |\n";
     t46 = "|                                                             |\n";
     t47 = "|                                        4*pi                 |\n";
-    t48 = "|  with the Tensor operators  C   = sqrt(------) Y   .         |\n";
+    t48 = "|  with the Tensor operators  C   = sqrt(------) Y   .        |\n";
     t49 = "|                             kq         2k+1    kq           |\n";
     t50 = "|                                                             |\n";
-    t52 = "|  Y   =  quantised spherical harmonics                 |\n";
+    t52 = "|  Y   =  quantised spherical harmonics                       |\n";
     t53 = "|   kq                                                        |\n";
     t54 = "|                                                             |\n";
     t11 = "===============================================================\n";
     TSS = "| Energy eigenvalues are in  : %6s                            |\n";
-    T15 = "| Temperature of the sample   : %7.2f Kelvin                    |\n";
-    T12 = "| Ion                        : %25s                            |\n";
-    T13 = "| Symmetry         : %s   Symmetry number : %1d      |\n";
-    T14 = "| Magnetic field             : %s                              |\n";
+    T15 = "| Temperature of the sample  : %7.2f Kelvin                   |\n";
+    T12 = "| Ion                        : %25s                           |\n";
+    T13 = "| Symmetry  : %s            Symmetry number: %1d              |\n";
+    T14 = "| Magnetic field             : %s                             |\n";
     T11 = "===============================================================\n";
     t11 = "===============================================================\n";
     T20n= "| L 2, 0:                                                     |\n";
@@ -2382,45 +2378,45 @@ ITERATION *read_Wkq(name,vsymmetrienr_vor)  /* Wkq aus file name lesen */
      e_4f = E4f( ionennr );
  
      f2= A0_BOHR*A0_BOHR;
-     RT( V20(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ]*f2;
-     RT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ]*f2;
-     RT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ]*f2;
+     RT( V20(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr)*f2;
+     RT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr)*f2;
+     RT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr)*f2;
  
      f4= f2 * f2;
-     RT( V40(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     RT( V41(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     RT( V42(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     RT( V43(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     RT( V44(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
+     RT( V40(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     RT( V41(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     RT( V42(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     RT( V43(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     RT( V44(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
  
      f6= f4 * f2;
-     RT( V60(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     RT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
+     RT( V60(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     RT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
  
  
  
      f2= A0_BOHR*A0_BOHR;
-     IT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ]*f2;
-     IT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ]*f2;
+     IT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr)*f2;
+     IT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr)*f2;
  
      f4= f2 * f2;
-     IT( V41(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     IT( V42(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     IT( V43(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
-     IT( V44(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ]*f4;
+     IT( V41(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     IT( V42(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     IT( V43(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
+     IT( V44(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr)*f4;
  
      f6= f4 * f2;
-     IT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     IT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     IT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     IT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     IT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
-     IT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ]*f6;
+     IT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     IT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     IT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     IT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     IT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
+     IT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr)*f6;
  
  
  
@@ -2637,25 +2633,25 @@ ITERATION *read_Akq(name,vsymmetrienr_vor)  /* Akq aus file name lesen */
      e_4f = E4f( ionennr );
  
      f2= A0_BOHR*A0_BOHR;
-     RT( V20(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ];
-     RT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ];
-     RT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2[ e_4f ];
+     RT( V20(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr);
+     RT( V21(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr);
+     RT( V22(iteration) ) *=  alpha_J[ e_4f ] * r2(ionennr);
  
      f4= f2 * f2;
-     RT( V40(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ];
-     RT( V41(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ];
-     RT( V42(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ];
-     RT( V43(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ];
-     RT( V44(iteration) ) *=   beta_J[ e_4f ] * r4[ e_4f ];
+     RT( V40(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr);
+     RT( V41(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr);
+     RT( V42(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr);
+     RT( V43(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr);
+     RT( V44(iteration) ) *=   beta_J[ e_4f ] * r4(ionennr);
  
      f6= f4 * f2;
-     RT( V60(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
-     RT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6[ e_4f ];
+     RT( V60(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V61(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V62(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V63(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V64(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V65(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
+     RT( V66(iteration) ) *=  gamma_J[ e_4f ] * r6(ionennr);
  
  
     if( symmetrienr==8 ){

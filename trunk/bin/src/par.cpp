@@ -113,8 +113,8 @@ par::par(const par & p)
 //destruktor
 par::~par ()
 {  int i;
-  //for(i=1;i<=3+nofatoms;++i)   // rems is a string - looping over its element and deleting individual elements frees the memory
-  //{delete []rems[i];}          //   used by the string many times - causing newer versions of glibc/gcc to produce memory error
+  for(i=1;i<=3+nofatoms;++i)
+  {delete []rems[i];}
   for(i=1;i<=nofatoms;++i)  
   {delete jjj[i];}
    delete []jjj;

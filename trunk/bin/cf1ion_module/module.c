@@ -18,7 +18,7 @@
 extern "C" void cfield0_mcphas(double ** hcfr,double ** hcfi, double ** Jxr,double ** Jxi,  double ** Jyr, double ** Jyi, double ** Jzr, double ** Jzi,
                               double ** mo20r, double ** mo20i,
                               double ** mo22r, double ** mo22i,
-                              double ** mo20r, double ** mo40i,
+                              double ** mo40r, double ** mo40i,
                               double ** mo42r, double ** mo42i,
                               double ** mo44r, double ** mo44i,
                               double ** mo60r, double ** mo60i,

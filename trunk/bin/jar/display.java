@@ -95,8 +95,8 @@ public class display extends Panel implements Runnable {
        if (cx>0) {sx=sx.substring(0,cx);}
        if (cy>0) {sy=sy.substring(0,cy);}
 
-       sx=sx.replace("D","E");
-       sy=sy.replace("D","E");
+       sx=sx.replace('D','E');
+       sy=sy.replace('D','E');
 
       Double p = new Double(0.0);
 //      System.out.println(sx+" "+sy);

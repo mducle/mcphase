@@ -103,14 +103,11 @@ extern ITERATION *read_Wkq();        /* definiert in EINGABE.C*/
 extern ITERATION *read_xW();         /* definiert in EINGABE.C*/
 extern UMGEBUNG  *read_nn();         /* definiert in EINGABE.C*/
  
-extern DOUBLE r2[];      /* definiert in theta.c */
-extern DOUBLE r4[];      /* definiert in theta.c */
-extern DOUBLE r6[];      /* definiert in theta.c */
 extern DOUBLE alpha_J[]; /* definiert in theta.c */
 extern DOUBLE beta_J[];  /* definiert in theta.c */
 extern DOUBLE gamma_J[]; /* definiert in theta.c */
  
- 
+extern IONEN IONENIMP[]; /* definiert in theta.c*/ 
  
 /*----------------------------------------------------------------------------
                                 Programmname
@@ -125,39 +122,8 @@ _CALFUN CF;  /*globale struktur fuer routine CALFUN, */
              /* welche von der fortranroutine VA05A   */
              /* aufgerufen wird                       */
  
-IONEN IONENIMP[]={
-/*                                                       */
-/*            ion    e_in_4f  g     2J+1  F(4)   F(6)    */
-/*                             J                         */
-/*                                                       */
-/*  0 */   { "Ce3+"  ,  1 , 6.0/7  ,  6  , 60 ,     1 },
-/*  1 */   { "Pr3+"  ,  2 , 4.0/5  ,  9  , 60 ,  1260 },
-/*  2 */   { "Nd3+"  ,  3 , 8.0/11 , 10  , 60 ,  2520 },
-/*  3 */   { "Pm3+"  ,  4 , 3.0/5  ,  9  , 60 ,  1260 },
-/*  4 */   { "Sm3+"  ,  5 , 2.0/7  ,  6  , 60 ,     1 },
-/*  5 */   { "Eu3+"  ,  6 , 0.0    ,  1  ,  1 ,     1 },
-/*  6 */   { "Gd3+"  ,  7 , 2.0    ,  8  , 60 ,  1260 },
-/*  7 */   { "Tb3+"  ,  8 , 3.0/2  , 13  , 60 ,  7560 },
-/*  8 */   { "Dy3+"  ,  9 , 4.0/3  , 16  , 60 , 13860 },
-/*  9 */   { "Ho3+"  , 10 , 5.0/4  , 17  , 60 , 13860 },
-/* 10 */   { "Er3+"  , 11 , 6.0/5  , 16  , 60 , 13860 },
-/* 11 */   { "Tm3+"  , 12 , 7.0/6  , 13  , 60 ,  7560 },
-/* 12 */   { "Yb3+"  , 13 , 8.0/7  ,  8  , 60 ,  1260 },
-/* 13 */   { "U4+"   ,  2 , 4.0/5  ,  9  , 60 ,  1260 },
-/* 14 */   { "U3+"   ,  3 , 8.0/11 , 10  , 60 ,  2520 },
-/* 15 */   { "Np4+"  ,  3 , 8.0/11 , 10  , 60 ,  2520 },
-/* 16 */   { "Nd2+"  ,  4 , 3.0/5  ,  9  , 60 ,  1260 },
-/* 17 */   { "Sm2+"  ,  6 , 0.0    ,  1  ,  1 ,     1 },
-/* 18 */   { "Eu2+"  ,  7 , 2.0    ,  8  , 60 ,  1260 },
-/* 19 */   { "Gd2+"  ,  8 , 3.0/2  , 13  , 60 ,  7560 },
-/* 20 */   { "Tb2+"  ,  9 , 4.0/3  , 16  , 60 , 13860 },
-/* 21 */   { "Dy2+"  , 10 , 5.0/4  , 17  , 60 , 13860 },
-/* 22 */   { "Ho2+"  , 11 , 6.0/5  , 16  , 60 , 13860 },
-/* 23 */   { "Er2+"  , 12 , 7.0/6  , 13  , 60 ,  7560 },
-/* 24 */   { "Tm2+"  , 13 , 8.0/7  ,  8  , 60 ,  1260 },
-/* 25 */   { "V3+"   , 2  , 2.0    ,  3  , 0  ,     0 }  /*unclear what is F(4) and F(6) */
-};
-#define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )
+/*define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )*/
+#define ANZ_IONEN              32
  
 SYMMETRIE SYMLISTE[]={
 /* 0 */   {  0 , "triklin   " } ,
@@ -1312,6 +1278,8 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                           }
                                           lambda = a_tof(argv[5+i],0,5);
                                           theta  = 0.0;
+/*inserted 24.9.08 MR */
+                                          lesetheta = NEIN;
                                       }
  
                                 if( c=='m' || c=='M' ||c=='k'||c=='K' ){
@@ -1659,8 +1627,8 @@ EWPROBLEM *solve(setup,ewproblem,overwrite,kristallfeld,modus)
                   }
                   break;
     }
- if( overwrite != NOSPACE )
-    printf("diagonalising the hamiltonian...\n");
+ /*if( overwrite != NOSPACE )
+    printf("diagonalising the hamiltonian...\n");*/
  
  if( overwrite == NOSPACE ){
     return(  diagonalisiere( ewproblem,HAMILTONIAN(iteration),NOSPACE,setup ));
@@ -3035,6 +3003,7 @@ KRISTALLFELD *init_iteration(filename,symmetrienr,modus) /* [1] */
    }
  
    kristallfeld              = KRISTALLFELD(1);
+   INFILE(kristallfeld)=filename;
    ITERATION(kristallfeld)   = iteration;
    SYMMETRIENR(kristallfeld) = SYMMETRIENR( iteration );
    return( kristallfeld );
@@ -3072,8 +3041,8 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
-                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)
-                                IT(V21(iter)) = 0.0;
+//                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // strange rule  - removed because it gave errors 
+//                                IT(V21(iter)) = 0.0;                     // upon rotating coordinate systems
                  }
                  break;
  
@@ -3258,9 +3227,9 @@ ITERATION *init_umgebung(name,umgebung )  /* Umgebungsionen fuer Iteration    */
          phi_R   = X2(umgebung,i);
  
          Q_R( iteration,i) = Q(umgebung,i);
-         R2_3(iteration,i) = alpha_J[_e4f] * r2[_e4f] / pow_( R , 3);
-         R4_5(iteration,i) = beta_J[ _e4f] * r4[_e4f] / pow_( R , 5);
-         R6_7(iteration,i) = gamma_J[_e4f] * r6[_e4f] / pow_( R , 7);
+         R2_3(iteration,i) = alpha_J[_e4f] * r2(IONENNR(umgebung)) / pow_( R , 3);
+         R4_5(iteration,i) = beta_J[ _e4f] * r4(IONENNR(umgebung)) / pow_( R , 5);
+         R6_7(iteration,i) = gamma_J[_e4f] * r6(IONENNR(umgebung)) / pow_( R , 7);
  
          R2_3(iteration,i) *= _E0programm*1000; /* Energieeinheit */
          R4_5(iteration,i) *= _E0programm*1000; /* meV            */
@@ -3460,8 +3429,9 @@ MATRIX *calc_Bmag( dimj,gj,myB,Bx,By,Bz ) /*magnetischen Hamiltonian */
          for( m=dimj ; m>=1 ; --m){
               jm=JM(mj)*D(nj,mj-1);
               jp=JP(mj)*D(nj,mj+1);
-              R(bmag,n,m) = gj*myB*(  0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
-              I(bmag,n,m) = gj*myB*   0.5*By*( jm-jp );
+/* sign changed 24.9.08 because zeeman term has negative sign */
+              R(bmag,n,m) = -gj*myB*(  0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
+              I(bmag,n,m) = -gj*myB*   0.5*By*( jm-jp );
     }
     return( bmag );
 }
@@ -3482,8 +3452,9 @@ MATRIX *calcBmol( dimj,bmag,gjs,myB,Bx,By,Bz )   /* gjs = 2(gJ-1) */
          for( m=dimj ; m>=1 ; --m){
               jm=JM(mj)*D(nj,mj-1);
               jp=JP(mj)*D(nj,mj+1);
-              R(bmag,n,m) += gjs*myB*(  0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
-              I(bmag,n,m) += gjs*myB*   0.5*By*( jm-jp );
+/* sign changed 24.9.08 because zeeman term has negative sign */
+              R(bmag,n,m) += -gjs*myB*(  0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
+              I(bmag,n,m) += -gjs*myB*   0.5*By*( jm-jp );
     }
     return( bmag );
 }
@@ -3506,16 +3477,18 @@ MATRIX *calc_iBmag( bmag,gj,myB,Bx,By,Bz,Bxmol,Bymol,Bzmol )
          for( m=dimj ; m>=1 ; --m){
               jm=JM(mj)*D(nj,mj-1);
               jp=JP(mj)*D(nj,mj+1);
-              R(bmag,n,m) = 2.0*(gj-1.0)*myB*(0.5*Bxmol*( jm+jp )
+ /* sign changed 24.9.08 because zeeman term has negative sign */
+             R(bmag,n,m) = -2.0*(gj-1.0)*myB*(0.5*Bxmol*( jm+jp )
                             + mj*Bzmol*D(nj,mj)  );
-              I(bmag,n,m) = 2.0*(gj-1.0)*myB* 0.5*Bymol*( jm-jp );
+              I(bmag,n,m) = -2.0*(gj-1.0)*myB* 0.5*Bymol*( jm-jp );
          }
     for( n=dimj ; n>=1 ; --n)
          for( m=dimj ; m>=1 ; --m){
               jm=JM(mj)*D(nj,mj-1);
               jp=JP(mj)*D(nj,mj+1);
-              R(bmag,n,m) += gj*myB*(0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
-              I(bmag,n,m) += gj*myB* 0.5*By*( jm-jp );
+ /* sign changed 24.9.08 because zeeman term has negative sign */
+             R(bmag,n,m) += -gj*myB*(0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  );
+              I(bmag,n,m) += -gj*myB* 0.5*By*( jm-jp );
          }
     return( bmag );
 }

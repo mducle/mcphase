@@ -243,7 +243,7 @@ SETUP *read_setup(fp,setup)  /* setupfile lesen    */
    line=fgets( string , buffer_size , fp ); /*                     */
    line=fgets( string , buffer_size , fp ); /*                     */
    KOMMASTELLE(setup) = a_toi(line,26,41);
-   if(KOMMASTELLE(setup) < 3) KOMMASTELLE(setup) = 3; /* da EW auf x.xx */
+   if(KOMMASTELLE(setup) < 1) KOMMASTELLE(setup) = 1;  /* da EW auf x.xx */
  
    while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 4.==== */
    while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 5.==== */

@@ -14,7 +14,12 @@
 
 all : pack 
 
-compile : IniConfigurator.java IniFile.java IniItem.java IniKey.java display.java
+OBJS = IniConfigurator.java IniFile.java IniItem.java IniKey.java display.java \
+       displaybubbles.java displaycontour.java displaydsigma.java displaymag.java \
+       displaytext.java FileListener.java FileMonitor.java searchspacestatus.java \
+       simannfitstatus.java Viewer.java
+
+compile : $(OBJS)
 	javac ./*.java
 
 pack    : compile
