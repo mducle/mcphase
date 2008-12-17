@@ -65,7 +65,11 @@ class inipar
  
   // printout initial parameters to file   
    void print();
+   void print (const char * file);
+
+  // exit with error message
    void errexit();
+  //load parameters from file
    int load();
   inipar (const char * file); //constructor
   inipar (const inipar & p);//kopier-konstruktor

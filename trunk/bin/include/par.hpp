@@ -41,8 +41,10 @@ par (const char *filejjj);	//konstruktor
 int newatom(jjjpar * p); //creates new atom from an existing and returns its index
 void add(par & b); // add exchange parameters
 void save(FILE * fout); // save lattice, atoms and exchange parameters to file
+void save(const char * filename); // save lattice, atoms and exchange parameters to file
 void savelattice(FILE *fout);// save lattice to file
 void saveatoms(FILE *fout);// save atom positions and properties  to file
+void increase_nofcomponents (int n); //increases the number of components in the interaction vector
 };
 
 #endif

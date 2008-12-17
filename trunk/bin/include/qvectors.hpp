@@ -69,12 +69,12 @@ class qvectors
 	                and qvectors::save() puts a large set of information into mcphas.qom (including
 			magnetic structures corresponding to qvector)
     */
-    qvectors (inipar & ini,Matrix & rz,
-              Vector & mmax, const char * filename,int nofatoms,int nofcomponents,int v);	//konstruktor
+    qvectors (inipar & ini,Matrix & rz,
+              Vector & mmax,const char * filename,int nofatoms,int nofcomponents,int v);	//konstruktor
 
     qvectors (const qvectors & qs);	// kopier-konstruktor
 
-   ~qvectors ();		//destruktor
+    ~qvectors ();		//destruktor
 
 };
 

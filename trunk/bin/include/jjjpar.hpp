@@ -32,7 +32,6 @@ class jjjpar
 
   ionpars * iops;
   int intern_mcalc;
-  char * cffilename;
   Vector ABC;         
   Vector magFF; // magnetic formfactor numbers
   double DWF; // DebeyWallerFactor 
@@ -40,7 +39,8 @@ class jjjpar
 
   public:
 
-  Vector xyz,J;
+  char * cffilename;
+  Vector xyz,Jret;
   int paranz;
   int nofcomponents; // number of moments (components of moment vector)
   double gJ;
@@ -52,6 +52,11 @@ class jjjpar
 // subroutine to calculate momentum <J> from effective field gjmbH [meV]
    Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U);
    Vector &  tetan(); //returns stevens parameters if possible
+   double J(); // returns total angular momentum if possible
+   
+   // returns eigenvalues and eigenstates matrix parameters of ion
+   ComplexMatrix & eigenstates (Vector & gjmbheff);
+
    int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta);
    int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
 
@@ -60,6 +65,7 @@ class jjjpar
    jjjpar (const jjjpar & jjjpars);	// kopier-konstruktor
    
 ~jjjpar ();		//destruktor
+   void increase_nofcomponents(int n); // increase nofcomponents by n
    void add(jjjpar & b, Vector & abc); // add parameters b to this
    void addpars (int number, jjjpar & addjjj); // enlarge the set of parameters by
                                                         // inserting a new exchange parameters addjjj

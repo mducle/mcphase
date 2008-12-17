@@ -53,9 +53,9 @@ spinfromq (int n1,int n2, int n3,Vector & qvector,
          Vector & nettom,Vector & momentq0, Vector & phi);
 
     void print(FILE * fout);
-    void printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z);//print list of atoms + positions + moments
+    void printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames);//print list of atoms + positions + moments
     void eps(FILE * fout);
-    void eps(FILE * fout,char * text);
+    void eps(FILE * fout,const char * text);
     void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation);
     void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
     void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);

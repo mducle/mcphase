@@ -35,7 +35,7 @@ class inimcdis
   Vector qmin,qmax,deltaq;
   mfcf mf;
   
-  void errexit();
+   void errexit();
   inimcdis (const char * file,const char * spinfile); //constructor
   inimcdis (const inimcdis & p);//kopier-konstruktor
  ~inimcdis ();//destruktor

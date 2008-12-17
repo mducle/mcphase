@@ -30,12 +30,15 @@ class ionpars
    Matrix **Olm; ComplexMatrix **OOlm; // array of matrices
  
    Vector Blm; // Cf parameters  
+   Vector Llm; // Cf parameters  
 
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U);
+   ComplexMatrix & cfeigenstates (Vector & H);
    // and transition matrix elements
    int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
    void savBlm(FILE * file); // saving Blm to file 
+   void savLlm(FILE * file); // saving Blm to file 
 
    ionpars(int dimj);
    ionpars(FILE * cf_file);

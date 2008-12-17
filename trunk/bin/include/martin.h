@@ -39,20 +39,28 @@ extern  int inputline (FILE * fin_coq, float *nn);
 // parname=3 23 542 23
 // returns:0 .... it is a comment line (starting with #) or parameter parname not found
 //         n .... number of numbers read
-extern int inputparline (const char * parname, FILE * fin_coq, float *nn);
+extern int inputparline (const char * parname, FILE * fin_coq, float *nn)
+;
+
+// return random number between 0 and z
+extern  float rnd(float z);
 
 // return integer of floating number (like basic integer function)
 extern  float integer (float s);
 
-// return random number between 0 and z
-extern  float rnd(float z);
+//return rounded integer of floating number
+extern int cint (float s);
+
+// return threej symbol 
+extern float threej (float AJ1,float AJ2,float AJ3,float AM1,float AM2,float AM3);
+
 
 #ifndef __linux__
 // return rounded integer (not needed any more in MINGW 3.1.3)
 //extern double rint(double value);
 
 //extern double copysign(double a,double b);
-extern void sleep(int a);
+extern int sleep(int a);
 #endif
 
 
