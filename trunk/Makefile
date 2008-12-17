@@ -5,11 +5,15 @@ include bin/src/Makefile.common
 cfdir = bin/cf1ion_module
 mcpdir = bin/src
 vecdir = bin/src/vector
+funcdir = bin/src/functions
 
-all: vector cfield mcphase
+all: vector functions cfield mcphase
 
 vector: 
 	cd $(vecdir) && $(MAKE) 
+
+functions:
+	cd $(funcdir) && $(MAKE)
 
 cfield: vector
 	cd $(cfdir) && $(MAKE)
@@ -19,6 +23,7 @@ mcphase: vector cfield
 
 clean: 
 	cd $(vecdir) && $(MAKE) clean
+	cd $(funcdir) && $(MAKE) clean
 	cd $(cfdir) && $(MAKE) clean
 	cd $(mcpdir) && $(MAKE) clean
 	rm -vf bin/addj.exe bin/charges.exe bin/coq2jjj.exe \

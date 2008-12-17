@@ -42,6 +42,16 @@ MATPACK = ..
 
 include ${MATPACK}/Makefile.common
 
+INCLUDE= ../../include
+
+.SUFFIXES: .cc .o
+
+.c.o: 
+	${CC} -c ${CCOPTS} -I ${INCLUDE} $<
+
+.cc.o: 
+	${CCC} -c ${CCOPTS} -I ${INCLUDE} $<
+
 
 ###########################################################################
 ### make all objects

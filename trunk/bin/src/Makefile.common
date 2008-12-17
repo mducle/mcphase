@@ -29,14 +29,15 @@
 ifeq ($(shell uname),Linux)
 LINOPTS =-fPIC
 ifeq ($(shell uname -m),x86_64)
+ifdef fast
+ARCHFLAG=-O2 -march=native
+endif
 ifdef OMP
-ARCHFLAG=-fopenmp
+ARCHFLAG+=-fopenmp
 endif
-ifdef B32
-ARCHFLAG=-m32 -march=pentium
+ifdef b32
+ARCHFLAG+=-m32
 endif
-else
-ARCHFLAG=-march=pentium
 endif
 endif
 
