@@ -30,9 +30,14 @@ format STDOUT =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
 .
+format Fout =
+@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+.
 
  @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parav=();
   $searchlevel=$ARGV[0]; shift @ARGV;
+ open(Fout,">searchspace.status");
  foreach (@ARGV)
  {$file=$_; system ("copy ".$file." ".$file.".par"); open (Fin, $file);
    while($line=<Fin>)
@@ -43,7 +48,7 @@ sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$pare
 				 ($parmax[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parerr[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parstp[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^\Q]\E]+)|);
-                                 $i=$#par;write STDOUT;
+                                 $i=$#par;write STDOUT;write Fout;
 				  #check if parmin<=parmax
                           if ($parmin[$#par]>$parmax[$#par]) 
                             {print "ERROR searchspace reading parameterrange: parmin > parmax\n";
@@ -53,7 +58,7 @@ sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$pare
                          $line=~s|par\w+\s*\Q[\E||;                     
 				 }
      } close Fin;
- } print "starting search of level $searchlevel ...\n";
+ } print "starting search of level $searchlevel ...\n";close Fout;
 #*******************************************************************************
 $minnumber=1;$pointcounter=0;
 $starttime=time;$stamin=1e10;
@@ -75,6 +80,13 @@ if ($searchlevel==0)
          {
           $par[$i]+=$dpar;
           ($sta)=sta();
+          open(Fin,"searchspace.status");$line=<Fin>;
+          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          else
+     {open(Fout,">searchspace.status");$i=0;
+     foreach(@par){write Fout;++$i;}
+     print Fout " ...  current sta=$sta\n";
+     close Fout;}
           last if ($sta==0);
           if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
@@ -86,6 +98,13 @@ if ($searchlevel==0)
 	    ++$pointcounter; 
           $par[$i]-=2*$dpar;
           ($sta)=sta();
+          open(Fin,"searchspace.status");$line=<Fin>;
+          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          else
+     {open(Fout,">searchspace.status");$i=0;
+     foreach(@par){write Fout;++$i;}
+     print Fout " ...  current sta=$sta\n";
+     close Fout;}
           last if ($sta==0);
           if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
@@ -114,7 +133,7 @@ if ($searchlevel==0)
         }
 }
 else
-{print "reading point from file searchspace.".($searchlevel-1)."\n";
+{print "reading points from file searchspace.".($searchlevel-1)."\n";
  open (Fin1,"searchspace.".($searchlevel-1));
  while($line=<Fin1>)
   {
@@ -129,6 +148,8 @@ else
          {
           $par[$i]+=$dpar;
           ($sta)=sta();
+          open(Fin,"searchspace.status");$line=<Fin>;
+          if ($line=~/exit searchspace/){$sta=0;close Fin;}
           last if ($sta==0);
           if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
@@ -140,6 +161,13 @@ else
 	   ++$pointcounter; 
           $par[$i]-=2*$dpar;
           ($sta)=sta();
+          open(Fin,"searchspace.status");$line=<Fin>;
+          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          else
+     {open(Fout,">searchspace.status");$i=0;
+     foreach(@par){write Fout;++$i;}
+     print Fout " ...  current sta=$sta\n";
+     close Fout;}
           last if ($sta==0);
           if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
@@ -176,6 +204,7 @@ print "$pointcounter points calculated in  $hours h.\n Time estimate for next le
 print Fout "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
 close Fout;
  foreach (@ARGV) {$file=$_; system ("copy ".$file.".parmin.$searchlevel ".$file);}
+     open(Fout,">searchspace.status");print Fout " ... searchspace stopped\n"; close Fout;
 
 exit 0;
 

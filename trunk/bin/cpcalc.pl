@@ -30,11 +30,15 @@ $noflevels=1; # initialize noflevels
 # read energies from cfield.out
   while($line=<Fin>)
   {if($line=~/^.*\QEnergy Eigenvalues are in\E/){unless ($line=~/^.*\QEnergy Eigenvalues are in  meV\E/) 
-                                                        {print "ERROR cpcalc: energies  in cfield.out not in meV - ".$line."\n";exit(1);}
+                                                        {print "ERROR cpcalc: energies in cfield.out must be in meV ! - ".$line."\n";exit(1);}
                                                 }
    if($line=~/^.*\QNumber of different energy levels\E\s*:/) # read noflevels
       {($noflevels)=($line=~m|\QNumber of different energy levels\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
        print "#Number of different energy levels: $noflevels\n";
+      } 
+   if($line=~/^.*\QEnergy shift\E\s*\Q(Eshift)\E\s*:/) # read energyshift
+      {($energyshift)=($line=~m|\QEnergy shift\E\s*\Q(Eshift)\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
+       print "#Energy shift: $energyshift meV\n";
       } 
    for($i=1;$i<=$noflevels;++$i)
      {if($line=~/^.*\QE( \E$i\Q)\E\s*=/) 
@@ -89,6 +93,7 @@ $T=$T0+$dT/2;
                  $Up+=$deg[$i]*$E[$i]*exp(-$x);
                  }
             $Up/=$Zp*0.0862; # magnetic energy per ion in K
+            $Up+=$energyshift/0.0862; # shift energy 
             $Up*=1.38066*6.023; # magnetic energy in J per mol
 	    
 	    $T=$T0-$dT/2;
@@ -99,13 +104,15 @@ $T=$T0+$dT/2;
                  $Um+=$deg[$i]*$E[$i]*exp(-$x);
                  }
             $Um/=$Zm*0.0862; # magnetic energy per ion in K
-            $Um*=1.38066*6.023; # magnetic energy in J per mol
+            $Um+=$energyshift/0.0862; # shift energy 
+            $Um*=1.38066*6.023; # 0.0862meV/K*1.602e-22J/meV*6.023e23ion/mol 
+                                # magnetic energy in J per mol
          
-	 $cpc=($Up-$Um)/$dT;  	    
-       if($ARGV[3]=~/-f/){$cpc=-$T*log(0.5*($Zm+$Zp))*1.38066*6.023;}
-       if($ARGV[3]=~/-z/){$cpc=0.5*($Zm+$Zp);}
-       if($ARGV[3]=~/-u/){$cpc=0.5*($Um+$Up);}
-       if($ARGV[3]=~/-s/){$cpc=0.5*($Um+$Up)/$T0+log(0.5*($Zm+$Zp))*1.38066*6.023;}
+	 $cpc=($Up-$Um)/$dT; # specific heat 	    
+       if($ARGV[3]=~/-f/){$cpc=($energyshift/0.0862-$T0*log(0.5*($Zm+$Zp)))*1.38066*6.023;} # helmholtz function
+       if($ARGV[3]=~/-z/){$cpc=0.5*($Zm+$Zp)*exp(-$energyshift/$T0/0.0862);} # partition sum
+       if($ARGV[3]=~/-u/){$cpc=0.5*($Um+$Up);} # magnetic energy
+       if($ARGV[3]=~/-s/){$cpc=0.5*($Um+$Up)/$T0-($energyshift/$T0/0.0862-log(0.5*($Zm+$Zp)))*1.38066*6.023;} # entropy
 
 return $cpc;
 }

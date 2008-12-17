@@ -114,11 +114,11 @@ my $MR4 = [
             [    1,    0, -7/2,    0,    0,  7/8,    0,    0,    0],
             [    0,    0,    0,    0,    0,    0,    0, -1/4,    0],
             [    1,    0,  1/2,    0,    0, -1/4,    0,    0,    0],
-            [    0,    0,    0,    0,  3/8,    0, -1/8,    0,  1/8],
+            [    0,    0,    0,    0,  3/8,    0,  1/8,    0,  1/8],
             [    0, -2/5,    0, -3/4,    0,    0,    0,    0,    0],
-            [    0,    0,    0,    0, -5/2,    0,  1/2,    0,  1/2],
+            [    0,    0,    0,    0, -5/2,    0, -1/2,    0,  1/2],
             [    0, -3/4,    0,  7/4,    0,    0,    0,    0,    0],
-            [    0,    0,    0,    0, 35/8,    0,  7/8,    0,  1/8]
+            [    0,    0,    0,    0, 35/8,    0, -7/8,    0,  1/8]
           ];
 
 my $MR6 = [
@@ -143,7 +143,9 @@ if ($input) {
   open (input_file, $input) or die "$0: cannot open $input for input CF parameters";
 
   while(<input_file>) {                                   # Selects out lines with crystal field parameters
-    if ($_ =~ s/(B[0-9\ CcSs]*)\s*[=:]\s*([-\.\de]*)// ) { # () are groups which may be access with $1, $2 etc.
+  if ($_=~/^\s*#/) {}
+  else{  
+   if ($_ =~ s/(B[0-9\ CcSs]+)\s*[=:]\s*([-\.\de]*)// ) { # () are groups which may be access with $1, $2 etc.
                                                           # * means match previous char any number of times.
       $ky = $1; $vl = $2;                                 # Parameters are of form Bkq = x.xx or Bkq : x.xx
       if ($vl != "") {                                    # \s matches whitespace characters.
@@ -160,6 +162,7 @@ if ($input) {
       }  
     }
     if ($_ =~ /I[Oo][Nn].*[=:]([ \w]\w*\+)/ ) { $Ion = $1; }
+   }
   }
   close (input_file);
   print "\n";
@@ -215,19 +218,6 @@ EOF
 
 #   D = 2 * pi / Q
 #   s = 1 / 2 / D: sintheta = lambda * s
-
-#Nd3+ magnetische formfaktoren nach international tables
-#     ff(i,1...7)= <j0(kr)>-terms A,a,B,b,C,c,D
-FFj0A=0.2953 FFj0a= 17.6846 FFj0B=0.2923 FFj0b=6.7329 FFj0C=0.4313 FFj0c=5.3827 FFj0D=-0.0194
-#     ff(i,8..14)= <j2(kr)>-terms A,a,B,b,C,c,D
-FFj2A=0.9809 FFj2a=18.0630 FFj2B = 1.8413 FFj2b= 7.7688 FFj2C=0.9905  FFj2c=2.8452 FFj2D=0.0120
-
-#  ....
-#   j0 = ff(1) * EXP(-ff(2) * s * s) + ff(3) * EXP(-ff(4) * s * s)
-#   j0 = j0 + ff(5) * EXP(-ff(6) * s * s) + ff(7)
-#   j2 = ff(8) * s * s * EXP(-ff(9) * s * s) + ff(10) * s * s * EXP(-ff(11) * s * s)
-#   j2 = j2 + ff(12) * s * s * EXP(-ff(13) * s * s) + s * s * ff(14)
-#   FQ = (j0 + j2 * (2 / gJ - 1))
 
 
 # Debey-Waller Factor

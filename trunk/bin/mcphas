@@ -37,7 +37,7 @@ java display 1 4 ./results/.fe_status.dat &
 status2id=$!
 fi
 
- sleep 5 s
+ sleep 2
  #start calculation program
  mcphasit $1 $2 $3 $4 $5 $6
 

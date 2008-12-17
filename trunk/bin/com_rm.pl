@@ -7,7 +7,7 @@ unless ($#ARGV >=0)
  print " usage: com_rm *.*  \n *.* .. filenname\n";
  exit 0;}
 
-$command="#addc";foreach $d(@ARGV){$command.= " ".$d;}; $command.="\n";
+#$command="#addc";foreach $d(@ARGV){$command.= " ".$d;}; $command.="\n";
 
   foreach (@ARGV)
   {
@@ -22,7 +22,7 @@ $command="#addc";foreach $d(@ARGV){$command.= " ".$d;}; $command.="\n";
        
       }
       close Fin;
-      print Fout $command;
+#      print Fout $command;
       close Fout;
        unless (rename "range.out",$file)
       {unless(open (Fout, ">$file"))     

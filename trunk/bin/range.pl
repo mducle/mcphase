@@ -3,10 +3,11 @@
 
 unless ($#ARGV >2) 
 {print " program range used to delete (comment out) data out of specified range from a file\n";
- print " usage: range  col min max *.*   \n (col=column,[min,max]..range \n *.* .. filenname\n";
+ print " usage: range [-d] col min max *.*   \n (col=column,[min,max]..range \n *.* .. filenname\n -d ... option to delete lines from file";
  exit 0;}
  
 $column=$ARGV[0];shift @ARGV;
+if ($column=~/\s*-d/) {$dd=$column;$column=$ARGV[0];shift @ARGV;}
 $min=$ARGV[0];   shift @ARGV;
 $max=$ARGV[0];   shift @ARGV;
 
@@ -24,7 +25,7 @@ $max=$ARGV[0];   shift @ARGV;
           if ($min<$numbers[$column-1]&&$numbers[$column-1]<$max)
            	  {print Fout $line;}  
           else   
-                  {print Fout "#:".$line;}  
+                  {if ($dd=~/\s*-d/) {;} else {print Fout "#:".$line;}}  
            }
       }
       close Fin;

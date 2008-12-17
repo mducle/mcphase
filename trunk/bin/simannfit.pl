@@ -21,27 +21,35 @@ unless ($#ARGV >0)
 #.
 format STDOUT =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+.
+format Fout =
+@<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
 .
 
- @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parav=();
+ @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parstp0=();@parav=();@thisparstp=();
 				 @parhisto=();@parhistostart=();$hh=0;
   $stattemp=$ARGV[0]; shift @ARGV;
   $starttime=time;$maxtim=1e10;$maxstep=1e24;
   if ($ARGV[0]=~"-t") {shift @ARGV; $maxtim=$ARGV[0]; shift @ARGV;}
   if ($ARGV[0]=~"-s") {shift @ARGV; $maxstep=$ARGV[0]; shift @ARGV;}
-  
+
+while(!open(Fout,">simannfit.status")){print "Error opening file simannfit.status\n";}
  foreach (@ARGV)
  {$file=$_; system ("cp -f ".$file." ".$file.".par"); open (Fin, $file);
    while($line=<Fin>)
  {while ($line=~/^.*par\w+\s*\Q[\E/) {++$#par;#load another parameter
-				 ($parnam[$#par])=($line=~m|(par\w+)\s*\Q[\E|);
+				 ($parname)=($line=~m|(par\w+)\s*\Q[\E|);
+                                 foreach(@parnam){if (/$parname/){print "ERROR simannfit: parameter $parname occurs more than one time in input files\n";exit 1;}}
+                                 $parnam[$#par]=$parname;
 				 ($par[$#par])=($line=~m|par\w+\s*\Q[\E\s*([^,]+)|);
 				 ($parmin[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parmax[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parerr[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parstp[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^\Q]\E]+)|);
-                                 $i=$#par;write STDOUT;
+                         $parstp0[$#par]=$parstp[$#par];
+                                 $i=$#par;write STDOUT;write Fout;
                          #check if parmin<=parmax
                           if ($parmin[$#par]>$parmax[$#par]) 
                             {print "ERROR simannfit reading parameterrange: parmin > parmax\n";
@@ -56,7 +64,7 @@ sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$pare
                                   
 				 }
      } close Fin;
- } print "starting fit ...\n";
+ } print "starting fit ...\n";close Fout;
 #*******************************************************************************
 # fitting loop
 $rnd=1;$stasave=1e20;
@@ -69,27 +77,35 @@ while($sta>0)
  # modify parameters
  print "\n ...next fitting loop ...\n";
  @parsav=@par;$i=0;
- foreach(@par){$rnd=rand;$par[$i]+=($rnd-0.5)*$parstp[$i]*$stps;
-               if ($par[$i]<$parmin[$i]) {$par[$i]=$parmin[$i];}
-	       if ($par[$i]>$parmax[$i]) {$par[$i]=$parmax[$i];}
+ foreach(@par){$rnd=rand;$thisparstp[$i]=($rnd-0.5)*$parstp[$i]*$stps;$par[$i]+=$thisparstp[$i];
+               if ($par[$i]<$parmin[$i]) {$thisparstp[$i]=$parmin[$i]-$par[$i];$par[$i]=$parmin[$i];}
+	       if ($par[$i]>$parmax[$i]) {$thisparstp[$i]=$parmax[$i]-$par[$i];$par[$i]=$parmax[$i];}
                write STDOUT;
 	       ++$i;}
  $rnd=rand;
    ($sta)=sta(); # CALCULATE sta !!!!
    ++$stepnumber;
    print " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
+   while(!open(Fin,"simannfit.status")){print "Error opening file simannfit.status\n";}$line=<Fin>;
+    if ($line=~/exit simannfit/){$sta=0;close Fin;}
+    else
+    {close Fin;
+     while(!open(Fout,">simannfit.status")){print "Error opening file simannfit.status\n";}$i=0;
+     foreach(@par){write Fout;++$i;}
+     print Fout " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
+     close Fout;
+    }
 
  if (time-$starttime>$maxtim){$sta=0;}
  if ($stepnumber>$maxstep){$sta=0;}
- if ($sta==0) {#recover ol pars
+ if ($sta==0) {#recover old pars
       @par=@parsav; 
-      ($sta)=sta(); # CALCULATE sta !!!!
       }
  last if ($sta==0);
  if ($sta>$stasave)
   {if($rnd>exp(-($sta-$stasave)/$stattemp))
-     {#recover ol pars
-      @par=@parsav;#foreach(@parstp){$_*=0.9995;}
+     {#recover ol pars and adapt parstep to step not so big in this direction
+      @par=@parsav;$i=0;foreach(@parstp){$parstp[$i]-=$parstp[$i]*0.1*abs($thisparstp[$i]);++$i;}
       $stps*=0.999;$sta=$stasave; 
       if ($stps<0.01){$stps=10;}# if stepwidth decreased too much make large steps again to get out of side minimum !!!
      }
@@ -106,12 +122,13 @@ while($sta>0)
    $parav[$i]=($parav[$i]*$noofupdates + $p)/($noofupdates+1);
    $parerr[$i]=sqrt($parerr[$i]*$parerr[$i]*$noofupdates+
                    ($p-$parav[$i])*($p-$parav[$i]))/($noofupdates+1);     
-   $hx=int(($p-$parmin[$i])/$parstp[$i]);
+   $parstp[$i]+=$parstp[$i]*0.1*abs($thisparstp[$i]); # adapt parstp to be more bold in this direction
+   $hx=int(($p-$parmin[$i])/$parstp0[$i]);
    ++$parhisto[($hx+$parhistostart[$i])];
     open(Fout,">".$parnam[$i].".hst");
     print Fout "#{Histogram of parameter ".$parnam[$i]."\n# value vs. number of  occurrences in good solutions (sta decreased)}\n";
-    for($hx=0;$hx<=int(($parmax[$i]-$parmin[$i])/$parstp[$i])+1;++$hx)
-     {print Fout (($hx+0.5)*$parstp[$i]+$parmin[$i])."   ".($parhisto[($hx+$parhistostart[$i])])."\n"; 
+    for($hx=0;$hx<=int(($parmax[$i]-$parmin[$i])/$parstp0[$i])+1;++$hx)
+     {print Fout (($hx+0.5)*$parstp0[$i]+$parmin[$i])."   ".($parhisto[($hx+$parhistostart[$i])])."\n"; 
      } close Fout;
 
    ++$i;} ++$noofupdates;
@@ -131,6 +148,9 @@ while($sta>0)
  foreach (@ARGV)
  {$file=$_; system ("mv ".$file." ".$file.".fit");
             system ("mv ".$file.".par ".$file);}
+ while(!open(Fout,"simannfit.status")){print "Error opening file simannfit.status\n";}
+ print Fout " ... simannfit stopped\n"; 
+ print " ... simannfit stopped\n"; close Fout;
 exit 0;
 # END OF MAIN PROGRAM
 #****************************************************************************** 
