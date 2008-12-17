@@ -11,6 +11,22 @@
                      // because it is used to decide wether for small transition
 		     // energy the matrix Mijkl contains wn-wn' or wn/kT
 
+void myPrintComplexMat(FILE * file,ComplexMatrix & M)
+{int i1,j1;
+ fprintf (file,"#Real Part\n");
+   
+   for (i1=M.Rlo();i1<=M.Rhi();++i1){
+    for (j1=M.Clo();j1<=M.Chi();++j1) fprintf (file,"%6.3g ",real(M(i1,j1)));
+    fprintf (file,"\n");
+    }
+    fprintf (file,"#Imaginary Part\n");
+   for (i1=M.Rlo();i1<=M.Rhi();++i1){
+   for (j1=M.Clo();j1<=M.Chi();++j1)fprintf (file,"%6.3g ",imag(M(i1,j1)));
+    fprintf (file,"\n");
+    }
+}    
+
+
  ionpars::ionpars (const ionpars & p) //copy constructor
  {J=p.J;
   Ja=p.Ja; Jb=p.Jb; Jc=p.Jc;Hcf=p.Hcf;
@@ -19,6 +35,7 @@
   alpha=p.alpha;beta=p.beta;gamma=p.gamma;
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
+  Llm=p.Llm; // vector of crystal field parameters
   
    int i;
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
@@ -45,6 +62,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
   Jcc=ComplexMatrix(1,dimj,1,dimj);
 
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
@@ -74,6 +92,7 @@ ionpars::ionpars (char * iontype) // constructor from iontype (mind:no matrices 
   Jcc=ComplexMatrix(1,dimj,1,dimj);
 
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
@@ -150,17 +169,73 @@ void ionpars::savBlm(FILE * outfile)
 
 }
 
+void ionpars::savLlm(FILE * outfile)
+{
+        fprintf(outfile,"L22S=%g\n",Llm(1));
+        fprintf(outfile,"L21S=%g\n",Llm(2));
+	fprintf(outfile,"L20=%g\n",Llm(3));
+        fprintf(outfile,"L21=%g\n",Llm(4));
+	fprintf(outfile,"L22=%g\n",Llm(5));
+   
+	fprintf(outfile,"L33S=%g\n",Llm(6));
+	fprintf(outfile,"L32S=%g\n",Llm(7));
+	fprintf(outfile,"L31S=%g\n",Llm(8));
+	fprintf(outfile,"L30=%g\n",Llm(9));
+   fprintf(outfile,"L31=%g\n",Llm(10));
+   fprintf(outfile,"L32=%g\n",Llm(11));
+   fprintf(outfile,"L32=%g\n",Llm(12));
+
+   fprintf(outfile,"L44S=%g\n",Llm(13));
+   fprintf(outfile,"L43S=%g\n",Llm(14));
+   fprintf(outfile,"L42S=%g\n",Llm(15));
+   fprintf(outfile,"L41S=%g\n",Llm(16));
+   fprintf(outfile,"L40=%g\n",Llm(17));
+   fprintf(outfile,"L41=%g\n",Llm(18));
+   fprintf(outfile,"L42=%g\n",Llm(19));
+   fprintf(outfile,"L43=%g\n",Llm(20));
+   fprintf(outfile,"L44=%g\n",Llm(21));
+  
+   fprintf(outfile,"L55S=%g\n",Llm(22));
+   fprintf(outfile,"L54S=%g\n",Llm(23));
+   fprintf(outfile,"L53S=%g\n",Llm(24));
+   fprintf(outfile,"L52S=%g\n",Llm(25));
+   fprintf(outfile,"L51S=%g\n",Llm(26));
+   fprintf(outfile,"L50=%g\n",Llm(27));
+   fprintf(outfile,"L51=%g\n",Llm(28));
+   fprintf(outfile,"L52=%g\n",Llm(29));
+   fprintf(outfile,"L53=%g\n",Llm(30));
+   fprintf(outfile,"L54=%g\n",Llm(31));
+   fprintf(outfile,"L55=%g\n",Llm(32));
+ 
+   fprintf(outfile,"L66S=%g\n",Llm(33));
+   fprintf(outfile,"L65S=%g\n",Llm(34));
+   fprintf(outfile,"L64S=%g\n",Llm(35));
+   fprintf(outfile,"L63S=%g\n",Llm(36));
+   fprintf(outfile,"L62S=%g\n",Llm(37));
+   fprintf(outfile,"L61S=%g\n",Llm(38));
+   fprintf(outfile,"L60=%g\n",Llm(39));
+   fprintf(outfile,"L61=%g\n",Llm(40));
+   fprintf(outfile,"L62=%g\n",Llm(41));
+   fprintf(outfile,"L63=%g\n",Llm(42));
+   fprintf(outfile,"L64=%g\n",Llm(43));
+   fprintf(outfile,"L65=%g\n",Llm(44));
+   fprintf(outfile,"L66=%g\n",Llm(45));
+
+}
+
+
 ionpars::ionpars(FILE * cf_file) 
 //constructor with commands from file handle (filename of cf parameters etc)
 { 
 static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
-  int i=0,j,l,dj=30; //30 ... maximum number of 2j+1
+  int i,j,l,dj=30; //30 ... maximum number of 2j+1
   char instr[MAXNOFCHARINLINE];
   char iontype[MAXNOFCHARINLINE];
   
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
   // read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
@@ -216,6 +291,57 @@ static int pr=1;
    extract(instr,"B64",Blm(43));
    extract(instr,"B65",Blm(44));
    extract(instr,"B66",Blm(45));
+
+        extract(instr,"L22S",Llm(1));
+        extract(instr,"L21S",Llm(2));
+	extract(instr,"L20",Llm(3));
+        extract(instr,"L21",Llm(4));
+	extract(instr,"L22",Llm(5));
+   
+	extract(instr,"L33S",Llm(6));
+	extract(instr,"L32S",Llm(7));
+	extract(instr,"L31S",Llm(8));
+	extract(instr,"L30",Llm(9));
+   extract(instr,"L31",Llm(10));
+   extract(instr,"L32",Llm(11));
+   extract(instr,"L32",Llm(12));
+
+   extract(instr,"L44S",Llm(13));
+   extract(instr,"L43S",Llm(14));
+   extract(instr,"L42S",Llm(15));
+   extract(instr,"L41S",Llm(16));
+   extract(instr,"L40",Llm(17));
+   extract(instr,"L41",Llm(18));
+   extract(instr,"L42",Llm(19));
+   extract(instr,"L43",Llm(20));
+   extract(instr,"L44",Llm(21));
+  
+   extract(instr,"L55S",Llm(22));
+   extract(instr,"L54S",Llm(23));
+   extract(instr,"L53S",Llm(24));
+   extract(instr,"L52S",Llm(25));
+   extract(instr,"L51S",Llm(26));
+   extract(instr,"L50",Llm(27));
+   extract(instr,"L51",Llm(28));
+   extract(instr,"L52",Llm(29));
+   extract(instr,"L53",Llm(30));
+   extract(instr,"L54",Llm(31));
+   extract(instr,"L55",Llm(32));
+ 
+   extract(instr,"L66S",Llm(33));
+   extract(instr,"L65S",Llm(34));
+   extract(instr,"L64S",Llm(35));
+   extract(instr,"L63S",Llm(36));
+   extract(instr,"L62S",Llm(37));
+   extract(instr,"L61S",Llm(38));
+   extract(instr,"L60",Llm(39));
+   extract(instr,"L61",Llm(40));
+   extract(instr,"L62",Llm(41));
+   extract(instr,"L63",Llm(42));
+   extract(instr,"L64",Llm(43));
+   extract(instr,"L65",Llm(44));
+   extract(instr,"L66",Llm(45));
+
 
 	}}
   
@@ -852,7 +978,7 @@ static Vector JJ(1,gjmbH.Hi());
      U=En*wn;
    // calculate Ja,Jb,Jc
      z=ComplexMatrix(zr,zi);
-     
+    
      za=Jaa*z;
      zb=Jbb*z;
      zc=Jcc*z;
@@ -877,6 +1003,70 @@ static Vector JJ(1,gjmbH.Hi());
 return JJ;
 }
 /**************************************************************************/
+ComplexMatrix & ionpars::cfeigenstates(Vector & gjmbH)
+{   /*on input
+    gJmbH	vector of effective field [meV]
+      on output
+    Matrix containing the eigenvalues and eigenfunctions of the crystalfield problem
+*/
+
+// check dimensions of vector
+if(gjmbH.Hi()>48)
+   {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
+    exit(EXIT_FAILURE);}
+
+//  Driver routine to compute the  eigenvalues and normalized eigenvectors 
+//  of a complex Hermitian matrix z.The real parts of the elements must be
+//  stored in the lower triangle of z,the imaginary parts (of the elements
+//  corresponding to the lower triangle) in the positions
+//  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
+//  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
+//  True, otherwise  not ordered for sort = False. The real  and imaginary
+//  parts of the eigenvectors are  returned in  the columns of  zr and zi. 
+//  The storage requirement is 3*n*n + 4*n complex numbers. 
+//  All matrices and vectors have to be allocated and removed by the user.
+//  They are checked for conformance !
+// void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
+// 			   int sort, int maxiter)
+   // setup hamiltonian
+   int dj,i,j;
+//   complex <double> imag(0,1);
+   dj=Hcf.Rhi();
+static ComplexMatrix eigenstates(0,dj,1,dj);
+   Matrix Ham(1,dj,1,dj);
+   ComplexMatrix z(1,dj,1,dj);
+   ComplexMatrix za(1,dj,1,dj);
+   ComplexMatrix zb(1,dj,1,dj);
+   ComplexMatrix zc(1,dj,1,dj);
+   ComplexMatrix zolm(1,dj,1,dj);    
+
+ 
+   Ham=Hcf-gjmbH(1)*Ja-gjmbH(2)*Jb-gjmbH(3)*Jc;
+
+/* myPrintComplexMat(stdout,Jaa);
+ myPrintComplexMat(stdout,Jbb);
+ myPrintComplexMat(stdout,Jcc);*/
+
+   for(j=4;j<=gjmbH.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);}
+
+/*   int i1,j1; //printout matrix
+   for (i1=1;i1<=dj;++i1){
+    for (j1=1;j1<=dj;++j1) printf ("%4.6g ",(*Olm[j])(i1,j1));
+    printf ("\n");
+    }*/
+      
+    
+   // diagonalize
+   Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
+   int sort=1;int maxiter=1000000;
+   EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
+
+   for(i=1;i<=dj;++i){eigenstates(0,i)=complex <double> (En(i),0);
+     for(j=1;j<=dj;++j){eigenstates(i,j)=complex <double> (zr(i,j),zi(i,j));
+   }}
+   
+ return eigenstates;
+}
 
 /**************************************************************************/
 // for mcdisp this routine is needed

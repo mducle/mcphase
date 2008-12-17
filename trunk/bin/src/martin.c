@@ -7,6 +7,7 @@
 #include<cstring>
 #include<cmath>
 #include<martin.h>
+#include<vector.h>
 
 #ifndef __linux__
 #include<cfloat>
@@ -63,7 +64,7 @@
 
 
 //open a file: similar fopen but with error check 
-FILE * fopen_errchk (const char * filename, const char * mode)
+FILE * fopen_errchk (const char * filename,const char * mode)
 { FILE *file;
  
   errno = 0;
@@ -211,12 +212,66 @@ if(i>=(int)nn[0])
 
  // *************************************************************************
 
+// return random number between 0 and z
+float rnd(float z){return  z*rand()/RAND_MAX;};
 
 // return integer of floating number (like basic integer function)
 float integer (float s){  double result;modf(s,&result);  return result;};
 
-// return random number between 0 and z
-float rnd(float z){return  z*rand()/RAND_MAX;};
+//return rounded integer of floating number
+int cint (float s){  double result;if(modf(s,&result)<0.5){return (int)result;}{return (int)result+1;}};
+
+
+// return threej symbol 
+float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
+{//  THIS IS A PROGRAM TO CALCULATE THE 3_J SYMBOL
+//    (AJ1,AJ2,AJ3;AM1,AM2,AM3)
+//    F(I)=I! IS THE FACTORIAL FUNCTION
+//    I = 0 TO 30 IS USUSALLY ENOUGH
+//    PLEASE NOTE THAT I STARTS FROM ZERO
+//
+//    "CRYSTAL FIELD HANDBOOK", EDITED BY D.J. NEWMAN AND BETTY NG
+//    CAMBRIDGE UNIVERSITY PRESS 
+//    ... and transfered to c and improved by M. Rotter 2008
+
+        int I,J,M,N,J7;
+	double R0,R4,R5,R6,R7,R8,R9;
+	double F[31];      
+
+//  DEFINE THE FACTORIAL FUNCTION
+        F[0] = 1;for(I=1;I<=30;++I){F[I]=F[I-1]*I;}
+
+//   SELECTION RULES
+     if (AM1 + AM2 + AM3 != 0) { return 0;}
+     if (AJ1 + AJ2 - AJ3 < 0) { return 0;}
+     if (AJ3 + AJ1 - AJ2 < 0) { return 0;}
+     if (AJ3 + AJ2 - AJ1 < 0) { return 0;}
+     if (AJ1 + AJ2 + AJ3 + 1 < 0) { return 0;}
+     if (AJ1 - AM1 < 0) { return 0;}
+     if (AJ2 - AM2 < 0) { return 0;}
+     if (AJ3 - AM3 < 0) { return 0;}
+     if (AJ1 + AM1 < 0) { return 0;}
+     if (AJ2 + AM2 < 0) { return 0;}
+     if (AJ3 + AM3 < 0) { return 0;}
+
+   R4 = F[int(AJ1 + AJ2 - AJ3)] * F[int(AJ1 - AM1)] * F[int(AJ2 - AM2)] * F[int(AJ3 - AM3)] * F[int(AJ3 + AM3)];
+   R5 = F[int(AJ1 + AJ2 + AJ3 + 1)] * F[int(AJ3 + AJ1 - AJ2)] * F[int(AJ3 + AJ2 - AJ1)] * F[int(AJ1 + AM1)] * F[int(AJ2 + AM2)];
+   R6 = 0;
+   for (J7 = 0;J7<=25;++J7)
+     { if (AJ1 + AM1 + J7 >= 0 && AJ2 + AJ3 - AM1 - J7 >= 0 && AJ3 + AM3 - J7 >= 0 && AJ1 - AM1 - J7 >= 0
+           && AJ2 - AJ3 + AM1 + J7 >= 0) 
+       {R8 = F[int(AJ1 + AM1 + J7)] * F[int(AJ2 + AJ3 - AM1 - J7)];
+        R8 *= odd(int(AJ1 - AM1 - J7)) ? -1 : 1; // .... equiv to  * (-1) ^ (int(AJ1 - AM1 - J7));
+        R9 = F[J7] * F[int(AJ3 + AM3 - J7)] * F[int(AJ1 - AM1 - J7)] * F[int(AJ2 - AJ3 + AM1 + J7)];
+        R6 +=  R8 / R9;
+       }    
+     }
+     R0 = sqrt(R4 / R5) * R6 ;
+     R0 *= odd(int(AJ1 - AJ2 - AM3)) ? -1 : 1; //.... equiv to * (-1) ^ int((AJ1 - AJ2 - AM3))
+  return R0;
+};
+
+
 
 #ifndef __linux__
 // /* not needed any more in mingw3.1
@@ -233,7 +288,7 @@ float rnd(float z){return  z*rand()/RAND_MAX;};
 double copysign(double a,double b)
 {//if fabs(a)
  //return a*a/fabs(a)*b/fabs(b);
-#ifdef CYGWIN
+#if defined CYGWIN || defined __CYGWIN__ 
  return copysign(a,b);
 #else
  return _copysign(a,b);
@@ -241,13 +296,14 @@ double copysign(double a,double b)
 }
 // */
 //sleep function
-void sleep(int a)
+int sleep(int a)
 {
-#ifdef CYGWIN
+#if defined CYGWIN || defined __CYGWIN__ 
 #include<unistd.h>
   return usleep(a*1000);
 #else
-  return _sleep(a*1000);
+  _sleep(a*1000);
+  return true;
 #endif
 }
 

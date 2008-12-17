@@ -1,7 +1,7 @@
  // *************************************************************************
- // ************************ spincf *************************************
+ // ****** md cf - single ion transition matrix elements storage ************
  // *************************************************************************
-// methods for class spincf 
+// methods for class mdcf 
 #include <cerrno>
 #include <cstdio>
 #include <cmath>
@@ -20,7 +20,7 @@ int sum(IntVector & v)
   return sum;
 }
 
-// returns md of spin [i=na,j=nb,k=nc] 
+// returns md of cf [i=na,j=nb,k=nc] 
 ComplexMatrix & mdcf::U(int na, int nb, int nc)
 { return (*s[in(na,nb,nc)]);
 }
@@ -33,7 +33,7 @@ ComplexMatrix & mdcf::sqrt_gamma(int na, int nb, int nc)
 Vector & mdcf::delta(int na, int nb, int nc)
 { return (*d[in(na,nb,nc)]);
 }
-// the same but for spin number "i"
+// the same but for cf number "i"
 ComplexMatrix & mdcf::Ui(int i)
 { return (*s[i]);
 }
@@ -46,7 +46,7 @@ ComplexMatrix & mdcf::sqrt_gammai(int i)
 Vector  & mdcf::deltai(int i)
 { return (*d[i]);
 }
-// get index ijk=iv(1-3)  of spinconfiguration number in 
+// get index ijk=iv(1-3)  of cf configuration number in 
 int * mdcf::ijk(int in)
 {div_t result; result=div(in,mxb*mxc); 
  iv[1]= result.quot;
@@ -55,12 +55,12 @@ int * mdcf::ijk(int in)
  iv[3]= result.rem;
  return iv;}
 
-// the inverse: get number of spin from indizes i,j,k
+// the inverse: get number of cf from indizes i,j,k
 int mdcf::in(int i, int j, int k)
 {return ((i*mxb+j)*mxc+k);}
 
 
-// return number of spins
+// return number of cfs
 int mdcf::n()
 {return (nofa*nofb*nofc);
 }
@@ -92,7 +92,7 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
   if (l == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   d = new Vector * [mxa*mxb*mxc+1]; //(1,nofatoms);
   if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  nt= new IntVector [mxa*mxb*mxc+1](1,nofatoms);
+  nt= new IntVector [mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){nt[i]=IntVector(1,nofatoms);}
   if (nt == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
 }
  

@@ -21,14 +21,14 @@ int parameters::savjjj(FILE *file)
   fprintf(file,"%s",rems[1]);
   fprintf(file,"%s",rems[2]);
   fprintf(file,"a=%4.6g  b=%4.6g c=%4.6g [A] alpha=%4.6g beta=%4.6g gamma=%4.6g [deg]\n",a,b,c,alpha,beta,gamma);
-  fprintf(file,"r1x=0.5 r2x=0 r3x=0\n");
-  fprintf(file,"r1y=0.0 r2y=0.5 r3y=0   primitive basis vectors\n");
-  fprintf(file,"r1z=0.5 r2z=0 r3z=1.0\n");
+  fprintf(file,"r1a=0.5 r2a=0 r3a=0\n");
+  fprintf(file,"r1b=0.0 r2b=0.5 r3b=0   primitive basis vectors\n");
+  fprintf(file,"r1c=0.5 r2c=0 r3c=1.0\n");
   fprintf(file,"nofatoms=1\n");
 
   fprintf(file,"****************************************************************************\n");
-  fprintf(file,"atom=1 x=0 [a]  y=0 [b] z=0 [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=mcphas.cf\n",paranz,diagonalexchange,gJ);
-  fprintf(file,"x[a]      y[b]      z[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
+  fprintf(file,"atom=1 da=0 [a]  db=0 [b] dc=0 [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=mcphas.cf\n",paranz,diagonalexchange,gJ);
+  fprintf(file,"da[a]     db[b]     dc[c]      Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
   for (i = 1; i <= paranz; ++i)
     {
    fprintf(file,"%#+8.6f %#+8.6f %#+8.6f  %#+8.6f %#+8.6f %#+8.6f\n",
@@ -148,19 +148,19 @@ parameters::parameters (char *file)
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  jij = new Vector[paranz+1](1,3);
+  jij = new Vector[paranz+1];for(i=0;i<=paranz;++i){jij[i]=Vector(1,3);}
   if (jij == NULL)
     {
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  jijerr = new Vector[paranz+1](1,3);
+  jijerr = new Vector[paranz+1];for(i=0;i<=paranz;++i){jijerr[i]=Vector(1,3);}
   if (jijerr == NULL)
     {
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  dn = new Vector[paranz+1](1,3);
+  dn = new Vector[paranz+1];for(i=0;i<=paranz;++i){dn[i]=Vector(1,3);}
   if (dn == NULL)
     {
       fprintf (stderr, "Out of memory\n");
@@ -207,10 +207,9 @@ parameters::parameters (char *file)
   fclose (fin_coq);
 // here we have to calculate jj[] and nofbcplanes 
 // by summing the couplinfs over all bc planes
-	jj = new Vector[MAXNOFBCPLANES+1](1,3);
+	jj = new Vector[MAXNOFBCPLANES+1];for(i=0;i<=MAXNOFBCPLANES;++i){jj[i]=Vector(1,3);jj[i]=0;}
         if (jj == NULL)
 	{ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-	for (i=0;i<=MAXNOFBCPLANES;++i){jj[i]=0;} //initialize
 
   nofbcplanes=0;
   for (i = 1; i <= paranz; ++i)
@@ -263,19 +262,19 @@ parameters::parameters (const parameters & p)
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  jij = new Vector[paranz+1](1,3);
+  jij = new Vector[paranz+1];for(i=0;i<=paranz;++i){jij[i]=Vector(1,3);}
   if (jij == NULL)
     {
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  jijerr = new Vector[paranz+1](1,3);
+  jijerr = new Vector[paranz+1];for(i=0;i<=paranz;++i){jijerr[i]=Vector(1,3);}
   if (jijerr == NULL)
     {
       fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);
     }
-  dn = new Vector[paranz+1](1,3);
+  dn = new Vector[paranz+1];for(i=0;i<=paranz;++i){dn[i]=Vector(1,3);}
   if (rij == NULL)
     {
       fprintf (stderr, "Out of memory\n");
@@ -285,7 +284,7 @@ parameters::parameters (const parameters & p)
   {rij[i]=p.rij[i];jij[i]=p.jij[i];jijerr[i]=p.jijerr[i];dn[i]=p.dn[i];}
 
   nofbcplanes=p.nofbcplanes;
-	jj = new Vector[MAXNOFBCPLANES+1](1,3);
+	jj = new Vector[MAXNOFBCPLANES+1];for(i=0;i<=MAXNOFBCPLANES;++i){jj[i]=Vector(1,3);}
         if (jj == NULL)
 	{ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
   for (i=1;i<=MAXNOFBCPLANES;++i)

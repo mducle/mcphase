@@ -30,15 +30,16 @@ void   sort(float * v,int jmin,int jmax,int * jnew) // sorting function
 //constructor
 physproperties::physproperties (int nofspincorrs,int maxnofhkli,int na,int nm)
 {washere=0;
+ int i;
  nofspincorr=nofspincorrs;
  nofatoms=na;
  nofcomponents=nm;
  
  m=Vector(1,3);
  H=Vector(1,3);
- jj= new Vector [nofspincorrs+1](1,nofcomponents*nofcomponents*nofatoms); //  ... number of interaction constants (aa bb cc ab ba ac ca bc cb)
+ jj= new Vector [nofspincorrs+1];for(i=0;i<=nofspincorrs;++i){jj[i]=Vector(1,nofcomponents*nofcomponents*nofatoms);} //  ... number of interaction constants (aa bb cc ab ba ac ca bc cb)
    if (jj == NULL){fprintf (stderr, "physproperties::physproperties Out of memory\n");exit (EXIT_FAILURE);} 
- hkli= new Vector [maxnofhkli+1](1,7);
+ hkli= new Vector [maxnofhkli+1];for(i=0;i<=maxnofhkli;++i){hkli[i]=Vector(1,7);}
    if (hkli == NULL){fprintf (stderr, "physproperties::physproperties Out of memory\n");exit (EXIT_FAILURE);} 
  nofhkls=0;
  sps=spincf(1,1,1,nofatoms,nofcomponents);
@@ -65,9 +66,9 @@ physproperties::physproperties (const physproperties & p)
  nofatoms=p.nofatoms;
  nofcomponents=p.nofcomponents;
   
- jj= new Vector [nofspincorr](1,nofcomponents*nofcomponents*nofatoms); //  ... number of interaction constants (aa bb cc ab ba ac ca bc cb)
+ jj= new Vector [nofspincorr+1];for(i=0;i<=nofspincorr;++i){jj[i]=Vector(1,nofcomponents*nofcomponents*nofatoms);} //  ... number of interaction constants (aa bb cc ab ba ac ca bc cb)
    if (jj == NULL){fprintf (stderr, "physproperties::physproperties Out of memory\n");exit (EXIT_FAILURE);} 
- hkli= new Vector [maxnofhkls](1,7);
+ hkli= new Vector [maxnofhkls+1];for(i=0;i<=maxnofhkls;++i){hkli[i]=Vector(1,7);}
    if (hkli == NULL){fprintf (stderr, "physproperties::physproperties Out of memory\n");exit (EXIT_FAILURE);} 
  for(i=1;i<=nofspincorr;++i)
     {jj[i]=p.jj[i];}
@@ -84,7 +85,8 @@ physproperties::~physproperties ()
 void physproperties::update_maxnofhkls(int maxnofhkli)
 {delete []hkli;
  maxnofhkls=maxnofhkli;
- hkli= new Vector [maxnofhkli+1](1,7);
+ int i;
+ hkli= new Vector [maxnofhkli+1];for(i=0;i<=maxnofhkli;++i){hkli[i]=Vector(1,7);}
    if (hkli == NULL){fprintf (stderr, "physproperties::update_maxnofhkls - Out of memory\n");exit (EXIT_FAILURE);} 
 }
 
@@ -111,7 +113,7 @@ double physproperties::save (int verbose, int htfailed, par & inputpars)
   {fout = fopen_errchk ("./results/mcphas.fum","w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
-   fprintf (fout, "#1mev/ion=96.48mJ/mol\n");
+   fprintf (fout, "#1mev/ion=96.48J/mol\n");
    fprintf (fout, "#note: moments and energies are given per ion - not per formula unit !\n");
    fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc[mb/ion]}\n");
    fclose(fout);
@@ -189,7 +191,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   {  fout = fopen_errchk (filename,"w");
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
-   fprintf (fout, "# sublattice %i (x=%g y=%g z=%g)\n",l,(*inputpars.jjj[l]).xyz(1),(*inputpars.jjj[l]).xyz(2),(*inputpars.jjj[l]).xyz(3));
+   fprintf (fout, "# sublattice %i (da=%g a db=%g b dc=%g c)\n",l,(*inputpars.jjj[l]).xyz(1),(*inputpars.jjj[l]).xyz(2),(*inputpars.jjj[l]).xyz(3));
    fprintf (fout, "# correlation fuction <JJ(%g %g %g)>\n",(*inputpars.jjj[l]).dn[i](1),(*inputpars.jjj[l]).dn[i](2),(*inputpars.jjj[l]).dn[i](3));
    fprintf (fout, "#x     y     T[K]  H[T]   Ha[T] Hb[T] Hc[T]  ");
            for(i1=1;i1<=(*inputpars.jjj[l]).nofcomponents;++i1)
@@ -325,7 +327,7 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
-   //inputpars.rems[2]=" ";
+   inputpars.rems[2]=" ";
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmeanfield-components\n");
    fprintf (fout, "    #mfa(1) mfa(2) .... selfconsistent Mean field configuration \n"); 

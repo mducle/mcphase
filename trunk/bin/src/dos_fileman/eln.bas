@@ -1,5 +1,6 @@
 DECLARE SUB neutint (lambda!, thetamax!, ovalltemp!, lorenz!, r1!(), r2!(), r3!(), n!, x!(), y!(), z!(), mx!(), my!(), mz!(), sl!(), slcode%(), ff!(), ffcode%(), occ!(), m!, h!(), k!(), l!(), D!(), theta!(), imag!(), ikern!(), sf!(), lpg!())
-DECLARE SUB printeln (filename$, lambda!, ovalltemp!, lorenz!, r1!(), r2!(), r3!(), n!, x!(), y!(), z!(), mx!(), my!(), mz!(), sl!(), slcode%(), ff!(), ffcode%(), occ!(), m!, h!(), k!(), l!(), ikern!(), imag!(), D!(), theta!(), sf!(), lpg!())
+DECLARE SUB printeln (filename$, unitcell$, lambda!, ovalltemp!, lorenz!, r1!(), r2!(), r3!(), n!, x!(), y!(), z!(), mx!(), my!(), mz!(), sl!(), slcode%(), ff!(), ffcode%(), occ!(), m!, h!(), k!(), l!(), ikern!(), imag!(), D!(), theta!(), sf!(),  _
+lpg!())
 DECLARE SUB rezcalc (r1!(), r2!(), r3!(), rez1!(), rez2!(), rez3!())
 DECLARE SUB elneutrons ()
 DECLARE SUB inputline (n!, d1#(), col1%, d2$(), col2%)
@@ -292,6 +293,7 @@ IF a = 0 THEN PRINT "ERROR ELN: no lattice constant a given in section 3 or line
 IF b = 0 THEN PRINT "ERROR ELN: no lattice constant b given in section 3 or line does not start with #: "; a$: END
 IF c = 0 THEN PRINT "ERROR ELN: no lattice constant c given in section 3 or line does not start with #: "; a$: END
 PRINT "             section 3 - a="; a; " A  b="; b; " A c="; c; "A"
+unitcell$ = "# a=" + STR$(a) + " A  b=" + STR$(b) + " A c=" + STR$(c) + " A  alpha=90  beta=90 gamma=90"
 PRINT USING "                            / ##.###a \     / ##.###a\     / ##.###a \"; r1(1); r2(1); r3(1)
 PRINT USING "                         r1=| ##.###b |  r2=| ##.###b|  r3=| ##.###b |"; r1(2); r2(2); r3(2)
 PRINT USING "                            \ ##.###c /     \ ##.###c/     \ ##.###c /"; r1(3); r2(3); r3(3)
@@ -407,7 +409,7 @@ NEXT
 
 
 
-CALL printeln(filename$, lambda, ovalltemp, lorenz, r1(), r2(), r3(), n, x(), y(), z(), mx(), my(), mz(), sl(), slcode%(), ff(), ffcode%(), occ(), m, h(), k(), l(), ikern(), imag(), D(), theta(), sf(), lpg())
+CALL printeln(filename$, unitcell$, lambda, ovalltemp, lorenz, r1(), r2(), r3(), n, x(), y(), z(), mx(), my(), mz(), sl(), slcode%(), ff(), ffcode%(), occ(), m, h(), k(), l(), ikern(), imag(), D(), theta(), sf(), lpg())
 
 
 END SUB
@@ -673,10 +675,11 @@ END IF
 
 33 END SUB
 
-SUB printeln (filename$, lambda, ovalltemp, lorenz, r1(), r2(), r3(), n, x(), y(), z(), mx(), my(), mz(), sl(), slcode%(), ff(), ffcode%(), occ(), m, h(), k(), l(), ikern(), imag(), D(), theta(), sf(), lpg())
+SUB printeln (filename$, unitcell$, lambda, ovalltemp, lorenz, r1(), r2(), r3(), n, x(), y(), z(), mx(), my(), mz(), sl(), slcode%(), ff(), ffcode%(), occ(), m, h(), k(), l(), ikern(), imag(), D(), theta(), sf(), lpg())
 REM ausgabe auf file filename$
 OPEN "o", 1, filename$
 PRINT #1, "#{"; filename$; " "; TIME$; DATE$; "   unit cell:"
+PRINT #1, unitcell$
 PRINT #1, "#r1x="; r1(1); " A r2x="; r2(1); " A r3x="; r3(1)
 PRINT #1, "#r1y="; r1(2); " A r2y="; r2(2); " A r3y="; r3(2)
 PRINT #1, "#r1z="; r1(3); " A r2z="; r2(3); " A r3z="; r3(3)

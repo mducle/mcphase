@@ -27,11 +27,24 @@ return 0; //configuration could not be added
 
 // print out table of all configurations
 void testspincf::save ()
+{save(savfilename);}
+
+
+// print out table of all configurations
+void testspincf::save (const char*filename)
 {int i;
  FILE * fout;
 // we should print to a file all used configurations
- fout = fopen_errchk (savfilename,"w");
- for (i=1;i<n;++i)
+ fout = fopen_errchk (filename,"w");
+ fprintf(fout,"#\n#<!--mcphase.mcphas.tst-->\n");
+ fprintf(fout,"# nofatoms=%i\n",nofatoms);
+ fprintf(fout,"#nofcomponents=%i\n",nofcomponents);
+ fprintf(fout,"# File Format: blocks of 3xnofatoms lines consisting of\n");
+ fprintf(fout,"# ma[1] ma[2] ma[3] .... ma[n]\n");
+ fprintf(fout,"# mb[1] mb[2] mb[3] .... mb[n]\n");
+ fprintf(fout,"# mc[1] mc[2] mc[3] .... mc[n]\n");
+
+ for (i=1;i<=n;++i)
    {// print  configuration i 
     fprintf(fout,"#{momentum configuration %i}\n",i);
     configurations[i]->print(fout);
@@ -41,7 +54,7 @@ void testspincf::save ()
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 
 // rememeber filename for lateron save of the list (savfile)
-testspincf::testspincf (int nofconf, const char * file, const char * savfile,int na,int nm)
+testspincf::testspincf (int nofconf, const char * file,const char * savfile,int na,int nm)
 { savfilename= new char [strlen(savfile)+1];
   strcpy(savfilename,savfile);
   FILE *fin_coq;

@@ -240,7 +240,7 @@ void spincf::spinfromq (int n1,int n2, int n3,Vector & qvector,Vector & nettom,
   mxa=n1+1; mxb=n2+1; mxc=n3+1;
   int l;
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mom = new Vector[mxa*mxb*mxc+1];for(l=0;l<=mxa*mxb*mxc;++l){mom[l]=Vector(1,nofcomponents*nofatoms);}
   if (mom == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
 
 // fill spinconfiguration with values
@@ -307,7 +307,7 @@ nofc=k;
   mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
   
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mom = new Vector[mxa*mxb*mxc+1];for(l=0;l<=mxa*mxb*mxc;++l){mom[l]=Vector(1,nofcomponents*nofatoms);}
   if (mom == NULL)
     {fprintf (stderr, "Out of memory\n");
      exit (EXIT_FAILURE);} 
@@ -334,7 +334,7 @@ nofc=k;
 void spincf::eps(FILE * fout) //print spinconfiguration to stream
 {eps(fout,"no title");}
 
-void spincf::eps(FILE * fout,char * text ) //print spinconfiguration to stream
+void spincf::eps(FILE * fout,const char * text ) //print spinconfiguration to stream
 {//viewport [-1,1,-1,1] ... distribute spins on that
   int i,j,k,l,m;
   float x0,y0,compoffset,atomoffset;
@@ -480,7 +480,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
 
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3);
+  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
   nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
   for (i=1;i<=3;++i)
   {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
@@ -502,7 +502,22 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
    t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
   }
   max_min=max-min;    
- 
+  // determine ijkmin ijkmax by calculating the 8 corners of the  quader
+  // in terms of primitive lattice 
+  // i*pa+j*pb+k*pc=cornerpointvector ... i,j,k =?
+  // ijk=p^-1*corerpointvector
+  for (i=1;i<=3;++i)
+  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
+   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
+   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
+   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
+   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
+   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
+   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
+   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
+   ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
+  }  
+
  //determine bounding box for  specific view
   bbwidth=700;
   switch(orientation)
@@ -595,12 +610,20 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
   
   
   // plot atoms and moments in region xmin to xmax (quader)
-int i1,j1,k1,i2,k2,j2,i1true,j1true,k1true;
+int i1,j1,k1;
+//i2,k2,j2,i1true,j1true,k1true;
    fprintf(fout,"/Helvetica findfont\n %i scalefont setfont\n",(int)(1000/nofa/nofb/nofc+1));
-i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+
+//these lines do not work if primitive lattice angles are > 90 deg ...
+//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+
+   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
 	 {//         r1=l+'0';
@@ -613,7 +636,7 @@ k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
             {
-             i1true=1;j1true=1;k1true=1;       
+//             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
 //   fprintf(fout,"%g %g moveto \n (%c) show \n",a(1),a(2),r1);
@@ -630,7 +653,8 @@ k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2
 	     }
 	  }
        }}}           
- }}}}}}
+ }}}
+//}}}
   
   
   
@@ -644,7 +668,7 @@ void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float
  double t;
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3);
+  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
   nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
   for (i=1;i<=3;++i)
   {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
@@ -666,6 +690,21 @@ void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float
    t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
   }
   max_min=max-min;    
+  // determine ijkmin ijkmax by calculating the 8 corners of the  quader
+  // in terms of primitive lattice 
+  // i*pa+j*pb+k*pc=cornerpointvector ... i,j,k =?
+  // ijk=p^-1*corerpointvector
+  for (i=1;i<=3;++i)
+  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
+   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
+   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
+   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
+   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
+   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
+   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
+   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
+   ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
+  }  
 
 
 fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
@@ -675,11 +714,24 @@ fprintf(fout,"CELL     %g    %g    %g  90.0000  90.0000 90.0000   DISPLAY MULTIP
 fprintf(fout,"BOX   -0.15  1.15   -0.15  1.15    -0.15  1.15 \n");
 
   // plot atoms in region xmin to xmax (quader)
-int i1,j1,k1,i2,k2,j2,i1true,j1true,k1true;
-i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+int i1,j1,k1;
+//,i2,k2,j2;
+//,i1true,j1true,k1true;
+//these lines do not work if primitive lattice angles are > 90 deg ...
+//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+
+   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
+
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
 	 {//         r1=l+'0';
@@ -692,7 +744,7 @@ k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
             {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
-             i1true=1;j1true=1;k1true=1;       
+//             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
               xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
@@ -705,7 +757,8 @@ fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd
 	     }
 	  }
        }}}           
- }}}}}} 
+ }}}
+//}}} 
 
 fprintf(fout," \n");
 fprintf(fout,"{\n");
@@ -715,10 +768,16 @@ fprintf(fout,"SYMM  x,y,z\n");
 fprintf(fout,"MSYM  u,v,w,0.0\n");
 
 // plot moments in region xmin to xmax (quader)
-i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
+//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
+//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
+//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+
+   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
+
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
 	 {//         r1=l+'0';
@@ -731,7 +790,7 @@ k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
             {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
-             i1true=1;j1true=1;k1true=1;       
+//             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
               xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
@@ -744,7 +803,8 @@ fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0
 	     }
 	  }
        }}}           
- }}}}}}
+ }}}
+//}}}
 fprintf(fout,"}\n");
 } 
 
@@ -763,9 +823,9 @@ void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,f
   pb=p.Column(2);
   pc=p.Column(3);
 
-gamma=180/3.1415926*acos(pa*pb/Norm(pa)/Norm(pb));if (pa*pb<0)gamma=180-gamma;
-beta=180/3.1415926*acos(pa*pc/Norm(pa)/Norm(pc));if (pa*pc<0)beta*=180-beta;
-alpha=180/3.1415926*acos(pb*pc/Norm(pb)/Norm(pc));if (pb*pc<0)alpha*=180-alpha;
+gamma=180/3.1415926*acos(pa*pb/Norm(pa)/Norm(pb));
+beta=180/3.1415926*acos(pa*pc/Norm(pa)/Norm(pc));
+alpha=180/3.1415926*acos(pb*pc/Norm(pb)/Norm(pc));
 
 
 fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
@@ -841,7 +901,7 @@ void spincf::print(FILE * fout) //print spinconfiguration to stream
 // fprintf(fout,"\n"); //new line to end spinconfiguration - removed aug 07
 }               
 
-void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z) //print spinconfiguration to stream
+void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames) //print spinconfiguration to stream
 { int i,j,k,l,lc;
 
  // determine primitive magnetic unit cell
@@ -857,8 +917,8 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
 
 
  fprintf(fout,"#nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",nofa,nofb,nofc,nofatoms*nofa*nofb*nofc);
- fprintf(fout,"#[atom number] x[a] y[b] z[c] dr1[r1] dr2[r2] dr3[r3]  <Ja> <Jb> <Jc> ...\n");
-
+ fprintf(fout,"#{atom file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ja> <Jb> <Jc> ...\n");
+ 
    // output atoms and moments in primitive unit cell
   for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
@@ -868,14 +928,13 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
          dd(3)=z[l]*abc(3);
          dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
          dd0=p.Inverse()*dd;dd0(1)*=nofa;dd0(2)*=nofb;dd0(3)*=nofc;
-            {
-              fprintf(fout,"[%i] %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
-	              l,dd(1)/abc(1),dd(2)/abc(2),dd(3)/abc(3),dd0(1),dd0(2),dd0(3));
+              fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
+	              cffilenames[l],dd(1)/abc(1),dd(2)/abc(2),dd(3)/abc(3),dd0(1),dd0(2),dd0(3));
              {for (lc=1;lc<=nofcomponents;++lc)
               {fprintf(fout," %4.4f",mom[in(i,j,k)](lc+nofcomponents*(l-1)));}
               fprintf(fout,"\n");
 	     }
-	    }
+	    
 	 }
   }}}          
 
@@ -893,7 +952,7 @@ spincf & spincf::operator= (const spincf & op2)
  nofcomponents=op2.nofcomponents;
   delete []mom;
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mom = new Vector[mxa*mxb*mxc+1];for(k=0;k<=mxa*mxb*mxc;++k){mom[k]=Vector(1,nofcomponents*nofatoms);}
   if (mom == NULL)
     {fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);}
@@ -967,12 +1026,13 @@ return 0; //not equal
 //from n1xn2xn3 unit cells with na number in the cryst. basis and nc number of components of the spin of each atom
 spincf::spincf (int n1,int n2,int n3,int na,int nc)
 { wasstable=0;
+  int l;
   nofa=n1;nofb=n2;nofc=n3;
    mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
   nofatoms=na;
   nofcomponents=nc;
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mom = new Vector[mxa*mxb*mxc+1];for(l=0;l<=mxa*mxb*mxc;++l){mom[l]=Vector(1,nofcomponents*nofatoms);}
   if (mom == NULL)
     { fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);} 
@@ -988,7 +1048,7 @@ spincf::spincf (const spincf & p)
   nofcomponents=p.nofcomponents;
   
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mom = new Vector[mxa*mxb*mxc+1];for(k=0;k<=mxa*mxb*mxc;++k){mom[k]=Vector(1,nofcomponents*nofatoms);}
   if (mom == NULL)
     {
       fprintf (stderr, "Out of memory\n");

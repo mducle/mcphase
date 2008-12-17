@@ -13,7 +13,7 @@ void qvectors::save()
     
  printf("saving %s\n",savfilename); 
  fout=fopen_errchk (savfilename,"w");
- fprintf (fout, "#{(h k l) of test-Qvectors (na nb nc) unitcellsize (no) structure number / momentum arrangement <J(i)>}\n");
+ fprintf (fout, "#{(h k l) of test-Qvectors (nr1 nr2 nr3) unitcellsize (no) structure number / momentum arrangement <J(i)>}\n");
  for (k=1;k<=nofqs();++k)
  {Vector hkl(1,3);
   hkl=rez.Transpose()*q(k);
@@ -82,7 +82,7 @@ int qvectors::nc (int i) // returns period for i.th qvector
         v               verbose switch
 */
 qvectors::qvectors (inipar & ini,Matrix & rz,
-                    Vector & mmax, const char * savfile, int na,int nmm,int v)
+                    Vector & mmax,const char * savfile, int na,int nmm,int v)
 { savfilename= new char [strlen(savfile)+1];
   strcpy(savfilename,savfile);
   verbose=v;

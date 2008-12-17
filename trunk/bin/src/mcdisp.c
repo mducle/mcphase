@@ -9,7 +9,7 @@
 		      // transitions of single ions less then SMALL have in Mijkl wn/kT instead of wn-wn'
 		      // !!! must match SMALL in jjjpar.cpp !!!!
 #define SMALLINT 1e-4 // small intensity treshhold
-#define SMALLEDIF 1e-4 // small difference in calculation of transition energy
+#define SMALLEDIF 1e-3 // small difference in calculation of transition energy
                        // used to give error if recalculation of mcdisp.trs
 		       // energies gives different results than file
 #define KB 0.0862     // Boltzmanns constant in mev/K

@@ -9,6 +9,7 @@
 
 // maximum number of spinconfigurations allowed in phasediagramm
 #define MAXNOFSPINCF 100
+#define MAXNOFCHARINLINE 1024
 #define MU_B 0.05788
 #define K_B  0.0862
 
@@ -20,7 +21,9 @@ int verbose=0;
 
 // main program
 int main (int argc, char **argv)
-{ FILE * fin=NULL;
+{ FILE * fin=NULL; FILE * cfout; FILE * cfin;
+  char cfoutfilename[MAXNOFCHARINLINE+10]="./results/";
+  char instr[MAXNOFCHARINLINE];
   int im,j,l;
   int nofstapoints=0;
   int options=1; // this integer indicates how many command strings belong to options (=1+number of option-strings)
@@ -35,9 +38,6 @@ int main (int argc, char **argv)
   Vector h(1,3);Vector mmax1(1,3);
   xvsav=0;yvsav=0;
   
-  if (ini.exit_mcphas!=0)
-  {ini.exit_mcphas=0;ini.print();} // if exit was 1 - save parameters and set exit=0
-  
 // check command line
   for (im=1;im<=argc-1;++im)
   {if (strcmp(argv[im],"-v")==0) {verbose=1;if (options<im)options=im;}// set verbose mode on
@@ -47,12 +47,31 @@ int main (int argc, char **argv)
                                   if (options<im)options=im+1;}
   }
 
+  if (ini.exit_mcphas!=0)
+  {ini.exit_mcphas=0;ini.print();} // if exit was 1 - save parameters and set exit=0
+   ini.print("./results/mcphas.ini");  // copy mcphas.ini to results directory
+
+
 // as class par load  parameters from file
  if(verbose==1){printf("reading parameters from file mcphas.j\n");}
- par inputpars("./mcphas.j");
- Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
+ par inputpars("./mcphas.j"); inputpars.save("./results/mcphas.j"); 
+  Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
   Vector h1(1,inputpars.nofcomponents);
  
+// here save single ion property files to results
+char *token;
+for(l=1;l<=inputpars.nofatoms;++l){cfin=fopen_errchk((*inputpars.jjj[l]).cffilename,"rb");
+                                   strcpy(cfoutfilename+10,(*inputpars.jjj[l]).cffilename);
+                                   cfout=fopen_errchk(cfoutfilename,"w");
+                    while(feof(cfin)==false){fgets(instr, MAXNOFCHARINLINE, cfin);
+                                            // strip /r (dos line feed) from line if necessary
+                                            while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
+                                            fprintf(cfout,"%s",instr);
+                                           }
+                                   fclose(cfin);
+                                  fclose(cfout);
+                                  }
+
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
 T=1.0;for(l=1;l<=inputpars.nofatoms;++l){
       for (im=1;im<=inputpars.nofcomponents;++im){h1=0;h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;
@@ -61,9 +80,11 @@ T=1.0;for(l=1;l<=inputpars.nofatoms;++l){
                                         }
 for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}
 
+
 T=0.0;h=0;
-// load testspinconfigurations (nooftstspindconfigurations,init-file,sav-file)
+// load testspinconfigurations (nooftstspinconfigurations,init-file,sav-file)
    testspincf testspins (MAXNOFSPINCF,"./mcphas.tst","./results/mcphas.phs",inputpars.nofatoms,inputpars.nofcomponents);
+   testspins.save("./results/mcphas.tst");
    qvectors testqs (ini,inputpars.rez,mmax,"./results/mcphas.qvc",inputpars.nofatoms,inputpars.nofcomponents,verbose);
 
 // declare variable physprop (typa class physproperties)

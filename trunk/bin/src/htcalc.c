@@ -190,7 +190,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
                  ComplexVector b1(1,inputpars.nofcomponents*inputpars.nofatoms);
                  float inmax=0;int qh,qk,ql,l;
                  ComplexVector * mq;  
-                 mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2](1,inputpars.nofcomponents*inputpars.nofatoms);
+                 mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2];for(l=0;l<=sps.in(sps.na(),sps.nb(),sps.nc())+1;++l){mq[l]=ComplexVector(1,inputpars.nofcomponents*inputpars.nofatoms);}
                  Vector sq2(1,3*inputpars.nofatoms),qs(1,3),qt(1,3);float in;qs(1)=1000;
                  sps.FT(mq); //Fourier trafo of spincf
 		 // get the main propagation vector by looking for the
@@ -379,7 +379,7 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
   ComplexVector * mq;  
   Vector ri(1,3);
   double QQ;
- mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2](1,sps.nofcomponents*sps.nofatoms);
+ mq = new ComplexVector [sps.in(sps.na(),sps.nb(),sps.nc())+2];for(i=0;i<=sps.in(sps.na(),sps.nb(),sps.nc())+1;++i){mq[i]=ComplexVector(1,sps.nofcomponents*sps.nofatoms);}
   float in;
   sps.FT(mq); //Fourier trafo of momentum configuration
      // mq[n]=mq[0];
@@ -574,7 +574,7 @@ double fecalc(Vector  Hex,double T,par & inputpars,
     inputpars	exchange and other parameters
     sps		initial spinconfiguration
     testspins	all other testspinconfigurations
-  on return
+  on return:
     returns free energy[meV]
     sps		selfconsistently stabilized spinconfiguration (may be different
 		from initial spinconfiguration)
@@ -588,19 +588,16 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  int i,j,k,i1,j1,k1,di,dj,dk,l,r,s,sdim,m,n,m1;
  div_t result; // some modulo variable
  float    sta=1000000; // initial value of standard deviation
- float staold=2000000; int slowct=10;
+ float staold=2000000; 
  float bigstep;
  float smallstep;
- 
- bigstep=fmodf(ini.bigstep-0.0001,1.0);
- if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
-
+ int slowct=10;
  float stepratio=1.0;
 
  float spinchange=0; // initial value of spinchange
  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
- Vector  * lnzi; lnzi=new Vector [sdim+2](1,inputpars.nofatoms); // partition sum for every atom
- Vector  * ui; ui=new Vector [sdim+2](1,inputpars.nofatoms); // magnetic energy for every atom
+ Vector  * lnzi; lnzi=new Vector [sdim+2];for(i=0;i<=sdim+1;++i){lnzi[i]=Vector(1,inputpars.nofatoms);} // partition sum for every atom
+ Vector  * ui; ui=new Vector [sdim+2];for(i=0;i<=sdim+1;++i){ui[i]=Vector(1,inputpars.nofatoms);} // magnetic energy for every atom
  int diagonalexchange=1;
  FILE * fin_coq;
  time_t time_of_last_output=0; 
@@ -613,7 +610,7 @@ double fecalc(Vector  Hex,double T,par & inputpars,
 // for (r=0;r<=sdim;++r)
 
  Matrix * jj; //if (inputpars.diagonalexchange()==0){i=9;}else{i=3;}
-  jj= new Matrix [(sdim+1)+1](1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms); // coupling coeff.variable
+  jj= new Matrix [(sdim+1)+1];for(i=0;i<=sdim+1;++i){jj[i]=Matrix(1,inputpars.nofcomponents*inputpars.nofatoms,1,inputpars.nofcomponents*inputpars.nofatoms);} // coupling coeff.variable
    if (jj == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
 
    // initialize mfold with zeros
@@ -723,7 +720,7 @@ for (r=1;sta>ini.maxstamf;++r)
   }}}
   mfold=mf;      
   sta=sqrt(sta/sps.n()/inputpars.nofatoms);
-
+  
   bigstep=fmodf(ini.bigstep-0.0001,1.0);
   if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
   if (r==1) {stepratio=smallstep;} //in first loop initialize stepratio to smallstep

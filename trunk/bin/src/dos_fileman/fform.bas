@@ -45,9 +45,9 @@ OPEN "i", 1, filename$
 OPEN "o", 2, "FFORM.ffo"
 
 22 CALL headerinput(text$(), j, 1)
-PRINT #2, "{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
-PRINT #2, DATE$; " "; TIME$;
-PRINT #2, "col "; jj%; "has been ffo using program FFORM.bas}"
+PRINT #2, "#{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
+PRINT #2, "#"; DATE$; " "; TIME$;
+PRINT #2, "#col "; jj%; "has been ffo using program FFORM.bas}"
 
 
  REM input data columns
@@ -60,7 +60,7 @@ WHILE EOF(1) = 0
  IF coll% >= ii% AND coll% <= jj% THEN PRINT #2, USING a$ + " "; xm#(coll%);  ELSE PRINT #2, " "; xm#(coll%); " ";
  NEXT
  FOR coll% = 1 TO col2%
-  PRINT #2, " {" + d2$(coll%) + "} ";
+  PRINT #2, "# {" + d2$(coll%) + "} ";
  NEXT: PRINT #2,
 WEND
 
@@ -147,9 +147,13 @@ WHILE klauf% < klzu% AND klauf% > 0   'take out closed bracketed expressions
 WEND
 
 
+
 IF klauf% > 0 THEN
  col1% = -1: SEEK n, aa 'a comment bracket is not closed ... no data read
 ELSE
+ IF LEFT$(LTRIM$(ala$), 1) = "#" THEN
+ col1% = 0: col2% = 1: d2$(1) = ala$
+ ELSE
  col1% = 0
  WHILE LEN(ala$) > 0
     col1% = col1% + 1
@@ -157,6 +161,7 @@ ELSE
     d1#(col1%) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
     ala$ = LTRIM$(RIGHT$(ala$, LEN(ala$) - INSTR(ala$, " ")))
  WEND
+ END IF
 END IF
 
 

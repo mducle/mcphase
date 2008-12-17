@@ -1,7 +1,7 @@
  // *************************************************************************
- // ************************ spincf *************************************
+ // ************************ meanfieldcf *************************************
  // *************************************************************************
-// methods for class spincf 
+// methods for class mfcf 
 #include <cerrno>
 #include <cstdio>
 #include <cmath>
@@ -22,7 +22,7 @@ Vector & mfcf::mi(int i)
 { return mfi[i];
 }
 
-// get index ijk=iv(1-3)  of spinconfiguration number in 
+// get index ijk=iv(1-3)  of mfonfiguration number in 
 int * mfcf::ijk(int in)
 {div_t result; result=div(in,mxb*mxc); 
  iv[1]= result.quot;
@@ -107,7 +107,7 @@ nofc=k;
   mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
   
 //dimension arrays
-  mfi = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mfi = new Vector[mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){mfi[i]=Vector(1,nofcomponents*nofatoms);}
   if (mfi == NULL)
     {fprintf (stderr, "Out of memory\n");
      exit (EXIT_FAILURE);} 
@@ -131,8 +131,8 @@ nofc=k;
 
 
 //-----------------------------------------------------------------------
-//  numeric output of spinconfiguration to file
-void mfcf::print(FILE * fout) //print spinconfiguration to stream
+//  numeric output of mfconfiguration to file
+void mfcf::print(FILE * fout) //print mfconfiguration to stream
 {int i,j,k,l;
  for (k=1;k<=nofc;++k)
  {for (j=1;j<=nofb;++j)
@@ -162,7 +162,7 @@ mfcf & mfcf::operator= (const mfcf & op2)
  wasstable=op2.wasstable;
   delete []mfi;
 //dimension arrays
-  mfi = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mfi = new Vector[mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){mfi[i]=Vector(1,nofcomponents*nofatoms);}
   if (mfi == NULL)
     {fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);}
@@ -184,9 +184,9 @@ mfcf::mfcf (int n1,int n2,int n3,int na,int nc)
    mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
   nofatoms=na;
   nofcomponents=nc;
-  
+  int i;
 //dimension arrays
-  mfi = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mfi = new Vector[mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){mfi[i]=Vector(1,nofcomponents*nofatoms);}
   if (mfi == NULL)
     { fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);} 
@@ -202,7 +202,7 @@ mfcf::mfcf (const mfcf & p)
   nofcomponents=p.nofcomponents;
   
 //dimension arrays
-  mfi = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
+  mfi = new Vector[mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){mfi[i]=Vector(1,nofcomponents*nofatoms);}
   if (mfi == NULL)
     {
       fprintf (stderr, "Out of memory\n");

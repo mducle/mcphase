@@ -40,6 +40,9 @@ par::par (const char *filejjj)
    extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
    extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
    extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
+   extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
+   extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
+   extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
    extract(instr,"nofatoms",nofatoms); 
 		  if(feof(fin_coq)!=0)
                     {fprintf(stderr,"ERROR reading header of file mcphas.j: no line ****** found\n");exit(EXIT_FAILURE);}
@@ -145,7 +148,14 @@ void par::add (par & p1)
     abc(1)=a;abc(2)=b;abc(3)=c;
     abc1(1)=p1.a;abc1(2)=p1.b;abc1(3)=p1.c;
     if (Norm(abc-abc1)>0.0001){fprintf(stderr,"ERROR adding parameter sets: lattice parameters abc not equal\n");exit(EXIT_FAILURE);}
-    if (nofcomponents!=p1.nofcomponents){fprintf(stderr,"ERROR adding parameter sets: number of spin components not equal\n");exit(EXIT_FAILURE);}
+//    if (nofcomponents!=p1.nofcomponents)
+//    {fprintf(stderr,"ERROR adding parameter sets: number of spin components not equal\n");exit(EXIT_FAILURE);}
+    if (nofcomponents>p1.nofcomponents)
+{p1.increase_nofcomponents(nofcomponents-p1.nofcomponents);}
+    if (nofcomponents<p1.nofcomponents)
+{(*this).increase_nofcomponents(p1.nofcomponents-nofcomponents);}
+
+
     if (gJ!=p1.gJ){fprintf(stderr,"ERROR adding parameter sets: Landefactors gJ of atoms not equal\n");exit(EXIT_FAILURE);}
 
  for(i=1;i<=p1.nofatoms;++i)
@@ -159,7 +169,29 @@ void par::add (par & p1)
  }
 }
 
+
+void par::increase_nofcomponents (int n)
+{//increases the number of components in the interaction vector
+
+ int i;
+ if (n<1) {fprintf(stderr,"ERROR increasing number of compoments in parameter set: n negative - number cannot be decreased\n");exit(EXIT_FAILURE);}
+
+ for(i=1;i<=nofatoms;++i)
+ {
+    (*jjj[i]).increase_nofcomponents(n);
+ }
+}
+
+
+
 //save to file
+void par::save (const char * filename)
+{ FILE * fout;
+  fout = fopen_errchk (filename, "w");
+  save (fout);
+  fclose(fout);
+}
+
 void par::save (FILE * file)
 { int i;
   errno = 0;
@@ -178,9 +210,9 @@ void par::savelattice (FILE *file)
   fprintf(file,"%s",rems[1]);
   fprintf(file,"%s",rems[2]);
   fprintf(file,"# a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
-  fprintf(file,"# r1x=%4.6g r2x=%4.6g r3x=%4.6g\n",r[1][1],r[1][2],r[1][3]);
-  fprintf(file,"# r1y=%4.6g r2y=%4.6g r3y=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);
-  fprintf(file,"# r1z=%4.6g r2z=%4.6g r3z=%4.6g\n",r[3][1],r[3][2],r[3][3]);
+  fprintf(file,"# r1a=%4.6g r2a=%4.6g r3a=%4.6g\n",r[1][1],r[1][2],r[1][3]);
+  fprintf(file,"# r1b=%4.6g r2b=%4.6g r3b=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);
+  fprintf(file,"# r1c=%4.6g r2c=%4.6g r3c=%4.6g\n",r[3][1],r[3][2],r[3][3]);
   fprintf(file,"# nofatoms=%i  nofcomponents=%i  number of atoms in primitive unit cell/number of components of each spin\n",nofatoms,nofcomponents);
   fprintf(file,"%s",rems[3]);
 }

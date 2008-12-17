@@ -11,6 +11,7 @@
 #include "chargedensity.hpp"
 #include "spincf.hpp"
 #include "martin.h"
+#include "myev.h"
 #include<cstdio>
 #include<cerrno>
 #include<cstdlib>
@@ -20,7 +21,8 @@
 #include<par.hpp>
 
 
-// sub for calculation of charge density given a radiu R and polar angles teta, fi and expansion coeff. alm
+// sub for calculation of charge density given a radiu R and polar angles teta, 
+// fi and expansion coeff. alm
 
 double rocalc (double & teta,double & fi,double & R, Matrix & a)
 {double ro,ct,ct2,st,st2,sfi,cfi,rs,rr;
@@ -89,8 +91,11 @@ int main (int argc, char **argv)
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS];
+ char * cffilenames[MAXNOFATOMS];
+// ComplexMatrix * eigenstates[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
+
 // check command line
   if (argc < 5)
     { printf (" program charges - display charges at HT point\n\
@@ -108,7 +113,7 @@ int main (int argc, char **argv)
  else
  { fin_coq = fopen_errchk (argv[5], "rb");}
     
- fout = fopen_errchk ("./charges.jvx", "w");
+ fout = fopen_errchk ("./charges.out", "w");
 
 
 
@@ -120,19 +125,28 @@ abc=0;
    if (pos==-1) 
        {fprintf(stderr,"Error: wrong mf file format\n");exit (EXIT_FAILURE);}
    fgets(instr,MAXNOFCHARINLINE,fin_coq);
-//   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
+   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
    }
    extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
    extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
    extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
+   extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
+   extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
+   extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
    extract(instr,"nofatoms",nofatoms);    extract(instr,"nofcomponents",nofcomponents); 
-   if (nofatoms>0&&extract(instr,"x",x[n+1])+
+   if (nofatoms>0&&(extract(instr,"x",x[n+1])+
                    extract(instr,"y",y[n+1])+
-		   extract(instr,"z",z[n+1])==0)
-		  {++n;if(n>nofatoms||nofatoms>MAXNOFATOMS)
+  		       extract(instr,"z",z[n+1])==0)||
+		       (extract(instr,"da",x[n+1])+
+                   extract(instr,"db",y[n+1])+
+		       extract(instr,"dc",z[n+1])==0))
+		  {++n;if(n>nofatoms||nofatoms>MAXNOFATOMS) 
                     {fprintf(stderr,"ERROR charges.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
+                   cffilenames[n]=new char[MAXNOFCHARINLINE];
+                   extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
+//		   printf("%s\n",cffilenames[n]);
                   }
   }
   if (alpha!=90||beta!=90||gamma!=90)
@@ -208,7 +222,20 @@ int tt,ff,iii,iv;
   chargedensity * cd[savmf.na()*savmf.nb()*savmf.nc()*savmf.nofatoms+1];
   for(i=1;i<=savmf.na()*savmf.nb()*savmf.nc()*savmf.nofatoms;++i)cd[i]=new chargedensity(dtheta,dfi);
 
-  
+          // the following is for the printout of charges.out ...........................
+           fprintf(fout,"#T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",T,ha,hb,hc,savmf.na(),savmf.nb(),savmf.nc(),inputpars.nofatoms*savmf.na()*savmf.nb()*savmf.nc());
+            fprintf(fout,"#J=value {atom-file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ja> <Jb> <Jc> ...\n");
+            fprintf(fout,"# Eigenvalues [meV] and eigenvectors [as columns]\n");
+	  // determine primitive magnetic unit cell
+           Vector nofabc(1,3),dd3(1,3),pa(1,3),pb(1,3),pc(1,3);
+           Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3);
+           nofabc(1)=savmf.na();nofabc(2)=savmf.nb();nofabc(3)=savmf.nc();
+             for (i=1;i<=3;++i){for(j=1;j<=3;++j) {dd3(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd3(j);}}
+             pa=p.Column(1);  //primitive magnetic unit cell
+             pb=p.Column(2);
+             pc=p.Column(3);
+        // .............................................................................                                
+	       
 //  1. from the meanfieldconfiguration (savmf) the <Olm> have to be calculated for all l=2,4,6
 // 1.a: the mcphas.j has to be used to determine the structure + single ione properties (copy something from singleion.c)
 // 1.b: mcalc has to be used to calculate all the <Olm>.
@@ -221,9 +248,28 @@ int tt,ff,iii,iv;
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
 
-            moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u);
+            moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u); // here we trigger single ion 
+                                                           // module to calculate all 48
+                                                           // higher order moments 
+ 
 
-  for(nt=1;nt<=48;++nt)extendedspincf.m(i,j,k)(nt+48*(ii-1))=moments(nt);
+          // output atoms and moments in primitive unit cell to stdout
+         dd3(1)=x[ii]*abc(1);
+         dd3(2)=y[ii]*abc(2);
+         dd3(3)=z[ii]*abc(3);
+         dd3+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd0=p.Inverse()*dd3;dd0(1)*=savmf.na();dd0(2)*=savmf.nb();dd0(3)*=savmf.nc();
+              fprintf(fout,"J=%4.1f {%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
+	              (*inputpars.jjj[ii]).J(),cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
+                     for(nt=1;nt<=48;++nt)
+		        {extendedspincf.m(i,j,k)(nt+48*(ii-1))=moments(nt);
+                         fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+48*(ii-1)));}
+                         fprintf(fout,"\n");
+                             
+	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
+							   // ... and the eigenvalues + eigenvectors !
+
+
 // mind  if there is kramers or another si module, not all the Olm vectors are available - then we plot a sphere
 
 // how do we get the stevens factors - look into cfield if they are there !!!
@@ -326,6 +372,8 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 
 
   }}}}
+//  extendedspincf.printall(fout,abc,r,x,y,z,cffilenames);
+  fclose(fout);
 
 
 
@@ -334,7 +382,8 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 //print out the long vector of moments 1-48
   printf("%s - spin configuration <Olm>(i)\n",outstr);
   extendedspincf.print(stdout);
-//  extendedspincf.printall(fout,abc,r,x,y,z);
+
+  fout = fopen_errchk ("./charges.jvx", "w");
 
  fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n");
  fprintf(fout,"<!DOCTYPE jvx-model SYSTEM \"http://www.javaview.de/rsrc/jvx.dtd\">\n");
@@ -394,6 +443,7 @@ fprintf(fout,"</faces></faceSet></geometry></geometries></jvx-model>\n");
 
 
   for(i=1;i<=savmf.na()*savmf.nb()*savmf.nc()*savmf.nofatoms;++i)delete cd[i];
+  for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
 
   return 0;
 }

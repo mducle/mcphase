@@ -21,13 +21,14 @@ int main (int argc, char **argv)
 { spincf savspins;
  FILE * fin_coq, * fout;
  float delta,dd,ddT,ddHa,ddHb,ddHc,alpha,beta,gamma;
- int n=0,nofatoms=0,nofcomponents=3;
+ int i,n=0,nofatoms=0,nofcomponents=3;
  long int pos=0,j;
  float numbers[11];numbers[9]=1;numbers[10]=3;
  numbers[0]=11;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS];
+ char * cffilenames[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
 // check command line
@@ -53,7 +54,10 @@ abc=0;
   { pos=ftell(fin_coq); 
    if (pos==-1) 
        {fprintf(stderr,"Error: wrong sps file format\n");exit (EXIT_FAILURE);}
-   fgets(instr,MAXNOFCHARINLINE,fin_coq);
+   fgets(instr,MAXNOFCHARINLINE,fin_coq); 
+   // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
+   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
+   
    if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
@@ -61,13 +65,22 @@ abc=0;
    extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
    extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
    extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
+   extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
+   extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
+   extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
    extract(instr,"nofatoms",nofatoms);    extract(instr,"nofcomponents",nofcomponents); 
-   if (nofatoms>0&&extract(instr,"x",x[n+1])+
+   if (nofatoms>0&&(extract(instr,"x",x[n+1])+
                    extract(instr,"y",y[n+1])+
-		   extract(instr,"z",z[n+1])==0)
+  		       extract(instr,"z",z[n+1])==0)||
+		       (extract(instr,"da",x[n+1])+
+                   extract(instr,"db",y[n+1])+
+		       extract(instr,"dc",z[n+1])==0))
 		  {++n;if(n>nofatoms||nofatoms>MAXNOFATOMS)
                     {fprintf(stderr,"ERROR spins.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
-                  }
+                   cffilenames[n]=new char[MAXNOFCHARINLINE];
+                   extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
+//		   printf("%s\n",cffilenames[n]);
+		  }
   }
   if (alpha!=90||beta!=90||gamma!=90)
   {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
@@ -137,9 +150,11 @@ abc=0;
 
   printf("%s - momentum configuration <J(i)>\n",outstr);
   fprintf(fout,"#%s - momentum configuration <J(i)>\n",outstr);
-  savspins.printall(fout,abc,r,x,y,z);
+  savspins.printall(fout,abc,r,x,y,z,cffilenames);
   savspins.print(stdout);
   fclose (fout);
+  
+  for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
   return 0;
 }
 

@@ -1,6 +1,7 @@
 #include<myev.h>
 
 #define VERYSMALL 1e-04
+#define MAXNOFCHARINLINE 1000
 
 // subs to be able to check and directly diagonalize hermitean
 // matrizes, inverse a nearly singular matrix
@@ -19,6 +20,29 @@ void myPrintComplexMatrix(FILE * file,ComplexMatrix & M)
     }
 }    
 
+int myReadComplexMatrix (FILE * file, ComplexMatrix & M)
+{int i,i1,j1;char instr[MAXNOFCHARINLINE];
+ float numbers[M.Rhi()-M.Rlo()+2];numbers[0]=M.Rhi()-M.Rlo()+2;
+ 
+     //read comment line 
+     if(fgets(instr,MAXNOFCHARINLINE,file)==false) {fprintf (stderr, "ERROR reading complex matrix - comment line before real part\n");return false;}
+
+    // read real part
+   for (i1=M.Rlo();i1<=M.Rhi();++i1){
+    j1=inputline(file,numbers);if(j1!=M.Chi()-M.Clo()+1) {fprintf (stderr, "ERROR reading complex matrix - number of columns read (%i) does not match matrix dimension (%i)\n",j1,M.Chi()-M.Clo()+1);return false;}
+    for (j1=M.Clo();j1<=M.Chi();++j1)M(i1,j1)=complex <double> (numbers[j1-M.Clo()+1],0);
+    }
+
+     //read comment line 
+     if(fgets(instr,MAXNOFCHARINLINE,file)==false) {fprintf (stderr, "ERROR reading complex matrix - comment line before imaginary part\n");return false;}
+    // read imaginary part
+   for (i1=M.Rlo();i1<=M.Rhi();++i1){
+    j1=inputline(file,numbers);if(j1!=M.Chi()-M.Clo()+1) {fprintf (stderr, "ERROR reading complex matrix - number of columns read (%i) does not match matrix dimension (%i)\n",j1,M.Chi()-M.Clo()+1);return false;}
+    for (j1=M.Clo();j1<=M.Chi();++j1)M(i1,j1)+=complex <double> (0,numbers[j1-M.Clo()+1]);
+    }
+return true;
+}
+
 void myPrintMatrix(FILE * file,Matrix & M)
 {int i1,j1;
    for (i1=M.Rlo();i1<=M.Rhi();++i1){
@@ -34,6 +58,15 @@ void myPrintVector(FILE * file,Vector & M)
     for (j1=M.Lo();j1<=M.Hi();++j1) fprintf (file,"%6.3g ",M(j1));
     fprintf (file,"\n");    
 }    
+
+void myPrintComplexVector(FILE * file,ComplexVector & M)
+{int j1;
+ fprintf (file,"#Components:\n");
+   
+    for (j1=M.Lo();j1<=M.Hi();++j1) fprintf (file,"%6.3g %+6.3g i ",real(M(j1)),imag(M(j1)));
+    fprintf (file,"\n");    
+}    
+
 
 void myEigenValuesHermitean (ComplexMatrix & M,Vector & lambda,int & sort,int & maxiter)
 { // this sub diagonalizes M and puts eigenvalues to lambda

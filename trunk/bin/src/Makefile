@@ -17,7 +17,7 @@ vpath %.c  ./
 vpath %.cpp ./
 vpath %.h  ../include
 vpath %.hpp ../include
-vpath %.o  ./ ./vector ../cf1ion_module
+vpath %.o  ./ ./vector ../cf1ion_module ./functions
 
 #---------------------------------------------------------------------
 #  Operating system
@@ -102,6 +102,13 @@ VOBS = ivector.o imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o cmatrix.o cma
 CFIELDOBJS= cfieldrout.o diahermx.o eingabe.o intensit.o komplex.o matrix.o stevens.o  \
 	theta.o ortho.o mb11a.o minima.o spline.o va05a.o
 
+FUNCTIONOBJS=hypot3d.o hypot3f.o initds.o derf.o derfc.o ddaws.o ddaws2.o cwofz.o cwofz2.o \
+	dcbrt.o dgamlm.o d9lgmc.o dlnrel.o dlngam.o dgamma.o dfac.o dbsi0e.o dbesi0.o dbsi1e.o \
+	dbesi1.o dbsk0e.o dbesk0.o dbsk1e.o dbesk1.o d9b0mp.o d9b1mp.o dbesj0.o dbesj1.o dbesjn.o \
+	dbesy0.o dbesy1.o dbesyn.o d9aimp.o daie.o dai.o dbie.o dbi.o ei.o jacobip.o chebyshevt.o \
+	laguerrel.o hermiteh.o legendrep.o legendrepa.o harmonicy.o powi.o powii.o clnrel.o cgamma.o \
+	clngam.o c9lgmc.o threejm.o threejj.o clebsch.o sixj.o
+
 LINKER= $(CCC) $(LDFLAGS)
 #OBJS := $(patsubst %.c,%.o,$(wildcard ./src/*.c)) \
 #	$(patsubst %.cpp,%.o,$(wildcard ./src/*.cpp)) 
@@ -109,7 +116,7 @@ LINKER= $(CCC) $(LDFLAGS)
 # Build mcphas
 #
 
-all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins addj singleion charges chrgplt pointc
+all :  martin.o cond  coq2jjj jjj2j mcdispit mcphasit spins spinsfromq addj singleion charges chrgplt pointc mcdiff
 
 # ****************************************************
 # compile sources 
@@ -178,10 +185,13 @@ jjj2j.o: jjj2j.c par.hpp jjj2j.h jjjpar.hpp vector.h
 spins.o: spins.c spincf.hpp  martin.h vector.h
 	$(CCC) $(CFLAGS) $<
 
+spinsfromq.o: spinsfromq.c spincf.hpp  par.hpp martin.h vector.h 
+	$(CCC) $(CFLAGS) $<
+
 singleion.o: singleion.c par.hpp  martin.h vector.h
 	$(CCC) $(CFLAGS) $<
 
-charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h
+charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h myev.h
 	$(CCC) $(CFLAGS) $<
 
 chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h ionpars.hpp
@@ -191,6 +201,12 @@ pointc.o:  pointc.c  martin.h vector.h ionpars.hpp
 	$(CCC) $(CFLAGS) $<
 
 addj.o: addj.c par.hpp  martin.h vector.h
+	$(CCC) $(CFLAGS) $<
+
+mcdiff.o: mcdiff.c 
+	$(CCC) $(CFLAGS) $<
+
+myev.o: myev.c
 	$(CCC) $(CFLAGS) $<
 
 ifdef LINUX
@@ -221,10 +237,13 @@ mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) ionpars.o
 spins: spincf.o spins.o martin.o  $(VOBS)
 	$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
+spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o  $(VOBS) $(CFIELDOBJS) ionpars.o
+	$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
+
 singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o
 	$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
-charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o
+charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o myev.o
 	$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
 chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
@@ -235,6 +254,9 @@ pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o
 
 addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) ionpars.o
 	$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
+
+mcdiff: mcdiff.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS)
+	$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
 
 ifdef LINUX
