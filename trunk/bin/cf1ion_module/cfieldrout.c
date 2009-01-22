@@ -2607,8 +2607,8 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
- //                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
- //                               IT(V21(iter)) = 0.0;                     // results in rotated systems
+ /*                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
+ //                               IT(V21(iter)) = 0.0;                     // results in rotated systems */
                  }
                  break;
  

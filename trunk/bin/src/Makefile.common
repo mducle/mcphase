@@ -28,10 +28,10 @@
 # Checks for operating system types and architecture
 ifeq ($(shell uname),Linux)
 LINOPTS =-fPIC
-ifeq ($(shell uname -m),x86_64)
 ifdef fast
 ARCHFLAG=-O2 -march=native
 endif
+ifeq ($(shell uname -m),x86_64)
 ifdef OMP
 ARCHFLAG+=-fopenmp
 endif
@@ -46,7 +46,7 @@ CC= gcc -pipe $(ARCHFLAG)
 #CC=icc
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -mcpu=i486
 COPTS= -DDEBUG 
-COPTS=$(LINOPTS)
+COPTS=-ansi $(LINOPTS)
 ifdef PROFILE
 COPTS=-pg $(LINOPTS)
 LDFLAGS=-pg 
@@ -78,6 +78,12 @@ ifeq ($(CC),icc)
 CCOPTS= -openmp -fPIC# -D "__sync_fetch_and_add(ptr,addend)=_InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(ptr)), addend)"
 COPTS=$(CCOPTS)
 LDFLAGS= -openmp -lstdc++
+endif
+
+ifdef blas
+#LBLAS=-L../../../ic1ionmodule/libs/GotoBLAS -lgoto -lpthread
+LBLAS=-L../../../ic1ionmodule/libs -lblas -llapack -lgfortran
+BLAS=-D_MATPACK_USE_BLAS_
 endif
 
 #CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium

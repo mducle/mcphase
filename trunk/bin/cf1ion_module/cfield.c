@@ -3041,8 +3041,8 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
-//                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // strange rule  - removed because it gave errors 
-//                                IT(V21(iter)) = 0.0;                     // upon rotating coordinate systems
+/*                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // strange rule  - removed because it gave errors 
+//                                IT(V21(iter)) = 0.0;                     // upon rotating coordinate systems */
                  }
                  break;
  

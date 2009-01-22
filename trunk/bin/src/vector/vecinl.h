@@ -25,6 +25,7 @@
 #define _VECINL_H_
 
 #include <complex>
+#include <cstring>
 
 //----------------------------------------------------------------------------//
 // This include file contains high speed inlined loops for elementary 

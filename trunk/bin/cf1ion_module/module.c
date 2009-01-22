@@ -429,7 +429,7 @@ if(gjmbH.Hi()>12)
    EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
    // calculate Z and wn (occupation probability)
      Vector wn(1,dj);double Z;
-     double x,y;int i,j,k,l,m;
+     double x,y;int i,j=0,k,l,m;
      x=Min(En);
      for (i=1;i<=dj;++i)
      {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 

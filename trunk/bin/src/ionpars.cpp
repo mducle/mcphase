@@ -1,6 +1,7 @@
 #include "ionpars.hpp"
 #include "martin.h"
 #include <cstring>
+#include <cstdlib>
 // ionpars: class to load and store matrices for internal module cfield
 #include "ionpars.h"
 

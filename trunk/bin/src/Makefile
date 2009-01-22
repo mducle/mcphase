@@ -61,7 +61,8 @@ endif
 ifdef OMP
 LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
 else
-LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm
+#LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm
+LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm ${LBLAS}
 endif
 
 #---------------------------------------------------------------------
