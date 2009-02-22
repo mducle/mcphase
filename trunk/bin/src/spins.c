@@ -27,7 +27,7 @@ int main (int argc, char **argv)
  numbers[0]=11;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS];
+ float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
@@ -79,11 +79,13 @@ abc=0;
                     {fprintf(stderr,"ERROR spins.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
                    cffilenames[n]=new char[MAXNOFCHARINLINE];
                    extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
+                   extract(instr,"gJ",gJ[n]);
 //		   printf("%s\n",cffilenames[n]);
 		  }
   }
   if (alpha!=90||beta!=90||gamma!=90)
   {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
+   Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];}
   
   
 // load spinsconfigurations and check which one is nearest -------------------------------   
@@ -116,41 +118,40 @@ abc=0;
      savspins.eps(fin_coq,outstr);
     fclose (fin_coq);
 
-
 // here the 3d file should be created
     fin_coq = fopen_errchk ("./spinsab.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,1);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,1,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./spinsac.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,2);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,2,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./spinsbc.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,3);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,3,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./spins3dab.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,4);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,4,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./spins3dac.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,5);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,5,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./spins3dbc.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,6);
+     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,6,gJJ);
     fclose (fin_coq);
 
     fin_coq = fopen_errchk ("./spins.fst", "w");
-     savspins.fst(fin_coq,outstr,abc,r,x,y,z);
+     savspins.fst(fin_coq,outstr,abc,r,x,y,z,gJJ);
     fclose (fin_coq);
 
     
    fin_coq = fopen_errchk ("./spins_prim.fst", "w");
-     savspins.fstprim(fin_coq,outstr,abc,r,x,y,z);
+     savspins.fstprim(fin_coq,outstr,abc,r,x,y,z,gJJ);
     fclose (fin_coq);
 
     
 
   printf("%s - momentum configuration <J(i)>\n",outstr);
   fprintf(fout,"#%s - momentum configuration <J(i)>\n",outstr);
-  savspins.printall(fout,abc,r,x,y,z,cffilenames);
+  savspins.printall(fout,abc,r,x,y,z,cffilenames,gJ);
   savspins.print(stdout);
   fclose (fout);
   

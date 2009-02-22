@@ -1,4 +1,15 @@
 #makefile for program cfield
+
+OSTYPE=$(shell uname)
+#  (linux windows)
+ifeq ($(OSTYPE),Linux)
+ LINUX = linux
+else
+ WINDOWS = windows
+endif
+
+
+
 vpath %.h  ../include
 vpath %.hpp ../include
 vpath %.o  ../src/vector
@@ -36,10 +47,10 @@ INCLUDE= ../../include
 .SUFFIXES: .cc .o
 
 .c.o: 
-	${CC} -c ${COPTS} -I ${INCLUDE} $<
+	${CC} -c ${COPTS} -Wno-format -I ${INCLUDE} $<
 
 .cc.o: 
-	${CCC} -c ${CCOPTS} -I ${INCLUDE} $<
+	${CCC} -c ${CCOPTS} -Wno-format -I ${INCLUDE} $<
 
 ###########################################################################
 ###########################################################################
@@ -54,7 +65,12 @@ INCLDIRS =      -I. \
 
 
 
-all : cfieldrout.o cfield.so cfield 
+ifdef LINUX
+all : cfieldrout.o cfield.so cfield module.o
+endif
+ifdef WINDOWS
+all : cfieldrout.o cfield module.o
+endif
 
 VECOBJS= matpack.o sortdbl.o sort2dbl.o sort3dbl.o ivector.o \
 		imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o \
@@ -66,7 +82,7 @@ CFOBJS= cfield.o diahermx.o eingabe.o intensit.o komplex.o matrix.o mb11a.o mini
 	       ortho.o spline.o stevens.o theta.o va05a.o
 
 
-${CFOBJS}: 
+${CFOBJS}: types.c
 
 # used for internal module in mcphas and mcdisp
 cfieldrout.o: cfieldrout.c

@@ -127,8 +127,8 @@ float invalues[100];invalues[0]=99;
   fclose(sipf_file);
  }
  else
- {iops=new ionpars(argv[1]);  // read ion parameters from internal table
-  printf ("#!cfield\n#<!--mcphase.sipf-->\n");
+ {printf ("#!cfield\n#<!--mcphase.sipf-->\n");
+  iops=new ionpars(argv[1]);  // read ion parameters from internal table 
   printf ("IONTYPE=%s\n",(*iops).iontype);
 // printout the information used in pointc to output 
   printf("#J=%4g\n",(*iops).J);
@@ -188,7 +188,7 @@ cnst(4,2)=  0.4730943;
 cnst(4,3)=  1.77013;
 cnst(4,4)=  0.625845;
 cnst(6,0)=  0.06357014;
-cnst(6,1)=  1.032669;
+cnst(6,1)=  0.582621;
 cnst(6,2)=  0.4606094;
 cnst(6,3)=  0.921205;
 cnst(6,4)=  0.5045723;

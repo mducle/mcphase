@@ -99,9 +99,9 @@ IONEN IONENIMP [] = {
 /* 26 */   { "Np3+"  ,  4 , 3.0/5  ,  9  , 60 ,  1260 ,2.297    ,11.00   ,98.63},  /* r^n Lewis et al. J. Chem Phys. 53 (1970) 809 average j=5/2 and j=7/2 in DS method*/
 /* 27 */   { "Pu4+"  ,  4 , 3.0/5  ,  9  , 60 ,  1260 ,1.838    ,6.401   ,38.77},  /* r^n Lewis et al. J. Chem Phys. 53 (1970) 809 average j=5/2 and j=7/2 in DS method*/
 /* 28 */   { "Pu3+"  ,  5 , 2.0/7  ,  6  , 60 ,     1 ,2.1025   ,9.1775  ,75.30},  /* r^n Lewis et al. J. Chem Phys. 53 (1970) 809 average j=5/2 and j=7/2 in DS method*/
-/* 29 */   { "V3+"   ,  0 , 2.0    ,  3  , 0  ,     0 ,4        ,16      ,64    },  /*unclear what is F(4) and F(6) r^n just estimate */
-/* 30 */   { "Co4+"  ,  0 , 2.0    ,  6  , 0  ,     0 ,4        ,16      ,64    },  /*unclear what is F(4) and F(6) r^n just estimate */
-/* 31 */   { "Co3+"  ,  0 , 2.0    ,  5  , 0  ,     0 ,4        ,16      ,64    }  /*unclear what is F(4) and F(6)  r^n just estimate*/
+/* a pure spin S=int or half int problem */
+/* 29 */   { "S="    ,  0 , 2.0    ,  0  ,  0 ,     0 ,1e300    ,1e300   ,1e300},  /* r^n Lewis et al. J. Chem Phys. 53 (1970) 809 average j=5/2 and j=7/2 in DS method*/
+
 }; 
 #define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )
 

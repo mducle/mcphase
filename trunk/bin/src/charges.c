@@ -90,7 +90,7 @@ int main (int argc, char **argv)
  numbers[0]=11;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS];
+ float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
 // ComplexMatrix * eigenstates[MAXNOFATOMS];
   Matrix r(1,3,1,3);
@@ -149,6 +149,10 @@ abc=0;char *token;
                     {fprintf(stderr,"ERROR charges.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
                    cffilenames[n]=new char[MAXNOFCHARINLINE];
                    extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
+                   extract(instr,"gJ",gJ[n]);
+  if (gJ[n]==0)
+  {fprintf(stderr,"ERROR program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet\n",n);exit(EXIT_FAILURE);}
+  
 //		   printf("%s\n",cffilenames[n]);
                   }
   }
@@ -227,8 +231,8 @@ int tt,ff,iii,iv;
 
           // the following is for the printout of charges.out ...........................
            fprintf(fout,"#T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",T,ha,hb,hc,savmf.na(),savmf.nb(),savmf.nc(),inputpars.nofatoms*savmf.na()*savmf.nb()*savmf.nc());
-            fprintf(fout,"#J=value {atom-file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ja> <Jb> <Jc> ...\n");
-            fprintf(fout,"# Eigenvalues [meV] and eigenvectors [as columns]\n");
+            fprintf(fout,"#J=value {atom-file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3] <Ma> <Mb> <Mc> [mb] <Ja> <Jb> <Jc> ...\n");
+          fprintf(fout,"#{corresponding effective fields gjmbHeff [meV]- if passed to mcdiff only these are used for caculation (not the magnetic moments)}\n");
 	  // determine primitive magnetic unit cell
            Vector nofabc(1,3),dd3(1,3),pa(1,3),pb(1,3),pc(1,3);
            Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3);
@@ -262,14 +266,19 @@ int tt,ff,iii,iv;
          dd3(3)=z[ii]*abc(3);
          dd3+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
          dd0=p.Inverse()*dd3;dd0(1)*=savmf.na();dd0(2)*=savmf.nb();dd0(3)*=savmf.nc();
-              fprintf(fout,"J=%4.1f {%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
-	              (*inputpars.jjj[ii]).J(),cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
-                     for(nt=1;nt<=48;++nt)
+              fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
+	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
+                     for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}else{fprintf(fout," %4.4f",2*moments(nt)+moments(nt+3));}}
+                     for(nt=1;nt<=48;++nt)                                                               // this else is not yet implemented: gJ=0 means intermediate coupling
 		        {extendedspincf.m(i,j,k)(nt+48*(ii-1))=moments(nt);
                          fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+48*(ii-1)));}
                          fprintf(fout,"\n");
+                      fprintf(fout,"                  corresponding effective fields gjmbHeff [meV]-->          ");
+                      for(nt=1;nt<=savmf.nofcomponents;++nt)  // printout meanfields
+                        {fprintf(fout," %4.4f",h(nt));}
+                         fprintf(fout,"\n");
                              
-	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
+//	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
 							   // ... and the eigenvalues + eigenvectors !
 
 

@@ -226,7 +226,7 @@ cond: cond.o paramete.o $(VOBS) martin.o
 coq2jjj: coq2jjj.o paramete.o $(VOBS) martin.o
 	$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
 
-jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) ionpars.o
+jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS)
 	$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
 
 mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS)  $(CFIELDOBJS)

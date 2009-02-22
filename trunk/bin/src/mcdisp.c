@@ -18,7 +18,7 @@
 #include <mcdisp.h>
 #include "../../version"
 #include "myev.c"
-#include "intcalc.c"
+#include "mcdisp_intcalc.c"
 
 int index_s(int i,int j,int k,int l, int t, mdcf & md,inimcdis & ini)
 {int s=0,i1,j1,k1;

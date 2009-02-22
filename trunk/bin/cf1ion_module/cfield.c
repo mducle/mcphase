@@ -123,7 +123,7 @@ _CALFUN CF;  /*globale struktur fuer routine CALFUN, */
              /* aufgerufen wird                       */
  
 /*define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )*/
-#define ANZ_IONEN              32
+#define ANZ_IONEN              30
  
 SYMMETRIE SYMLISTE[]={
 /* 0 */   {  0 , "triklin   " } ,
@@ -1382,7 +1382,8 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                     THETA(              kristallfeld) = theta;
                     NAMETHETAFILE(      kristallfeld) = nametheta;
                     LESETHETAFILE(      kristallfeld) = lesetheta;
-                  }
+ 
+                 }
  
                   if(c=='m'||c=='M'){
                     IS_MAGNETM(   kristallfeld) = JA;

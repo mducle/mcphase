@@ -1,10 +1,12 @@
+// ionpars: class to load and store matrices for internal module cfield
+
 #include "ionpars.hpp"
 #include "martin.h"
 #include <cstring>
 #include <cstdlib>
-// ionpars: class to load and store matrices for internal module cfield
 #include "ionpars.h"
 
+#define PI 3.1415926535
 #define NOF_OLM_MATRICES 45
 #define MAXNOFCHARINLINE 1024
 #define K_B  0.0862
@@ -814,7 +816,7 @@ pr=0;
 
 
 void ionpars::savBlm(FILE * outfile)
-{
+{fprintf(outfile,"units=meV\n");
    if(Blm(1)!=0){fprintf(outfile,"B22S=%g\n",Blm(1));}
    if(Blm(2)!=0){fprintf(outfile,"B21S=%g\n",Blm(2));}
    if(Blm(3)!=0){fprintf(outfile,"B20=%g\n",Blm(3));}
@@ -868,7 +870,7 @@ void ionpars::savBlm(FILE * outfile)
 }
 
 void ionpars::savLlm(FILE * outfile)
-{
+{fprintf(outfile,"units=meV\n");
    if(Llm(1)!=0){fprintf(outfile,"L22S=%g\n",Llm(1));}
    if(Llm(2)!=0){fprintf(outfile,"L21S=%g\n",Llm(2));}
    if(Llm(3)!=0){fprintf(outfile,"L20=%g\n",Llm(3));}
@@ -976,7 +978,7 @@ void ionpars::save_radial_wavefunction(char * filename)
     fclose(fout);
    }
 //------------------------------------------------------------------------------------------------
-// ROUTINE CFIELD for full crystal field + higher order interactions
+// ROUTINE CFIELD mcalc for full crystal field + higher order interactions
 //------------------------------------------------------------------------------------------------
 Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
 {//ABC not used !!!
@@ -1313,3 +1315,101 @@ if (delta>SMALL)
 // return number of all transitions     
  return (int)((J+1)*(2*J+1)); 
 }
+
+//**********************************************************************/
+// routine to calculate the scattering operator to go beyond dip approx
+// *********************************************************************
+
+// just another routine to calculakte Z(K)
+double Z(int K, float J0, float J2, float J4, float J6, Vector Zc)
+{// calculate Z(K)
+ if (K==1) return Zc(1)*J0+Zc(2)*J2;
+ if (K==3) return Zc(3)*J2+Zc(4)*J4;
+ if (K==5) return Zc(5)*J4+Zc(6)*J6;
+ if (K==7) return Zc(7)*J6;
+ 
+ return 0;
+}
+
+// calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+// according to stored eigenstate matrix est
+// calculates the scattering operator given the polar angles th, ph (with respect to the CEF coordinate 
+// system xyz and the <jl(qr)> and the eigenstate matrix with eigenstates and thermal population numbers
+ComplexVector & ionpars::MQ(double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc,ComplexMatrix & est)
+    {  complex <double> im(0,1);
+       int dj=(int)(2*J+1);
+       
+	 ComplexMatrix MQXM(1,dj,1,dj),MQYM(1,dj,1,dj),MQZM(1,dj,1,dj);
+         // .... calculate these matrices ...(formula 11.141-143 in lovesey)
+	    int K,Qd,M,Md;double MJ,MJd,PKdQd,thj,factor;
+	    complex <double>bracketx,brackety,bracketz;
+	    MQXM=0;MQYM=0;MQZM=0;
+	    for(K=1;K<=7;K+=2){
+			     factor=sqrt(4.0*PI)*Z(K,J0,J2,J4,J6,Zc)/K;
+                               if (factor!=0){
+					     thj=threej((float)K,J,J,0,J,-J);
+					     for(Qd=-K;Qd<=K;Qd+=1){
+                                                 bracketx=0;brackety=0;
+					       if(K-1>=Qd+1&&K-1>=-Qd-1)
+					       {bracketx+=SphericalHarmonicY (K-1,Qd+1,th,ph)*sqrt((double)(K-Qd)*(K-Qd-1));
+					        brackety+=SphericalHarmonicY (K-1,Qd+1,th,ph)*sqrt((double)(K-Qd)*(K-Qd-1));
+					       }
+					       if(K-1>=Qd-1&&K-1>=-Qd+1)
+                                                 {bracketx-=SphericalHarmonicY (K-1,Qd-1,th,ph)*sqrt((double)(K+Qd)*(K+Qd-1));
+						        brackety+=SphericalHarmonicY (K-1,Qd-1,th,ph)*sqrt((double)(K+Qd)*(K+Qd-1));
+					       }
+					       if(K-1>=Qd&&K-1>=-Qd)
+                                                 {bracketz=SphericalHarmonicY (K-1,Qd,th,ph)*sqrt((double)(K-Qd)*(K+Qd));
+                                                 }else {bracketz=0;}
+
+//.(1)..USE !		     ThreeJSymbolM	(J1,J2,J3,M1,&M2min,&M2max,*thrcof,ndim,errflag);
+                                                 double thrj[30];int ndim=30; double MJdmin,MJdmax; int errflag;
+                                                                      
+                                                 ThreeJSymbolM ((float)K,J,J,-(float)Qd,MJdmin,MJdmax,thrj,ndim,errflag);
+                                                 if (errflag!=0){fprintf(stderr,"ERROR mcdiff: threejsymbol error %i\n",errflag);exit(EXIT_FAILURE);}           
+                                                 for (Md=int(MJdmin+1+J);Md<=int(MJdmax+1+J);++Md){
+						                 MJd=(float)Md-1-J;
+								 MJ=-Qd+MJd;M=int(MJ+1+J);
+							         PKdQd=thrj[Md-int(MJdmin+1+J)]/thj; 
+							         PKdQd*=odd(int(J-MJd)) ? -1 : 1;
+							         MQXM(M,Md)+=0.5*factor*PKdQd*bracketx;
+							         MQYM(M,Md)+=-im*brackety*0.5*factor*PKdQd;
+							         MQZM(M,Md)+=factor*PKdQd*bracketz;
+                                                                 }
+
+/*
+//.(2)..                     3jsymb=threej(J1,J2,J3,M1,M2,M3) 
+//							       for(M=1;M<=dj;++M){MJ=(float)M-1-J;  
+//							        for(Md=1;Md<=dj;++Md){MJd=(float)Md-1-J; 
+//							         // according to 11.140 lovesey book        
+//							         PKdQd=threej((float)K,J,J,-(float)Qd,MJd,-MJ)/thj; 
+//							         PKdQd*=odd(int(J-MJd)) ? -1 : 1;
+//							         MQXM(M,Md)+=im*0.5*factor*PKdQd*bracketx;
+//							         MQYM(M,Md)+=-0.5*factor*PKdQd*brackety;
+//							         MQZM(M,Md)+=factor*PKdQd*bracketz;
+//							        }
+//							       }
+*/
+                                             }
+							      }
+                                                             }
+							     // ... calculate thermal expectation values
+							     // using the eigenstates and T 
+							     // mom(1) = ....
+          						     //
+							     static ComplexVector mm(1,3); 
+                                                             mm=0;
+	                                                     for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
+                                                                mm(1)+=est(0,K)*conj(est(M,K))*MQXM(M,Md)*est(Md,K); 
+                                                                mm(2)+=est(0,K)*conj(est(M,K))*MQYM(M,Md)*est(Md,K); 
+                                                                mm(3)+=est(0,K)*conj(est(M,K))*MQZM(M,Md)*est(Md,K); 
+                                                                }}}
+// myPrintComplexMatrix(stdout,MQXM);
+// myPrintComplexMatrix(stdout,MQYM);
+// myPrintComplexMatrix(stdout,MQZM);
+// 					       myPrintComplexMatrix(stdout,est);}
+					       
+                                                         mm*=2; // this is now <M(Q)>=-2x<Q>_TH in units of mb
+// myPrintComplexVector(stdout,mm);//equivalent to moment ...
+    return mm;
+    }

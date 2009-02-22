@@ -1,5 +1,8 @@
-// class of cf and exchange parameters for one specific atom
-// in crystallographic unit cell
+// jjjpar is a class to store all parameters associated
+// with a specific ion, for example CEF parameters
+// and exchange parameters 
+// it is used by many programs in the package
+// moreover, it loads also the user defined single ion module functions (linux only)
 #ifndef JJJPAR
 #define JJJPAR
 
@@ -19,59 +22,33 @@
 
 class jjjpar
 {
-  private:
-
-  void (*m)(Vector*,double*,Vector*,double*,Vector*,double*,double*);  
-  int  (*dm)(int*,double*,Vector*,double*,Vector*,ComplexMatrix*,float*);
-  void *handle;
-
-  Vector & kramer (double & T,Vector & H, double & Z,double & U);
-  int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
-  Vector & brillouin (double & T,Vector & H, double & Z,double & U);
-  int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
-
-  ionpars * iops;
-  int intern_mcalc;
-  Vector ABC;         
-  Vector magFF; // magnetic formfactor numbers
-  double DWF; // DebeyWallerFactor 
-
 
   public:
-
-  char * cffilename;
-  Vector xyz,Jret;
-  int paranz;
-  int nofcomponents; // number of moments (components of moment vector)
-  double gJ;
-  Matrix *jij;
-  Vector *dn; // exchange, coordinates 
-  int *sublattice; // sublattice of neighbour
-  int diagonalexchange;  // switches 1=exchange is diagonal
-
-// subroutine to calculate momentum <J> from effective field gjmbH [meV]
-   Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U);
-   Vector &  tetan(); //returns stevens parameters if possible
-   double J(); // returns total angular momentum if possible
    
-   // returns eigenvalues and eigenstates matrix parameters of ion
-   ComplexMatrix & eigenstates (Vector & gjmbheff);
+   // subroutine to calculate momentum <J> from effective field gjmbH [meV]
+   Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U);
 
+   // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
    int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta);
    int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
 
-   jjjpar (FILE * fin); //konstruktor with filehandle
-   jjjpar (int n=1,int diag=0,int nofmom=3); // konstructor without file
-   jjjpar (const jjjpar & jjjpars);	// kopier-konstruktor
-   
-~jjjpar ();		//destruktor
-   void increase_nofcomponents(int n); // increase nofcomponents by n
-   void add(jjjpar & b, Vector & abc); // add parameters b to this
-   void addpars (int number, jjjpar & addjjj); // enlarge the set of parameters by
-                                                        // inserting a new exchange parameters addjjj
-							// into field at position number
-   void save (FILE *file); // to save the parameters to a filehandle
-   void saveatom (FILE *file); // to save the atom coordinates and properties to a filehandle
+   // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+   // according to stored eigenstate matrix est
+   ComplexVector & MQ(Vector & Qvec);
+   ComplexVector Mq;
+
+  ComplexMatrix est; // eigenstates 
+   // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
+   ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
+
+  char * cffilename; // single ion parameter filename
+  double SLR,SLI; // scattering length
+  double DWF; // DebeyWallerFactor [A^2] 
+  Vector magFFj0; // magnetic formfactor numbers
+  Vector magFFj2; // magnetic formfactor numbers
+  Vector magFFj4; // magnetic formfactor numbers
+  Vector magFFj6; // magnetic formfactor numbers
+  Vector Zc;      // Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
 
 //  D = 2 * pi / Q
 //  s = 1 / 2 / D: sintheta = lambda * s
@@ -81,12 +58,75 @@ class jjjpar
 //  j2 = ff(8) * s * s * EXP(-ff(9) * s * s) + ff(10) * s * s * EXP(-ff(11) * s * s)
 //  j2 = j2 + ff(12) * s * s * EXP(-ff(13) * s * s) + s * s * ff(14)
 //  F = (j0 + j2 * (2 / gJ - 1))  formfactor F(Q)
-   double F(double & Q);
+//  RETURN TOTAL FORMFACTOR, 
+//    however if gJ=0 and Q>0 return spin form factor FS(Q)=<j0(Q)>
+//            if gJ=0 and Q<0 return angular  form factor FL(Q)=<j0(Q)>+<j2(Q)>
+   double F(double Q);
 
-//   debeywallerfactor = EXP(-2 * DWF *s*s)
-   double debeywallerfactor(double & Q);
+//   debyewallerfactor = EXP(-2 * DWF *s*s)
+   double debyewallerfactor(double & Q);
 
-//    jjjpar & operator= (const jjjpar & op2); // zuweisung
+   double J(); // returns total angular momentum if possible
+   Vector &  tetan(); //returns stevens parameters if possible
+
+  Vector xyz,mom; // atom position, moment
+  int paranz;   // number of exchange parameters
+  int nofcomponents; // number of moments (components of moment vector)
+  double gJ;
+  Matrix *jij; // exchange constants 
+  Vector *dn; // exchange - coordinates of neighbors 
+  int *sublattice; // sublattice of neighbours
+  int diagonalexchange;  // switch 1=exchange is diagonal, 0=exchange is not diagonal
+   void increase_nofcomponents(int n); // increase nofcomponents by n
+   void add(jjjpar & b, Vector & abc); // add parameters b to this
+   void addpars (int number, jjjpar & addjjj); // enlarge the set of parameters by
+                                                        // inserting a new exchange parameters addjjj
+							// into field at position number
+
+   void save (FILE *file); // to save the parameters to a filehandle
+   void saveatom (FILE *file); // to save the atom coordinates and properties to a filehandle
+
+
+   jjjpar (FILE * fin); //konstruktor with filehandle of mcphas.j file
+   jjjpar (double x, double y, double z,char * sipffile); // constructor with filename of single ion parameter file
+               // constructor with positions scattering length dwf
+   jjjpar(double x,double y,double z, double slr,double sli, double dwf);
+   jjjpar (int n=1,int diag=0,int nofmom=3); // konstructor without file
+   jjjpar (const jjjpar & jjjpars);	// kopier-konstruktor
+   
+  ~jjjpar ();		//destruktor
+  
+  private:
+
+  // integer to tell which module is loaded 
+  int intern_mcalc;
+
+  // external module functions, intern_mcalc=0
+  void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*);  
+  int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*);
+  void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
+  void (*estates)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
+  void *handle;
+
+  // kramers internal module functions, intern_mcalc=1
+  Vector & kramer (double & T,Vector & H, double & Z,double & U);
+  int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+
+  // realisation of class iops - cfield internal module functions, intern_mcalc=2
+  // the class iops calls for some functionality the program cfield (e.g. for
+  // getting stevens factors and other parameters, for the matrices Olm etc.)
+  ionpars * iops;
+
+  // brillouin internal module functions, intern_mcalc=3
+  Vector & brillouin (double & T,Vector & H, double & Z,double & U);
+  int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+
+    
+  Vector ABC;   // storage for single ion module paramters
+
+  void get_parameters_from_sipfile(char * cffilename); // function to read single ion parameter files
+
+
 
 };
 

@@ -96,14 +96,22 @@ int spincf::nc()
 Vector spincf::nettomagmom(Vector & gJ) // returns nettomagnetic moment [mu_b]
 {
  int i,j,k,l,m,n; 
- if (nofcomponents>=3){m=3;}else{m=nofcomponents;}
  Vector ret(1,3);
  ret=0;
  for (i=1;i<=nofa;++i)
  { for (j=1;j<=nofb;++j)
    {for (k=1;k<=nofc;++k)
     {for (l=1;l<=nofatoms;++l)
-     { for (n=1;n<=m;++n){ret(n)+=mom[in(i,j,k)](nofcomponents*(l-1)+n)*gJ(l);}
+     {if(gJ(l)==0) // intermediate coupling  <M>=2*<S>+<L>
+        {if (nofcomponents>=6){m=6;}else{m=nofcomponents;}
+         for (n=1;n<=m;++n){if (m==2||m==4||m==6) {ret((n+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+n);}
+                            else                  {ret((n+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+n)*2;}
+                           }
+        }
+      else        // LS coupling
+        {if (nofcomponents>=3){m=3;}else{m=nofcomponents;}
+         for (n=1;n<=m;++n){ret(n)+=mom[in(i,j,k)](nofcomponents*(l-1)+n)*gJ(l);}
+        }
      }    
     }
    }
@@ -454,11 +462,11 @@ Vector dd(1,3),dd0(1,3);
 return dd;
 }
 
-void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation)
+void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation, Vector & gJ)
  {// function to plot spins in a 3d manner
   // orientation:1 ab 2 ac 3 bc projection
   //             4 ab 5 ac 6 bc side view
-  int i,j,k,l;char r1,r2,r3;
+  int i,j,k,l,m,maxm;char r1,r2,r3;
   
   Vector a(1,2);
   Vector b(1,2),c(1,3);
@@ -470,9 +478,17 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
     for (j=1;j<=nofb;++j)
      for (k=1;k<=nofc;++k)
       for(l=1;l<=nofatoms;++l)
-      {c(1)=mom[in(i,j,k)](nofcomponents*(l-1)+1);
-       c(2)=mom[in(i,j,k)](nofcomponents*(l-1)+2); 
-       c(3)=mom[in(i,j,k)](nofcomponents*(l-1)+3);
+      {if (gJ(l)==0)
+       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+        c=0;
+        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                             else                {c((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                            }
+       }
+       else
+       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){c(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+       }
        if ((d=Norm(c))>scale)scale=d;
       } 
   scale=0.5/(scale+0.01);
@@ -641,13 +657,24 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
 //   fprintf(fout,"%g %g moveto \n (%c) show \n",a(1),a(2),r1);
 //   fprintf(fout,"%g %g moveto \n (O) show \n",a(1),a(2));
-              xyz(1)=dd(1)+scale*mom[in(i,j,k)](1+nofcomponents*(l-1));
-              xyz(2)=dd(2)+scale*mom[in(i,j,k)](2+nofcomponents*(l-1));
-              xyz(3)=dd(3)+scale*mom[in(i,j,k)](3+nofcomponents*(l-1));
+       if (gJ(l)==0)  //load magnetic moment into vector c
+       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+        c=0;
+        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                             else                {c((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                            }
+       }
+       else
+       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){c(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+       }
+              xyz(1)=dd(1)+scale*c(1);
+              xyz(2)=dd(2)+scale*c(2);
+              xyz(3)=dd(3)+scale*c(3);
 	      a=xy(xyz,orientation, min, max,bbwidth,bbheight);
-              xyz(1)=dd(1)-scale*mom[in(i,j,k)](1+nofcomponents*(l-1));
-              xyz(2)=dd(2)-scale*mom[in(i,j,k)](2+nofcomponents*(l-1));
-              xyz(3)=dd(3)-scale*mom[in(i,j,k)](3+nofcomponents*(l-1));
+              xyz(1)=dd(1)-scale*c(1);
+              xyz(2)=dd(2)-scale*c(2);
+              xyz(3)=dd(3)-scale*c(3);
               b=xy(xyz,orientation, min, max,bbwidth,bbheight);
               epsarrow(fout,a,b);   
 	     }
@@ -663,10 +690,11 @@ fprintf(fout,"showpage\n");
 
  }
 
-void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z) //print std file to stream
+// output for fullprof studio
+void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
  double t;
-  // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
+int maxm,m;  // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
   Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
   nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
@@ -747,11 +775,9 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
-              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
-              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
-              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
 
-fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd(2),dd(3));                                                                                                                              
+fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd(2),dd(3)); 
+                                                                                                                             
 	     ++ctr;
 
 	     }
@@ -793,9 +819,18 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
-              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
-              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
-              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
+       if (gJ(l)==0)  //load magnetic moment into vector xyz
+       {
+        if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+        xyz=0;
+        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                             else                {xyz((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                            }
+       }
+       else
+       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+       }
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd(1),dd(2),dd(3));
 fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz(1),xyz(2),xyz(3));
 	     ++ctr;
@@ -808,9 +843,10 @@ fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0
 fprintf(fout,"}\n");
 } 
 
-void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z) //print std file to stream
+void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
- double alpha,beta,gamma;
+int maxm,m; 
+double alpha,beta,gamma;
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector nofabc(1,3),dd(1,3),pa(1,3),pb(1,3),pc(1,3);
   Matrix p(1,3,1,3);
@@ -866,9 +902,17 @@ fprintf(fout,"MSYM  u,v,w,0.0\n");
          dd(3)=z[l]*abc(3);
          dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
          dd0=p.Inverse()*dd;
-              xyz(1)=mom[in(i,j,k)](1+nofcomponents*(l-1));
-              xyz(2)=mom[in(i,j,k)](2+nofcomponents*(l-1));
-              xyz(3)=mom[in(i,j,k)](3+nofcomponents*(l-1));
+       if (gJ(l)==0)  //load magnetic moment into vector xyz
+       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+        xyz=0;
+        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                             else                {xyz((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                            }
+       }
+       else
+       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+       }
               xyz0=p.Inverse()*xyz; xyz0(1)*=Norm(pa);xyz0(2)*=Norm(pb);xyz0(3)*=Norm(pc);
 
 
@@ -901,12 +945,12 @@ void spincf::print(FILE * fout) //print spinconfiguration to stream
 // fprintf(fout,"\n"); //new line to end spinconfiguration - removed aug 07
 }               
 
-void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames) //print spinconfiguration to stream
-{ int i,j,k,l,lc;
+void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames,float * gJ) //print spinconfiguration to stream
+{ int i,j,k,l,lc,m,maxm;
 
  // determine primitive magnetic unit cell
   Vector nofabc(1,3),dd(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3);
+  Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3),mmm(1,3);
   nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
   for (i=1;i<=3;++i)
   {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
@@ -917,7 +961,7 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
 
 
  fprintf(fout,"#nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",nofa,nofb,nofc,nofatoms*nofa*nofb*nofc);
- fprintf(fout,"#{atom file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ja> <Jb> <Jc> ...\n");
+ fprintf(fout,"#{atom file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ma> <Mb> <Mc> [mb] <Ja> <Jb> <Jc> <Jd> <Je> ...\n");
  
    // output atoms and moments in primitive unit cell
   for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
@@ -930,6 +974,21 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
          dd0=p.Inverse()*dd;dd0(1)*=nofa;dd0(2)*=nofb;dd0(3)*=nofc;
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
 	              cffilenames[l],dd(1)/abc(1),dd(2)/abc(2),dd(3)/abc(3),dd0(1),dd0(2),dd0(3));
+             if(gJ[l]!=0)
+              {fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](1+nofcomponents*(l-1)));
+               if(nofcomponents>=2){fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](2+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
+               if(nofcomponents>=2){fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](3+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
+              }
+             else   // if gJ=0 it means we have so print out total moment
+              { //load magnetic moment into vector mmm
+               if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+                mmm=0;
+                for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){mmm((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                                     else                {mmm((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                                     }
+
+               fprintf(fout," %4.4f %4.4f %4.4f",mmm(1),mmm(2),mmm(3));
+              }
              {for (lc=1;lc<=nofcomponents;++lc)
               {fprintf(fout," %4.4f",mom[in(i,j,k)](lc+nofcomponents*(l-1)));}
               fprintf(fout,"\n");

@@ -12,6 +12,7 @@
 #include <mpspecfunp.h>
 #include <martin.h>
 #include <myev.h>
+#include <jjjpar.hpp>
 #include<cstdio>
 #include<cerrno>
 #include<cstdlib>
@@ -42,20 +43,20 @@ void rezcalc(Vector r1,Vector  r2,Vector  r3,Vector  rez1,Vector  rez2,Vector  r
  xproduct(rez3,r1,r2); vol=rez3*r3; rez3*=2.0*PI/vol;
 return;}
 
-double Z(int K, float J0, float J2, float J4, float J6, Vector Zc)
-{// calculate Z(K)
- if (K==1) return Zc(1)*J0+Zc(2)*J2;
- if (K==3) return Zc(3)*J2+Zc(4)*J4;
- if (K==5) return Zc(5)*J4+Zc(6)*J6;
- if (K==7) return Zc(7)*J6;
- 
- return 0;
-}
+//double ZZ(int K, float J0, float J2, float J4, float J6, Vector Zc)
+//{// calculate Z(K)
+// if (K==1) return Zc(1)*J0+Zc(2)*J2;
+// if (K==3) return Zc(3)*J2+Zc(4)*J4;
+// if (K==5) return Zc(5)*J4+Zc(6)*J6;
+// if (K==7) return Zc(7)*J6;
+// 
+// return 0;
+//}
 
-int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector rez3,float scale,float T,float lambda,float ovalltemp,int lorenz,int & n,Vector * xyz,float * slr,float * sli,float * dwf,Vector * mom,float * gj,float * J,float & d,Vector * j0,Vector * j2,Vector * j4,Vector * j6,Vector * Zc,ComplexMatrix ** eigenstates,float & Theta,float & Imag,float & Imagdip,float & inuc,float & SF,float & lorentzf,complex <double> & mqx,complex <double> & mqy,complex <double> & mqz,complex <double> & mqxy,complex <double> & mqxz,complex <double> & mqyz,complex <double> & mqx2,complex <double> & mqy2,complex <double> & mqz2)
+int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector rez3,float scale,double T,float lambda,float ovalltemp,int lorenz,int & n,int * J,float & d,float & Theta,float & Imag,float & Imagdip,float & inuc,float & SF,float & lorentzf,complex <double> & mqx,complex <double> & mqy,complex <double> & mqz,complex <double> & mqxy,complex <double> & mqxz,complex <double> & mqyz,complex <double> & mqx2,complex <double> & mqy2,complex <double> & mqz2)
 {
-            double s,Q,sintheta,qr,FQ,sin2theta,ovallt,mux,muy,muz;
-            int i;
+            double s,Q,FQ,FQL,sintheta,qr,sin2theta,ovallt,mux,muy,muz;
+            int i,j;
             Vector Qvec(1,3);
             //calculate d spacing and intensity for h,k,l triple (d,intmag,ikern)************
             Qvec=rez1*(double)(hi) + rez2*(double)(ki)  + rez3*(double)(li) ;
@@ -73,127 +74,70 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
                complex <double> im(0,1);
 
                for(i=1;i<=n;++i){
-                                 complex <double> scl(slr[i],sli[i]); 
-                                 qr=hi*xyz[i](1)+ki*xyz[i](2)+li*xyz[i](3);
+                                 complex <double> scl((*jjjpars[i]).SLR,(*jjjpars[i]).SLI); 
+                                 qr=hi*(*jjjpars[i]).xyz(1)+ki*(*jjjpars[i]).xyz(2)+li*(*jjjpars[i]).xyz(3);
 
                                  //nuclear structure factor nsfr,nsfc
-                                 nsf+=scl*exp(-2*PI*qr*im)*exp(-2 * dwf[i] *s*s);;
+                                 nsf+=scl*exp(-2*PI*qr*im)*(*jjjpars[i]).debyewallerfactor(Q);
 
                                 //magnetic structure factors
-                                if(gj[i]!=0){
-                                             float J0,J2,J4,J6;
-                                             J0=j0[i](1)*exp(-j0[i](2)*s*s)+j0[i](3)*exp(-j0[i](4)*s*s)+j0[i](5)*exp(-j0[i](6)*s*s)+j0[i](7);
-                                             J2=j2[i](1)*exp(-j2[i](2)*s*s)+j2[i](3)*exp(-j2[i](4)*s*s)+j2[i](5)*exp(-j2[i](6)*s*s)+j2[i](7);
-					     J2*=s*s;
-                                             FQ = (J0 + J2 * (2 / gj[i] - 1)); // formfactor F(Q)
-                                             if(J[i]>=0){ // go beyond dipole approximation
-                                                         J4=j4[i](1)*exp(-j4[i](2)*s*s)+j4[i](3)*exp(-j4[i](4)*s*s)+j4[i](5)*exp(-j4[i](6)*s*s)+j4[i](7);
-	                				     J4*=s*s;
-                                                         J6=j6[i](1)*exp(-j6[i](2)*s*s)+j6[i](3)*exp(-j6[i](4)*s*s)+j6[i](5)*exp(-j6[i](6)*s*s)+j6[i](7);
-				                	     J6*=s*s;
-//printf("sintheta/lambda=%g J0=%g J2=%g J4=%g J6=%g\n",s,J0,J2,J4,J6);
-							     int dj=(int)(2*J[i]+1);
-							 // calculate th and ph (polar angles of Q with respect to xyz of CEF)
-                                                         double th,ph,Qx,Qy,Qz;							 
-							 Qx=Qvec(1);Qy=Qvec(2);Qz=Qvec(3);
-							 th=acos(Qz/Q);
-							 if(sin(th)>=SMALL){
-							                    if(Qx>0){ph=acos(Qx/(Q*sin(th))-SMALL);}
-									    else    {ph=acos(Qx/(Q*sin(th))+SMALL);}
-									   }
-							 else{ph=0;}
-							 if (Qy<0){ph=2*PI-ph;} 
+                                if(J[i]<=0){   // i.e. atom is magnetic
+                                             // formfactor F(Q)
+                                             FQ = (*jjjpars[i]).F(Q); //rare earth
 
-							 ComplexMatrix MQXM(1,dj,1,dj),MQYM(1,dj,1,dj),MQZM(1,dj,1,dj);
-                                                             // .... calculate these matrices ...(formula 11.141-143 in lovesey)
-							    int K,Qd,M,Md;double MJ,MJd,PKdQd,thj,factor;
-							    complex <double>bracketx,brackety,bracketz;
-							    MQXM=0;MQYM=0;MQZM=0;
-							    for(K=1;K<=7;K+=2){
-							     factor=sqrt(4.0*PI)*Z(K,J0,J2,J4,J6,Zc[i])/K;
-                               if (factor!=0){
-							     thj=threej((float)K,J[i],J[i],0,J[i],-J[i]);
-							     for(Qd=-K;Qd<=K;Qd+=1){
-                                                 bracketx=0;brackety=0;
-							       if(K-1>=Qd+1&&K-1>=-Qd-1)
-							       {bracketx+=SphericalHarmonicY (K-1,Qd+1,th,ph)*sqrt((double)(K-Qd)*(K-Qd-1));
-							        brackety+=SphericalHarmonicY (K-1,Qd+1,th,ph)*sqrt((double)(K-Qd)*(K-Qd-1));
-							       }
-							       if(K-1>=Qd-1&&K-1>=-Qd+1)
-                                                 {bracketx-=SphericalHarmonicY (K-1,Qd-1,th,ph)*sqrt((double)(K+Qd)*(K+Qd-1));
-							        brackety+=SphericalHarmonicY (K-1,Qd-1,th,ph)*sqrt((double)(K+Qd)*(K+Qd-1));
-							       }
-							       if(K-1>=Qd&&K-1>=-Qd)
-                                                 {bracketz=SphericalHarmonicY (K-1,Qd,th,ph)*sqrt((double)(K-Qd)*(K+Qd));
-                                                 }else {bracketz=0;}
-
-//.(1)..USE !		     ThreeJSymbolM	(J1,J2,J3,M1,&M2min,&M2max,*thrcof,ndim,errflag);
-                                                 double thrj[30];int ndim=30; double MJdmin,MJdmax; int errflag;
-                                                                      
-                                                 ThreeJSymbolM ((float)K,J[i],J[i],-(float)Qd,MJdmin,MJdmax,thrj,ndim,errflag);
-                                                 if (errflag!=0){fprintf(stderr,"ERROR mcdiff: threejsymbol error %i\n",errflag);exit(EXIT_FAILURE);}           
-                                                 for (Md=int(MJdmin+1+J[i]);Md<=int(MJdmax+1+J[i]);++Md){
-						                 MJd=(float)Md-1-J[i];
-								 MJ=-Qd+MJd;M=int(MJ+1+J[i]);
-							         PKdQd=thrj[Md-int(MJdmin+1+J[i])]/thj; 
-							         PKdQd*=odd(int(J[i]-MJd)) ? -1 : 1;
-							         MQXM(M,Md)+=0.5*factor*PKdQd*bracketx;
-							         MQYM(M,Md)+=-im*brackety*0.5*factor*PKdQd;
-							         MQZM(M,Md)+=factor*PKdQd*bracketz;
-                                                                 }
-
-/*
-//.(2)..                     3jsymb=threej(J1,J2,J3,M1,M2,M3) 
-//							       for(M=1;M<=dj;++M){MJ=(float)M-1-J[i];  
-//							        for(Md=1;Md<=dj;++Md){MJd=(float)Md-1-J[i]; 
-//							         // according to 11.140 lovesey book        
-//							         PKdQd=threej((float)K,J[i],J[i],-(float)Qd,MJd,-MJ)/thj; 
-//							         PKdQd*=odd(int(J[i]-MJd)) ? -1 : 1;
-//							         MQXM(M,Md)+=im*0.5*factor*PKdQd*bracketx;
-//							         MQYM(M,Md)+=-0.5*factor*PKdQd*brackety;
-//							         MQZM(M,Md)+=factor*PKdQd*bracketz;
-//							        }
-//							       }
-*/
-                                             }
-							      }
-                                                             }
-							     // ... calculate thermal expectation values
-							     // using the eigenstates and T 
-							     // mom[i](1) = ....
-          						     //
-							     ComplexVector mm(1,3); 
-                                                             mm=0;
-	                                                     for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
-                                                                mm(1)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQXM(M,Md)*(*eigenstates[i])(Md,K); 
-                                                                mm(2)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQYM(M,Md)*(*eigenstates[i])(Md,K); 
-                                                                mm(3)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQZM(M,Md)*(*eigenstates[i])(Md,K); 
-                                                                }}}
-// myPrintComplexMatrix(stdout,MQXM);
-// myPrintComplexMatrix(stdout,MQYM);
-// myPrintComplexMatrix(stdout,MQZM);
-// 					       myPrintComplexMatrix(stdout,(*eigenstates[i]));}
-					       
-                                                         mm*=2;
-// myPrintComplexVector(stdout,mm);//equivalent to moment ...
-							 msfx+=0.5*mm(1)*exp(-2*PI*qr*im);
-							 msfy+=0.5*mm(2)*exp(-2*PI*qr*im);
-							 msfz+=0.5*mm(3)*exp(-2*PI*qr*im);
-					                }else
-							{msfx+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
-							 msfy+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
-							 msfz+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
-							}
-// myPrintVector(stdout,mom[i]);//equivalent to moment ...
-                                                         msfdipx+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
-							 msfdipy+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
-							 msfdipz+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
-                                                         //mux=mom[i](3); // this should be done in future to implement
-                                                         //muy=mom[i](1); // also nonortholattices in corr functions and res mag scatt
-                                                         //muz=mom[i](2);
-                                                         mux=mom[i](1); // this is still here because correlation functions are calculated
-                                                         muy=mom[i](2); // only for orhtogonal lattices (see printeln sub) and so we take 
-                                                         muz=mom[i](3); // the old convention of the mcdiff program (a||x,b||y,c||z)
+                                             if(J[i]==0){ // go beyond dipole approximation for rare earth
+                                                         ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
+					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);
+					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
+					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
+                                                       msfdipx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);
+					               msfdipy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
+					               msfdipz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
+					                  }
+ 					      if(J[i]==-1){// dipole approximation - use magnetic moments 
+                                                        msfx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);
+					                msfy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
+					                msfz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
+                                                        msfdipx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);
+					                msfdipy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
+					                msfdipz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
+					               }
+					      if(J[i]==-2){// dipole approximation - use S and L moments (only if gJ=0!)
+                                                        FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
+                                                        msfx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+					                msfy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
+					                msfz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
+					                msfx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
+					                msfy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
+					                msfz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
+                                                        msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+					                msfdipy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
+					                msfdipz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
+					                msfdipx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
+					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
+					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
+					               }
+                                             if(J[i]==-3){ // go beyond dipole approximation for gJ=0
+                                                       ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
+					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);
+					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
+					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
+                                                        FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
+                                                        msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+					                msfdipy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
+					                msfdipz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
+					                msfdipx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
+					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
+					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
+					               }
+// myPrintVector(stdout,(*jjjpars[i]).mom);//equivalent to moment ...
+                                          
+                                                         //mux=(*jjjpars[i]).mom(3); // this should be done in future to implement
+                                                         //muy=(*jjjpars[i]).mom(1); // also nonortholattices in corr functions and res mag scatt
+                                                         //muz=(*jjjpars[i]).mom(2);
+                                                         mux=(*jjjpars[i]).mom(1); // this is still here because correlation functions are calculated
+                                                         muy=(*jjjpars[i]).mom(2); // only for orhtogonal lattices (see printeln sub) and so we take 
+                                                         muz=(*jjjpars[i]).mom(3); // the old convention of the mcdiff program (a||x,b||y,c||z)
                                                          mqx+=mux*exp(-2*PI*qr*im);
                                                          mqy+=muy*exp(-2*PI*qr*im);
                                                          mqz+=muz*exp(-2*PI*qr*im);
@@ -251,7 +195,7 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
 return true;
 }
 
-void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int & n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr, float * sli,Vector * j0,Vector *  j2,Vector *  j4,Vector *  j6, Vector * Zc, ComplexMatrix ** eigenstates,int & m,Vector *  hkl,float * D,float * theta,float * intmag,float * intmagdip,float * ikern,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2)
+void neutint(jjjpar ** jjjpars,int code,double T,float lambda, float thetamax, float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int & n,int * J,int & m,Vector *  hkl,float * D,float * theta,float * intmag,float * intmagdip,float * ikern,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2)
 {//****************************************************************************
 // this routine calculates the intensity of elastic neutrons
 // for a given magnetic unit cell (crystal axis orthogonal)
@@ -262,23 +206,24 @@ void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int 
 // ovalltemp                          overall temperature factor [A]
 // r1(1..3),r2(),r3()                 vectors of primitive unit cell[A]
 // n                                  number of atoms per unit cell
-// xyz[1...n](1..3)                   atomic positional parameters dr1 dr2 dr3
+// (*jjjpar[1...n]).xyz(1..3)         atomic positional parameters dr1 dr2 dr3
 //                                        '(with respect to primitive lattice)
-// dwf[1..n]			      debye waller factors [A]
-// slr(1...n),sli(1...n)              nuclear scattering length[10^-12cm]
-// mom[1...n](1..3)                   atomic magnetic moment [mb]
+// (*jjjpars[1...n]).DWF              debye waller factors [A]
+// (*jjjpars[1...n]).SLR,SLI          nuclear scattering length[10^-12cm]
+// (*jjjpars[1...n]).mom(1..3)(45)(67)(89)        atomic magnetic moment Ma Mb Mc [mb] and (if input) Sa La Sb Lb Sc Lc
 //                                       ' (with respect to coordinates 1,2,3=yzx)
-// gj[1...n]			      Lande factor
-// J[1..n]			      total angular momentum (if J=0 dipole approx is used)
-// j0[1..n](1..7)                     formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
-// j2[1..n](1..7)                     formfactor j2 for atom 1...n <j2(kr)>-terms A,a,B,b,C,c,D
+// (*jjjpars[1...n]).gj		      Lande factor
+// J[1..n] // code for indicating if ion is nonmagnetic (J=1), 
+            //magnetic with dipole approx (J=-1), beyond dipole approx (J=0)
+// (*jjjpars[1...n]).magFFj0(1..7)         formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
+// (*jjjpars[1...n]).magFFj2(1..7)         formfactor j2 for atom 1...n <j2(kr)>-terms A,a,B,b,C,c,D
 //     <jl(kr)> is defined as = integral[0,inf] U^2(r) jl(kr) 4 pi r^2 dr
 //     where U(r) is the Radial wave function for the unpaired electrons in the atom
-// j4[1..n](1..7)                        formfactor j4 for atom 1...n  (needed to go beyond dipole approx)
-// j6[1..n](1..7)                        formfactor j6 for atom 1...n  (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).magFFj4(1..7)         formfactor j4 for atom 1...n  (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).magFFj6(1..7)         formfactor j6 for atom 1...n  (needed to go beyond dipole approx)
 // T				         temperature [K] (needed to go beyond dipole approx)
-// Zc[1...n]			         Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
-// eigenstates [1..n](1..2J+1,1..2J+1)   CF+MF eigenstates (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).Zc		         Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).eigenstates(1..2J+1,1..2J+1)   CF+MF eigenstates (needed to go beyond dipole approx)
 
 // output
 // m                                  number of calculated reflections
@@ -328,7 +273,7 @@ if(code==0){ m = 0;// reset m
                 complex <double> mqy=0,mqy2=0,mqxz=0;
                 complex <double> mqz=0,mqz2=0,mqyz=0;  
 
-          if(getint(hi,ki,li,thetamax,rez1,rez2,rez3,scale,T,lambda,ovalltemp,lorenz,n,xyz,slr,sli,dwf,mom,gj,J,d,j0,j2,j4,j6,Zc,eigenstates,Theta,Imag,Imagdip,inuc,SF,lorentzf,mqx,mqy,mqz,mqxy,mqxz,mqyz,mqx2,mqy2,mqz2))
+          if(getint(jjjpars,hi,ki,li,thetamax,rez1,rez2,rez3,scale,T,lambda,ovalltemp,lorenz,n,J,d,Theta,Imag,Imagdip,inuc,SF,lorentzf,mqx,mqy,mqz,mqxy,mqxz,mqyz,mqx2,mqy2,mqz2))
           {// reflection was found below thetamax....
 
             //sort according to descending d spacing
@@ -391,7 +336,7 @@ else
                hkl[i](1)=rint(hkl[i](1));
                hkl[i](2)=rint(hkl[i](2));
                hkl[i](3)=rint(hkl[i](3));
-          if(!getint((int)hkl[i](1),(int)hkl[i](2),(int)hkl[i](3),thetamax,rez1,rez2,rez3,scale,T,lambda,ovalltemp,lorenz,n,xyz,slr,sli,dwf,mom,gj,J,d,j0,j2,j4,j6,Zc,eigenstates,Theta,Imag,Imagdip,inuc,SF,lorentzf,mqx,mqy,mqz,mqxy,mqxz,mqyz,mqx2,mqy2,mqz2))
+          if(!getint(jjjpars,(int)hkl[i](1),(int)hkl[i](2),(int)hkl[i](3),thetamax,rez1,rez2,rez3,scale,T,lambda,ovalltemp,lorenz,n,J,d,Theta,Imag,Imagdip,inuc,SF,lorentzf,mqx,mqy,mqz,mqxy,mqxz,mqyz,mqx2,mqy2,mqz2))
                 {fprintf(stderr,"ERROR mcdiff: theta for reflection number %i above thetamax=%g\n",i,thetamax);exit(1);}
                D[i] = d; theta[i] = Theta;
                intmag[i] = Imag;intmagdip[i] = Imagdip;  ikern[i] = inuc;
@@ -413,7 +358,7 @@ else
 return;}
 
 
-void printeln(int code,const char * filename,const char* infile,char * unitcell,float T, float Ha, float Hb, float Hc,float lambda,float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr,float * sli,Vector *j0,Vector *j2,Vector *j4,Vector *j6,Vector * Zc, ComplexMatrix ** eigenstates,int m,Vector * hkl,float * ikern,float * intmag,float * intmagdip,float * D,float * theta,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2,float a,float b,float c)
+void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infile,char * unitcell,double T, float Ha, float Hb, float Hc,float lambda,float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int n,int * J,int m,Vector * hkl,float * ikern,float * intmag,float * intmagdip,float * D,float * theta,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2,float a,float b,float c)
 {// ausgabe auf file filename
  FILE * fout;char l[MAXNOFCHARINLINE];
  int i,j,chinr=0,ortho=1;
@@ -447,24 +392,27 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
  fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl, Debye Waller (defined as ovalltemp)\n");
  fprintf(fout, "#  and  Lande factors total angular momentum J (=0 if dipole approximation is used) <j0> and <j2> formfactor\n# coefficients\n");
  if (ortho==1)
- {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
  } else
- {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
   fprintf(fout, "#                         ...with x||(a x b), z||b and y normal to x and z\n");
  }
  for (i = 1;i<=n;++i)
  {if((double)(i)/50==(double)(i/50))
   {
    if (ortho==1)
-   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
    } else
-   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
     fprintf(fout, "#                         ...with x||a x b, z||b and y normal to x and z\n");
    }
   }
-  fprintf(fout, "# %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f%+6.3fi %6.3f %6.3f %6.3f ",xyz[i](1),xyz[i](2),xyz[i](3),mom[i](1),mom[i](2),mom[i](3),slr[i],sli[i],dwf[i],gj[i],J[i]);
-  for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",j0[i](j));}
-  for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",j2[i](j));}
+  fprintf(fout, "# %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f%+6.3fi %6.3f %6.3f ",(*jjjpars[i]).xyz(1),(*jjjpars[i]).xyz(2),(*jjjpars[i]).xyz(3),(*jjjpars[i]).mom(1),(*jjjpars[i]).mom(2),(*jjjpars[i]).mom(3),(*jjjpars[i]).SLR,(*jjjpars[i]).SLI,(*jjjpars[i]).DWF,(*jjjpars[i]).gJ);
+  if(J[i]==0||J[i]==-3){fprintf(fout,"F(Q) beyond dip.approx.");}
+  if(J[i]==-2){fprintf(fout,"separate spin and orb. moments F(Q) dip.approx.");}
+
+  for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",(*jjjpars[i]).magFFj0(j));}
+  for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",(*jjjpars[i]).magFFj2(j));}
   fprintf(fout, "\n");
  }
  fprintf(fout, "#}\n");
@@ -629,8 +577,9 @@ return;}
 // hauptprogramm
 int main (int argc, char **argv)
 { FILE * fin, * fin_coq, * fout;
-  float ovalltemp,thetamax,lambda,a=0,b=0,c=0,T=0,Ha=0,Hb=0,Hc=0,alpha=0,beta=0,gamma=0;
-  int i,j,n,lorenz,nat, nofatoms,nr1=0,nr2=0,nr3=0,natmagnetic;
+  float ovalltemp,thetamax,lambda,a=0,b=0,c=0,Ha=0,Hb=0,Hc=0,alpha=0,beta=0,gamma=0;
+  double T=0;
+  int i,j,k,n,lorenz,nat, nofatoms,nr1=0,nr2=0,nr3=0,natmagnetic;
   long int pos=0;
   char instr[MAXNOFCHARINLINE+1];
   char cffilename[MAXNOFCHARINLINE+1];
@@ -862,27 +811,23 @@ printf ("                 nat=%i magnetic atoms\n",natmagnetic);
 n = nr1 * nr2 * nr3 * nat + natmagnetic; //atoms in der magnetic unit cell
 
 
-float slr[n+1], sli[n+1],dwf[n+1], gj[n+1],J[n+1];
-Vector * xyz = new Vector [n+1]; for(i=0;i<=n;++i){xyz[i]=Vector (1,3);}
-Vector * mom = new Vector[n+1]; for(i=0;i<=n;++i){mom[i]=Vector(1,3);}
-Vector * j0 = new Vector[n+1]; for(i=0;i<=n;++i){j0[i]=Vector(1,7);}
-Vector * j2 = new Vector[n+1]; for(i=0;i<=n;++i){j2[i]=Vector(1,7);}
-Vector * j4 = new Vector[n+1]; for(i=0;i<=n;++i){j4[i]=Vector(1,7);}
-Vector * j6 = new Vector[n+1]; for(i=0;i<=n;++i){j6[i]=Vector(1,7);}
-Vector * Zc = new Vector[n+1]; for(i=0;i<=n;++i){Zc[i]=Vector(1,7);}
-ComplexMatrix ** eigenstates= new ComplexMatrix * [n+1];
-
+int J[n+1]; // code for indicating if ion is nonmagnetic (J=1), 
+            // go beyond dipole approx for rare earth (J=0)
+            // use magnetic moment with dipole approx (J=-1)
+            // use L and S values with dipole approx (J=-2) 
+            // go beyond dipole approx for gJ=0 (L and S separately)
+jjjpar ** jjjpars = new jjjpar * [n+1];
+double lnZ,U;
 printf("                 reading magnetic atoms and moments ...\n");
 
 for(i=1;i<=natmagnetic;++i){ 
                             instr[0]='#';J[i]=-1;
                             while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
 			     // get cffilename out of "{filename}   ..."
-			    extract(instr,"J",J[i]);
-			    if (J[i]>=0) // if J= has been found and J read, overtype it with spaces until a "{" is found
-			    {char * token;for(token=instr;*token!='{'&&token<instr+MAXNOFCHARINLINE;++token){*token=' ';};}
+
                             if(instr[strspn(instr," \t")]!='{'){fprintf(stderr,"ERROR mcdiff: magnetic atom line has to start with '{'\n");exit (EXIT_FAILURE);}
 			    if (strchr(instr,'}')==NULL){fprintf(stderr,"ERROR mcdiff: no '}' found after filename for magnetic atom %s\n",instr);exit (EXIT_FAILURE);}
+
                             instr[strspn(instr," \t")]='=';
 			    extract(instr,"",cffilename,(size_t)MAXNOFCHARINLINE);
                             if(strchr(cffilename,'}')!=NULL){*strchr(cffilename,'}')='\0';}
@@ -894,85 +839,60 @@ for(i=1;i<=natmagnetic;++i){
                             fseek(fin_coq,pos+strchr(instr,'}')-instr+1,SEEK_SET); 
                             j=inputline(fin_coq,numbers);
                             if (j<9) {fprintf(stderr,"ERROR mcdiff: too few parameters for magnetic atom %i: %s\n",i,instr);exit(EXIT_FAILURE);}
-                             xyz[i](1) = numbers[4] / nr1;
-			     xyz[i](2) = numbers[5] / nr2;
-			     xyz[i](3) = numbers[6] / nr3;
-			     dwf[i]=0;slr[i]=0;sli[i]=0;gj[i]=0;
+                             jjjpars[i]=new jjjpar(numbers[4] / nr1,numbers[5] / nr2,numbers[6] / nr3, cffilename);
+                              // store moment and components of S and L (if given)
+                              for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
+                              if((*jjjpars[i]).gJ==0){if(j>=15){J[i]=-2; // do not use input moment but spin and angular momentum for calculation
+                            (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
+                            (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
+                            (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);}
+                                                      else {(*jjjpars[i]).gJ=2;} // just use spin formfactor
+                                       }
+                            instr[0]='#';
+                            while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
 
-                            fin = fopen_errchk (cffilename, "rb");
-                            while(feof(fin)==0)
-                                 {instr[0]='#';
-                                  while (instr[strspn(instr," \t")]=='#'&&feof(fin)==0) 
-                                   {fgets(instr,MAXNOFCHARINLINE,fin);}
-                                  extract(instr,"SCATTERINGLENGTHREAL",slr[i]);  
-                                  extract(instr,"SCATTERINGLENGTHIMAG",sli[i]);  
-                                  extract(instr,"DWF",dwf[i]);  
-                                  extract(instr,"GJ",gj[i]);  
-                                  extract(instr,"FFj0A",j0[i](1));  
-                                  extract(instr,"FFj0a",j0[i](2));  
-                                  extract(instr,"FFj0B",j0[i](3));  
-                                  extract(instr,"FFj0b",j0[i](4));  
-                                  extract(instr,"FFj0C",j0[i](5));  
-                                  extract(instr,"FFj0c",j0[i](6));  
-                                  extract(instr,"FFj0D",j0[i](7));  
-
-                                  extract(instr,"FFj2A",j2[i](1));  
-                                  extract(instr,"FFj2a",j2[i](2));  
-                                  extract(instr,"FFj2B",j2[i](3));  
-                                  extract(instr,"FFj2b",j2[i](4));  
-                                  extract(instr,"FFj2C",j2[i](5));  
-                                  extract(instr,"FFj2c",j2[i](6));  
-                                  extract(instr,"FFj2D",j2[i](7));  
-
-                                  extract(instr,"FFj4A",j4[i](1));  
-                                  extract(instr,"FFj4a",j4[i](2));  
-                                  extract(instr,"FFj4B",j4[i](3));  
-                                  extract(instr,"FFj4b",j4[i](4));  
-                                  extract(instr,"FFj4C",j4[i](5));  
-                                  extract(instr,"FFj4c",j4[i](6));  
-                                  extract(instr,"FFj4D",j4[i](7));  
-
-                                  extract(instr,"FFj6A",j6[i](1));  
-                                  extract(instr,"FFj6a",j6[i](2));  
-                                  extract(instr,"FFj6B",j6[i](3));  
-                                  extract(instr,"FFj6b",j6[i](4));  
-                                  extract(instr,"FFj6C",j6[i](5));  
-                                  extract(instr,"FFj6c",j6[i](6));  
-                                  extract(instr,"FFj6D",j6[i](7));  
-                                   // coefficients of Z(K') according to Lovesey chapter 11.6.1 page 233
-                                  extract(instr,"Z1c0",Zc[i](1));  
-                                  extract(instr,"Z1c2",Zc[i](2));  
-                                  extract(instr,"Z3c2",Zc[i](3));  
-                                  extract(instr,"Z3c4",Zc[i](4));  
-                                  extract(instr,"Z5c4",Zc[i](5));  
-                                  extract(instr,"Z5c6",Zc[i](6));  
-                                  extract(instr,"Z7c6",Zc[i](7));  
-                                  
-                                  }
-                             fclose(fin); 
-                            if (J[i]>=0) {int dj=(int)(2*J[i]+1);
-			                  eigenstates [i]= new ComplexMatrix (0,dj,1,dj);
-					  if (myReadComplexMatrix (fin_coq, (*eigenstates[i]))==false){fprintf (stderr, "ERROR mcdiff reading eigenstates for atom %i\n",i);exit(EXIT_FAILURE);}
-                                          //myPrintComplexMatrix (stdout,(*eigenstates[i])); 
+                            if (strchr(instr,'>')==NULL){fseek(fin_coq,pos,SEEK_SET);} // no ">" found --> do dipole approx
+                             else          {J[i]=0; // J=0 tells that full calculation should be done for this ion
+                            fseek(fin_coq,pos+strchr(instr,'>')-instr+1,SEEK_SET); 
+                            j=inputline(fin_coq,numbers);printf("dimension of mf = %i\n",j);
+                            Vector heff(1,j);for(k=1;k<=j;++k){heff(k)=numbers[k];}
+                            if ((*jjjpars[i]).gJ==0)
+			    {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
+ 			     (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
+			    }
+			    else
+			    {// beyond formalism for rare earth		    
+                             // do some consistency checks
+                             Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U);
+                             if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i\n",i);}
+                             if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i\n",i);}
+                             if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i\n",i);}
+                             (*jjjpars[i]).mom(1)=(*jjjpars[i]).gJ*moment(1);
+                             (*jjjpars[i]).mom(2)=(*jjjpars[i]).gJ*moment(2);
+                             (*jjjpars[i]).mom(3)=(*jjjpars[i]).gJ*moment(3);
+                            
+                             (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
+                     
+                             int dj;dj=(int)(2.0*(*jjjpars[i]).J()+1.0);
+                                          //myPrintComplexMatrix (stdout,(*jjjpars[i]).est); 
                                                 //calculate partition sum
                                                double z=0;double KBT=T*KB,E0;
-    		                               E0=real((*eigenstates[i])(0,1));
+    		                               E0=real((*jjjpars[i]).est(0,1));
                                                for(j=1;j<=dj;++j)
-                                               {z+=exp(-((real((*eigenstates[i])(0,j))-E0)/KBT));}
+                                               {z+=exp(-((real((*jjjpars[i]).est(0,j))-E0)/KBT));}
                                                // put boltzmann population into row 0 of eigenstates...
                                                for(j=1;j<=dj;++j)
-                                               {(*eigenstates[i])(0,j)=complex<double>(exp(-(real((*eigenstates[i])(0,j))-E0)/KBT)/z,0);}
-                             if(Norm(Zc[i])==0){fprintf(stderr,"WARNING mcdiff: Z(K) coefficients not found or zero in file %s\n",cffilename);}
-                             if(Norm(j4[i])==0){fprintf(stderr,"WARNING mcdiff: <j4(Q)> coefficients not found or zero in file %s\n",cffilename);}
-                             if(Norm(j6[i])==0){fprintf(stderr,"WARNING mcdiff: <j6(Q)> coefficients not found or zero in file %s\n",cffilename);}
+                                               {(*jjjpars[i]).est(0,j)=complex<double>(exp(-(real((*jjjpars[i]).est(0,j))-E0)/KBT)/z,0);}
+                             if(Norm((*jjjpars[i]).Zc)==0){fprintf(stderr,"WARNING mcdiff: Z(K) coefficients not found or zero in file %s\n",cffilename);}
+                            }
+                             if(Norm((*jjjpars[i]).magFFj4)==0){fprintf(stderr,"WARNING mcdiff: <j4(Q)> coefficients not found or zero in file %s\n",cffilename);}
+                             if(Norm((*jjjpars[i]).magFFj6)==0){fprintf(stderr,"WARNING mcdiff: <j6(Q)> coefficients not found or zero in file %s\n",cffilename);}
  			                 }
-                             if(slr[i]==0){fprintf(stderr,"WARNING mcdiff: SCATTERINGLENGTHREAL not found or zero in file %s\n",cffilename);}
-                             if(gj[i]==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s\n",cffilename);}
-                             if(Norm(j0[i])==0){fprintf(stderr,"WARNING mcdiff: <j0(Q)> coefficients not found or zero in file %s\n",cffilename);}
-                             if(Norm(j2[i])==0){fprintf(stderr,"WARNING mcdiff: <j2(Q)> coefficients not found or zero in file %s\n",cffilename);}
-                              mom[i](1) = numbers[7] * gj[i];
-                              mom[i](2) = numbers[8] * gj[i];
-                              mom[i](3) = numbers[9] * gj[i];
+
+                             if((*jjjpars[i]).SLR==0){fprintf(stderr,"WARNING mcdiff: SCATTERINGLENGTHREAL not found or zero in file %s\n",cffilename);}
+                             if((*jjjpars[i]).gJ==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s - gJ=0 means Ja=Sy Jb=Ly Jc=Sz Jd=Lz Je=Sx Jf=Lx !\n",cffilename);}
+                             if(Norm((*jjjpars[i]).magFFj0)==0){fprintf(stderr,"WARNING mcdiff: <j0(Q)> coefficients not found or zero in file %s\n",cffilename);}
+                             if(Norm((*jjjpars[i]).magFFj2)==0){fprintf(stderr,"WARNING mcdiff: <j2(Q)> coefficients not found or zero in file %s\n",cffilename);}
                            }
   fclose(fin_coq);
 printf ("calculating ...\n");  
@@ -986,21 +906,10 @@ for(na = 1;na<=nr1;++na){
    if(nat!=0){
     for(i=1;i<=nat;++i){
       ++ncryst;
-      slr[ncryst]=sl1r[i];
-      sli[ncryst]=sl1i[i];
-      xyz[ncryst](1) = (na + x1[i] - 1) / nr1;
-      xyz[ncryst](2) = (nb + y1[i] - 1) / nr2;
-      xyz[ncryst](3) = (nc + z1[i] - 1) / nr3;
-      mom[ncryst]=0;
-      j0[ncryst]=0;
-      j2[ncryst]=0;
-      j4[ncryst]=0;
-      j6[ncryst]=0;
-      Zc[ncryst]=0;
-      eigenstates[ncryst]=0;
-      gj[ncryst]=0;
       J[ncryst]=-1;
-      dwf[ncryst]=dwf1[i];
+      jjjpars[ncryst]=new jjjpar((na + x1[i] - 1) / nr1,(nb + y1[i] - 1) / nr2,(nc + z1[i] - 1) / nr3,sl1r[i],sl1i[i],dwf1[i]);
+      (*jjjpars[ncryst]).mom=0;
+      (*jjjpars[ncryst]).gJ=0;
       }
     }
 }}}
@@ -1052,7 +961,7 @@ if (argc>1){int nr;
 // transformieren der millerindizes auf kristallographische einheitszelle
 
 
-neutint(code,T,lambda, thetamax, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj, slr, sli, j0, j2, j4, j6, Zc,eigenstates,m, hkl, D, theta, intmag,intmagdip, ikern, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2);
+neutint(jjjpars,code,T,lambda, thetamax, ovalltemp, lorenz, r1, r2, r3, n,  J, m, hkl, D, theta, intmag,intmagdip, ikern, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2);
 
 
 
@@ -1068,19 +977,12 @@ for(i=1;i<=m;++i){hhkkll=hkl[i];
                  }
 
 
-printeln(code,"./results/mcdiff.out","mcdiff.in", unitcellstr,T,Ha,Hb,Hc, lambda, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj , slr,sli,j0,j2,j4,j6,Zc,eigenstates, m, hkl, ikern, intmag,intmagdip, D, theta, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2,a,b,c);
+printeln(jjjpars,code,"./results/mcdiff.out","mcdiff.in", unitcellstr,T,Ha,Hb,Hc, lambda, ovalltemp, lorenz, r1, r2, r3, n,  J, m, hkl, ikern, intmag,intmagdip, D, theta, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2,a,b,c);
 
 fprintf (stderr,"...results written to ./results/mcdiff.out\n");
 
-  delete []j0;
-  delete []j2;
-  delete []j4;
-  delete []j6;
-  delete []Zc;
-  for (i=1;i<=natmagnetic;++i){if (J[i]>0)delete eigenstates [i];}
-  delete []eigenstates;
-  delete []mom;
-  delete []xyz;
+//  for (i=1;i<=n;++i){delete jjjpars[i];}
+//  delete []jjjpars;
   delete []hkl;
  return 0;
 }

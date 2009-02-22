@@ -124,7 +124,7 @@ _CALFUN CF;  /*globale struktur fuer routine CALFUN, */
  
 
 /*define ANZ_IONEN              (  sizeof(IONENIMP)/sizeof(IONEN)  )*/
-#define ANZ_IONEN              32
+#define ANZ_IONEN              30
  
 SYMMETRIE SYMLISTE[]={
 /* 0 */   {  0 , "triklin   " } ,

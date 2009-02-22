@@ -3,6 +3,7 @@
 
 #include <vector.h>
 #include <cstdio>
+#include <mpspecfunp.h>
 
 // ionpars: class to 
 //          - read single ion parameterfile for cfield module
@@ -50,6 +51,14 @@ class ionpars
    ComplexMatrix & cfeigenstates (Vector & H);
    // and transition matrix elements
    int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+
+   // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+   // according to stored eigenstate matrix est
+   // calculates the scattering operator given the polar angles th, ph (with respect to the CEF coordinate 
+   // system xyz and the <jl(qr)> and the eigenstate matrix with eigenstates and thermal population numbers
+   ComplexVector & MQ(double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc,ComplexMatrix & est);
+
+
    void savBlm(FILE * file); // saving Blm to file 
    void savLlm(FILE * file); // saving Blm to file 
  

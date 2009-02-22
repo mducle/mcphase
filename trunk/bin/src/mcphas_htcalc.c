@@ -157,13 +157,13 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 		    z[is]=(*inputpars.jjj[is]).xyz[3];}
                      sprintf(text,"fe=%g,fered=%g<femin=%g:T=%gK, |H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT,  %i spins",fe,fered,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6,inputpars.gJ);
                     fclose (fin_coq);
 		   
                     fin_coq = fopen_errchk ("./results/.spins.eps", "w");
@@ -196,19 +196,37 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 		 // get the main propagation vector by looking for the
 		 // biggest Fourier component of the magnetic moment arrangement 
                  for(qh=0;qh<=sps.na()/2;++qh){for(qk=0;qk<=sps.nb()/2;++qk){for(ql=0;ql<=sps.nc()/2;++ql)
-                  {// get magnetic moment from momentum fouriercomponent
+                  {// get magnetic moment from momentum fouriercomponent into b 
+		   b=0;
 		   b1 = mq[sps.in(sps.na()-qh,sps.nb()-qk,sps.nc()-ql)];
                    for(l=1;l<=inputpars.nofatoms;++l)
-		   {b(3*(l-1)+1)=b1(inputpars.nofcomponents*(l-1)+1)*(*inputpars.jjj[l]).gJ;    
-		    b(3*(l-1)+2)=b1(inputpars.nofcomponents*(l-1)+2)*(*inputpars.jjj[l]).gJ;    
-		    b(3*(l-1)+3)=b1(inputpars.nofcomponents*(l-1)+3)*(*inputpars.jjj[l]).gJ;} // mind to set zero b(3*(l-1)+4,5,6... 
+		   {int m1,m1max=3; if ((*inputpars.jjj[l]).gJ==0){m1max=6;}
+		    for (m1=1;m1<=m1max;++m1)
+		     {if((*inputpars.jjj[l]).gJ==0)
+		      {if(m1==2||m1==4||m1==6){b(3*(l-1)+(m1+1)/2)+=b1(inputpars.nofcomponents*(l-1)+m1);}
+		       else                   {b(3*(l-1)+(m1+1)/2)+=2.0*b1(inputpars.nofcomponents*(l-1)+m1);}
+		      }
+		      else
+		      {b(3*(l-1)+m1)=b1(inputpars.nofcomponents*(l-1)+m1)*(*inputpars.jjj[l]).gJ;
+		      }
+		     }    
+		    }
 		   a = b.Conjugate();
 		   b1 = mq[sps.in(qh,qk,ql)];
+		   b=0;
                    for(l=1;l<=inputpars.nofatoms;++l)
-		   {b(3*(l-1)+1)=b1(inputpars.nofcomponents*(l-1)+1)*(*inputpars.jjj[l]).gJ;    
-		    b(3*(l-1)+2)=b1(inputpars.nofcomponents*(l-1)+2)*(*inputpars.jjj[l]).gJ;    
-		    b(3*(l-1)+3)=b1(inputpars.nofcomponents*(l-1)+3)*(*inputpars.jjj[l]).gJ;} // mind to set zero b(3*(l-1)+4,5,6... 
-                   // inner product
+		   {int m1,m1max=3; if ((*inputpars.jjj[l]).gJ==0){m1max=6;}
+		    for (m1=1;m1<=m1max;++m1)
+		     {if((*inputpars.jjj[l]).gJ==0)
+		      {if(m1==2||m1==4||m1==6){b(3*(l-1)+(m1+1)/2)+=b1(inputpars.nofcomponents*(l-1)+m1);}
+		       else                   {b(3*(l-1)+(m1+1)/2)+=2.0*b1(inputpars.nofcomponents*(l-1)+m1);}
+		      }
+		      else
+		      {b(3*(l-1)+m1)=b1(inputpars.nofcomponents*(l-1)+m1)*(*inputpars.jjj[l]).gJ;
+		      }
+		     }    
+		    }                   
+		   // inner product
                    sq2=Abs(b+a)/(double)sps.n()/(double)inputpars.nofatoms;
                    Vector q(1,3);
 		   q(1)=1.0*qh/sps.na();
@@ -283,13 +301,13 @@ else // if yes ... then
 		    z[is]=(*inputpars.jjj[is]).xyz[3];}
                      sprintf(text,"recalculated: fe=%g,femin=%g:T=%gK,|H|=%gT,Ha=%gT, Hb=%gT, Hc=%gT, %i spins",physprops.fe,femin,T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6,inputpars.gJ);
                     fclose (fin_coq);
 		 fin_coq = fopen_errchk ("./results/.spins.eps", "w");
                      sps.eps(fin_coq,text);
@@ -422,10 +440,18 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
      for(l=1;l<=inputpars.nofatoms;++l)
       {//multiply mq by lattice positions exp(iqr_i) and sum into a
        ri=inputpars.rez*(const Vector&)(*inputpars.jjj[l]).xyz; // ri ... atom position with respect to primitive lattice
-       g=exp(piq*(Q*ri))*(*inputpars.jjj[l]).debeywallerfactor(QQ)*(*inputpars.jjj[l]).gJ*(*inputpars.jjj[l]).F(QQ)/2.0; // and formfactor + debey waller factor
-        for(l1=1;l1<=3&&l1<=inputpars.nofcomponents;++l1){
-       a(l1)+=g*mq[sps.in(qh,qk,ql)](inputpars.nofcomponents*(l-1)+l1)*(*inputpars.jjj[l]).gJ;
-                                                         }
+       g=exp(piq*(Q*ri))*(*inputpars.jjj[l]).debyewallerfactor(QQ)*(*inputpars.jjj[l]).F(QQ)/2.0; // and formfactor + debey waller factor
+       if((*inputpars.jjj[l]).gJ==0)
+        {for(l1=1;l1<=6&&l1<=inputpars.nofcomponents;++l1){
+         if(l1==2||l1==4||l1==6){a(l1/2)+=g*mq[sps.in(qh,qk,ql)](inputpars.nofcomponents*(l-1)+l1);}
+         else                   {a((l1+1)/2)+=2.0*g*mq[sps.in(qh,qk,ql)](inputpars.nofcomponents*(l-1)+l1);}
+                                                           }
+        }
+       else
+        {for(l1=1;l1<=3&&l1<=inputpars.nofcomponents;++l1){
+         a(l1)+=g*mq[sps.in(qh,qk,ql)](inputpars.nofcomponents*(l-1)+l1)*(*inputpars.jjj[l]).gJ;
+                                                           }
+        }
       } 
       if (QQ<ini.maxQ||(i1==0&&j1==0&&k1==0&&i2==-1&&j2==-1&&k2==-1&&ini.maxQ==0))
           {
@@ -494,13 +520,13 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
 		    z[is]=(*inputpars.jjj[is]).xyz[3];}
     sprintf(text,"physpropclc:T=%gK, |H|=%gT, Ha=%gT, Hb=%gT, Hc=%gT  %i spins",T,Norm(H),H(1),H(2),H(3),sps.n());
                     fin_coq = fopen_errchk ("./results/.spins3dab.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,4,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dac.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,5,inputpars.gJ);
                     fclose (fin_coq);
                     fin_coq = fopen_errchk ("./results/.spins3dbc.eps", "w");
-                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6);
+                     sps.eps3d(fin_coq,text,abc,inputpars.r,x,y,z,6,inputpars.gJ);
                     fclose (fin_coq);
    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
     sps.eps(fin_coq,text);
@@ -693,9 +719,17 @@ for (r=1;sta>ini.maxstamf;++r)
  for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
  {mf.mf(i,j,k)=0;
   for (l=1;l<=inputpars.nofatoms;++l){
-   for (i1=1;i1<=3&&i1<=inputpars.nofcomponents;++i1){
-             mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=Hex(i1)*inputpars.gJ(l)*MU_B;
-				                     }
+    if(inputpars.gJ(l)==0)              {
+     for (i1=1;i1<=6&&i1<=inputpars.nofcomponents;++i1){
+            if(i1==2||i1==4||i1==6){ mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=Hex(i1/2)*MU_B;}
+	    else                   { mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=2*Hex((i1+1)/2)*MU_B;}
+  				                       }
+            				}
+    else                                {
+     for (i1=1;i1<=3&&i1<=inputpars.nofcomponents;++i1){
+               mf.mf(i,j,k)[inputpars.nofcomponents*(l-1)+i1]=Hex(i1)*inputpars.gJ(l)*MU_B;
+  				                       }
+					}
 				     }
   for (i1=1;i1<=sps.na();++i1){if (i<i1){di=i-i1+sps.na();}else{di=i-i1;} 
                                for (j1=1;j1<=sps.nb();++j1){if (j<j1){dj=j-j1+sps.nb();}else{dj=j-j1;}
@@ -780,8 +814,17 @@ for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
   // subtract external field (only necessary for magnetic field, not for quadrupolar fields,
   // because the Cf parameters are treated separately in mcalc and not as part of the quadrupolar
   // field)
-  for(m1=1;m1<=3;++m1){meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
-
+  if(inputpars.gJ(l)==0)
+  {for(m1=1;m1<=6&&m1<=inputpars.nofcomponents;++m1)
+    {if(m1==2||m1==4||m1==6) {meanfield[m1]-=Hex[m1/2]*MU_B;}
+     else                    {meanfield[m1]-=2*Hex[(m1+1)/2]*MU_B;}
+    }
+  }
+  else
+  {
+  for(m1=1;m1<=3&&m1<=inputpars.nofcomponents;++m1){meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
+  }
+  
   // add correction term
   fe+=0.5*(meanfield*d1);
   u+=0.5*(meanfield*d1);

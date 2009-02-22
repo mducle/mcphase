@@ -16,8 +16,8 @@
 inipar ini("mcphas.ini");
 int verbose=0;
 
-#include "htcalc.h"
-#include "htcalc.c"
+#include "mcphas_htcalc.h"
+#include "mcphas_htcalc.c"
 
 // main program
 int main (int argc, char **argv)
@@ -74,7 +74,9 @@ for(l=1;l<=inputpars.nofatoms;++l){cfin=fopen_errchk((*inputpars.jjj[l]).cffilen
 
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
 T=1.0;for(l=1;l<=inputpars.nofatoms;++l){
-      for (im=1;im<=inputpars.nofcomponents;++im){h1=0;h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;
+      for (im=1;im<=inputpars.nofcomponents;++im){h1=0;
+                            if((*inputpars.jjj[l]).gJ!=0){h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;}
+                            else                         {h1(im)=20*MU_B;} //just put some high field
                             mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u)(im);
 			   }
                                         }
@@ -91,7 +93,7 @@ T=0.0;h=0;
    physproperties physprop(ini.nofspincorrs,ini.maxnofhkls,inputpars.nofatoms,inputpars.nofcomponents);
    
 // transform mmax to contain saturation moments [muB] 
-for(l=1;l<=inputpars.nofatoms;++l){for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax(3*(l-1)+im)*=inputpars.gJ(l);}}
+for(l=1;l<=inputpars.nofatoms;++l){for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){if((*inputpars.jjj[l]).gJ!=0)mmax(3*(l-1)+im)*=inputpars.gJ(l);}}
 
 if (argc>options&&strncmp(argv[argc-1],"-",1)!=0){ini.xv=0;ini.yv=0;fin=fopen_errchk (argv[argc-1],"rb");}   //input from file
 // loop different H /T points in phase diagram
@@ -164,10 +166,5 @@ endproper:
    if(argc>options&&strncmp(argv[argc-1],"-",1)!=0) fclose(fin);
 fprintf(stdout,"sta=%g\n",sta);
 
-#ifdef linux 
-return 0;
-#else
 exit(0);
-#endif
-
 }

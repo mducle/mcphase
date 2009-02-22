@@ -5,7 +5,7 @@
 double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
- int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb;
+ int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
  double intensity=1.2;
  double ki,kf;
  complex <double> chileft;
@@ -79,8 +79,29 @@ double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis 
     for(j=1;j<=3;++j){pol(i,j)-=qxyz(i)*qxyz(j)/(qxyz*qxyz);
     }}
     QQ=Norm(qxyz)*2*PI;
+// yes and for intermediate coupling we need another polarization factor
+// because neutrons sense the first 6x6 part of S
+ Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);
+ Matrix polICn(1,md.nofcomponents,1,md.nofcomponents);
+ Matrix polnIC(1,md.nofcomponents,1,md.nofcomponents);
+ polICIC=0;polICn=0;polnIC=0;
+    for(i=1;i<=6&&i<=md.nofcomponents;++i){
+    for(j=1;j<=6&&j<=md.nofcomponents;++j){polICIC(i,j)=pol((i+1)/2,(j+1)/2);
+                      if(i==1||i==3||i==5){polICIC(i,j)*=2.0;} // this accounts for the 
+                      if(j==1||j==3||j==5){polICIC(i,j)*=2.0;} // fact that gs=2 and gl=1
+    }}
+    for(i=1;i<=3&&i<=md.nofcomponents;++i){
+    for(j=1;j<=6&&j<=md.nofcomponents;++j){polnIC(i,j)=pol(i,(j+1)/2);
+                      if(j==1||j==3||j==5){polnIC(i,j)*=2.0;} // fact that gs=2 and gl=1
+    }}
+    for(i=1;i<=6&&i<=md.nofcomponents;++i){
+    for(j=1;j<=3&&j<=md.nofcomponents;++j){polICn(i,j)=pol((i+1)/2,j);
+                      if(i==1||i==3||i==5){polICn(i,j)*=2.0;} // this accounts for the 
+    }}
 
- //multiply polarization factor, formfactor and debeywallerfactor
+
+
+ //multiply polarization factor, formfactor and debyewallerfactor
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
  for(l1=1;l1<=md.nofatoms;++l1){
  for(t1=1;t1<=md.noft(i1,j1,k1,l1);++t1){
@@ -94,9 +115,38 @@ double intcalc_approx(int dimA, ComplexMatrix Tau, int level,double en,inimcdis 
       ss=(index_s(i2,j2,k2,l2,t2,md,ini)-1)*md.nofcomponents;
 
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
-      S(s+i,ss+j)*=pol(i,j);
-      S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debeywallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
-      S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debeywallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ==0)
+      {S(s+i,ss+j)*=polICIC(i,j); 
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+      }
+      if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ!=0)
+      {S(s+i,ss+j)*=polICn(i,j); 
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      }
+      if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ==0)
+      {S(s+i,ss+j)*=polnIC(i,j); 
+       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // debey waller factor
+       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+      }
+      if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ!=0)
+      {S(s+i,ss+j)*=pol(i,j);
+       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      }
     }}   
   }}
   }}}
@@ -233,6 +283,27 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
     for(j=1;j<=3;++j){pol(i,j)-=qxyz(i)*qxyz(j)/(qxyz*qxyz);
     }}
     QQ=Norm(qxyz)*2*PI;
+// yes and for intermediate coupling we need another polarization factor
+// because neutrons sense the first 6x6 part of S
+    Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);
+    Matrix polICn(1,md.nofcomponents,1,md.nofcomponents);
+    Matrix polnIC(1,md.nofcomponents,1,md.nofcomponents);
+    polICIC=0;polICn=0;polnIC=0;
+    for(i=1;i<=6&&i<=md.nofcomponents;++i){
+    for(j=1;j<=6&&j<=md.nofcomponents;++j){polICIC(i,j)=pol((i+1)/2,(j+1)/2);
+                      if(i==1||i==3||i==5){polICIC(i,j)*=2.0;} // this accounts for the 
+                      if(j==1||j==3||j==5){polICIC(i,j)*=2.0;} // fact that gs=2 and gl=1
+    }}
+    for(i=1;i<=3&&i<=md.nofcomponents;++i){
+    for(j=1;j<=6&&j<=md.nofcomponents;++j){polnIC(i,j)=pol(i,(j+1)/2);
+                      if(j==1||j==3||j==5){polnIC(i,j)*=2.0;} // fact that gs=2 and gl=1
+    }}
+    for(i=1;i<=6&&i<=md.nofcomponents;++i){
+    for(j=1;j<=3&&j<=md.nofcomponents;++j){polICn(i,j)=pol((i+1)/2,j);
+                      if(i==1||i==3||i==5){polICn(i,j)*=2.0;} // this accounts for the 
+    }}
+
+
 
  //multiply polarization factor, formfactor and debeywallerfactor
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
@@ -246,9 +317,38 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
 //   ss=((((i2-1)*ini.mf.nb()+(j2-1))*ini.mf.nc()+(k2-1))*md.nofatoms+(l2-1))*md.nofcomponents;
       ss=(index_s(i2,j2,k2,l2,t2,md,ini)-1)*md.nofcomponents;
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
-      S(s+i,ss+j)*=pol(i,j);
-      S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debeywallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
-      S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debeywallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ==0)
+      {S(s+i,ss+j)*=polICIC(i,j); 
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+      }
+      if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ!=0)
+      {S(s+i,ss+j)*=polICn(i,j); 
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      }
+      if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ==0)
+      {S(s+i,ss+j)*=polnIC(i,j); 
+       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // debey waller factor
+       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+                               // mind here we should use different formfactors for spin and orbital components !!!
+                               // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
+      }
+      if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ!=0)
+      {S(s+i,ss+j)*=pol(i,j);
+       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+      }
     }}   
   }}
   }}}

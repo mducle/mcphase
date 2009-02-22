@@ -20,7 +20,6 @@ Includedateien holen
 #include <math.h>           /* damit sqrt in define_j.c definiert wird */
 #define pi (4.0*atan(1.0))  /* atan() braucht <math.h>                 */
 #include "types.c"          /* benutze Datentypen laden                */
-#include <string.h>
 /*----------------------------------------------------------------------------
 extern definierte Dateien
 -----------------------------------------------------------------------------*/
@@ -125,6 +124,11 @@ create_Vkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -273,6 +277,11 @@ create_Dkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -423,6 +432,11 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -430,7 +444,7 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     tabelle = TABELLE_ALLOC(1);
     t01 = "===============================================================\n";
     t02 = "|                                                             |\n";
-    t03 = "|Crystal Field paramter L    in  %6s    in which              |\n";
+    t03 = "|Crystal Field paramter L    in  %6s    in which           |\n";
     t04 = "|                        kq                                   |\n";
     t05 = "|                                                             |\n";
     t06 = "|        ---            ---                                   |\n";
@@ -481,11 +495,11 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t53 = "|   kq                                                        |\n";
     t54 = "|                                                             |\n";
     t11 = "===============================================================\n";
-    TSS = "| Energy eigenvalues are in  : %6s                            |\n";
-    T15 = "| Temperature of the sample  : %7.2f Kelvin                   |\n";
-    T12 = "| Ion                        : %25s                           |\n";
-    T13 = "| Symmetry  : %s            Symmetry number: %1d              |\n";
-    T14 = "| Magnetic field             : %s                             |\n";
+    TSS = "| Energy eigenvalues are in  : %6s                         |\n";
+    T15 = "| Temperature of the sample  : %7.2f Kelvin                 |\n";
+    T12 = "| Ion                        : %25s    |\n";
+    T13 = "| Symmetry  : %s            Symmetry number: %1d        |\n";
+    T14 = "| Magnetic field             : %s                 |\n";
     T11 = "===============================================================\n";
     t11 = "===============================================================\n";
     T20n= "| L 2, 0:                                                     |\n";
@@ -608,6 +622,11 @@ create_Wkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -758,6 +777,11 @@ create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -915,6 +939,11 @@ create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -1065,6 +1094,11 @@ create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     einheit_in  = EINHEITIMP[ einheitnr_in ].einheit;
     einheit_out = EINHEITIMP[ einheitnr_out].einheit;
     ion         = leftcopy(ion ,25);
@@ -1429,6 +1463,11 @@ ITERATION *read_Vkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -1769,6 +1808,11 @@ ITERATION *read_Dkq(name,vsymmetrienr_vor)  /* Dkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -1952,7 +1996,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     DOUBLE    sin(),cos();
     DOUBLE    a_tof(),v40,v44,v60,v64,sqrt(),temperatur;
     CHAR      *einheit_in,*einheit_out,modus;
-    CHAR      *ion;
+    CHAR      *ion,*token;
     CHAR      c,*string,*line,*fgets(),*a_tos();
     ITERATION *iteration,*iter_alloc();
     ITERATION *auswahlregel();
@@ -1961,9 +2005,610 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
  
     printf("Reading file %s ....\n",name);
     string   = STRING_ALLOC(buffer_size);
+     printf("Reading file %s ....\n",name);
+    string   = STRING_ALLOC(buffer_size);
  
     if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
+    line=fgets( string , buffer_size , fp );
+    fclose(fp);
+    if(strncmp(line,"#!cfield",8)==0)
+   {/* read mcphas single ion input file */
+       printf("file format as single ion input module #!cfield\n");
+
+    /* some fixed quantitities */
+    symmetrienr =0;
+     versionsnummer=VERSION;
+    c = 'm'; /* unit is meV */
+    einheitnr_in = is_einheit_imp(c);
+    if( einheitnr_in == NICHTIMP )
+         read_error(21,fp,name);
+    einheit_in = EINHEITIMP[ einheitnr_in ].einheit;
+    myB        = EINHEITIMP[ einheitnr_in ].myB;
+    c = 'm';
+    einheitnr_out= is_einheit_imp(c);
+    if( einheitnr_out== NICHTIMP )
+         read_error(21,fp,name);
+    einheit_out= EINHEITIMP[ einheitnr_out].einheit;
+
+     temperatur=10.0; /* can be modified by reading in a temperature below*/
+
+    if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
+    while(feof(fp)==0)
+    {line=fgets( string , buffer_size , fp );
+     if(feof(fp)==0&&strstr (line, "#")==NULL)      
+     {while ((token=strchr(line,'\r'))!=NULL){*token=' ';}
+      /*read temperature*/
+      if ((token = strstr (line, "TEMP"))!=NULL)
+        {token+=strlen("TEMP");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token,"=")!=token)++token;
+            ++token;
+            temperatur = strtod (token, NULL);
+            printf("T=%g K ",temperatur);
+           }
+        } 
+      if ((token = strstr (line, "T"))!=NULL)
+        {token+=strlen("T");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token,"=")!=token)++token;
+            ++token;
+            temperatur = strtod (token, NULL);
+            printf("T=%g K ",temperatur);
+           }
+        } 
+      /*read iontype*/
+      if ((token = strstr (line, "IONTYPE"))!=NULL)
+        {token+=strlen("IONTYPE");
+         if (strstr (token, "=")!=NULL)
+           {token = strstr (token, "=")+1;
+           while (*token==' '){++token;} /* remove starting spaces*/
+           ion =a_tos( token , 0,5);
+            /*strncpy(ion,token,1)*/;/*maximal 5 characters*/
+            /*remove from string var all characters after delimiters*/
+            strtok(ion," \n");
+            printf("IONTYPE=%s ",ion);
+           }
+        } 
+
+     }
+    }
+    fclose(fp);printf("\n");
+
+  
+    anz_nn    = 0;
+    ionennr   = isimplementiert(ion);
+    dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+    zwei_j    = dimj - 1 ;
  
+    iteration = iter_alloc(dimj,anz_nn);
+ 
+    ANZ_NN(   iteration)     =  anz_nn;
+    DIMJ(     iteration)     =  dimj;
+    GJ(       iteration)     =  IONENIMP[ ionennr ].gj;
+    IONNAME(  iteration)     =  IONENIMP[ ionennr ].ionname;
+    IONENNUMMER(iteration)   = ionennr;
+    EINHEITNRIN( iteration)     =  einheitnr_in;
+    EINHEITNROUT(iteration)     =  einheitnr_out;
+    PKQ(      iteration)     =  calc_Pkq( dimj );
+    SYMMETRIENR(iteration) =  symmetrienr;
+    TEMPERATUR( iteration) =  temperatur;
+    EFVERSION(  iteration) =  versionsnummer;
+ 
+ 
+    modus='a';/* Magnetfeld: . Symmnr...  */
+ 
+    if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
+    while(feof(fp)==0)
+    {line=fgets( string , buffer_size , fp );
+     if(feof(fp)==0&&strstr (line, "#")==NULL)      
+     {while ((token=strchr(line,'\r'))!=NULL){*token=' ';}
+
+
+      /*read V20*/
+      if ((token = strstr (line, "L20"))!=NULL)
+        {          token+=strlen("L20");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V20(iteration) )  = strtod (token, NULL);
+            printf("L20=%g meV ",RT( V20(iteration) ));
+              }
+           }
+        } 
+
+      /*read V21*/
+      if ((token = strstr (line, "L21"))!=NULL)
+        {          token+=strlen("L21");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V21(iteration) )  = strtod (token, NULL);
+            printf("L21=%g meV ",RT( V21(iteration) ));
+              }
+           }
+        } 
+
+      /*read V21S*/
+      if ((token = strstr (line, "L21S"))!=NULL)
+        {          token+=strlen("L21S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V21(iteration) )  = -strtod (token, NULL);
+            printf("L21S=%g meV ",-IT( V21(iteration) ));
+              }
+           }
+        } 
+
+      /*read V22*/
+      if ((token = strstr (line, "L22"))!=NULL)
+        {          token+=strlen("L22");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V22(iteration) )  = strtod (token, NULL);
+            printf("L22=%g meV ",RT( V22(iteration) ));
+              }
+           }
+        } 
+
+      /*read V22S*/
+      if ((token = strstr (line, "L22S"))!=NULL)
+        {          token+=strlen("L22S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V22(iteration) )  = -strtod (token, NULL);
+            printf("L22S=%g meV ",-IT( V22(iteration) ));
+              }
+           }
+        } 
+      /*read V40*/
+      if ((token = strstr (line, "L40"))!=NULL)
+        {          token+=strlen("L40");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V40(iteration) )  = strtod (token, NULL);
+            printf("L40=%g meV ",RT( V40(iteration) ));
+              }
+           }
+        } 
+
+      /*read V41*/
+      if ((token = strstr (line, "L41"))!=NULL)
+        {          token+=strlen("L41");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V41(iteration) )  = strtod (token, NULL);
+            printf("L41=%g meV ",RT( V41(iteration) ));
+              }
+           }
+        } 
+
+      /*read V41S*/
+      if ((token = strstr (line, "L41S"))!=NULL)
+        {          token+=strlen("L41S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V41(iteration) )  = -strtod (token, NULL);
+            printf("L41S=%g meV ",-IT( V41(iteration) ));
+              }
+           }
+        } 
+
+
+      /*read V42*/
+      if ((token = strstr (line, "L42"))!=NULL)
+        {          token+=strlen("L42");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V42(iteration) )  = strtod (token, NULL);
+            printf("L42=%g meV ",RT( V42(iteration) ));
+              }
+           }
+        } 
+
+      /*read V42S*/
+      if ((token = strstr (line, "L42S"))!=NULL)
+        {          token+=strlen("L42S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V42(iteration) )  = -strtod (token, NULL);
+            printf("L42S=%g meV ",-IT( V42(iteration) ));
+              }
+           }
+        } 
+
+      /*read V43*/
+      if ((token = strstr (line, "L43"))!=NULL)
+        {          token+=strlen("L43");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V43(iteration) )  = strtod (token, NULL);
+            printf("L43=%g meV ",RT( V43(iteration) ));
+              }
+           }
+        } 
+
+      /*read V43S*/
+      if ((token = strstr (line, "L43S"))!=NULL)
+        {          token+=strlen("L43S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V43(iteration) )  = -strtod (token, NULL);
+            printf("L43S=%g meV ",-IT( V43(iteration) ));
+              }
+           }
+        } 
+      /*read V44*/
+      if ((token = strstr (line, "L44"))!=NULL)
+        {          token+=strlen("L44");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V44(iteration) )  = strtod (token, NULL);
+            printf("L44=%g meV ",RT( V44(iteration) ));
+              }
+           }
+        } 
+
+      /*read V44S*/
+      if ((token = strstr (line, "L44S"))!=NULL)
+        {          token+=strlen("L44S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V44(iteration) )  = -strtod (token, NULL);
+            printf("L44S=%g meV ",-IT( V44(iteration) ));
+              }
+           }
+        } 
+
+      /*read V60*/
+      if ((token = strstr (line, "L60"))!=NULL)
+        {          token+=strlen("L60");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V60(iteration) )  = strtod (token, NULL);
+            printf("L60=%g meV ",RT( V60(iteration) ));
+              }
+           }
+        } 
+
+      /*read V61*/
+      if ((token = strstr (line, "L61"))!=NULL)
+        {          token+=strlen("L61");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V61(iteration) )  = strtod (token, NULL);
+            printf("L61=%g meV ",RT( V61(iteration) ));
+              }
+           }
+        } 
+
+      /*read V61S*/
+      if ((token = strstr (line, "L61S"))!=NULL)
+        {          token+=strlen("L61S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V61(iteration) )  = -strtod (token, NULL);
+            printf("L61S=%g meV ",-IT( V61(iteration) ));
+              }
+           }
+        } 
+
+
+      /*read V62*/
+      if ((token = strstr (line, "L62"))!=NULL)
+        {          token+=strlen("L62");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V62(iteration) )  = strtod (token, NULL);
+            printf("L62=%g meV ",RT( V62(iteration) ));
+              }
+           }
+        } 
+
+      /*read V62S*/
+      if ((token = strstr (line, "L62S"))!=NULL)
+        {          token+=strlen("L62S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V62(iteration) )  = -strtod (token, NULL);
+            printf("L62S=%g meV ",-IT( V62(iteration) ));
+              }
+           }
+        } 
+
+      /*read V63*/
+      if ((token = strstr (line, "L63"))!=NULL)
+        {          token+=strlen("L63");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V63(iteration) )  = strtod (token, NULL);
+            printf("L63=%g meV ",RT( V63(iteration) ));
+              }
+           }
+        } 
+
+      /*read V63S*/
+      if ((token = strstr (line, "L63S"))!=NULL)
+        {          token+=strlen("L63S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V63(iteration) )  = -strtod (token, NULL);
+            printf("L63S=%g meV ",-IT( V63(iteration) ));
+              }
+           }
+        } 
+      /*read V64*/
+      if ((token = strstr (line, "L64"))!=NULL)
+        {          token+=strlen("L64");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V64(iteration) )  = strtod (token, NULL);
+            printf("L64=%g meV ",RT( V64(iteration) ));
+              }
+           }
+        } 
+
+      /*read V64S*/
+      if ((token = strstr (line, "L64S"))!=NULL)
+        {          token+=strlen("L64S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V64(iteration) )  = -strtod (token, NULL);
+            printf("L64S=%g meV ",-IT( V64(iteration) ));
+              }
+           }
+        } 
+
+      /*read V65*/
+      if ((token = strstr (line, "L65"))!=NULL)
+        {          token+=strlen("L65");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V65(iteration) )  = strtod (token, NULL);
+            printf("L65=%g meV ",RT( V65(iteration) ));
+              }
+           }
+        } 
+
+      /*read V65S*/
+      if ((token = strstr (line, "L65S"))!=NULL)
+        {          token+=strlen("L65S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V65(iteration) )  = -strtod (token, NULL);
+            printf("L65S=%g meV ",-IT( V65(iteration) ));
+              }
+           }
+        } 
+
+      /*read V66*/
+      if ((token = strstr (line, "L66"))!=NULL)
+        {          token+=strlen("L66");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              RT( V66(iteration) )  = strtod (token, NULL);
+            printf("L66=%g meV ",RT( V66(iteration) ));
+              }
+           }
+        } 
+
+      /*read V66S*/
+      if ((token = strstr (line, "L66S"))!=NULL)
+        {          token+=strlen("L66S");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              IT( V66(iteration) )  = -strtod (token, NULL);
+            printf("L66S=%g meV ",-IT( V66(iteration) ));
+              }
+           }
+        } 
+
+   /*read Bx*/
+      if ((token = strstr (line, "Bx"))!=NULL)
+        {          token+=strlen("Bx");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B1(iteration)=x1   = strtod (token, NULL);
+            printf("Bx=%g T ", B1(iteration) );
+              }
+           }
+        } 
+
+   /*read By*/
+      if ((token = strstr (line, "By"))!=NULL)
+        {          token+=strlen("By");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B2(iteration) =x2  = strtod (token, NULL);
+            printf("By=%g T ", B2(iteration) );
+              }
+           }
+        } 
+   /*read Bz*/
+      if ((token = strstr (line, "Bz"))!=NULL)
+        {          token+=strlen("Bz");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B3(iteration) =x3  = strtod (token, NULL);
+            printf("Bz=%g T ", B3(iteration) );
+              }
+           }
+        } 
+
+     }
+    }
+    fclose(fp);printf("\n");
+ 
+     /* Auswahlregeln fuer Lkq beachten */
+    iteration = auswahlregel(iteration,symmetrienr);
+ 
+     /* Lkq auf Dkq umrechnen                 */
+    /*                                       */
+    /*             q                         */
+    /* D     = (-1)  (  L      + i L      )  */
+    /*  k,|q|            k,|q|      k,-|q|   */
+    /*                                       */
+ 
+     RT( V21(iteration) ) *=  -1;
+ 
+     RT( V41(iteration) ) *=  -1;
+     RT( V43(iteration) ) *=  -1;
+ 
+     RT( V61(iteration) ) *=  -1;
+     RT( V63(iteration) ) *=  -1;
+     RT( V65(iteration) ) *=  -1;
+ 
+ 
+     IT( V21(iteration) ) *=  -1;
+ 
+     IT( V41(iteration) ) *=  -1;
+     IT( V43(iteration) ) *=  -1;
+ 
+     IT( V61(iteration) ) *=  -1;
+     IT( V63(iteration) ) *=  -1;
+     IT( V65(iteration) ) *=  -1;
+ 
+ 
+ 
+ 
+    /* Dkq auf Vkq umrechnen            */
+    /*                                  */
+    /* Vkq = Dkq * epsilon_kq * theta_k */
+    /*                                  */
+    /*                                  */
+ 
+     e_4f = E4f( ionennr );
+ 
+ 
+     RT( V20(iteration) ) *=  epn2n(0) * alpha_J[ e_4f ];
+     RT( V21(iteration) ) *=  epn1n(1) * alpha_J[ e_4f ];
+     RT( V22(iteration) ) *=  epn0n(2) * alpha_J[ e_4f ];
+ 
+     RT( V40(iteration) ) *=  epn4n(0) * beta_J[ e_4f ];
+     RT( V41(iteration) ) *=  epn3n(1) * beta_J[ e_4f ];
+     RT( V42(iteration) ) *=  epn2n(2) * beta_J[ e_4f ];
+     RT( V43(iteration) ) *=  epn1n(3) * beta_J[ e_4f ];
+     RT( V44(iteration) ) *=  epn0n(4) * beta_J[ e_4f ];
+ 
+     RT( V60(iteration) ) *=  epn6n(0) * gamma_J[ e_4f ];
+     RT( V61(iteration) ) *=  epn5n(1) * gamma_J[ e_4f ];
+     RT( V62(iteration) ) *=  epn4n(2) * gamma_J[ e_4f ];
+     RT( V63(iteration) ) *=  epn3n(3) * gamma_J[ e_4f ];
+     RT( V64(iteration) ) *=  epn2n(4) * gamma_J[ e_4f ];
+     RT( V65(iteration) ) *=  epn1n(5) * gamma_J[ e_4f ];
+     RT( V66(iteration) ) *=  epn0n(6) * gamma_J[ e_4f ];
+ 
+ 
+ 
+     IT( V21(iteration) ) *=  epn1n(1) * alpha_J[ e_4f ];
+     IT( V22(iteration) ) *=  epn0n(2) * alpha_J[ e_4f ];
+ 
+     IT( V41(iteration) ) *=  epn3n(1) * beta_J[ e_4f ];
+     IT( V42(iteration) ) *=  epn2n(2) * beta_J[ e_4f ];
+     IT( V43(iteration) ) *=  epn1n(3) * beta_J[ e_4f ];
+     IT( V44(iteration) ) *=  epn0n(4) * beta_J[ e_4f ];
+ 
+     IT( V61(iteration) ) *=  epn5n(1) * gamma_J[ e_4f ];
+     IT( V62(iteration) ) *=  epn4n(2) * gamma_J[ e_4f ];
+     IT( V63(iteration) ) *=  epn3n(3) * gamma_J[ e_4f ];
+     IT( V64(iteration) ) *=  epn2n(4) * gamma_J[ e_4f ];
+     IT( V65(iteration) ) *=  epn1n(5) * gamma_J[ e_4f ];
+     IT( V66(iteration) ) *=  epn0n(6) * gamma_J[ e_4f ];
+ 
+ 
+ 
+    if( symmetrienr==8 ){
+       if( ABSD(2.0*epn0n(4)*v44 - 5.0*epn4n(0)*v40) > EPS1)
+       read_error(52,fp,name);
+       if( ABSD(2.0*epn2n(4)*v64 + 21.0*epn6n(0)*v60) > EPS1)
+       read_error(53,fp,name);
+    }
+ 
+
+     MODUS(iteration) = 'r';
+ 
+    /* falls ein Magnetfeld angelegt wurde : */
+ 
+    isinlimits(fp,name ,0, x1,x2,x3,MODUS(iteration) );
+ 
+    HMAG(iteration) = calc_Bmag( DIMJ(iteration),GJ(iteration),
+                                          myB,B1(iteration),
+                                              B2(iteration),
+                                              B3(iteration) );
+ 
+        B1MOL(iteration) = 0.0;
+        B2MOL(iteration) = 0.0;
+        B3MOL(iteration) = 0.0;
+        BMOL( iteration) = 0.0;
+        PHI(  iteration) = 0.0;
+        THETA(iteration) = 0.0;
+
+  
+   }
+    else
+   { /*read classical input file bkq.parmeter*/
+    if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
     while(  *(line=fgets( string , buffer_size , fp )) != '|'  );/* 1.==== */
     versionsnummer =a_tof( line , 11,23);
     fclose(fp);
@@ -2001,6 +2646,11 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -2035,12 +2685,12 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*| L 2,1 .. | L 2,-1.. */
     RT( V21(iteration) ) = a_tof(line, 9,30);
-    IT( V21(iteration) ) = a_tof(line,40,61);
+    IT( V21(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*| L 2,2 .. | L 2,-2.. */
     RT( V22(iteration) ) = a_tof(line, 9,30);
-    IT( V22(iteration) ) = a_tof(line,40,61);
+    IT( V22(iteration) ) = -a_tof(line,40,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 5.==== */
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 6.==== */
@@ -2050,22 +2700,22 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*|L 4,1  .. |L 4,-1 .. */
     RT( V41(iteration) ) = a_tof(line, 9,30);
-    IT( V41(iteration) ) = a_tof(line,40,61);
+    IT( V41(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 4,2  .. |L 4,-2 .. */
     RT( V42(iteration) ) = a_tof(line, 9,30);
-    IT( V42(iteration) ) = a_tof(line,40,61);
+    IT( V42(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 4,3  .. |L 4,-3 .. */
     RT( V43(iteration) ) = a_tof(line, 9,30);
-    IT( V43(iteration) ) = a_tof(line,40,61);
+    IT( V43(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 4,4  .. |L 4,-4 .. */
     RT( V44(iteration) ) = v44 = a_tof(line, 9,30);
-    IT( V44(iteration) ) = a_tof(line,40,61);
+    IT( V44(iteration) ) = -a_tof(line,40,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 7.==== */
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 8.==== */
@@ -2075,32 +2725,32 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,1  .. |L 6,-1 .. */
     RT( V61(iteration) ) = a_tof(line, 9,30);
-    IT( V61(iteration) ) = a_tof(line,40,61);
+    IT( V61(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,2  .. |L 6,-2 .. */
     RT( V62(iteration) ) = a_tof(line, 9,30);
-    IT( V62(iteration) ) = a_tof(line,40,61);
+    IT( V62(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,3  .. |L 6,-3 .. */
     RT( V63(iteration) ) = a_tof(line, 9,30);
-    IT( V63(iteration) ) = a_tof(line,40,61);
+    IT( V63(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,4  .. |L 6,-4 .. */
     RT( V64(iteration) ) = v64 = a_tof(line, 9,30);
-    IT( V64(iteration) ) = a_tof(line,40,61);
+    IT( V64(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,5  .. |L 6,-5 .. */
     RT( V65(iteration) ) = a_tof(line, 9,30);
-    IT( V65(iteration) ) = a_tof(line,40,61);
+    IT( V65(iteration) ) = -a_tof(line,40,61);
     line=fgets( string , buffer_size , fp ); /*--------------------- */
  
     line=fgets( string , buffer_size , fp ); /*|L 6,6  .. |L 6,-6 .. */
     RT( V66(iteration) ) = a_tof(line, 9,30);
-    IT( V66(iteration) ) = a_tof(line,40,61);
+    IT( V66(iteration) ) = -a_tof(line,40,61);
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/*9.==== */
  
     /* Auswahlregeln fuer Dkq beachten */
@@ -2189,8 +2839,8 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
        read_error(53,fp,name);
     }
  
- 
     HMAG(iteration) = readBmag(fp,name,modus,myB,iteration,buffer_size,string);
+  } 
  
     fclose(fp);
     return( iteration );
@@ -2262,6 +2912,11 @@ ITERATION *read_Wkq(name,vsymmetrienr_vor)  /* Wkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -2505,6 +3160,11 @@ ITERATION *read_Akq(name,vsymmetrienr_vor)  /* Akq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -2737,6 +3397,11 @@ ITERATION *read_Bkqnew(ion)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
  
     iteration = iter_alloc(dimj,anz_nn);
@@ -2900,13 +3565,22 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
             printf("T=%g K ",temperatur);
            }
         } 
+      if ((token = strstr (line, "T"))!=NULL)
+        {token+=strlen("T");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token,"=")!=token)++token;
+            ++token;
+            temperatur = strtod (token, NULL);
+            printf("T=%g K ",temperatur);
+           }
+        } 
       /*read iontype*/
       if ((token = strstr (line, "IONTYPE"))!=NULL)
         {token+=strlen("IONTYPE");
          if (strstr (token, "=")!=NULL)
            {token = strstr (token, "=")+1;
            while (*token==' '){++token;} /* remove starting spaces*/
-           ion =a_tos( token , 0,3);
+           ion =a_tos( token , 0,5);
             /*strncpy(ion,token,1)*/;/*maximal 5 characters*/
             /*remove from string var all characters after delimiters*/
             strtok(ion," \n");
@@ -2922,6 +3596,10 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
     zwei_j    = dimj - 1 ;
  
     iteration = iter_alloc(dimj,anz_nn);
@@ -3446,6 +4124,10 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
     zwei_j    = dimj - 1 ;
  
     iteration = iter_alloc(dimj,anz_nn);
@@ -3692,6 +4374,11 @@ ITERATION *read_xW(name,vsymmetrienr_vor)  /* x,W aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
     iteration = iter_alloc(dimj,anz_nn);
  
@@ -4968,6 +5655,11 @@ READ *read_einheit(name,art)
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
+    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+     {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
+      IONENIMP[ ionennr ].dimj=dimj;
+     }    
+
     zwei_j    = dimj - 1 ;
  
  

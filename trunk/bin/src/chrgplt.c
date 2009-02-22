@@ -129,7 +129,7 @@ int main (int argc, char **argv)
   if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
     {iops=new ionpars(cf_file);  
      // get 1ion parameters - operator matrices
-    }else {fprintf(stderr,"Error: single ion property file %s does not start with '#!cfield'\n",argv[5]);
+    }else {fprintf(stderr,"Error program chrgplt: single ion property file %s does not start with '#!cfield'\nother modules not supported yet\n",argv[5]);
      exit(EXIT_FAILURE);}
      fclose(cf_file);
 

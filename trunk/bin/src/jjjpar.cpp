@@ -1,3 +1,11 @@
+// *************************************************************************
+// ************************ class jjjpar     *******************************
+// *************************************************************************
+// jjjpar is a class to store all parameters associated
+// with a specific ion, for example CEF parameters
+// and exchange parameters 
+// it is used by many programs in the package
+// moreover, it loads also the user defined single ion module functions (linux only)
 #include "jjjpar.hpp"
 
 #define MAXNOFNUMBERSINLINE 200
@@ -10,55 +18,120 @@
 		     // energy the matrix Mijkl contains wn-wn' or wn/kT
 #define PI 3.1415926535
 
-// additional
-// function to look if string s2 lies in string s1, checking the first n characters of s2
-int strncomp(const char * s1,const char * s2, size_t n)
-{size_t i;
- if (strlen(s1)>=n)
- {for (i=0;i<=strlen(s1)-n;++i)
-  {if (strncmp(&s1[i],s2,n)==0){return 0;}
-  }
- }
- return strncmp(s1,s2,n);
-}
+#include "jjjpar_intmod_kramer.cpp"   // some functions for intern_mcalc=1
+#include "jjjpar_intmod_brillouin.cpp"// some functions for intern_mcalc=3
 
 
-
- // *************************************************************************
- // ************************ class parameters *******************************
- // *************************************************************************
-
-//  D = 2 * pi / Q
-//  s = 1 / 2 / D: sintheta = lambda * s
-   double jjjpar::F(double & Q)
-   {double s,j0,j2;    
-    s=Q/4/PI;
-   j0 = magFF(1) * exp(-magFF(2) * s * s) + magFF(3) * exp(-magFF(4) * s * s);
-   j0 = j0 + magFF(5) * exp(-magFF(6) * s * s) + magFF(7);
-   j2 = magFF(8) * s * s * exp(-magFF(9) * s * s) + magFF(10) * s * s * exp(-magFF(11) * s * s);
-   j2 = j2 + magFF(12) * s * s * exp(-magFF(13) * s * s) + s * s * magFF(14);
-   return (j0 + j2 * (2 / gJ - 1)); // formfactor F(Q)
-
-   }
-
-//   debeywallerfactor = exp(-2 * DWF *s*s)
-   double jjjpar::debeywallerfactor(double & Q)
-   {double s;
-    s=Q/4/PI;
-    return exp(-2*DWF*s*s);
-   }
 
 /****************************************************************************/
-// subroutine to calculate magnetisation M from effective field H
+// function to calculate magnetisation M from effective field H
 // this is the heart of the meanfield algorithm an it is necessary to
 // keep this routine as efficient as possible
 // at the moment we do only groundstate doublet
+/****************************************************************************/
 Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U)
 {switch (intern_mcalc)
   {case 1: return kramer(T,gjmbH,lnZ,U);break;
    case 2: return (*iops).cfield(T,gjmbH,lnZ,U);break;
    case 3: return brillouin(T,gjmbH,lnZ,U);break;
-   default: (*m)(&Jret,&T,&gjmbH,&gJ,&ABC,&lnZ,&U);return Jret;
+   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U);return mom;
+  }
+}
+
+/****************************************************************************/
+// this function returns n (the number of transitions in the single ion susceptibility)
+// the transition matrix mat corresponding to jjjpar.transitionnumber and delta
+// for effective field heff and temperature given on input
+/****************************************************************************/
+int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta)
+{switch (intern_mcalc)
+  {case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
+   default: return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&cffilename,&mat,&delta);
+  }
+}
+
+
+/****************************************************************************/
+// calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+// according to stored eigenstate matrix est
+/****************************************************************************/
+ComplexVector & jjjpar::MQ(Vector & Qvec)
+{double J0,J2,J4,J6;
+ double Q,d,s;
+            Q = Norm(Qvec); //dspacing
+            d = 2.0 * PI / Q; s=0.5 / d; 
+      J0=magFFj0(1)*exp(-magFFj0(2)*s*s)+magFFj0(3)*exp(-magFFj0(4)*s*s)+magFFj0(5)*exp(-magFFj0(6)*s*s)+magFFj0(7);
+      J2=magFFj2(1)*exp(-magFFj2(2)*s*s)+magFFj2(3)*exp(-magFFj2(4)*s*s)+magFFj2(5)*exp(-magFFj2(6)*s*s)+magFFj2(7);
+      J2*=s*s;
+      J4=magFFj4(1)*exp(-magFFj4(2)*s*s)+magFFj4(3)*exp(-magFFj4(4)*s*s)+magFFj4(5)*exp(-magFFj4(6)*s*s)+magFFj4(7);
+      J4*=s*s;
+      J6=magFFj6(1)*exp(-magFFj6(2)*s*s)+magFFj6(3)*exp(-magFFj6(4)*s*s)+magFFj6(5)*exp(-magFFj6(6)*s*s)+magFFj6(7);
+      J6*=s*s;
+	 // calculate th and ph (polar angles of Q with respect to xyz of CEF)
+         double th,ph,Qx,Qy,Qz;							 
+	 Qx=Qvec(1);Qy=Qvec(2);Qz=Qvec(3);
+	 th=acos(Qz/Q);
+	 if(sin(th)>=SMALL){
+	                    if(Qx>0){ph=acos(Qx/(Q*sin(th))-SMALL);}
+			    else    {ph=acos(Qx/(Q*sin(th))+SMALL);}
+			   }
+			 else{ph=0;}
+	 if (Qy<0){ph=2*PI-ph;} 
+
+ switch (intern_mcalc)
+  {case 0: (*mq)(&Mq,&th,&ph,&J0,&J2,&J4,&J6,&est);return Mq;break;
+   case 2: return (*iops).MQ(th,ph,J0,J2,J4,J6,Zc,est);break;
+   default: fprintf(stderr,"ERROR in scattering operator function M(Q) for ion %s \nM(Q) is currently only implemented for internal module cfield:\n",cffilename);exit(EXIT_FAILURE);
+  }
+}
+
+// returns eigenvalues and eigenstates matrix parameters of ion
+ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
+{switch (intern_mcalc)
+  {case 0:  (*estates)(&est,&gjmbheff,&gJ,&T,&ABC,&cffilename);return est;break;
+   case 2:  est=(*iops).cfeigenstates(gjmbheff);return est;break;
+   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to return eigenvalues and eigenstates \n"); 
+            exit (EXIT_FAILURE);
+  }
+}
+
+
+//  RETURN TOTAL FORMFACTOR, 
+//    however if gJ=0 and Q>0 return spin form factor FS(Q)=<j0(Q)>
+//            if gJ=0 and Q<0 return angular  form factor FL(Q)=<j0(Q)>+<j2(Q)>
+//  D = 2 * pi / Q
+//  s = 1 / 2 / D: sintheta = lambda * s
+   double jjjpar::F(double Q)
+   {double s,j0,j2;    
+    s=Q/4/PI;
+    j0=magFFj0(1)*exp(-magFFj0(2)*s*s)+magFFj0(3)*exp(-magFFj0(4)*s*s)+magFFj0(5)*exp(-magFFj0(6)*s*s)+magFFj0(7);
+    if(gJ==0&&Q>0){return j0;} // in case of intermediate coupling return spin form factor 
+    j2=magFFj2(1)*exp(-magFFj2(2)*s*s)+magFFj2(3)*exp(-magFFj2(4)*s*s)+magFFj2(5)*exp(-magFFj2(6)*s*s)+magFFj2(7);
+    j2*=s*s;
+    if(gJ==0&&Q<0){return j0+j2;} // in case of intermediate coupling return angular form factor 
+   return (j0 + j2 * (2 / gJ - 1)); // formfactor F(Q)
+
+   }
+
+//   debyewallerfactor = exp(-2 * DWF *s*s)
+   double jjjpar::debyewallerfactor(double & Q)
+   {double s;
+    s=Q/4/PI;
+    return exp(-2*DWF*s*s);
+   }
+
+
+// returns total angular momentum quantum number J
+double jjjpar::J()
+{
+ switch (intern_mcalc)
+  {
+   case 2: return (*iops).J;break;
+   case 3:  return ABC[1];break;
+   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate stevens parameters alpha beta gamma \n"); 
+            exit (EXIT_FAILURE);
   }
 }
 
@@ -75,69 +148,27 @@ Vector & jjjpar::tetan ()
   }
 }
 
-double jjjpar::J()
-{
- switch (intern_mcalc)
-  {
-   case 2: return (*iops).J;break;
-   case 3:  return ABC[1];break;
-   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate stevens parameters alpha beta gamma \n"); 
-            exit (EXIT_FAILURE);
+
+// additional
+// function to look if string s2 lies in string s1, checking the first n characters of s2
+int strncomp(const char * s1,const char * s2, size_t n)
+{size_t i;
+ if (strlen(s1)>=n)
+ {for (i=0;i<=strlen(s1)-n;++i)
+  {if (strncmp(&s1[i],s2,n)==0){return 0;}
   }
-}
-
-// returns eigenvalues and eigenstates matrix parameters of ion
-ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff)
-{switch (intern_mcalc)
-  {
-   case 2:  return (*iops).cfeigenstates(gjmbheff);break;
-   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to return eigenvalues and eigenstates \n"); 
-            exit (EXIT_FAILURE);
-  }
-}
-
-// this function returns n (the number of transitions in the single ion susceptibility)
-// the transition matrix mat corresponding to jjjpar.transitionnumber and delta for effective field heff 
-int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta)
-{switch (intern_mcalc)
-  {case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
-   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
-   case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
-   default: return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&mat,&delta);
-  }
+ }
+ return strncmp(s1,s2,n);
 }
 
 
 
-//saving parameters to file
-void jjjpar::save(FILE * file) 
-{ int i,i1,j1;
-  saveatom(file);
-  fprintf(file,"# x[a]    y[b]      z[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
-// save the exchange parameters to file (exactly paranz parameters!)
-  for  (i=1;i<=paranz;++i)
-  {fprintf(file,"%-+8.6g %-+8.6g %-+8.6g  ",dn[i](1),dn[i](2),dn[i](3));
-    // format of matrix 
-  // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
-  // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
-  // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
-  // etc ...
-  //save diagonal components of exchange matrix
-  for(i1=1;i1<=nofcomponents;++i1){fprintf(file,"%-+8.6e ",jij[i](i1,i1));}
-  //save off-diagonal components of exchange matrix (if required)
-  if (diagonalexchange==0){for(i1=1;i1<=nofcomponents-1;++i1)
-                              {for(j1=i1+1;j1<=nofcomponents;++j1)
-                               {fprintf(file,"%-+8.6e %-+8.6e ",jij[i](i1,j1),jij[i](j1,i1));
-			       }
-			      }
-                          }
-   fprintf(file,"\n");  
-  }
-}
 
-void jjjpar::saveatom(FILE * file) 
-{   fprintf(file,"# da=%4.6g [a] db=%4.6g [b] dc=%4.6g [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=%s\n",xyz(1),xyz(2),xyz(3),paranz,diagonalexchange,gJ,cffilename);
-}
+
+
+
+
+
 
 
 
@@ -145,7 +176,7 @@ void jjjpar::increase_nofcomponents(int n) // increase nofcomponents by n
 {int i,j,k,nold;
   nold=nofcomponents;
   nofcomponents+=n;
-  Jret.Resize(1,nofcomponents); 
+  mom.Resize(1,nofcomponents); 
 
   Matrix * jijstore;
   jijstore = new Matrix[paranz+1];for(i=0;i<=paranz;++i){jijstore[i]=Matrix(1,nofcomponents,1,nofcomponents);}
@@ -252,13 +283,47 @@ void jjjpar::addpars (int number, jjjpar & addjjj)
   delete []dnn;
 }
 
-//constructor
+
+//saving parameters to file
+void jjjpar::save(FILE * file) 
+{ int i,i1,j1;
+  saveatom(file);
+  fprintf(file,"# x[a]    y[b]      z[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
+// save the exchange parameters to file (exactly paranz parameters!)
+  for  (i=1;i<=paranz;++i)
+  {fprintf(file,"%-+8.6g %-+8.6g %-+8.6g  ",dn[i](1),dn[i](2),dn[i](3));
+    // format of matrix 
+  // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
+  // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
+  // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
+  // etc ...
+  //save diagonal components of exchange matrix
+  for(i1=1;i1<=nofcomponents;++i1){fprintf(file,"%-+8.6e ",jij[i](i1,i1));}
+  //save off-diagonal components of exchange matrix (if required)
+  if (diagonalexchange==0){for(i1=1;i1<=nofcomponents-1;++i1)
+                              {for(j1=i1+1;j1<=nofcomponents;++j1)
+                               {fprintf(file,"%-+8.6e %-+8.6e ",jij[i](i1,j1),jij[i](j1,i1));
+			       }
+			      }
+                          }
+   fprintf(file,"\n");  
+  }
+}
+
+void jjjpar::saveatom(FILE * file) 
+{   fprintf(file,"# da=%4.6g [a] db=%4.6g [b] dc=%4.6g [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=%s\n",xyz(1),xyz(2),xyz(3),paranz,diagonalexchange,gJ,cffilename);
+}
+
+
+
+/*****************************************************************************************/
+//constructor with file handle of mcphas.j
 jjjpar::jjjpar(FILE * file) 
 { FILE * cf_file;   
-  char modulefilename[MAXNOFCHARINLINE];
   char instr[MAXNOFCHARINLINE];
   cffilename= new char [MAXNOFCHARINLINE];
   int i,j,i1,j1,k1,l;
+  double gjcheck;
   float nn[MAXNOFNUMBERSINLINE];
   nn[0]=MAXNOFNUMBERSINLINE;
   xyz=Vector(1,3);
@@ -271,12 +336,95 @@ jjjpar::jjjpar(FILE * file)
   extract(instr,"dc",xyz[3]);
   extract(instr,"nofneighbours",paranz);
   extract(instr,"diagonalexchange",diagonalexchange);
-  extract(instr,"gJ",gJ);
+  extract(instr,"gJ",gjcheck);
   extract(instr,"cffilename",cffilename,(size_t)MAXNOFCHARINLINE);
   fgets_errchk (instr, MAXNOFCHARINLINE, file);
 
 // read single ion parameter file and see which type it is (internal module or loadable)
   transitionnumber=1;
+  
+  //start reading again at the beginning of the file to get formfactors, debye waller factor
+  get_parameters_from_sipfile(cffilename);
+  if (gJ!=gjcheck){fprintf (stderr, "Error: Lande factor gJ in file mcphas.j and %s are not the same\n",cffilename);
+                   exit (EXIT_FAILURE);}
+  Mq=ComplexVector(1,3);
+//fprintf(stderr,"\nmagnetic formfactors\n");
+//fprintf(stderr," FFj0A=%4.4g  FFj0a=%4.4g FFj0B=0%4.4g FFj0b=%4.4g  FFj0C=%4.4g  FFj0c=%4.4g FFj0D=%4.4g\n",magFFj0(1),magFFj0(2),magFFj0(3),magFFj0(4),magFFj0(5),magFFj0(6),magFFj0(7));  
+//fprintf(stderr," FFj2A=%4.4g FFj2a=%4.4g FFj2B =%4.4g FFj2b=%4.4g FFj2C=%4.4g  FFj2c=%4.4g FFj2D=%4.4g\n",magFFj2(1), magFFj2(2),magFFj2(3),magFFj2(4),magFFj2(5),magFFj2(6),magFFj2(7));
+//fprintf(stderr,"Debey-Waller Factor\n DWF=%g\n\n",DWF);
+
+
+  nofcomponents=3; // default value for nofcomponents - (important in case nofparameters=0)
+// read the exchange parameters from file (exactly paranz parameters!)
+  for  (i=1;i<=paranz;++i)
+  {while((j=inputline(file, nn))==0&&feof(file)==0){}; // returns 0 if comment line or eof, exits with error, if input string too long
+   if(feof(file)!=0){ fprintf (stderr, "Error in jjjpar.cpp: input jjj parameters - \n");
+  fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
+      exit (EXIT_FAILURE);
+    }
+    if(i==1){// determine nofcomponents from number of parameters read in first line of mcphas.j
+             if(diagonalexchange==1){nofcomponents=j-3;}else{nofcomponents=(int)sqrt((double)(j-3));}
+             if(intern_mcalc==1)
+	     {// check dimensions of vector if internal kramers is used
+              if(nofcomponents!=3)
+              {fprintf(stderr,"Error reading mcphas.j: number of dimensions (not equal 3) not compatible with internal single ion module kramer - check number of columns in file mcphas.j\n");
+               exit(EXIT_FAILURE);}
+             }
+             // dimension arrays
+             dn = new Vector[paranz+1];for(i1=0;i1<=paranz;++i1){dn[i1]=Vector(1,3);}
+             if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
+             sublattice = new int[paranz+1];if (sublattice == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
+             jij = new Matrix[paranz+1];for(i1=0;i1<=paranz;++i1){jij[i1]=Matrix(1,nofcomponents,1,nofcomponents);}
+             if (jij == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
+            }
+   //check if correct number of columns has been read	        
+    if((diagonalexchange==1&&nofcomponents!=j-3)||(diagonalexchange==0&&nofcomponents!=(int)sqrt((double)(j-3))))
+              {fprintf(stderr,"Error reading mcphas.j line %i: check number of columns\n",i);
+               exit(EXIT_FAILURE);}
+
+  mom=Vector(1,nofcomponents); 
+
+   //(1-3) give the absolute coordinates of the neighbour and are transformed here to relative
+   // coordinates !!
+   dn[i](1) = nn[1];dn[i](2) = nn[2];dn[i](3) = nn[3];
+   jij[i]=0;
+
+  // format of matrix 
+  // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
+  // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
+  // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
+  // etc ...
+  //read diagonal components of exchange matrix
+  for(i1=1;i1<=nofcomponents;++i1){jij[i](i1,i1)= nn[i1+3];}
+  //read off-diagonal components of exchange matrix (if required)
+  if (diagonalexchange==0){k1=3+nofcomponents;
+                           for(i1=1;i1<=nofcomponents-1;++i1)
+                              {for(j1=i1+1;j1<=nofcomponents;++j1)
+                               {++k1;jij[i](i1,j1)= nn[k1];
+			        ++k1;jij[i](j1,i1)= nn[k1];
+			       }
+			      }
+                          }
+  }
+}
+
+// constructor with filename of singleion parameter file
+jjjpar::jjjpar(double x,double y,double z, char * sipffile)
+{xyz=Vector(1,3);xyz(1)=x;xyz(2)=y;xyz(3)=z;
+  mom=Vector(1,9); mom=0; 
+  Mq=ComplexVector(1,3);
+ get_parameters_from_sipfile(sipffile);
+
+}
+
+void jjjpar::get_parameters_from_sipfile(char * cffilename)
+{FILE * cf_file;
+ int i,j;
+ float nn[MAXNOFNUMBERSINLINE];
+ nn[0]=MAXNOFNUMBERSINLINE;
+  char modulefilename[MAXNOFCHARINLINE];
+
+ char instr[MAXNOFCHARINLINE];
   cf_file = fopen_errchk (cffilename, "rb");
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
   // strip /r (dos line feed) from line if necessary
@@ -313,7 +461,9 @@ jjjpar::jjjpar(FILE * file)
      else 
      {if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
      {intern_mcalc=2;fprintf (stderr,"#[internal]\n");
-     iops=new ionpars(cf_file);  
+      iops=new ionpars(cf_file);  
+      int dj;dj=(int)(2*J()+1);
+      est=ComplexMatrix(0,dj,1,dj);
      // get 1ion parameters - operator matrices
      
      }
@@ -342,10 +492,16 @@ jjjpar::jjjpar(FILE * file)
 	         {fprintf (stderr,"%s\n",error);}
 	       exit (EXIT_FAILURE);
 	      }
-  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,double*,double*))dlsym(handle,"mcalc");
+  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*))dlsym(handle,"mcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s\n",error);exit (EXIT_FAILURE);}
-  dm=(int(*)(int*,double*,Vector*,double*,Vector*,ComplexMatrix*,float*))dlsym(handle,"dmcalc");
+  dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*))dlsym(handle,"dmcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);dm=NULL;}
+  mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))dlsym(handle,"mq");
+  if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mq=NULL;}
+  estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"estates");
+  if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);estates=NULL;}
+
+
 #else
   fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
   exit(EXIT_FAILURE);
@@ -355,116 +511,108 @@ jjjpar::jjjpar(FILE * file)
   }
   fclose(cf_file);
 
-  magFF=Vector(1,14);
-  magFF=0;  magFF[1]=1;
+  magFFj0=Vector(1,7);magFFj0=0;  magFFj0[1]=1;
+  magFFj2=Vector(1,7);magFFj2=0;
+  magFFj4=Vector(1,7);magFFj4=0;
+  magFFj6=Vector(1,7);magFFj6=0;
+  Zc=Vector(1,7);Zc=0;
+
   DWF=0;  
-  
-  //start reading again at the beginning of the file to get formfactors, debye waller factor
+
   cf_file = fopen_errchk (cffilename, "rb");
 
   while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+    extract(instr,"SCATTERINGLENGTHREAL",SLR);  
+    extract(instr,"SCATTERINGLENGTHIMAG",SLI);  
+    extract(instr,"GJ",gJ);  
    // read formfactor if given
-    extract(instr,"FFj0A",magFF[1]);
-    extract(instr,"FFj0a",magFF[2]);
-    extract(instr,"FFj0B",magFF[3]);
-    extract(instr,"FFj0b",magFF[4]);
-    extract(instr,"FFj0C",magFF[5]);
-    extract(instr,"FFj0c",magFF[6]);
-    extract(instr,"FFj0D",magFF[7]);
-    extract(instr,"FFj2A",magFF[8]);
-    extract(instr,"FFj2a",magFF[9]);
-    extract(instr,"FFj2B",magFF[10]);
-    extract(instr,"FFj2b",magFF[11]);
-    extract(instr,"FFj2C",magFF[12]);
-    extract(instr,"FFj2c",magFF[13]);
-    extract(instr,"FFj2D",magFF[14]);
+    extract(instr,"FFj0A",magFFj0[1]);
+    extract(instr,"FFj0a",magFFj0[2]);
+    extract(instr,"FFj0B",magFFj0[3]);
+    extract(instr,"FFj0b",magFFj0[4]);
+    extract(instr,"FFj0C",magFFj0[5]);
+    extract(instr,"FFj0c",magFFj0[6]);
+    extract(instr,"FFj0D",magFFj0[7]);
+    extract(instr,"FFj2A",magFFj2[1]);
+    extract(instr,"FFj2a",magFFj2[2]);
+    extract(instr,"FFj2B",magFFj2[3]);
+    extract(instr,"FFj2b",magFFj2[4]);
+    extract(instr,"FFj2C",magFFj2[5]);
+    extract(instr,"FFj2c",magFFj2[6]);
+    extract(instr,"FFj2D",magFFj2[7]);
+    extract(instr,"FFj4A",magFFj4[1]);
+    extract(instr,"FFj4a",magFFj4[2]);
+    extract(instr,"FFj4B",magFFj4[3]);
+    extract(instr,"FFj4b",magFFj4[4]);
+    extract(instr,"FFj4C",magFFj4[5]);
+    extract(instr,"FFj4c",magFFj4[6]);
+    extract(instr,"FFj4D",magFFj4[7]);
+    extract(instr,"FFj6A",magFFj6[1]);
+    extract(instr,"FFj6a",magFFj6[2]);
+    extract(instr,"FFj6B",magFFj6[3]);
+    extract(instr,"FFj6b",magFFj6[4]);
+    extract(instr,"FFj6C",magFFj6[5]);
+    extract(instr,"FFj6c",magFFj6[6]);
+    extract(instr,"FFj6D",magFFj6[7]);
+   // coefficients of Z(K') according to Lovesey chapter 11.6.1 page 233
+    extract(instr,"Z1c0",Zc(1));  
+    extract(instr,"Z1c2",Zc(2));  
+    extract(instr,"Z3c2",Zc(3));  
+    extract(instr,"Z3c4",Zc(4));  
+    extract(instr,"Z5c4",Zc(5));  
+    extract(instr,"Z5c6",Zc(6));  
+    extract(instr,"Z7c6",Zc(7));  
    // read debeywallerfactor if given    
     extract(instr,"DWF",DWF);
   }    
  }
  
-fprintf(stderr,"\nmagnetic formfactors\n");
-fprintf(stderr," FFj0A=%4.4g  FFj0a=%4.4g FFj0B=0%4.4g FFj0b=%4.4g  FFj0C=%4.4g  FFj0c=%4.4g FFj0D=%4.4g\n",magFF(1),magFF(2),magFF(3),magFF(4),magFF(5),magFF(6),magFF(7));  
-fprintf(stderr," FFj2A=%4.4g FFj2a=%4.4g FFj2B =%4.4g FFj2b=%4.4g FFj2C=%4.4g  FFj2c=%4.4g FFj2D=%4.4g\n",magFF(8), magFF(9),magFF(10),magFF(11),magFF(12),magFF(13),magFF(14));
-fprintf(stderr,"Debey-Waller Factor\n DWF=%g\n\n",DWF);
- 
  fclose (cf_file); 
+if (gJ==0){printf("# reading gJ=0 -> entering intermediate coupling mode by assigning Ja=Sy Jb=Ly Jc=Sz Jd=Lz Je=Sx Jf=Lx\n");
+           if (intern_mcalc==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
+           if (intern_mcalc==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
+           if (intern_mcalc==3){fprintf(stderr,"Error internal module brillouin: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
+          }
 
-  nofcomponents=3; // default value for nofcomponents - (important in case nofparameters=0)
-// read the exchange parameters from file (exactly paranz parameters!)
-  for  (i=1;i<=paranz;++i)
-  {while((j=inputline(file, nn))==0&&feof(file)==0){}; // returns 0 if comment line or eof, exits with error, if input string too long
-   if(feof(file)!=0){ fprintf (stderr, "Error in jjjpar.cpp: input jjj parameters - \n");
-  fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
-      exit (EXIT_FAILURE);
-    }
-    if(i==1){// determine nofcomponents from number of parameters read in first line of mcphas.j
-             if(diagonalexchange==1){nofcomponents=j-3;}else{nofcomponents=(int)sqrt((double)(j-3));}
-             if(intern_mcalc==1)
-	     {// check dimensions of vector if internal kramers is used
-              if(nofcomponents!=3)
-              {fprintf(stderr,"Error reading mcphas.j: number of dimensions (not equal 3) not compatible with internal single ion module kramer - check number of columns in file mcphas.j\n");
-               exit(EXIT_FAILURE);}
-             }
-             // dimension arrays
-             dn = new Vector[paranz+1];for(i1=0;i1<=paranz;++i1){dn[i1]=Vector(1,3);}
-             if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
-             sublattice = new int[paranz+1];if (sublattice == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
-             jij = new Matrix[paranz+1];for(i1=0;i1<=paranz;++i1){jij[i1]=Matrix(1,nofcomponents,1,nofcomponents);}
-             if (jij == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-            }
-   //check if correct number of columns has been read	        
-    if((diagonalexchange==1&&nofcomponents!=j-3)||(diagonalexchange==0&&nofcomponents!=(int)sqrt((double)(j-3))))
-              {fprintf(stderr,"Error reading mcphas.j line %i: check number of columns\n",i);
-               exit(EXIT_FAILURE);}
-
-  Jret=Vector(1,nofcomponents); 
-
-   //(1-3) give the absolute coordinates of the neighbour and are transformed here to relative
-   // coordinates !!
-   dn[i](1) = nn[1];dn[i](2) = nn[2];dn[i](3) = nn[3];
-   jij[i]=0;
-
-  // format of matrix 
-  // 11 22 33 12 21 13 31 23 32 (3x3 matrix)
-  // 11 22 33 44 12 21 13 31 14 41 23 32 24 42 34 43 (4x4 matrix)
-  // 11 22 33 44 55 12 21 13 31 14 41 15 51 23 32 24 42 25 52 34 43 35 53 45 54 (5x5 matrix)
-  // etc ...
-  //read diagonal components of exchange matrix
-  for(i1=1;i1<=nofcomponents;++i1){jij[i](i1,i1)= nn[i1+3];}
-  //read off-diagonal components of exchange matrix (if required)
-  if (diagonalexchange==0){k1=3+nofcomponents;
-                           for(i1=1;i1<=nofcomponents-1;++i1)
-                              {for(j1=i1+1;j1<=nofcomponents;++j1)
-                               {++k1;jij[i](i1,j1)= nn[k1];
-			        ++k1;jij[i](j1,i1)= nn[k1];
-			       }
-			      }
-                          }
-  }
 }
 
+// constructor with positions scattering length dwf
+jjjpar::jjjpar(double x,double y,double z, double slr,double sli, double dwf)
+{xyz=Vector(1,3);xyz(1)=x;xyz(2)=y;xyz(3)=z;
+ mom=Vector(1,9); mom=0; 
+ DWF=dwf;SLR=slr;SLI=sli;
+  magFFj0=Vector(1,7);magFFj0=0;  magFFj0[1]=1;
+  magFFj2=Vector(1,7);magFFj2=0;
+  magFFj4=Vector(1,7);magFFj4=0;
+  magFFj6=Vector(1,7);magFFj6=0;
+  Zc=Vector(1,7);Zc=0;
+
+}
 //constructor without file
 jjjpar::jjjpar(int n,int diag,int nofmom) 
 { cffilename= new char [MAXNOFCHARINLINE];
   diagonalexchange=diag;
-  paranz=n;xyz=Vector(1,3);
+  paranz=n;xyz=Vector(1,3);xyz=0;
   int i1;
-  intern_mcalc=1;ABC=Vector(1,3);
+  intern_mcalc=1;ABC=Vector(1,3);ABC=0;
   transitionnumber=1;
   nofcomponents=nofmom;
-  Jret=Vector(1,nofcomponents); 
+  mom=Vector(1,nofcomponents);
+  mom=0; 
   dn = new Vector[n+1];for(i1=0;i1<=n;++i1){dn[i1]=Vector(1,3);}
   if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
   sublattice = new int[paranz+1];
   if (sublattice == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
   jij = new Matrix[n+1];for(i1=0;i1<=n;++i1){jij[i1]=Matrix(1,nofcomponents,1,nofcomponents);}
   if (jij == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  magFF=Vector(1,14);
-  magFF=0;  magFF[1]=1;
-  DWF=0;  
+  magFFj0=Vector(1,7);magFFj0=0;  magFFj0[1]=1;
+  magFFj2=Vector(1,7);magFFj2=0;
+  magFFj4=Vector(1,7);magFFj4=0;
+  magFFj6=Vector(1,7);magFFj6=0;
+  Zc=Vector(1,7);Zc=0;
+  DWF=0;gJ=0;
 
 }
 
@@ -473,15 +621,23 @@ jjjpar::jjjpar (const jjjpar & p)
 { int i;
   xyz=Vector(1,3);
   nofcomponents=p.nofcomponents;
-  Jret=Vector(1,nofcomponents); 
+  mom=Vector(1,nofcomponents); 
   xyz=p.xyz;paranz=p.paranz;
+  SLR=p.SLR;SLI=p.SLI;
+
   diagonalexchange=p.diagonalexchange;
   gJ=p.gJ;intern_mcalc=p.intern_mcalc;
+  Mq=ComplexVector(1,3);
+  Mq=p.Mq;
+  
   transitionnumber=p.transitionnumber;
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.intern_mcalc==1||p.intern_mcalc==0)  ABC=p.ABC;
-  if (p.intern_mcalc==2)  iops=new ionpars((int)(2*(*p.iops).J+1));iops=p.iops;
+  if (p.intern_mcalc==2)  {iops=new ionpars((int)(2*(*p.iops).J+1));iops=p.iops;
+                           int dj;dj=(int)(2*J()+1);
+                           est=ComplexMatrix(0,dj,1,dj);est=p.est;
+                           }
 //  if (intern_mcalc==2)  iops=new ionpars(4);iops=p.iops;
 //  if (intern_mcalc==2)  iops=p.iops;
   
@@ -497,12 +653,17 @@ jjjpar::jjjpar (const jjjpar & p)
 */
    m=p.m;
    dm=p.dm;
+   mq=p.mq;
+   estates=p.estates;
 /*  }*/
 #endif
-  magFF=Vector(1,14);
-  magFF=p.magFF;
+  magFFj0=Vector(1,7);magFFj0=p.magFFj0;
+  magFFj2=Vector(1,7);magFFj2=p.magFFj2;
+  magFFj4=Vector(1,7);magFFj4=p.magFFj4;
+  magFFj6=Vector(1,7);magFFj6=p.magFFj6;
+  Zc=Vector(1,7);Zc=p.Zc;
   DWF=p.DWF;  
-int i1;
+int i1;
 //dimension arrays
   jij = new Matrix[paranz+1];for(i1=0;i1<=paranz;++i1){jij[i1]=Matrix(1,nofcomponents,1,nofcomponents);}
   if (jij == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
@@ -517,469 +678,14 @@ jjjpar::jjjpar (const jjjpar & p)
 
 //destruktor
 jjjpar::~jjjpar ()
-{ delete []jij;
-  delete []dn;
-  delete []sublattice;
-  delete []cffilename;
+{ //delete []jij; //will not work in linux 
+  //delete []dn;  // will not work in linux
+  //delete []sublattice;
+  //delete []cffilename;// will not work in linux
   if (intern_mcalc==2) delete iops;
 #ifdef __linux__
    if (intern_mcalc==0)dlclose(handle);
 #endif
 }
 
-//------------------------------------------------------------------------------------------------
-//routine mcalc for kramers doublet
-//------------------------------------------------------------------------------------------------
-Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
-{ /*on input
-    ABC(1...3)  A,M,Ci....saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
-    gJ		lande factor
-    T		temperature[K]
-    gjmbH	vector of effective field [meV]
-  on output    
-    J		single ion momentum vector <J>
-    Z		single ion partition function
-    U		single ion magnetic energy
-*/
-  double alpha, betar, betai, lambdap,lambdap_K_BT, lambdap2, expp, expm, np, nm;
-  double nennerp, nennerm, jap, jam, jbp, jbm, jcp, jcm,Z;
-  double alpha_lambdap,alphaplambdap,alphaxlambdap;
 
-  static Vector Jret(1,3);
-  
-  alpha = ABC[2] * gjmbH[2];
-  betar = -ABC[1] * gjmbH[1];
-  betai = -ABC[3] * gjmbH[3];
-  lambdap2 = alpha * alpha + betar * betar + betai * betai;
-  lambdap = sqrt (lambdap2);
-  lambdap_K_BT=lambdap/K_B/T;
-  if (lambdap_K_BT>700){lambdap_K_BT=700;}
-  if (lambdap_K_BT<-700){lambdap_K_BT=-700;}
-  expm = exp (lambdap_K_BT);
-  expp = 1/expm; //=exp (-lambdap_K_BT);
-  Z = expp + expm;
-  lnZ=log(Z);
-  np = expp / Z;
-  nm = expm / Z;
-  U=lambdap*(np-nm); // energy
-
-//  nennerp = (alpha - lambdap) * (alpha - lambdap) + betar * betar + betai * betai;
-//  nennerm = (alpha + lambdap) * (alpha + lambdap) + betar * betar + betai * betai;
-    alphaxlambdap=alpha*lambdap;
-    alpha_lambdap=alpha-lambdap;
-    alphaplambdap=alpha+lambdap;
-    nennerp=  2.0*(-alphaxlambdap+lambdap2);    
-    nennerm=  2.0*(alphaxlambdap+lambdap2);    
-
-  if (nennerp > SMALL)
-    {
-      jap = -ABC[1] * 2.0 * betar * (alpha_lambdap) / nennerp;
-//      jbp = M * ((alpha_lambdap) * (alpha_lambdap) - (betar * betar + betai * betai)) / nennerp;
-      jbp = ABC[2] * (2.0 * alpha*alpha_lambdap) / nennerp;
-      jcp = -2.0 * ABC[3] * betai * (alpha_lambdap) / nennerp;
-    }
-  else
-    {
-      jap = 0;
-      if (alpha * alpha > SMALL)
-	{
-	  jbp = -copysign (ABC[2], alpha);
-	}
-      else
-	{
-	  jbp = ABC[2];
-	}
-      jcp = 0;
-    }
-
-  if (nennerm > SMALL)
-    {
-      jam = -ABC[1] * 2.0 * betar * (alphaplambdap) / nennerm;
-//      jbm = M * ((alpha + lambdap) * (alpha + lambdap) - (betar * betar + betai * betai)) / nennerm;
-      jbm = ABC[2] * (2.0 * alpha*alphaplambdap) / nennerm;
-      jcm = -2.0 * ABC[3] * betai * (alphaplambdap) / nennerm;
-    }
-  else
-    {
-      jam = 0;
-      if (alpha * alpha > SMALL)
-	{
-	  jbm = copysign (ABC[2], alpha);
-	}
-      else
-	{
-	  jbm = -ABC[2];
-	}
-      jcm = 0;
-    }
-
-  Jret[1] = np * jap + nm * jam;
-  Jret[2] = np * jbp + nm * jbm;
-  Jret[3] = np * jcp + nm * jcm;
-//  printf ("Ha=%g Hb=%g Hc=%g Ja=%g Jb=%g Jc=%g \n", 
-//     gjmbH[1]/MU_B/gjJ, gjmbH[2]/MU_B/gjJ, gjmbH[3]/MU_B/gjJ, J[1], J[2], J[3]);
-return Jret;
-}
-
-int jjjpar::kramerdm(int & transitionnumber,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
-{ 
-  /*on input
-    transitionnumber ... number of transition to be computed - meaningless for kramers doublet, because there is only 1 transition
-    ABC[i]	saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
-    gJ		lande factor
-    T		temperature[K]
-    gjmbH	vector of effective field [meV]
-  on output    
-    delta	splitting of kramers doublet [meV]
-    mat(i,j)	<-|(Ji-<Ji>)|+><+|(Jj-<Jj>|-> tanh(delta/2kT)
-*/
-  double alpha, betar, betai, lambdap,lambdap_K_BT, lambdap2, expp, expm, np, nm;
-  double nennerp, nennerm, nenner;
-  complex<double> ja,jb,jc,i(0,1), jap, jam, jbp, jbm, jcp, jcm;
-  double alpha_lambdap,alphaplambdap,alphaxlambdap;
-  double Z;
-  double lnz,u;
-  
-  static Vector Jret(1,3);
-  // clalculate thermal expectation values (needed for quasielastic scattering)
-  Jret=kramer(T,gjmbH,lnz,u);
-  int pr;
-  pr=1;
-  if (transitionnumber<0) {pr=0;transitionnumber*=-1;}
-
-  alpha = ABC[2]* gjmbH[2];
-  betar = -ABC[1] * gjmbH[1];
-  betai = -ABC[3] * gjmbH[3];
-  lambdap2 = alpha * alpha + betar * betar + betai * betai;
-  lambdap = sqrt (lambdap2);
-
-
-  
-  lambdap_K_BT=lambdap/K_B/T;
-  if (lambdap_K_BT>700){lambdap_K_BT=700;}
-  if (lambdap_K_BT<-700){lambdap_K_BT=-700;}
-  expm = exp (lambdap_K_BT);
-  expp = 1/expm; //=exp (-lambdap_K_BT);
-  Z = expp + expm;
-  np = expp / Z;
-  nm = expm / Z;
-
-    alphaxlambdap=alpha*lambdap;
-    alpha_lambdap=alpha-lambdap;
-    alphaplambdap=alpha+lambdap;
-    nennerp=  2.0*(-alphaxlambdap+lambdap2);    
-    nennerm=  2.0*(alphaxlambdap+lambdap2);    
-
-
-if (transitionnumber==2)
-{ delta=2*lambdap; //set delta !!!
-
-
-    nenner=sqrt(nennerp*nennerm);
-
-  if (nenner > SMALL)
-    {
-      ja = -ABC[1] * 2.0*(alpha * betar+i * betai * lambdap) / nenner;
-      jb = -ABC[2] * 2.0 * (betar*betar+betai*betai) / nenner;
-      jc = -ABC[3] * 2.0*(alpha*betai -i *betar*lambdap) / nenner;
-    }
-  else
-    {
-      if (alpha > SMALL)
-	{ja = ABC[1];  // <-| is the ground state
-  	 jb = 0;
-         jc = -i*ABC[3];
-	}
-      else
-	{ja = ABC[1];  // <+| is the ground state
-  	 jb = 0;
-         jc = i*ABC[3]; 	
-	}
-    }
- if (delta>SMALL)
- {// now lets calculate mat
- mat(1,1)=ja*conj(ja)*(nm-np);
- mat(1,2)=ja*conj(jb)*(nm-np);
- mat(1,3)=ja*conj(jc)*(nm-np);
- mat(2,1)=jb*conj(ja)*(nm-np);
- mat(2,2)=jb*conj(jb)*(nm-np);
- mat(2,3)=jb*conj(jc)*(nm-np);
- mat(3,1)=jc*conj(ja)*(nm-np);
- mat(3,2)=jc*conj(jb)*(nm-np);
- mat(3,3)=jc*conj(jc)*(nm-np); 
- }else
- {// quasielastic scattering needs epsilon * nm / KT ....
- mat(1,1)=ja*conj(ja)*nm/K_B/T;
- mat(1,2)=ja*conj(jb)*nm/K_B/T;
- mat(1,3)=ja*conj(jc)*nm/K_B/T;
- mat(2,1)=jb*conj(ja)*nm/K_B/T;
- mat(2,2)=jb*conj(jb)*nm/K_B/T;
- mat(2,3)=jb*conj(jc)*nm/K_B/T;
- mat(3,1)=jc*conj(ja)*nm/K_B/T;
- mat(3,2)=jc*conj(jb)*nm/K_B/T;
- mat(3,3)=jc*conj(jc)*nm/K_B/T; 
- }
-}
-else
-{ delta=-SMALL; // transition within the same level
-  if (nennerp > SMALL)
-    {
-      jap = -ABC[1] * 2.0 * betar * (alpha_lambdap) / nennerp;
-//      jbp = M * ((alpha_lambdap) * (alpha_lambdap) - (betar * betar + betai * betai)) / nennerp;
-      jbp = ABC[2] * (2.0 * alpha*alpha_lambdap) / nennerp;
-      jcp = -2.0 * ABC[3] * betai * (alpha_lambdap) / nennerp;
-    }
-  else
-    {
-      jap = 0;
-      if (alpha * alpha > SMALL)
-	{
-	  jbp = -copysign (ABC[2], alpha);
-	}
-      else
-	{
-	  jbp = -ABC[2];
-	}
-      jcp = 0;
-    }
-
-  if (nennerm > SMALL)
-    {
-      jam = -ABC[1] * 2.0 * betar * (alphaplambdap) / nennerm;
-//      jbm = M * ((alpha + lambdap) * (alpha + lambdap) - (betar * betar + betai * betai)) / nennerm;
-      jbm = ABC[2] * (2.0 * alpha*alphaplambdap) / nennerm;
-      jcm = -2.0 * ABC[3] * betai * (alphaplambdap) / nennerm;
-    }
-  else
-    {
-      jam = 0;
-      if (alpha * alpha > SMALL)
-	{
-	  jbm = copysign (ABC[2], alpha);
-	}
-      else
-	{
-	  jbm = ABC[2];
-	}
-      jcm = 0;
-    }
- if (transitionnumber==1)
- {// now lets calculate mat
- mat(1,1)=(jam-Jret(1))*(jam-Jret(1))*nm/K_B/T;
- mat(1,2)=(jam-Jret(1))*(jbm-Jret(2))*nm/K_B/T;
- mat(1,3)=(jam-Jret(1))*(jcm-Jret(3))*nm/K_B/T;
- mat(2,1)=(jbm-Jret(2))*(jam-Jret(1))*nm/K_B/T;
- mat(2,2)=(jbm-Jret(2))*(jbm-Jret(2))*nm/K_B/T;
- mat(2,3)=(jbm-Jret(2))*(jcm-Jret(3))*nm/K_B/T;
- mat(3,1)=(jcm-Jret(3))*(jam-Jret(1))*nm/K_B/T;
- mat(3,2)=(jcm-Jret(3))*(jbm-Jret(2))*nm/K_B/T;
- mat(3,3)=(jcm-Jret(3))*(jcm-Jret(3))*nm/K_B/T;
- }else{
- // now lets calculate mat
- mat(1,1)=(jap-Jret(1))*(jap-Jret(1))*np/K_B/T;
- mat(1,2)=(jap-Jret(1))*(jbp-Jret(2))*np/K_B/T;
- mat(1,3)=(jap-Jret(1))*(jcp-Jret(3))*np/K_B/T;
- mat(2,1)=(jbp-Jret(2))*(jap-Jret(1))*np/K_B/T;
- mat(2,2)=(jbp-Jret(2))*(jbp-Jret(2))*np/K_B/T;
- mat(2,3)=(jbp-Jret(2))*(jcp-Jret(3))*np/K_B/T;
- mat(3,1)=(jcp-Jret(3))*(jap-Jret(1))*np/K_B/T;
- mat(3,2)=(jcp-Jret(3))*(jbp-Jret(2))*np/K_B/T;
- mat(3,3)=(jcp-Jret(3))*(jcp-Jret(3))*np/K_B/T;
- }
-}
-if (pr==1) printf ("delta=%4.6g meV\n",delta);
-
-return 3; // kramers doublet has always exactly one transition + 2 levels (quasielastic scattering)!
-}
-/**************************************************************************/
-
-//------------------------------------------------------------------------------------------------
-//routine mcalc for brillouin function
-//------------------------------------------------------------------------------------------------
-Vector & jjjpar::brillouin (double & T, Vector & gjmbH, double & lnZ, double & U)
-{ /*on input
-    ABC(1)  J=S....Spin quantum number
-    gJ		lande factor
-    T		temperature[K]
-    gjmbH	vector of effective field [meV]
-  on output    
-    J		single ion momentum vector <J>
-    Z		single ion partition function
-    U		single ion magnetic energy
-*/
-
-static Vector Jret(1,3);
-
-// check dimensions of vector
-if(Jret.Hi()!=3||gjmbH.Hi()!=3||ABC.Hi()!=1)
-   {fprintf(stderr,"Error loadable module brillouin.so: wrong number of dimensions - check number of columns in file mcphas.j or number of parameters in single ion property file\n");
-    exit(EXIT_FAILURE);}
-    
-double JJ,K_BT,XJ,gmhkt,Jav,gmh,Z,X;
-
-// program brillouin function for S=J=ABC(1)
-JJ=ABC[1];
-K_BT=T*K_B;
-gmh=Norm(gjmbH);
-gmhkt=gmh/K_BT;
-
-if(JJ*gmhkt>100||gmhkt>100){Jav=JJ;lnZ=JJ*gmhkt;}
-else
-{X=exp(gmhkt);
- XJ=exp(JJ*gmhkt);
-
-// printf("1-X=%g gmhkt=%g\n",1-X,gmhkt);
-
- if (X<=1.000001){Z=2*JJ+1;Jav=0;}
- else
- {Z=(XJ*X-1/XJ)/(X-1.0);
-  Jav=JJ*(XJ*X*X-1/XJ)+(JJ+1)*X*(1.0/XJ-XJ);
-  Jav/=(X-1);
-  Jav/=(XJ*X-1/XJ);
- }
-//for (i=-JJ*2;i<=+0.000001;++i)
-//{dd=i*gmhkt;
-// if (dd<-700){expp=0;}else{expp=exp(dd);}
-// Z += expp; //this is not yet Z, a factor exp(J gJ Heff/kT) is missing
-//}
-
-
-//Jav=0;
-//for (i=-JJ*2;i<=+0.000001;++i)
-//{dd=i*gmhkt;
-// if (dd<-700){expp=0;}else{expp=exp(dd);}
-// Jav+=(JJ+i)*expp/Z;
-//}
-//Z*=exp(JJ*gmhkt); //this is now the correct Z
-lnZ=log(Z);
-}
-
-U=-gmh*Jav;
-
-
-
-if (gmh>0)
-{ Jret[1] = Jav*gjmbH(1)/gmh;
-  Jret[2] = Jav*gjmbH(2)/gmh;
-  Jret[3] = Jav*gjmbH(3)/gmh;
- }
- else
- {Jret=0;}
-//  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
-return Jret;
-}
-/**************************************************************************/
-// for mcdisp this routine is needed
-int jjjpar::brillouindm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
-{ 
-  /*on input
-    tn          transition-number
-    ABC(1)      S=J spin quantum number
-    g_J		lande factor
-    T		temperature[K]
-    gjmbH	vector of effective field [meV]
-  on output    
-    delta	splittings [meV] 
-    mat(i,j)	transition matrix elements ...
-*/
-// NOT IMPLEMENTED
-// printf("Error: external module brillouin.c has not implemented dmcalc function");exit(EXIT_FAILURE);
-// return 1; 
-static Vector Jret(1,3);
-int pr;
-
-  pr=1;
-  if (tn<0) {pr=0;tn*=-1;}
-
-  double JJ,K_BT,XJ,gmhkt,gmh,Z,R,X,sinth,hxxyy,jjkt;
-  complex <double> i(0,1),bx,by,bz;
-
-// program brillouin function for S=J=ABC(1)
-  JJ=ABC[1];
-  K_BT=T*K_B;
-  gmh=Norm(gjmbH);
-  gmhkt=gmh/K_BT;
-  X=exp(gmhkt);
-  XJ=exp(JJ*gmhkt);
-// calculate Z and R
-if (X==1.0){Z=2*JJ+1;R=0;}
-else
-{Z=(XJ*X-1/XJ)/(X-1.0);
- R=JJ*(1/XJ-XJ*X*X)+(JJ+1)*X*(XJ-1.0/XJ);
- R/=0.5*(X-1)*(X-1);
-}
-
-// calculate coefficients bx,by,bz
- hxxyy=gjmbH(1)*gjmbH(1)+gjmbH(2)*gjmbH(2);
- if (hxxyy/gjmbH(3)/gjmbH(3)>SMALL*SMALL)
- {sinth=sqrt(hxxyy)/gmh;
-  bx=-gjmbH(2)+i*gjmbH(1)*gjmbH(3)/gmh;
-  bx/=2*gmh*sinth;
-  by=gjmbH(1)+i*gjmbH(2)*gjmbH(3)/gmh;
-  by/=2*gmh*sinth;
-  }
- else
- {sinth=0;by=0.5;
-  if(gjmbH(3)>0)
-  {bx=0.5*i;}
-  else
-  {bx=-0.5*i;}
- }
-  bz=-i*sinth*0.5;
-// -----------------------------------------
-
-if (tn==2) // transition to finite energy
- {delta=gmh; //set delta !!!
-
- if (delta>SMALL)
-  {// now lets calculate mat
-  mat(1,1)=bx*conj(bx)*(-R/Z);
-  mat(1,2)=bx*conj(by)*(-R/Z);
-  mat(1,3)=bx*conj(bz)*(-R/Z);
-  mat(2,1)=by*conj(bx)*(-R/Z);
-  mat(2,2)=by*conj(by)*(-R/Z);
-  mat(2,3)=by*conj(bz)*(-R/Z);
-  mat(3,1)=bz*conj(bx)*(-R/Z);
-  mat(3,2)=bz*conj(by)*(-R/Z);
-  mat(3,3)=bz*conj(bz)*(-R/Z);
-  } else
-  {// quasielastic scattering needs epsilon * nm / KT ....
-  jjkt=0.6666667*JJ*(JJ+1)/K_BT;
-  mat(1,1)=bx*conj(bx)*jjkt;
-  mat(1,2)=bx*conj(by)*jjkt;
-  mat(1,3)=bx*conj(bz)*jjkt;
-  mat(2,1)=by*conj(bx)*jjkt;
-  mat(2,2)=by*conj(by)*jjkt;
-  mat(2,3)=by*conj(bz)*jjkt;
-  mat(3,1)=bz*conj(bx)*jjkt;
-  mat(3,2)=bz*conj(by)*jjkt;
-  mat(3,3)=bz*conj(bz)*jjkt;
-  }
- }
- else
- { delta=-SMALL; // tn=1 ... transition within the same level
-   if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/K_BT/(2*JJ+1);}
-   else {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
-         jjkt+=JJ*JJ/X/XJ;
-	 jjkt+=(JJ*JJ+2*JJ+1)*X/XJ;
-	 jjkt-=(JJ+1)*(JJ+1)*XJ;
-	 jjkt+=(2*JJ*JJ+2*JJ-1)*XJ*X;
-	 jjkt-=JJ*JJ*XJ*X*X;
-	 jjkt*=X/(1-X)/(1-X);
-	 jjkt/=(1/XJ-X*XJ)*K_BT;}
- // now lets calculate mat
- mat(1,1)=gjmbH(1)*gjmbH(1)*jjkt;
- mat(1,2)=gjmbH(1)*gjmbH(2)*jjkt;
- mat(1,3)=gjmbH(1)*gjmbH(3)*jjkt;
- mat(2,1)=gjmbH(2)*gjmbH(1)*jjkt;
- mat(2,2)=gjmbH(2)*gjmbH(2)*jjkt;
- mat(2,3)=gjmbH(2)*gjmbH(3)*jjkt;
- mat(3,1)=gjmbH(3)*gjmbH(1)*jjkt;
- mat(3,2)=gjmbH(3)*gjmbH(2)*jjkt;
- mat(3,3)=gjmbH(3)*gjmbH(3)*jjkt;
- }
-if (pr==1) printf ("delta=%4.6g meV\n",delta);
-
-return 2;
-// brillouin function has 2 effective transitions
-}

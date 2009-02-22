@@ -48,17 +48,17 @@ class spincf
                       //returns position of atom l at lattice site (i j k) (Angstrom)
     void invert();// inverts all spins (AND higher order moments)
     void reduce();// reduces spinconfiguration
-    void 
-spinfromq (int n1,int n2, int n3,Vector & qvector,
-         Vector & nettom,Vector & momentq0, Vector & phi);
+    void spinfromq (int n1,int n2, int n3,Vector & qvector, Vector & nettom,Vector & momentq0, Vector & phi);
 
     void print(FILE * fout);
-    void printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames);//print list of atoms + positions + moments
+
+//print list of atoms + positions + moments
+    void printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames,float * gJ);
     void eps(FILE * fout);
     void eps(FILE * fout,const char * text);
-    void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation);
-    void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
-    void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z);
+    void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation, Vector & gJ);
+    void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
+    void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
     int  load(FILE * fin_coq);	
      
     spincf & operator + (const spincf & op2); // addition    

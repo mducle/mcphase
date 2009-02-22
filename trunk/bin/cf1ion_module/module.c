@@ -255,7 +255,7 @@ dummyc=Jbb;Jbb=Jcc;Jcc=Jaa;Jaa=dummyc;
 
 ionpars iops("#ATTENTION in module cfield.so the AXES xyz are parallel to cab\n#The higher order interactions are described by the  PKQ Operators defined in cfield:\n#O20(c) .... Jd\n#O22(c) .... Je\n#O40(c) .... Jf\n#O42(c) .... Jg\n#O44(c) .... Jh\n#O60(c) .... Ji\n#O62(c) .... Jj\n#O64(c) .... Jk\n#O66(c) .... Jl\n");  // get 1ion parameters - operator matrices
   
-extern "C" void mcalc(Vector & J,double & T,Vector & gjmbH, double & gJ,Vector & ABC, double & lnZ,double & U)
+extern "C" void mcalc(Vector & J,double & T,Vector & gjmbH, double & gJ,Vector & ABC,  char ** sipffile,double & lnZ,double & U)
 {//ABC not used !!!
     /*on input
     T		temperature[K]
@@ -368,7 +368,7 @@ return;
 
 /**************************************************************************/
 // for mcdisp this routine is needed
-extern "C" int dmcalc(int & tn,double & T,Vector & gjmbH,double & gJ,Vector & ABC,ComplexMatrix & mat,float & delta)
+extern "C" int dmcalc(int & tn,double & T,Vector & gjmbH,double & gJ,Vector & ABC, char ** sipffile,ComplexMatrix & mat,float & delta)
 {//ABC not used !!!
     /*on input
     tn          transitionnumber
@@ -400,7 +400,7 @@ if(gjmbH.Hi()>12)
 // 			   int sort, int maxiter)
    static Vector J(1,gjmbH.Hi());
    double lnz,u;
-   mcalc(J,T,gjmbH,gJ,ABC,lnz,u);
+   mcalc(J,T,gjmbH,gJ,ABC,sipffile,lnz,u);
    // setup hamiltonian
    int dj;
    dj=iops.Hcf.Rhi();
@@ -430,7 +430,7 @@ if(gjmbH.Hi()>12)
    EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
    // calculate Z and wn (occupation probability)
      Vector wn(1,dj);double Z;
-     double x,y;int i,j=0,k,l,m;
+     double x,y;int i,j,k,l,m;
      x=Min(En);
      for (i=1;i<=dj;++i)
      {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 

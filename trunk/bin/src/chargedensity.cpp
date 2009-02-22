@@ -7,7 +7,6 @@
 #include<cerrno>
 #include<martin.h>
 #include<vector.h>
-#include<cstdlib>
 
 /* private:
   double dtheta;
