@@ -23,49 +23,121 @@
 int main (int argc, char **argv)
 {// check command line
   if (argc < 3)
-    { printf ("\nProgram to calculate Crystalfield Parameters from Point Charges \n\
-                Usage: pointc Ce3+ 0.2 4 1 5.3\n\
-                 ... meaning calculate Blms (Stevens Parameters) \n \
-                                 and   Llms (Wybourne Parameters) \n \
-                 for one pointcharge of +0.2|e| in distance\n\
-                 x=4 A y=1 A z=5.3 A from a Ce3+ ion.\n\
-                Alternative Usage: pointc Ce3+ filename\n\
-                 ... meaning read several charges+coordinates from file,\n\
-                 file format: column 1=charge, column 2-4 = x y z coordinate.\n\
-                results are written to stdout\n\
-		\n");
+    { printf ("\nProgram to calculate Crystal field Parameters from Point Charges \n\n\
+            Usage: pointc Ce3+ 0.2 4 1 5.3\n\n\
+             ... meaning calculate Blms (Stevens Parameters) \n\
+                             and   Llms (Wybourne Parameters) \n\
+             for one pointcharge of +0.2|e| in distance\n\
+             x=4 A y=1 A z=5.3 A from a Ce3+ ion.\n\n\
+             Alternative Usage: pointc Ce3+ filename\n\
+             ... meaning read several charges+coordinates from file,\n\
+             file format: column 1=charge, column 2-4 = x y z coordinate.\n\
+             results are written to stdout (including radial matrix elements\n\
+             and Stevens factors)\n\n\
+          Note: if an ion is not implemented, it's parameters can be \n\
+                entered in a single ion property file and pointc is\n\
+                started as \n\
+                  pointc file.sipf 0.2 4 1 5.3\n\n\
+\n\
+                the single ion property file must then contain the \n\
+                following information (# denotes comments):\n\
+\n\
+                  #the name of the ion\n\
+                  IONTYPE=Ce3+\n\
+                  #stevens parameters(optional,necessary for output of Blm)\n\
+                  ALPHA=-0.0571429\n\
+                  BETA=0.00634921\n\
+                  GAMMA=0\n\
+                  # the radial matrix elements RN=<r^N> \n\
+                  # in units of a0^N (a0=0.5292 A)\n\
+                  R2=1.309\n\
+                  R4=3.964\n\
+                  R6=23.31\n\
+                  # alternatively the radial wave function can be given:\n\
+                  # the radial wave function is expanded as \n\
+                  # R(r)=sum_p C_p R_Np,XIp(r)\n\
+                  # R_Np,XIp(r)=r^(Np-1).exp(-xi r).(2 XIp)^(Np+0.5)/sqrt(2Np!)\n\
+                  # radial wave function parameters Np XIp Cp values are\n\
+                  # tabulated in clementi & roetti Atomic data and \n\
+                  # nuclear data tables 14 (1974) 177-478\n\
+                  # e.g. Co2+ is isoelectronic to Fe+, looking at page 422\n\ 
+                  # of Clemente & Roetti the parameters are \n\
+                  N1=3 XI1=4.95296 C1=0.36301 \n\
+                  N2=3 XI2=12.2963 C2=0.02707 \n\
+                  N3=3 XI3=7.03565 C3=0.14777\n\
+                  N4=3 XI4=2.74850 C4=0.49771 \n\
+                  N5=3 XI5=1.69027 C5=0.11388 \n\
+                  # if the above parameters are given the radial wave function\n\
+                  # is output to file radwavfun.dat\n\
+	\n");
       exit (1);
     }
 
 FILE * table_file;
+FILE * sipf_file;
 char instr[MAXNOFCHARINLINE];
 int n=0;
 float invalues[100];invalues[0]=99;
   double q,x,y,z;
-  printf ("#!cfield\n#<!--mcphase.sipf-->\n");
-  printf ("IONTYPE=%s\n",argv[1]);
+// set stevens parameters and landefactor, J and <r^l> of ion
+
 
 // read create class object ionpars from iontype - sets J, gJ, Stevens factors from the
 // routine getpar in cfieldrout.c, thus takes the single ion parameters from
 // the same source as the cfield program ...
-
  ionpars * iops;
- iops=new ionpars(argv[1]);  
+ char *token;
+ if(sipf_file=fopen(argv[1],"r")) //read ion parameters from file
+ { iops=new ionpars(2);
+   while(feof(sipf_file)==false)
+  {if(fgets(instr, MAXNOFCHARINLINE, sipf_file)){// strip /r (dos line feed) from line if necessary
+                                      while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
+                                      printf("%s",instr);
+                                    }
+   
+   if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+        extract(instr,"IONTYPE",(*iops).iontype,(size_t)MAXNOFCHARINLINE);
+        
+        extract(instr,"N1",(*iops).Np(1));extract(instr,"XI1",(*iops).Xip(1));extract(instr,"C1",(*iops).Cp(1));
+        extract(instr,"N2",(*iops).Np(2));extract(instr,"XI2",(*iops).Xip(2));extract(instr,"C2",(*iops).Cp(2));
+        extract(instr,"N3",(*iops).Np(3));extract(instr,"XI3",(*iops).Xip(3));extract(instr,"C3",(*iops).Cp(3));
+        extract(instr,"N4",(*iops).Np(4));extract(instr,"XI4",(*iops).Xip(4));extract(instr,"C4",(*iops).Cp(4));
+        extract(instr,"N5",(*iops).Np(5));extract(instr,"XI5",(*iops).Xip(5));extract(instr,"C5",(*iops).Cp(5));
+        extract(instr,"N6",(*iops).Np(6));extract(instr,"XI6",(*iops).Xip(6));extract(instr,"C6",(*iops).Cp(6));
+        extract(instr,"N7",(*iops).Np(7));extract(instr,"XI7",(*iops).Xip(7));extract(instr,"C7",(*iops).Cp(7));
+        extract(instr,"N8",(*iops).Np(8));extract(instr,"XI8",(*iops).Xip(8));extract(instr,"C8",(*iops).Cp(8));
+        extract(instr,"N9",(*iops).Np(9));extract(instr,"XI9",(*iops).Xip(9));extract(instr,"C9",(*iops).Cp(9));
 
-// set stevens parameters and landefactor, J and <r^l> of ion
-  Vector tetan(1,6), rl(1,6);
-  double gJ,J;
-  tetan(2)=(*iops).alpha;tetan(4)=(*iops).beta;tetan(6)=(*iops).gamma;
-  gJ=(*iops).gJ; 
-  J=(*iops).J;
-  rl(2)=(*iops).r2;  rl(4)=(*iops).r4;  rl(6)=(*iops).r6;
+        extract(instr,"ALPHA",(*iops).alpha);
+        extract(instr,"BETA",(*iops).beta);
+        extract(instr,"GAMMA",(*iops).gamma);
 
+        extract(instr,"R2",  (*iops).r2);
+        extract(instr,"R4",  (*iops).r4);
+        extract(instr,"R6",  (*iops).r6);
+        }
+  }
+      if((*iops).r2==0){(*iops).r2_from_radial_wavefunction();printf("#<r^2> in units of a0^2 a0=0.5292 Angstroem\nR2=%g\n",(*iops).r2);}
+      if((*iops).r4==0){(*iops).r4_from_radial_wavefunction();printf("#<r^4> in units of a0^4 a0=0.5292 Angstroem\nR4=%g\n",(*iops).r4);}
+      if((*iops).r6==0){(*iops).r6_from_radial_wavefunction();printf("#<r^6> in units of a0^6 a0=0.5292 Angstroem\nR6=%g\n",(*iops).r6);}
+      if((*iops).Np(1)!=0)
+      {// save radial wavefunction
+      (*iops).save_radial_wavefunction("radwavfun.dat");
+      }
+  fclose(sipf_file);
+ }
+ else
+ {iops=new ionpars(argv[1]);  // read ion parameters from internal table
+  printf ("#!cfield\n#<!--mcphase.sipf-->\n");
+  printf ("IONTYPE=%s\n",(*iops).iontype);
 // printout the information used in pointc to output 
-  printf("#J=%4g\n",J);
-  printf("#Lande Factor: gJ = %4g\n",gJ);
-  printf("#Stevens factors: alpha beta gamma = %4g %4g %4g \n",tetan(2),tetan(4),tetan(6));
-  printf("#Expectation values of radial wave function:\n");
-  printf("#<r^2>=%4g a0^2  <r^4>=%4g a0^4  <r^6>=%4g a0^6    a0=0.5292 Angstroem\n#\n",rl(2),rl(4),rl(6));
+  printf("#J=%4g\n",(*iops).J);
+  printf("#Lande Factor gJ\n GJ = %4g\n",(*iops).gJ);
+  printf("#Stevens factors\nALPHA=%4g\nBETA=%4g\nGAMMA=%4g\n",(*iops).alpha,(*iops).beta,(*iops).gamma);
+  printf("#Expectation values of radial wave function <r^k> in units of a0^k a0=0.5292 Angstroem\n");
+  printf("R2=%4g\nR4=%4g\nR6=%4g\n\n",(*iops).r2,(*iops).r4,(*iops).r6);
+ }
+
 
 if (argc<5) // read pointcharges from file
 {table_file=fopen_errchk(argv[2],"r");
@@ -223,17 +295,17 @@ double e,a0,umr,ehv2,ehv4,ehv6;
 double J2meV=1/1.60217646e-22; // 1 millielectron volt = 1.60217646 × 10-22 joules
 
 // now calculation of the B_LM  and L_LM in meV
-for (i=1;i<=5;++i){(*iops).Blm(i)+=-B(i)*e*e*rl(2)*tetan(2)*ehv2; 
-                   if(i!=3){(*iops).Llm(i)+=-echarge*rl(2)*a0*a0*1e-20*gamma(i)*sqrt(5.0/8/PI)*J2meV;}  //m<>0
-                   else    {(*iops).Llm(i)+=-echarge*rl(2)*a0*a0*1e-20*gamma(i)*sqrt(5.0/4/PI)*J2meV;}  //m=0
+for (i=1;i<=5;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r2*(*iops).alpha*ehv2; 
+                   if(i!=3){(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/8/PI)*J2meV;}  //m<>0
+                   else    {(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/4/PI)*J2meV;}  //m=0
                   }
-for (i=13;i<=21;++i){(*iops).Blm(i)+=-B(i)*e*e*rl(4)*tetan(4)*ehv4; 
-                   if(i!=17){(*iops).Llm(i)+=-echarge*rl(4)*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/8/PI)*J2meV;}  //m<>0
-                   else     {(*iops).Llm(i)+=-echarge*rl(4)*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/4/PI)*J2meV;}  //m=0
+for (i=13;i<=21;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r4*(*iops).beta*ehv4; 
+                   if(i!=17){(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/8/PI)*J2meV;}  //m<>0
+                   else     {(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/4/PI)*J2meV;}  //m=0
                     }
-for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*rl(6)*tetan(6)*ehv6;
-                   if(i!=39){(*iops).Llm(i)+=-echarge*rl(6)*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/8/PI)*J2meV;}  //m<>0
-                   else     {(*iops).Llm(i)+=-echarge*rl(6)*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/4/PI)*J2meV;}  //m=0
+for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r6*(*iops).gamma*ehv6;
+                   if(i!=39){(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/8/PI)*J2meV;}  //m<>0
+                   else     {(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/4/PI)*J2meV;}  //m=0
                     }
 n=0;
 if (argc<5)

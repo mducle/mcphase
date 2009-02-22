@@ -11,7 +11,9 @@
 
 class ionpars  
 {private: 
+   double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
  public:
+   char * iontype; // description string
    double J;// momentum quantum number
    double gJ; // Lande factor
    double alpha;
@@ -32,6 +34,17 @@ class ionpars
    Vector Blm; // Cf parameters  
    Vector Llm; // Cf parameters  
 
+   Vector Np,Xip,Cp; // radial wave function parameters
+
+   // evaluate radial wave function // r given in Angstroems, returns R(r) in units of 1/A^1.5
+   double radial_wavefunction(double r);
+   void save_radial_wavefunction(char * filename);
+
+   //functions to calculate radial matrix elements <r^n> from radial wave function
+   int r2_from_radial_wavefunction();
+   int r4_from_radial_wavefunction();
+   int r6_from_radial_wavefunction();
+ 
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U);
    ComplexMatrix & cfeigenstates (Vector & H);
@@ -39,6 +52,8 @@ class ionpars
    int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
    void savBlm(FILE * file); // saving Blm to file 
    void savLlm(FILE * file); // saving Blm to file 
+ 
+
 
    ionpars(int dimj);
    ionpars(FILE * cf_file);

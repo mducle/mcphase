@@ -327,7 +327,7 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
- //inputpars.rems[2]=" ";
+   inputpars.rems[2]=" ";
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmeanfield-components\n");
    fprintf (fout, "    #mfa(1) mfa(2) .... selfconsistent Mean field configuration \n"); 

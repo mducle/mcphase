@@ -222,6 +222,16 @@ float integer (float s){  double result;modf(s,&result);  return result;};
 int cint (float s){  double result;if(modf(s,&result)<0.5){return (int)result;}{return (int)result+1;}};
 
 
+// factorial of an integer number
+int factorial(int number) {
+	int temp;
+
+	if(number <= 1) return 1;
+
+	temp = number * factorial(number - 1);
+	return temp;
+}
+
 // return threej symbol 
 float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
 {//  THIS IS A PROGRAM TO CALCULATE THE 3_J SYMBOL

@@ -117,7 +117,7 @@ int main (int argc, char **argv)
 
 
 
-abc=0;
+abc=0;char *token;
  // input file header ------------------------------------------------------------------
   instr[0]='#';
  while (instr[strspn(instr," \t")]=='#') // pointer to 'ltrimstring' 
@@ -125,7 +125,10 @@ abc=0;
    if (pos==-1) 
        {fprintf(stderr,"Error: wrong mf file format\n");exit (EXIT_FAILURE);}
    fgets(instr,MAXNOFCHARINLINE,fin_coq);
-   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
+   // strip /r (dos line feed) from line if necessary
+    while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
+
+   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,"%s",instr);}
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
    }

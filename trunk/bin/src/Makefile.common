@@ -70,7 +70,7 @@ else
 ifdef PROFILE
 CCOPTS  = -g -pg -fforce-addr -fpermissive $(LINOPTS)
 else
-CCOPTS  = -g -fomit-frame-pointer -fforce-addr -fpermissive $(LINOPTS)
+CCOPTS  = -g -fforce-addr -fpermissive $(LINOPTS) #-fomit-frame-pointer
 endif
 endif
 

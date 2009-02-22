@@ -37,10 +37,15 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
   Llm=p.Llm; // vector of crystal field parameters
+ 
+  Np=p.Np; Xip=p.Xip;Cp=p.Cp;
   
    int i;
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
+   iontype = new char [strlen(p.iontype)+1];
+   strcpy(iontype,p.iontype);
+  
 
  for(i=1;i<=NOF_OLM_MATRICES;++i)
  { Olm [i]= new Matrix(1,(*p.Olm[i]).Rhi(),1,(*p.Olm[i]).Chi()); 
@@ -65,8 +70,14 @@ ionpars::ionpars (int dimj) // constructor from dimj
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
+   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
+   Xip=Vector(1,9);Xip=0;
+   Cp=Vector(1,9);Cp=0;
+   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
+
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
+   iontype = new char [MAXNOFCHARINLINE];
 
 
  int i;   
@@ -79,9 +90,11 @@ ionpars::ionpars (int dimj) // constructor from dimj
 }
 
  
-ionpars::ionpars (char * iontype) // constructor from iontype (mind:no matrices filled with values !)
+ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices filled with values !)
  {int dimj;
-  getpar(iontype, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
+  getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
+   iontype = new char [strlen(ion)+1];
+   strcpy(iontype,ion);
 
   J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
@@ -94,6 +107,10 @@ ionpars::ionpars (char * iontype) // constructor from iontype (mind:no matrices 
 
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
+
+   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
+   Xip=Vector(1,9);Xip=0;
+   Cp=Vector(1,9);Cp=0;
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
@@ -110,119 +127,12 @@ ionpars::ionpars (char * iontype) // constructor from iontype (mind:no matrices 
 
 ionpars::~ionpars(){
  int i;
+ delete []iontype;
  for (i=1;i<=NOF_OLM_MATRICES;++i)
  {delete Olm[i];delete OOlm[i];}
   delete []Olm;
   delete []OOlm;
  } //destructor
-
-void ionpars::savBlm(FILE * outfile)
-{
-        fprintf(outfile,"B22S=%g\n",Blm(1));
-        fprintf(outfile,"B21S=%g\n",Blm(2));
-	fprintf(outfile,"B20=%g\n",Blm(3));
-        fprintf(outfile,"B21=%g\n",Blm(4));
-	fprintf(outfile,"B22=%g\n",Blm(5));
-   
-	fprintf(outfile,"B33S=%g\n",Blm(6));
-	fprintf(outfile,"B32S=%g\n",Blm(7));
-	fprintf(outfile,"B31S=%g\n",Blm(8));
-	fprintf(outfile,"B30=%g\n",Blm(9));
-   fprintf(outfile,"B31=%g\n",Blm(10));
-   fprintf(outfile,"B32=%g\n",Blm(11));
-   fprintf(outfile,"B32=%g\n",Blm(12));
-
-   fprintf(outfile,"B44S=%g\n",Blm(13));
-   fprintf(outfile,"B43S=%g\n",Blm(14));
-   fprintf(outfile,"B42S=%g\n",Blm(15));
-   fprintf(outfile,"B41S=%g\n",Blm(16));
-   fprintf(outfile,"B40=%g\n",Blm(17));
-   fprintf(outfile,"B41=%g\n",Blm(18));
-   fprintf(outfile,"B42=%g\n",Blm(19));
-   fprintf(outfile,"B43=%g\n",Blm(20));
-   fprintf(outfile,"B44=%g\n",Blm(21));
-  
-   fprintf(outfile,"B55S=%g\n",Blm(22));
-   fprintf(outfile,"B54S=%g\n",Blm(23));
-   fprintf(outfile,"B53S=%g\n",Blm(24));
-   fprintf(outfile,"B52S=%g\n",Blm(25));
-   fprintf(outfile,"B51S=%g\n",Blm(26));
-   fprintf(outfile,"B50=%g\n",Blm(27));
-   fprintf(outfile,"B51=%g\n",Blm(28));
-   fprintf(outfile,"B52=%g\n",Blm(29));
-   fprintf(outfile,"B53=%g\n",Blm(30));
-   fprintf(outfile,"B54=%g\n",Blm(31));
-   fprintf(outfile,"B55=%g\n",Blm(32));
- 
-   fprintf(outfile,"B66S=%g\n",Blm(33));
-   fprintf(outfile,"B65S=%g\n",Blm(34));
-   fprintf(outfile,"B64S=%g\n",Blm(35));
-   fprintf(outfile,"B63S=%g\n",Blm(36));
-   fprintf(outfile,"B62S=%g\n",Blm(37));
-   fprintf(outfile,"B61S=%g\n",Blm(38));
-   fprintf(outfile,"B60=%g\n",Blm(39));
-   fprintf(outfile,"B61=%g\n",Blm(40));
-   fprintf(outfile,"B62=%g\n",Blm(41));
-   fprintf(outfile,"B63=%g\n",Blm(42));
-   fprintf(outfile,"B64=%g\n",Blm(43));
-   fprintf(outfile,"B65=%g\n",Blm(44));
-   fprintf(outfile,"B66=%g\n",Blm(45));
-
-}
-
-void ionpars::savLlm(FILE * outfile)
-{
-        fprintf(outfile,"L22S=%g\n",Llm(1));
-        fprintf(outfile,"L21S=%g\n",Llm(2));
-	fprintf(outfile,"L20=%g\n",Llm(3));
-        fprintf(outfile,"L21=%g\n",Llm(4));
-	fprintf(outfile,"L22=%g\n",Llm(5));
-   
-	fprintf(outfile,"L33S=%g\n",Llm(6));
-	fprintf(outfile,"L32S=%g\n",Llm(7));
-	fprintf(outfile,"L31S=%g\n",Llm(8));
-	fprintf(outfile,"L30=%g\n",Llm(9));
-   fprintf(outfile,"L31=%g\n",Llm(10));
-   fprintf(outfile,"L32=%g\n",Llm(11));
-   fprintf(outfile,"L32=%g\n",Llm(12));
-
-   fprintf(outfile,"L44S=%g\n",Llm(13));
-   fprintf(outfile,"L43S=%g\n",Llm(14));
-   fprintf(outfile,"L42S=%g\n",Llm(15));
-   fprintf(outfile,"L41S=%g\n",Llm(16));
-   fprintf(outfile,"L40=%g\n",Llm(17));
-   fprintf(outfile,"L41=%g\n",Llm(18));
-   fprintf(outfile,"L42=%g\n",Llm(19));
-   fprintf(outfile,"L43=%g\n",Llm(20));
-   fprintf(outfile,"L44=%g\n",Llm(21));
-  
-   fprintf(outfile,"L55S=%g\n",Llm(22));
-   fprintf(outfile,"L54S=%g\n",Llm(23));
-   fprintf(outfile,"L53S=%g\n",Llm(24));
-   fprintf(outfile,"L52S=%g\n",Llm(25));
-   fprintf(outfile,"L51S=%g\n",Llm(26));
-   fprintf(outfile,"L50=%g\n",Llm(27));
-   fprintf(outfile,"L51=%g\n",Llm(28));
-   fprintf(outfile,"L52=%g\n",Llm(29));
-   fprintf(outfile,"L53=%g\n",Llm(30));
-   fprintf(outfile,"L54=%g\n",Llm(31));
-   fprintf(outfile,"L55=%g\n",Llm(32));
- 
-   fprintf(outfile,"L66S=%g\n",Llm(33));
-   fprintf(outfile,"L65S=%g\n",Llm(34));
-   fprintf(outfile,"L64S=%g\n",Llm(35));
-   fprintf(outfile,"L63S=%g\n",Llm(36));
-   fprintf(outfile,"L62S=%g\n",Llm(37));
-   fprintf(outfile,"L61S=%g\n",Llm(38));
-   fprintf(outfile,"L60=%g\n",Llm(39));
-   fprintf(outfile,"L61=%g\n",Llm(40));
-   fprintf(outfile,"L62=%g\n",Llm(41));
-   fprintf(outfile,"L63=%g\n",Llm(42));
-   fprintf(outfile,"L64=%g\n",Llm(43));
-   fprintf(outfile,"L65=%g\n",Llm(44));
-   fprintf(outfile,"L66=%g\n",Llm(45));
-
-}
 
 
 ionpars::ionpars(FILE * cf_file) 
@@ -233,16 +143,40 @@ static int pr=1;
   int dimj;complex<double> im(0,1);
   int i,j,l,dj=30; //30 ... maximum number of 2j+1
   char instr[MAXNOFCHARINLINE];
-  char iontype[MAXNOFCHARINLINE];
+  iontype= new char[MAXNOFCHARINLINE];
   
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
+
+   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
+   Xip=Vector(1,9);Xip=0;
+   Cp=Vector(1,9);Cp=0;
+   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
 
   // read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
         extract(instr,"IONTYPE",iontype,(size_t)MAXNOFCHARINLINE);
+        
+        extract(instr,"N1",Np(1));extract(instr,"XI1",Xip(1));extract(instr,"C1",Cp(1));
+        extract(instr,"N2",Np(2));extract(instr,"XI2",Xip(2));extract(instr,"C2",Cp(2));
+        extract(instr,"N3",Np(3));extract(instr,"XI3",Xip(3));extract(instr,"C3",Cp(3));
+        extract(instr,"N4",Np(4));extract(instr,"XI4",Xip(4));extract(instr,"C4",Cp(4));
+        extract(instr,"N5",Np(5));extract(instr,"XI5",Xip(5));extract(instr,"C5",Cp(5));
+        extract(instr,"N6",Np(6));extract(instr,"XI6",Xip(6));extract(instr,"C6",Cp(6));
+        extract(instr,"N7",Np(7));extract(instr,"XI7",Xip(7));extract(instr,"C7",Cp(7));
+        extract(instr,"N8",Np(8));extract(instr,"XI8",Xip(8));extract(instr,"C8",Cp(8));
+        extract(instr,"N9",Np(9));extract(instr,"XI9",Xip(9));extract(instr,"C9",Cp(9));
+
+        extract(instr,"ALPHA",alpha);
+        extract(instr,"BETA",beta);
+        extract(instr,"GAMMA",gamma);
+
+        extract(instr,"R2",r2);
+        extract(instr,"R4",r4);
+        extract(instr,"R6",r6);
+
         extract(instr,"B22S",Blm(1));
         extract(instr,"B21S",Blm(2));
 	extract(instr,"B20",Blm(3));
@@ -877,6 +811,170 @@ pr=0;
 }
 
 
+
+
+void ionpars::savBlm(FILE * outfile)
+{
+   if(Blm(1)!=0){fprintf(outfile,"B22S=%g\n",Blm(1));}
+   if(Blm(2)!=0){fprintf(outfile,"B21S=%g\n",Blm(2));}
+   if(Blm(3)!=0){fprintf(outfile,"B20=%g\n",Blm(3));}
+   if(Blm(4)!=0){fprintf(outfile,"B21=%g\n",Blm(4));}
+   if(Blm(5)!=0){fprintf(outfile,"B22=%g\n",Blm(5));}
+   
+   if(Blm(6)!=0){fprintf(outfile,"B33S=%g\n",Blm(6));}
+   if(Blm(7)!=0){fprintf(outfile,"B32S=%g\n",Blm(7));}
+   if(Blm(8)!=0){fprintf(outfile,"B31S=%g\n",Blm(8));}
+   if(Blm(9)!=0){fprintf(outfile,"B30=%g\n",Blm(9));}
+   if(Blm(10)!=0){fprintf(outfile,"B31=%g\n",Blm(10));}
+   if(Blm(11)!=0){fprintf(outfile,"B32=%g\n",Blm(11));}
+   if(Blm(12)!=0){fprintf(outfile,"B32=%g\n",Blm(12));}
+
+   if(Blm(13)!=0){fprintf(outfile,"B44S=%g\n",Blm(13));}
+   if(Blm(14)!=0){fprintf(outfile,"B43S=%g\n",Blm(14));}
+   if(Blm(15)!=0){fprintf(outfile,"B42S=%g\n",Blm(15));}
+   if(Blm(16)!=0){fprintf(outfile,"B41S=%g\n",Blm(16));}
+   if(Blm(17)!=0){fprintf(outfile,"B40=%g\n",Blm(17));}
+   if(Blm(18)!=0){fprintf(outfile,"B41=%g\n",Blm(18));}
+   if(Blm(19)!=0){fprintf(outfile,"B42=%g\n",Blm(19));}
+   if(Blm(20)!=0){fprintf(outfile,"B43=%g\n",Blm(20));}
+   if(Blm(21)!=0){fprintf(outfile,"B44=%g\n",Blm(21));}
+  
+   if(Blm(22)!=0){fprintf(outfile,"B55S=%g\n",Blm(22));}
+   if(Blm(23)!=0){fprintf(outfile,"B54S=%g\n",Blm(23));}
+   if(Blm(24)!=0){fprintf(outfile,"B53S=%g\n",Blm(24));}
+   if(Blm(25)!=0){fprintf(outfile,"B52S=%g\n",Blm(25));}
+   if(Blm(26)!=0){fprintf(outfile,"B51S=%g\n",Blm(26));}
+   if(Blm(27)!=0){fprintf(outfile,"B50=%g\n",Blm(27));}
+   if(Blm(28)!=0){fprintf(outfile,"B51=%g\n",Blm(28));}
+   if(Blm(29)!=0){fprintf(outfile,"B52=%g\n",Blm(29));}
+   if(Blm(30)!=0){fprintf(outfile,"B53=%g\n",Blm(30));}
+   if(Blm(31)!=0){fprintf(outfile,"B54=%g\n",Blm(31));}
+   if(Blm(32)!=0){fprintf(outfile,"B55=%g\n",Blm(32));}
+
+   if(Blm(33)!=0){fprintf(outfile,"B66S=%g\n",Blm(33));}
+   if(Blm(34)!=0){fprintf(outfile,"B65S=%g\n",Blm(34));}
+   if(Blm(35)!=0){fprintf(outfile,"B64S=%g\n",Blm(35));}
+   if(Blm(36)!=0){fprintf(outfile,"B63S=%g\n",Blm(36));}
+   if(Blm(37)!=0){fprintf(outfile,"B62S=%g\n",Blm(37));}
+   if(Blm(38)!=0){fprintf(outfile,"B61S=%g\n",Blm(38));}
+   if(Blm(39)!=0){fprintf(outfile,"B60=%g\n",Blm(39));}
+   if(Blm(40)!=0){fprintf(outfile,"B61=%g\n",Blm(40));}
+   if(Blm(41)!=0){fprintf(outfile,"B62=%g\n",Blm(41));}
+   if(Blm(42)!=0){fprintf(outfile,"B63=%g\n",Blm(42));}
+   if(Blm(43)!=0){fprintf(outfile,"B64=%g\n",Blm(43));}
+   if(Blm(44)!=0){fprintf(outfile,"B65=%g\n",Blm(44));}
+   if(Blm(45)!=0){fprintf(outfile,"B66=%g\n",Blm(45));}
+
+}
+
+void ionpars::savLlm(FILE * outfile)
+{
+   if(Llm(1)!=0){fprintf(outfile,"L22S=%g\n",Llm(1));}
+   if(Llm(2)!=0){fprintf(outfile,"L21S=%g\n",Llm(2));}
+   if(Llm(3)!=0){fprintf(outfile,"L20=%g\n",Llm(3));}
+   if(Llm(4)!=0){fprintf(outfile,"L21=%g\n",Llm(4));}
+   if(Llm(5)!=0){fprintf(outfile,"L22=%g\n",Llm(5));}
+  
+   if(Llm(6)!=0){fprintf(outfile,"L33S=%g\n",Llm(6));}
+   if(Llm(7)!=0){fprintf(outfile,"L32S=%g\n",Llm(7));}
+   if(Llm(8)!=0){fprintf(outfile,"L31S=%g\n",Llm(8));}
+   if(Llm(9)!=0){fprintf(outfile,"L30=%g\n",Llm(9));}
+   if(Llm(10)!=0){fprintf(outfile,"L31=%g\n",Llm(10));}
+   if(Llm(11)!=0){fprintf(outfile,"L32=%g\n",Llm(11));}
+   if(Llm(12)!=0){fprintf(outfile,"L32=%g\n",Llm(12));}
+
+   if(Llm(13)!=0){fprintf(outfile,"L44S=%g\n",Llm(13));}
+   if(Llm(14)!=0){fprintf(outfile,"L43S=%g\n",Llm(14));}
+   if(Llm(15)!=0){fprintf(outfile,"L42S=%g\n",Llm(15));}
+   if(Llm(16)!=0){fprintf(outfile,"L41S=%g\n",Llm(16));}
+   if(Llm(17)!=0){fprintf(outfile,"L40=%g\n",Llm(17));}
+   if(Llm(18)!=0){fprintf(outfile,"L41=%g\n",Llm(18));}
+   if(Llm(19)!=0){fprintf(outfile,"L42=%g\n",Llm(19));}
+   if(Llm(20)!=0){fprintf(outfile,"L43=%g\n",Llm(20));}
+   if(Llm(21)!=0){fprintf(outfile,"L44=%g\n",Llm(21));}
+ 
+   if(Llm(22)!=0){fprintf(outfile,"L55S=%g\n",Llm(22));}
+   if(Llm(23)!=0){fprintf(outfile,"L54S=%g\n",Llm(23));}
+   if(Llm(24)!=0){fprintf(outfile,"L53S=%g\n",Llm(24));}
+   if(Llm(25)!=0){fprintf(outfile,"L52S=%g\n",Llm(25));}
+   if(Llm(26)!=0){fprintf(outfile,"L51S=%g\n",Llm(26));}
+   if(Llm(27)!=0){fprintf(outfile,"L50=%g\n",Llm(27));}
+   if(Llm(28)!=0){fprintf(outfile,"L51=%g\n",Llm(28));}
+   if(Llm(29)!=0){fprintf(outfile,"L52=%g\n",Llm(29));}
+   if(Llm(30)!=0){fprintf(outfile,"L53=%g\n",Llm(30));}
+   if(Llm(31)!=0){fprintf(outfile,"L54=%g\n",Llm(31));}
+   if(Llm(32)!=0){fprintf(outfile,"L55=%g\n",Llm(32));}
+ 
+   if(Llm(33)!=0){fprintf(outfile,"L66S=%g\n",Llm(33));}
+   if(Llm(34)!=0){fprintf(outfile,"L65S=%g\n",Llm(34));}
+   if(Llm(35)!=0){fprintf(outfile,"L64S=%g\n",Llm(35));}
+   if(Llm(36)!=0){fprintf(outfile,"L63S=%g\n",Llm(36));}
+   if(Llm(37)!=0){fprintf(outfile,"L62S=%g\n",Llm(37));}
+   if(Llm(38)!=0){fprintf(outfile,"L61S=%g\n",Llm(38));}
+   if(Llm(39)!=0){fprintf(outfile,"L60=%g\n",Llm(39));}
+   if(Llm(40)!=0){fprintf(outfile,"L61=%g\n",Llm(40));}
+   if(Llm(41)!=0){fprintf(outfile,"L62=%g\n",Llm(41));}
+   if(Llm(42)!=0){fprintf(outfile,"L63=%g\n",Llm(42));}
+   if(Llm(43)!=0){fprintf(outfile,"L64=%g\n",Llm(43));}
+   if(Llm(44)!=0){fprintf(outfile,"L65=%g\n",Llm(44));}
+   if(Llm(45)!=0){fprintf(outfile,"L66=%g\n",Llm(45));}
+
+}
+   // evaluate radial wave function
+   double ionpars::radial_wavefunction(double rr) // rr given in Angstroems, returns R(r) in units of 1/A^1.5
+   {double R=0;int p;double a0=0.5292;
+    double r=rr/a0;// r is the distance in units of a0
+    for(p=1;p<=9;++p){if(Np(p)!=0){
+                                   R+=exp(-Xip(p)*r)*pow(r,Np(p)-1)*Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
+                                   if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of radial wave function R(r=%g) failed due to Xi%i<=0 - continuing with R(r=%g)=0\n",r,p,r);return 0;}
+                     }            }    
+    // now we have R in units of 1/a0^1.5
+    R/=sqrt(a0*a0*a0);
+    // now we have R in units of 1/A^1.5
+    return R;
+   }
+
+   //functions to calculate radial matrix elements <r^n> from radial wave function in units of a0=0.5292 A
+   double ionpars::rk_from_radial_wavefunction(int k)
+   {int p,q, pmax=0;
+    Vector coeff(1,9);
+    
+    for(p=1;p<=9;++p){if(Np(p)!=0){pmax=p;
+                                   coeff(p)=Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
+                                   if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of <r^%i> failed due to Xi%i<=0 - continuing with <r^%i>=0\n",k,p,k);return 0;}
+                     }            }
+    if(pmax==0){fprintf (stderr,"Warning: calculation of <r^%i> failed - continuing with <r^%i>=0\n",k);return 0;}
+    double rk=0;
+    for(p=1;p<=pmax;++p){
+    for(q=1;q<=pmax;++q){
+                         rk+=coeff(p)*coeff(q)*factorial((int)Np(p)+(int)Np(q)+k)/pow(Xip(p)+Xip(q),Np(p)+Np(q)+k+1);
+    }}
+   return rk;
+   }
+
+   int ionpars::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);}
+   int ionpars::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);}
+   int ionpars::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);}
+
+void ionpars::save_radial_wavefunction(char * filename)
+   {double r=0.1;
+    FILE * fout;
+    if (radial_wavefunction(r)==0){fprintf(stderr,"Warning: save_radial_wavefunction not possible\n");return;}
+    fout=fopen_errchk(filename,"w");
+    fprintf(fout,"# radial wave function for %s\n",iontype);
+    fprintf(fout,"# the radial wave function is expanded as \n");
+    fprintf(fout,"# R(r)=sum_p C_p R_Np,XIp(r)\n");
+    fprintf(fout,"# R_Np,XIp(r)=r^(Np-1).exp(-xi r).(2 XIp)^(Np+0.5)/sqrt(2Np!)\n");
+    fprintf(fout,"# radial wave function parameters Np XIp Cp values are\n");
+    fprintf(fout,"# tabulated in clementi & roetti Atomic data and \n");
+    fprintf(fout,"# nuclear data tables 14 (1974) 177-478\n");
+    fprintf(fout,"# the parameters used are: \n");
+    int p;    
+    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"# N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
+    fprintf(fout,"# r[A]  vs R(r)[1/A^1.5]\n");
+    for(r=0.01;r<=10;r*=1.05){fprintf(fout,"%8.8g  %8.8g\n",r,radial_wavefunction(r));}
+    fclose(fout);
+   }
 //------------------------------------------------------------------------------------------------
 // ROUTINE CFIELD for full crystal field + higher order interactions
 //------------------------------------------------------------------------------------------------

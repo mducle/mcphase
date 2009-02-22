@@ -95,7 +95,7 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
 							     int dj=(int)(2*J[i]+1);
 							 // calculate th and ph (polar angles of Q with respect to xyz of CEF)
                                                          double th,ph,Qx,Qy,Qz;							 
-							 Qx=Qvec(3);Qy=Qvec(1);Qz=Qvec(2);
+							 Qx=Qvec(1);Qy=Qvec(2);Qz=Qvec(3);
 							 th=acos(Qz/Q);
 							 if(sin(th)>=SMALL){
 							                    if(Qx>0){ph=acos(Qx/(Q*sin(th))-SMALL);}
@@ -165,9 +165,9 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
 							     ComplexVector mm(1,3); 
                                                              mm=0;
 	                                                     for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
-                                                                mm(3)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQXM(M,Md)*(*eigenstates[i])(Md,K); 
-                                                                mm(1)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQYM(M,Md)*(*eigenstates[i])(Md,K); 
-                                                                mm(2)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQZM(M,Md)*(*eigenstates[i])(Md,K); 
+                                                                mm(1)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQXM(M,Md)*(*eigenstates[i])(Md,K); 
+                                                                mm(2)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQYM(M,Md)*(*eigenstates[i])(Md,K); 
+                                                                mm(3)+=(*eigenstates[i])(0,K)*conj((*eigenstates[i])(M,K))*MQZM(M,Md)*(*eigenstates[i])(Md,K); 
                                                                 }}}
 // myPrintComplexMatrix(stdout,MQXM);
 // myPrintComplexMatrix(stdout,MQYM);
@@ -180,17 +180,20 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
 							 msfy+=0.5*mm(2)*exp(-2*PI*qr*im);
 							 msfz+=0.5*mm(3)*exp(-2*PI*qr*im);
 					                }else
-							{msfx+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
-							 msfy+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
-							 msfz+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
+							{msfx+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
+							 msfy+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
+							 msfz+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
 							}
 // myPrintVector(stdout,mom[i]);//equivalent to moment ...
-                                                         msfdipx+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
-							 msfdipy+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
-							 msfdipz+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
-                                                         mux=mom[i](1);
-                                                         muy=mom[i](2);
-                                                         muz=mom[i](3);
+                                                         msfdipx+=mom[i](3)*FQ/2*exp(-2*PI*qr*im);
+							 msfdipy+=mom[i](1)*FQ/2*exp(-2*PI*qr*im);
+							 msfdipz+=mom[i](2)*FQ/2*exp(-2*PI*qr*im);
+                                                         //mux=mom[i](3); // this should be done in future to implement
+                                                         //muy=mom[i](1); // also nonortholattices in corr functions and res mag scatt
+                                                         //muz=mom[i](2);
+                                                         mux=mom[i](1); // this is still here because correlation functions are calculated
+                                                         muy=mom[i](2); // only for orhtogonal lattices (see printeln sub) and so we take 
+                                                         muz=mom[i](3); // the old convention of the mcdiff program (a||x,b||y,c||z)
                                                          mqx+=mux*exp(-2*PI*qr*im);
                                                          mqy+=muy*exp(-2*PI*qr*im);
                                                          mqz+=muz*exp(-2*PI*qr*im);
@@ -248,7 +251,7 @@ int getint(int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector r
 return true;
 }
 
-void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int & n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr, float * sli,Vector * j0,Vector *  j2,Vector *  j4,Vector *  j6, Vector * Zc, ComplexMatrix ** eigenstates,int & m,Vector *  hkl,float * D,float * theta,float * intmag,float * intmagdip,float * ikern,float * sf,float * lpg,complex <double>*ma,complex <double>*mb,complex <double>*mc,complex <double>*mamb,complex <double>*mamc,complex <double>*mbmc,complex <double>*ma2,complex <double>*mb2,complex <double>*mc2)
+void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int & n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr, float * sli,Vector * j0,Vector *  j2,Vector *  j4,Vector *  j6, Vector * Zc, ComplexMatrix ** eigenstates,int & m,Vector *  hkl,float * D,float * theta,float * intmag,float * intmagdip,float * ikern,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2)
 {//****************************************************************************
 // this routine calculates the intensity of elastic neutrons
 // for a given magnetic unit cell (crystal axis orthogonal)
@@ -264,7 +267,7 @@ void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int 
 // dwf[1..n]			      debye waller factors [A]
 // slr(1...n),sli(1...n)              nuclear scattering length[10^-12cm]
 // mom[1...n](1..3)                   atomic magnetic moment [mb]
-//                                       ' (with respect to ortholatice abc)
+//                                       ' (with respect to coordinates 1,2,3=yzx)
 // gj[1...n]			      Lande factor
 // J[1..n]			      total angular momentum (if J=0 dipole approx is used)
 // j0[1..n](1..7)                     formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
@@ -287,7 +290,7 @@ void neutint(int code,float T,float lambda, float thetamax, float ovalltemp,int 
 // ikern[1...m]                       nuclear intensity
 // sf[1...m]                          nuclear structurfactor |sf|
 // lpg[1...m]                         lorentzfactor
-// ma,mb,mc,mamb,mamc,mbmc,ma2mb2mc2[].. fouriertransform of momentunitvectors (for mag xray scattering)
+// mx,my,mz,mxmy,mxmz,mymz,mx2my2mz2[].. fouriertransform of momentunitvectors (for mag xray scattering)
 
 //****experimental parameters*************************************************
 float scale,inuc;
@@ -346,30 +349,30 @@ if(code==0){ m = 0;// reset m
                 sf[msort] = sf[msort - 1];
                 lpg[msort] = lpg[msort - 1];
  
-                ma[msort] = ma[msort - 1];
-                mb[msort] = mb[msort - 1];
-                mc[msort] = mc[msort - 1];
-                mamb[msort] = mamb[msort - 1];
-                mamc[msort] = mamc[msort - 1];
-                mbmc[msort] = mbmc[msort - 1];
-                ma2[msort] = ma2[msort - 1];
-                mb2[msort] = mb2[msort - 1];
-                mc2[msort] = mc2[msort - 1];
+                mx[msort] = mx[msort - 1];
+                my[msort] = my[msort - 1];
+                mz[msort] = mz[msort - 1];
+                mxmy[msort] = mxmy[msort - 1];
+                mxmz[msort] = mxmz[msort - 1];
+                mymz[msort] = mymz[msort - 1];
+                mx2[msort] = mx2[msort - 1];
+                my2[msort] = my2[msort - 1];
+                mz2[msort] = mz2[msort - 1];
                   --msort; 
                }
                hkl[msort](1) = hi;hkl[msort](2) = ki; hkl[msort](3) = li; 
                D[msort] = d; theta[msort] = Theta;
                intmag[msort] = Imag;intmagdip[msort] = Imagdip;  ikern[msort] = inuc;
                sf[msort] = SF; lpg[msort] = lorentzf;
-               ma[msort]=(double)sqrt(scale)*mqx;
-               mb[msort]=(double)sqrt(scale)*mqy;
-               mc[msort]=(double)sqrt(scale)*mqz;
-               mamb[msort]=(double)sqrt(scale)*mqxy;
-               mamc[msort]=(double)sqrt(scale)*mqxz;
-               mbmc[msort]=(double)sqrt(scale)*mqyz;
-               ma2[msort]=(double)sqrt(scale)*mqx2;
-               mb2[msort]=(double)sqrt(scale)*mqy2;
-               mc2[msort]=(double)sqrt(scale)*mqz2;
+               mx[msort]=(double)sqrt(scale)*mqx;
+               my[msort]=(double)sqrt(scale)*mqy;
+               mz[msort]=(double)sqrt(scale)*mqz;
+               mxmy[msort]=(double)sqrt(scale)*mqxy;
+               mxmz[msort]=(double)sqrt(scale)*mqxz;
+               mymz[msort]=(double)sqrt(scale)*mqyz;
+               mx2[msort]=(double)sqrt(scale)*mqx2;
+               my2[msort]=(double)sqrt(scale)*mqy2;
+               mz2[msort]=(double)sqrt(scale)*mqz2;
               }
             }
           }
@@ -394,15 +397,15 @@ else
                intmag[i] = Imag;intmagdip[i] = Imagdip;  ikern[i] = inuc;
                sf[i] = SF; lpg[i] = lorentzf;
                if(code==1){
-               ma[i]=(double)sqrt(scale)*mqx;
-               mb[i]=(double)sqrt(scale)*mqy;
-               mc[i]=(double)sqrt(scale)*mqz;
-               mamb[i]=(double)sqrt(scale)*mqxy;
-               mamc[i]=(double)sqrt(scale)*mqxz;
-               mbmc[i]=(double)sqrt(scale)*mqyz;
-               ma2[i]=(double)sqrt(scale)*mqx2;
-               mb2[i]=(double)sqrt(scale)*mqy2;
-               mc2[i]=(double)sqrt(scale)*mqz2;
+               mx[i]=(double)sqrt(scale)*mqx;
+               my[i]=(double)sqrt(scale)*mqy;
+               mz[i]=(double)sqrt(scale)*mqz;
+               mxmy[i]=(double)sqrt(scale)*mqxy;
+               mxmz[i]=(double)sqrt(scale)*mqxz;
+               mymz[i]=(double)sqrt(scale)*mqyz;
+               mx2[i]=(double)sqrt(scale)*mqx2;
+               my2[i]=(double)sqrt(scale)*mqy2;
+               mz2[i]=(double)sqrt(scale)*mqz2;
                           }
                   }
  }
@@ -410,20 +413,22 @@ else
 return;}
 
 
-void printeln(int code,const char * filename,const char* infile,char * unitcell,float T, float Ha, float Hb, float Hc,float lambda,float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr,float * sli,Vector *j0,Vector *j2,Vector *j4,Vector *j6,Vector * Zc, ComplexMatrix ** eigenstates,int m,Vector * hkl,float * ikern,float * intmag,float * intmagdip,float * D,float * theta,float * sf,float * lpg,complex <double>*ma,complex <double>*mb,complex <double>*mc,complex <double>*mamb,complex <double>*mamc,complex <double>*mbmc,complex <double>*ma2,complex <double>*mb2,complex <double>*mc2,float a,float b,float c)
+void printeln(int code,const char * filename,const char* infile,char * unitcell,float T, float Ha, float Hb, float Hc,float lambda,float ovalltemp,int lorenz,Vector r1,Vector r2,Vector r3,int n,Vector * xyz,Vector * mom,float * dwf,float* J,float * gj,float * slr,float * sli,Vector *j0,Vector *j2,Vector *j4,Vector *j6,Vector * Zc, ComplexMatrix ** eigenstates,int m,Vector * hkl,float * ikern,float * intmag,float * intmagdip,float * D,float * theta,float * sf,float * lpg,complex <double>*mx,complex <double>*my,complex <double>*mz,complex <double>*mxmy,complex <double>*mxmz,complex <double>*mymz,complex <double>*mx2,complex <double>*my2,complex <double>*mz2,float a,float b,float c)
 {// ausgabe auf file filename
  FILE * fout;char l[MAXNOFCHARINLINE];
- int i,j,chinr=0;
- double isave=0,isavedip=0;
+ int i,j,chinr=0,ortho=1;
+ double isave=0,isavedip=0,alpha,beta,gamma;
+   extract(unitcell, " alpha", alpha); extract(unitcell, " beta", beta); extract(unitcell, " gamma", gamma); 
+   if(alpha!=90||beta!=90||gamma!=90){ortho=0;}
  time_t curtime;
  struct tm * loctime;
   fout = fopen_errchk (filename, "w");
  fprintf(fout, "#{%s input file: %s ",filename,infile);
  curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
  fprintf(fout,"# unit cell:%s",unitcell);
- fprintf(fout,"#                   / %6.3g A \\     / %6.3g A \\     / %6.3g A \\ \n", r1(1), r2(1), r3(1));
- fprintf(fout,"#                r1=| %6.3g A |  r2=| %6.3g A |  r3=| %6.3g A |\n", r1(2), r2(2), r3(2));
- fprintf(fout,"#                   \\ %6.3g A /     \\ %6.3g A /     \\ %6.3g A /\n", r1(3), r2(3), r3(3));
+ fprintf(fout,"#                   / %6.3f A \\     / %6.3f A \\     / %6.3f A \\ \n", r1(1), r2(1), r3(1));
+ fprintf(fout,"#                r1=| %6.3f A |  r2=| %6.3f A |  r3=| %6.3f A |\n", r1(2), r2(2), r3(2));
+ fprintf(fout,"#                   \\ %6.3f A /     \\ %6.3f A /     \\ %6.3f A /\n", r1(3), r2(3), r3(3));
  fprintf(fout, "# Wavelength=%g A   number of atoms: %i\n",lambda, n);
  fprintf(fout, "# T= %g K Ha= %g T Hb= %g T Hc= %g T\n",T,Ha,Hb,Hc);
  fprintf(fout, "# Overall temperature factor: exp(-2*%g A^2*(sin(theta)/lambda)^2)\n",ovalltemp);
@@ -441,17 +446,29 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
  }
  fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl, Debye Waller (defined as ovalltemp)\n");
  fprintf(fout, "#  and  Lande factors total angular momentum J (=0 if dipole approximation is used) <j0> and <j2> formfactor\n# coefficients\n");
- fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ if (ortho==1)
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ } else
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+  fprintf(fout, "#                         ...with x||(a x b), z||b and y normal to x and z\n");
+ }
  for (i = 1;i<=n;++i)
  {if((double)(i)/50==(double)(i/50))
-  {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");}
+  {
+   if (ortho==1)
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+   } else
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     J      <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+    fprintf(fout, "#                         ...with x||a x b, z||b and y normal to x and z\n");
+   }
+  }
   fprintf(fout, "# %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f%+6.3fi %6.3f %6.3f %6.3f ",xyz[i](1),xyz[i](2),xyz[i](3),mom[i](1),mom[i](2),mom[i](3),slr[i],sli[i],dwf[i],gj[i],J[i]);
   for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",j0[i](j));}
   for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",j2[i](j));}
   fprintf(fout, "\n");
  }
  fprintf(fout, "#}\n");
- hkl[0] = 0; D[0] = 100; theta[0] = 0; ikern[0] = 0; intmag[0] = 0;intmagdip[0] = 0; sf[0] = 0; lpg[0] = 0;ma[0]=0;mb[0]=0;mc[0]=0;ma2[0]=0;mb2[0]=0;mc2[0]=0;mamb[0]=0;mamc[0]=0;mbmc[0]=0;
+ hkl[0] = 0; D[0] = 100; theta[0] = 0; ikern[0] = 0; intmag[0] = 0;intmagdip[0] = 0; sf[0] = 0; lpg[0] = 0;mx[0]=0;my[0]=0;mz[0]=0;mx2[0]=0;my2[0]=0;mz2[0]=0;mxmy[0]=0;mxmz[0]=0;mymz[0]=0;
  double rpvalue=0,chisquared=0,total=0,rpvaluedip=0,chisquareddip=0;
  int imin=1;
  if(code==0)imin=0;
@@ -459,11 +476,15 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
  {if(code<2)
    {
     if((double)(i-imin)/50==(double)((i-imin)/50))
-    {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) F1:max-Isigpi azim Ipisig azim Ipipig azim F2:max-Isigpi azim Ipisig azim Ipipig azim  |^ma_q| |^mb_q| |^mc_q| |^ma^2_q||^mb^2_q||^mc^2_q||(^ma*^mb)_q||(^ma*^mc)_q||(^mb*^mc)_q|}\n");}
-    // calculate alpha_i delta_i for reflextion hkl[i](1..3)
+    {if (ortho==1)
+     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) F1:max-Isigpi azim Ipisig azim Ipipig azim F2:max-Isigpi azim Ipisig azim Ipipig azim  |^ma_q| |^mb_q| |^mc_q| |^ma^2_q||^mb^2_q||^mc^2_q||(^ma*^mb)_q||(^ma*^mc)_q||(^mb*^mc)_q|}\n");}
+     else
+     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) \n");}
+    }
+    // calculate alpha_i delta_i for reflection hkl[i](1..3)  [currently ok only for ortholattices !!!]
     double alpha1,alpha2,alpha3,delta1,delta2,delta3,Q,sqr1,sqr2;
-    alpha1=acos(-0.999999*hkl[i](1)*D[i]/a);
-    alpha2=acos(-0.999999*hkl[i](2)*D[i]/b);
+    alpha1=acos(-0.999999*hkl[i](1)*D[i]/a);   // the following lines should be extended to non ortho lattices !!!
+    alpha2=acos(-0.999999*hkl[i](2)*D[i]/b);   // mind: in this section still the old convention is used: a||x,b||y,c||z ... this should be changed for nonortholattices
     alpha3=acos(-0.999999*hkl[i](3)*D[i]/c);
     delta1=acos(-1.0);
     sqr1=sqrt((1.0/a-hkl[i](1)*hkl[i](1)*D[i]*D[i]/a/a/a)*(1.0/a-hkl[i](1)*hkl[i](1)*D[i]*D[i]/a/a/a)+(hkl[i](1)*hkl[i](2)*D[i]*D[i]/a/a/b)*(hkl[i](1)*hkl[i](2)*D[i]*D[i]/a/a/b)+(hkl[i](1)*hkl[i](3)*D[i]*D[i]/a/a/c)*(hkl[i](1)*hkl[i](3)*D[i]*D[i]/a/a/c));
@@ -500,37 +521,37 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
       ang(3,2)=cos(alpha2);
       ang(3,3)=cos(alpha3);
    
-      z1=ma[i]*ang(1,1)+mb[i]*ang(1,2)+mc[i]*ang(1,3);
-      z2=ma[i]*ang(2,1)+mb[i]*ang(2,2)+mc[i]*ang(2,3);
-      z3=ma[i]*ang(3,1)+mb[i]*ang(3,2)+mc[i]*ang(3,3);
+      z1=mx[i]*ang(1,1)+my[i]*ang(1,2)+mz[i]*ang(1,3);
+      z2=mx[i]*ang(2,1)+my[i]*ang(2,2)+mz[i]*ang(2,3);
+      z3=mx[i]*ang(3,1)+my[i]*ang(3,2)+mz[i]*ang(3,3);
    
-      z1z2=ma2[i]*ang(1,1)*ang(2,1);
-      z1z2+=mb2[i]*ang(1,2)*ang(2,2);
-      z1z2+=mc2[i]*ang(1,3)*ang(2,3);
-      z1z2+=mamb[i]*(ang(1,1)*ang(2,2)+ang(1,2)*ang(2,1));
-      z1z2+=mamc[i]*(ang(1,1)*ang(2,3)+ang(1,3)*ang(2,1));
-      z1z2+=mbmc[i]*(ang(1,2)*ang(2,3)+ang(1,3)*ang(2,2));
+      z1z2=mx2[i]*ang(1,1)*ang(2,1);
+      z1z2+=my2[i]*ang(1,2)*ang(2,2);
+      z1z2+=mz2[i]*ang(1,3)*ang(2,3);
+      z1z2+=mxmy[i]*(ang(1,1)*ang(2,2)+ang(1,2)*ang(2,1));
+      z1z2+=mxmz[i]*(ang(1,1)*ang(2,3)+ang(1,3)*ang(2,1));
+      z1z2+=mymz[i]*(ang(1,2)*ang(2,3)+ang(1,3)*ang(2,2));
    
-      z2z3=ma2[i]*ang(2,1)*ang(3,1);
-      z2z3+=mb2[i]*ang(2,2)*ang(3,2);
-      z2z3+=mc2[i]*ang(2,3)*ang(3,3);
-      z2z3+=mamb[i]*(ang(2,1)*ang(3,2)+ang(2,2)*ang(3,1));
-      z2z3+=mamc[i]*(ang(2,1)*ang(3,3)+ang(2,3)*ang(3,1));
-      z2z3+=mbmc[i]*(ang(2,2)*ang(3,3)+ang(2,3)*ang(3,2));
+      z2z3=mx2[i]*ang(2,1)*ang(3,1);
+      z2z3+=my2[i]*ang(2,2)*ang(3,2);
+      z2z3+=mz2[i]*ang(2,3)*ang(3,3);
+      z2z3+=mxmy[i]*(ang(2,1)*ang(3,2)+ang(2,2)*ang(3,1));
+      z2z3+=mxmz[i]*(ang(2,1)*ang(3,3)+ang(2,3)*ang(3,1));
+      z2z3+=mymz[i]*(ang(2,2)*ang(3,3)+ang(2,3)*ang(3,2));
    
-      z12=ma2[i]*ang(1,1)*ang(1,1);
-      z12+=mb2[i]*ang(1,2)*ang(1,2);
-      z12+=mc2[i]*ang(1,3)*ang(1,3);
-      z12+=mamb[i]*(ang(1,1)*ang(1,2)+ang(1,2)*ang(1,1));
-      z12+=mamc[i]*(ang(1,1)*ang(1,3)+ang(1,3)*ang(1,1));
-      z12+=mbmc[i]*(ang(1,2)*ang(1,3)+ang(1,3)*ang(1,2));
+      z12=mx2[i]*ang(1,1)*ang(1,1);
+      z12+=my2[i]*ang(1,2)*ang(1,2);
+      z12+=mz2[i]*ang(1,3)*ang(1,3);
+      z12+=mxmy[i]*(ang(1,1)*ang(1,2)+ang(1,2)*ang(1,1));
+      z12+=mxmz[i]*(ang(1,1)*ang(1,3)+ang(1,3)*ang(1,1));
+      z12+=mymz[i]*(ang(1,2)*ang(1,3)+ang(1,3)*ang(1,2));
    
-      z32=ma2[i]*ang(3,1)*ang(3,1);
-      z32+=mb2[i]*ang(3,2)*ang(3,2);
-      z32+=mc2[i]*ang(3,3)*ang(3,3);
-      z32+=mamb[i]*(ang(3,1)*ang(3,2)+ang(3,2)*ang(3,1));
-      z32+=mamc[i]*(ang(3,1)*ang(3,3)+ang(3,3)*ang(3,1));
-      z32+=mbmc[i]*(ang(3,2)*ang(3,3)+ang(3,3)*ang(3,2));
+      z32=mx2[i]*ang(3,1)*ang(3,1);
+      z32+=my2[i]*ang(3,2)*ang(3,2);
+      z32+=mz2[i]*ang(3,3)*ang(3,3);
+      z32+=mxmy[i]*(ang(3,1)*ang(3,2)+ang(3,2)*ang(3,1));
+      z32+=mxmz[i]*(ang(3,1)*ang(3,3)+ang(3,3)*ang(3,1));
+      z32+=mymz[i]*(ang(3,2)*ang(3,3)+ang(3,3)*ang(3,2));
       st=sin(theta[i]*PI/180);
       ct=cos(theta[i]*PI/180);
       s2t=sin(2.0*theta[i]*PI/180);
@@ -542,7 +563,7 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
       f2ps=abs(-z1z2*st+z2z3*ct); if(f2ps*f2ps>IpsF2){IpsF2=f2ps*f2ps;IpsF2a=azimuth*180/PI;}
       f2sp=abs(z1z2*st+z2z3*ct); if(f2sp*f2sp>IspF2){IspF2=f2sp*f2sp;IspF2a=azimuth*180/PI;}
       f2pp=abs(-ct*ct*(z12*st*st/ct/ct+z32)); if(f2pp*f2pp>IppF2){IppF2=f2pp*f2pp;IppF2a=azimuth*180/PI;}
-      if(code==1)
+      if(code==1&&ortho==1)
        {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
        hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],
        f1ps*f1ps,azimuth*180/PI,
@@ -551,39 +572,44 @@ void printeln(int code,const char * filename,const char* infile,char * unitcell,
        f2ps*f2ps,azimuth*180/PI,
        f2sp*f2sp,azimuth*180/PI,
        f2pp*f2pp,azimuth*180/PI,
-       abs(ma[i]),abs(mb[i]),abs(mc[i]),abs(ma2[i]),abs(mb2[i]),abs(mc2[i]),abs(mamb[i]),abs(mamc[i]),abs(mbmc[i]));}
+       abs(mx[i]),abs(my[i]),abs(mz[i]),abs(mx2[i]),abs(my2[i]),abs(mz2[i]),abs(mxmy[i]),abs(mxmz[i]),abs(mymz[i]));}
      }
 
     if(IspF1+IpsF1+IppF1+IspF2+IpsF2+IppF2+ikern[i]+intmag[i]>0.0001)
-      {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
-      hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],
-      IspF1,IspF1a,IpsF1,IpsF1a,IppF1,IppF1a,IspF2,IspF2a,IpsF2,IpsF2a,IppF2,IppF2a,
-       abs(ma[i]),abs(mb[i]),abs(mc[i]),abs(ma2[i]),abs(mb2[i]),abs(mc2[i]),abs(mamb[i]),abs(mamc[i]),abs(mbmc[i]));}
-    if(code==1){fprintf(fout,"#\n");}
+      {if(ortho==1)
+       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+        hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],
+        IspF1,IspF1a,IpsF1,IpsF1a,IppF1,IppF1a,IspF2,IspF2a,IpsF2,IpsF2a,IppF2,IppF2a,
+        abs(mx[i]),abs(my[i]),abs(mz[i]),abs(mx2[i]),abs(my2[i]),abs(mz2[i]),abs(mxmy[i]),abs(mxmz[i]),abs(mymz[i]));}
+       else
+       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+        hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i]);}
+      }
+    if(code==1&&ortho==1){fprintf(fout,"#\n");}
    }
    if(code==2)//calculate rpvalue and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs\n");}
       fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
-      hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(ma[i]));
-     if(real(ma[i])>=0){
-                      rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(ma[i])); total+=abs(ma[i]);
-                      rpvaluedip+=abs(isavedip+ikern[i]+intmagdip[i]-abs(ma[i]));
+      hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]));
+     if(real(mx[i])>=0){
+                      rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(mx[i])); total+=abs(mx[i]);
+                      rpvaluedip+=abs(isavedip+ikern[i]+intmagdip[i]-abs(mx[i]));
                       isave=0;isavedip=0;
                       }
      else {isave+=ikern[i]+intmag[i];isavedip+=ikern[i]+intmagdip[i];
           }
    }
-   if(code==3)//calculate alsorpvalue and chisquared and output neutrons only
+   if(code==3)//calculate also rpvalue and chisquared and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs error\n");}
       fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
-      hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(ma[i]),abs(mb[i]));
-     if(real(ma[i])>=0){
-      rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(ma[i])); total+=abs(ma[i]);
-      rpvaluedip+=abs(isavedip+ikern[i]+intmagdip[i]-abs(ma[i]));
-      chisquared+=(isave+ikern[i]+intmag[i]-abs(ma[i]))*(isave+ikern[i]+intmag[i]-abs(ma[i]))/abs(mb[i])/abs(mb[i]);
-      chisquareddip+=(isavedip+ikern[i]+intmagdip[i]-abs(ma[i]))*(isavedip+ikern[i]+intmagdip[i]-abs(ma[i]))/abs(mb[i])/abs(mb[i]);
+      hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]),abs(my[i]));
+     if(real(mx[i])>=0){
+      rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(mx[i])); total+=abs(mx[i]);
+      rpvaluedip+=abs(isavedip+ikern[i]+intmagdip[i]-abs(mx[i]));
+      chisquared+=(isave+ikern[i]+intmag[i]-abs(mx[i]))*(isave+ikern[i]+intmag[i]-abs(mx[i]))/abs(my[i])/abs(my[i]);
+      chisquareddip+=(isavedip+ikern[i]+intmagdip[i]-abs(mx[i]))*(isavedip+ikern[i]+intmagdip[i]-abs(mx[i]))/abs(my[i])/abs(my[i]);
       isave=0;isavedip=0;++chinr;
                       }
      else {isave+=ikern[i]+intmag[i];isavedip+=ikern[i]+intmagdip[i];
@@ -603,8 +629,8 @@ return;}
 // hauptprogramm
 int main (int argc, char **argv)
 { FILE * fin, * fin_coq, * fout;
-  float ovalltemp,thetamax,lambda,a=0,b=0,c=0,T=0,Ha=0,Hb=0,Hc=0;
-  int i,j,n,lorenz,nat, nofatoms,nna=0,nnb=0,nnc=0,natmagnetic;
+  float ovalltemp,thetamax,lambda,a=0,b=0,c=0,T=0,Ha=0,Hb=0,Hc=0,alpha=0,beta=0,gamma=0;
+  int i,j,n,lorenz,nat, nofatoms,nr1=0,nr2=0,nr3=0,natmagnetic;
   long int pos=0;
   char instr[MAXNOFCHARINLINE+1];
   char cffilename[MAXNOFCHARINLINE+1];
@@ -677,10 +703,10 @@ fin_coq = fopen_errchk ("./mcdiff.in", "rb");
  pos=ftell(fin_coq);
         char *token;
         fout = fopen_errchk ("./results/mcdiff.in", "w"); //copy input file to results
-        while(feof(fin_coq)==false){fgets(instr, MAXNOFCHARINLINE, fin_coq);
-                                    // strip /r (dos line feed) from line if necessary
-                                    while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
-                                    fprintf(fout,"%s",instr);
+        while(feof(fin_coq)==false){if(fgets(instr, MAXNOFCHARINLINE, fin_coq))
+                                     {// strip /r (dos line feed) from line if necessary
+                                      while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
+                                      fprintf(fout,"%s",instr);}
                                     }
         fclose(fout);
  fseek(fin_coq,pos,SEEK_SET); 
@@ -720,6 +746,9 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
    extract(instr, " a", a);
    extract(instr, " b", b);
    extract(instr, " c", c);
+   extract(instr, " alpha", alpha);
+   extract(instr, " beta", beta);
+   extract(instr, " gamma", gamma);
   }
   fseek(fin_coq,pos,SEEK_SET); 
   printf ("     section 2 - nat=%i\n",nat);
@@ -742,12 +771,15 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
 
 // input section 3 *********************************************************
   instr[0]='#';
- while (instr[strspn(instr," \t")]=='#'&&nna*nnb*nnc==0) 
+ while (instr[strspn(instr," \t")]=='#'&&nr1*nr2*nr3==0) 
   { pos=ftell(fin_coq); 
    fgets(instr,MAXNOFCHARINLINE,fin_coq); 
    if(a==0)extract(instr, " a", a);
    if(b==0)extract(instr, " b", b);
    if(c==0)extract(instr, " c", c);
+   if(alpha==0)extract(instr, " alpha", alpha);
+   if(beta==0)extract(instr, " beta", beta);
+   if(gamma==0)extract(instr, " gamma", gamma);
     extract(instr, "r1x", r1(1));
     extract(instr, "r1y", r1(2));
     extract(instr, "r1z", r1(3));
@@ -766,9 +798,9 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
     extract(instr, "r3a", r3(1));
     extract(instr, "r3b", r3(2));
     extract(instr, "r3c", r3(3));
-    extract(instr, "nr1", nna);
-    extract(instr, "nr2", nnb);
-    extract(instr, "nr3", nnc);
+    extract(instr, "nr1", nr1);
+    extract(instr, "nr2", nr2);
+    extract(instr, "nr3", nr3);
     extract(instr, "nat", natmagnetic);
     extract(instr, "T", T);
     extract(instr, "Ha", Ha);
@@ -776,33 +808,58 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
     extract(instr, "Hc", Hc);
   }
   fseek(fin_coq,pos,SEEK_SET); 
-if (a == 0) {fprintf(stderr,"ERROR mcdiff: no lattice constant a given in section 3 or line does not start with #: \n%s\n",instr);exit (EXIT_FAILURE);}
+if (a == 0) {fprintf(stderr,"ERROR mcdiff: no lattice constant a given in section 3 or line does not start with # or nat too small: \n%s\n",instr);exit (EXIT_FAILURE);}
 if (b == 0) {fprintf(stderr,"ERROR mcdiff: no lattice constant b given in section 3 or line does not start with #: \n%s\n",instr);exit (EXIT_FAILURE);}
 if (c == 0) {fprintf(stderr,"ERROR mcdiff: no lattice constant c given in section 3 or line does not start with #: \n%s\n",instr);exit (EXIT_FAILURE);}
-printf("     section 3 - a=%g A  b=%g A c=%g A\n",a,b,c);
-sprintf(unitcellstr," a= %g A  b= %g A c= %g A  alpha=90  beta=90 gamma=90\n",a,b,c);
-printf("                    / %5.3ga \\     / %5.3ga \\     / %5.3ga \\ \n", r1(1), r2(1), r3(1));
-printf("                 r1=| %5.3gb |  r2=| %5.3gb |  r3=| %5.3gb |\n", r1(2), r2(2), r3(2));
-printf("                    \\ %5.3gc /     \\ %5.3gc /     \\ %5.3gc /\n", r1(3), r2(3), r3(3));
-r1(1) = a * r1(1) * nna;
-r2(1) = a * r2(1) * nnb;
-r3(1) = a * r3(1) * nnc;
-r1(2) = b * r1(2) * nna;
-r2(2) = b * r2(2) * nnb;
-r3(2) = b * r3(2) * nnc;
-r1(3) = c * r1(3) * nna;
-r2(3) = c * r2(3) * nnb;
-r3(3) = c * r3(3) * nnc;
+printf("     section 3 - a=%g A  b=%g A c=%g A alpha=%g  beta=%g gamma=%g\n",a,b,c,alpha,beta,gamma);
+sprintf(unitcellstr," a= %g A  b= %g A c= %g A  alpha=%g  beta=%g gamma=%g\n",a,b,c,alpha,beta,gamma);
+printf("                 r1= %5.3ga + %5.3gb + %5.3gc\n", r1(1), r1(2), r1(3));
+printf("                 r2= %5.3ga + %5.3gb + %5.3gc\n", r2(1), r2(2), r2(3));
+printf("                 r3= %5.3ga + %5.3gb + %5.3gc\n", r3(1), r3(2), r3(3));
+
+//printf("                    / %5.3ga \\     / %5.3ga \\     / %5.3ga \\    x||c \n", r1(1), r2(1), r3(1));
+//printf("                 r1=| %5.3gb |  r2=| %5.3gb |  r3=| %5.3gb |    y||a\n", r1(2), r2(2), r3(2));
+//printf("                    \\ %5.3gc /     \\ %5.3gc /     \\ %5.3gc /    z||b\n", r1(3), r2(3), r3(3));
+Matrix rtoxyz(1,3,1,3); // define transformation matrix to calculate components of
+                           // r1 r2 and r3 with respect to the xyz coordinate system
+rtoxyz(1,1)=0;
+rtoxyz(2,1)=a*sin(gamma*PI/180);
+rtoxyz(3,1)=a*cos(gamma*PI/180);
+
+rtoxyz(1,2)=0;
+rtoxyz(2,2)=0;
+rtoxyz(3,2)=b;
+
+rtoxyz(3,3)=c*cos(alpha*PI/180);
+rtoxyz(2,3)=(a*c*cos(beta*PI/180)-rtoxyz(3,3)*rtoxyz(3,1))/rtoxyz(2,1);
+if (fabs(rtoxyz(2,3))>c){fprintf(stderr,"ERROR mcdiff: alpha beta and gamma geometrically inconsistent\n");exit(EXIT_FAILURE);}
+rtoxyz(1,3)=c*c-rtoxyz(2,3)*rtoxyz(2,3)-rtoxyz(3,3)*rtoxyz(3,3);
+if (rtoxyz(1,3)<=0){fprintf(stderr,"ERROR mcdiff: alpha beta and gamma geometrically inconsistent\n");exit(EXIT_FAILURE);}
+rtoxyz(1,3)=sqrt(rtoxyz(1,3));
+
+r1=(rtoxyz*r1)*(double)nr1;
+r2=(rtoxyz*r2)*(double)nr2;
+r3=(rtoxyz*r3)*(double)nr3;
+
+//r1(1) = a * r1(1) * nr1;
+//r2(1) = a * r2(1) * nr2;
+//r3(1) = a * r3(1) * nr3; 
+//r1(2) = b * r1(2) * nr1;
+//r2(2) = b * r2(2) * nr2;
+//r3(2) = b * r3(2) * nr3;
+//r1(3) = c * r1(3) * nr1;
+//r2(3) = c * r2(3) * nr2;
+//r3(3) = c * r3(3) * nr3;
 
 // input section 4 *********************************************************
 
-if (nna == 0){fprintf(stderr,"ERROR ELN: nr1 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
-if (nnb == 0){fprintf(stderr,"ERROR ELN: nr2 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
-if (nnc == 0){fprintf(stderr,"ERROR ELN: nr3 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
-printf ("     section 4 - nr1=%i nr2=%i nr3=%i\n",nna,nnb,nnc);
+if (nr1 == 0){fprintf(stderr,"ERROR mcdiff: nr1 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
+if (nr2 == 0){fprintf(stderr,"ERROR mcdiff: nr2 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
+if (nr3 == 0){fprintf(stderr,"ERROR mcdiff: nr3 not given or line does not start with # in section 4\n");exit(EXIT_FAILURE);}
+printf ("     section 4 - nr1=%i nr2=%i nr3=%i\n",nr1,nr2,nr3);
 printf ("                 nat=%i magnetic atoms\n",natmagnetic);
 
-n = nna * nnb * nnc * nat + natmagnetic; //atoms in der magnetic unit cell
+n = nr1 * nr2 * nr3 * nat + natmagnetic; //atoms in der magnetic unit cell
 
 
 float slr[n+1], sli[n+1],dwf[n+1], gj[n+1],J[n+1];
@@ -837,9 +894,9 @@ for(i=1;i<=natmagnetic;++i){
                             fseek(fin_coq,pos+strchr(instr,'}')-instr+1,SEEK_SET); 
                             j=inputline(fin_coq,numbers);
                             if (j<9) {fprintf(stderr,"ERROR mcdiff: too few parameters for magnetic atom %i: %s\n",i,instr);exit(EXIT_FAILURE);}
-                             xyz[i](1) = numbers[4] / nna;
-			     xyz[i](2) = numbers[5] / nnb;
-			     xyz[i](3) = numbers[6] / nnc;
+                             xyz[i](1) = numbers[4] / nr1;
+			     xyz[i](2) = numbers[5] / nr2;
+			     xyz[i](3) = numbers[6] / nr3;
 			     dwf[i]=0;slr[i]=0;sli[i]=0;gj[i]=0;
 
                             fin = fopen_errchk (cffilename, "rb");
@@ -923,17 +980,17 @@ printf ("calculating ...\n");
 //now insert also nonmagnetic elements into the unit cell
 int ncryst,na,nb,nc;
 ncryst = natmagnetic;
-for(na = 1;na<=nna;++na){
- for(nb = 1;nb<=nnb;++nb){
-  for(nc = 1;nc<=nnc;++nc){
+for(na = 1;na<=nr1;++na){
+ for(nb = 1;nb<=nr2;++nb){
+  for(nc = 1;nc<=nr3;++nc){
    if(nat!=0){
     for(i=1;i<=nat;++i){
       ++ncryst;
       slr[ncryst]=sl1r[i];
       sli[ncryst]=sl1i[i];
-      xyz[ncryst](1) = (na + x1[i] - 1) / nna;
-      xyz[ncryst](2) = (nb + y1[i] - 1) / nnb;
-      xyz[ncryst](3) = (nc + z1[i] - 1) / nnc;
+      xyz[ncryst](1) = (na + x1[i] - 1) / nr1;
+      xyz[ncryst](2) = (nb + y1[i] - 1) / nr2;
+      xyz[ncryst](3) = (nc + z1[i] - 1) / nr3;
       mom[ncryst]=0;
       j0[ncryst]=0;
       j2[ncryst]=0;
@@ -957,15 +1014,15 @@ float intmagdip[MAXNOFREFLECTIONS+1];
 float ikern[MAXNOFREFLECTIONS+1];
 float sf[MAXNOFREFLECTIONS+1];
 float lpg[MAXNOFREFLECTIONS+1];
-complex <double> ma[MAXNOFREFLECTIONS+1];
-complex <double> mb[MAXNOFREFLECTIONS+1];
-complex <double> mc[MAXNOFREFLECTIONS+1];
-complex <double> mamb[MAXNOFREFLECTIONS+1];
-complex <double> mamc[MAXNOFREFLECTIONS+1];
-complex <double> mbmc[MAXNOFREFLECTIONS+1];
-complex <double> ma2[MAXNOFREFLECTIONS+1];
-complex <double> mb2[MAXNOFREFLECTIONS+1];
-complex <double> mc2[MAXNOFREFLECTIONS+1];
+complex <double> mx[MAXNOFREFLECTIONS+1];
+complex <double> my[MAXNOFREFLECTIONS+1];
+complex <double> mz[MAXNOFREFLECTIONS+1];
+complex <double> mxmy[MAXNOFREFLECTIONS+1];
+complex <double> mxmz[MAXNOFREFLECTIONS+1];
+complex <double> mymz[MAXNOFREFLECTIONS+1];
+complex <double> mx2[MAXNOFREFLECTIONS+1];
+complex <double> my2[MAXNOFREFLECTIONS+1];
+complex <double> mz2[MAXNOFREFLECTIONS+1];
 
 rezcalc (r1, r2, r3, rez1, rez2, rez3);
 Vector hhkkll(1,3);
@@ -978,18 +1035,24 @@ if (argc>1){int nr;
        fin = fopen_errchk (argv[1], "rb");
        while(feof(fin)==false){nr=inputline(fin,nn);
                                if(nr>2)
-                               {hhkkll(1)=nn[1]/a;hhkkll(2)=nn[2]/b;hhkkll(3)=nn[3]/c;++m;
+                               {hhkkll(1)=nn[1];hhkkll(2)=nn[2];hhkkll(3)=nn[3];++m;
+//printf("%g %g %g\n", hhkkll(1),hhkkll(2),hhkkll(3));
                                 code=1;                                
                                // transformieren der millerindizes auf magnetische einheitszelle
-                                  hkl[m](1)=hhkkll*r1;
-                                  hkl[m](2)=hhkkll*r2;
-                                  hkl[m](3)=hhkkll*r3;
-                                if(nr>3){ma[m]=complex <double> (nn[4],0);code=2;}// intensities given                                
-                                if(nr>4){mb[m]=complex <double> (nn[5],0);code=3;}// errors given                                
+                                  hkl[m](1)=hhkkll*(rtoxyz.Inverse()*r1);
+                                  hkl[m](2)=hhkkll*(rtoxyz.Inverse()*r2);
+                                  hkl[m](3)=hhkkll*(rtoxyz.Inverse()*r3);
+//printf("%g %g %g\n\n", hkl[m](1), hkl[m](2), hkl[m](3));                                
+                                if(nr>3){mx[m]=complex <double> (nn[4],0);code=2;}// intensities given                                
+                                if(nr>4){my[m]=complex <double> (nn[5],0);code=3;}// errors given                                
                               }}
        fclose(fin);      
            }
-neutint(code,T,lambda, thetamax, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj, slr, sli, j0, j2, j4, j6, Zc,eigenstates,m, hkl, D, theta, intmag,intmagdip, ikern, sf, lpg,ma,mb,mc,mamb,mamc,mbmc,ma2,mb2,mc2);
+
+// transformieren der millerindizes auf kristallographische einheitszelle
+
+
+neutint(code,T,lambda, thetamax, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj, slr, sli, j0, j2, j4, j6, Zc,eigenstates,m, hkl, D, theta, intmag,intmagdip, ikern, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2);
 
 
 
@@ -998,11 +1061,14 @@ neutint(code,T,lambda, thetamax, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,
 for(i=1;i<=m;++i){hhkkll=hkl[i];
                   hkl[i]=hhkkll(1)*rez1+hhkkll(2)*rez2+hhkkll(3)*rez3;
                   hkl[i]/=2.0*PI;
-                  hkl[i](1)*=a;hkl[i](2)*=b;hkl[i](3)*=c;
+                  hhkkll=hkl[i];
+                  hkl[i](1)=hhkkll*rtoxyz.Column(1);
+                  hkl[i](2)=hhkkll*rtoxyz.Column(2);
+                  hkl[i](3)=hhkkll*rtoxyz.Column(3);
                  }
 
 
-printeln(code,"./results/mcdiff.out","mcdiff.in", unitcellstr,T,Ha,Hb,Hc, lambda, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj , slr,sli,j0,j2,j4,j6,Zc,eigenstates, m, hkl, ikern, intmag,intmagdip, D, theta, sf, lpg,ma,mb,mc,mamb,mamc,mbmc,ma2,mb2,mc2,a,b,c);
+printeln(code,"./results/mcdiff.out","mcdiff.in", unitcellstr,T,Ha,Hb,Hc, lambda, ovalltemp, lorenz, r1, r2, r3, n, xyz, mom,dwf,J, gj , slr,sli,j0,j2,j4,j6,Zc,eigenstates, m, hkl, ikern, intmag,intmagdip, D, theta, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2,a,b,c);
 
 fprintf (stderr,"...results written to ./results/mcdiff.out\n");
 
