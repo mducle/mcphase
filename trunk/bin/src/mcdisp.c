@@ -82,12 +82,12 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   FILE * foutds1;
   FILE * jqfile;
   float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
-  complex<double> imaginary(0,1);
+  int do_gobeyond=1;
   double E;
   double sta=0;
   double jqsta=-1.0;
   double jq0=0;
-  Vector hkl(1,3),q(1,3),gamma(1,ini.nofcomponents);
+  Vector hkl(1,3),q(1,3);
   Vector mf(1,ini.nofcomponents);
   int jmin,tl,tll;
   IntVector noftransitions(1,inputpars.nofatoms); // vector to remember how many transitions are on each atom
@@ -99,6 +99,8 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   struct tm *loctime;
   float d;
   
+  Vector gamma(1,ini.nofcomponents);
+  complex<double> imaginary(0,1);
   // transition matrix Mij
   ComplexMatrix Mijkl(1,ini.nofcomponents,1,ini.nofcomponents);
   // transformation matrix Uij
@@ -140,6 +142,9 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
  
  
    jmin=(*inputpars.jjj[l]).transitionnumber;
+  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
+                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
+                    } 
      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
      if(minE<d&&d<maxE)
@@ -197,6 +202,15 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   //just read dimensions of matrices in md
     md.set_noftransitions(i,j,k,noftransitions);
   // for later use:
+    for(l=1;l<=inputpars.nofatoms;++l){ //save eigenstates of ions (if possible)
+      for(ll=1;ll<=ini.nofcomponents;++ll)
+       {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s in first 
+                                                              //crystallographic unit of magnetic unit cell
+//       (*inputpars.jjj[l]).eigenstates(mf,ini.T);
+//       md.est_ini(i,j,k,l,(*inputpars.jjj[l]).est);
+         md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T));
+         if(NormFro(md.est(i,j,k,l))<SMALL){do_gobeyond=0;}
+      }
     md.U(i,j,k)=0; // initialize transformation matrix U
     md.M(i,j,k)=0; // initialize matrix M
     md.sqrt_gamma(i,j,k)=0; // and sqrt(gamma^s) matrix sqrt_gamma
@@ -228,18 +242,16 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
        j1=md.baseindex(i,j,k,l,jmin); 
       
        if(fabs(fabs(d)-fabs(nn[6]))>SMALLEDIF)
-        {fprintf(stderr,"ERROR mcdisp: reading mcdisp.trs with transition energy delta %g meV differnt from internal calculation %g meV %g\n",nn[6],d);	 
+        {fprintf(stderr,"ERROR mcdisp: reading mcdisp.trs with transition energy delta %g meV different from internal calculation %g meV\n",nn[6],d);	 
          exit(EXIT_FAILURE);}
        md.delta(i,j,k)(j1)=nn[6]; // set delta
      // diagonalizeMs to get unitary transformation matrix Us
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
-         Uijkl=Uijkl.Conjugate();
-	// conjugate inserted 31.10.05, because when calculating simple AF - I noticed
-	// that the eigensystemhgermitean returns eigenvectors as column vectors, but
+	// conjugate:note the eigensystemhgermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
-         // treat correctly case for neutron energy gain
-	 if (nn[6]<0){Uijkl=Uijkl.Conjugate();}
+         // treat correctly case for neutron energy loss
+	 if (nn[6]>=0){Uijkl=Uijkl.Conjugate();}
 
      if (gamma(ini.nofcomponents)>=0&&fabs(gamma(ini.nofcomponents-1))<SMALL) 
                            // mind in manual the 1st dimension alpha=1 corresponds
@@ -294,7 +306,7 @@ if (do_jqfile==0)
           fprintf (fout, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] > intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
   fprintf (foutqei, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqei);
-          fprintf (foutqei, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutqei, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
           foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot","w");
           printf("saving mcdisp.dsigma.tot\n");
@@ -551,6 +563,7 @@ if (do_jqfile==1){
    // diagonalize Ac to get energies  and eigenvectors !!!
    Vector En(1,dimA);
    Vector ints(1,dimA);
+   Vector intsbey(1,dimA);
 //   myEigenValuesHermitean (Ac,En,sort,maxiter);
   
 //   myEigenSystemHermitean (Ac,En,Tau,sort,maxiter);
@@ -593,10 +606,10 @@ if (do_jqfile==1){
    // been printed out above, so any refinement of energies during intcalc
    // is not included in the output file]
   double QQ;
-  double diffint=0;
+  double diffint=0,diffintbey=0;
   if(do_verbose==1){fprintf(stdout,"\ncalculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
-diffint=0;
+diffint=0;diffintbey=0;
                   for (i=1;i<=dimA;++i)
 		  {//double maxupshift=1e10; if (i<ini.mf.n()) {maxupshift=En(i+1)-En(i);}
 		   //double maxdownshift=-En(i); if(i>1){maxdownshift=En(i-1)-En(i);}		 
@@ -608,21 +621,22 @@ diffint=0;
                    //if(En(i)-maxdownshift-SMALL<md.delta(i1,j1,k1)(l1)&&md.delta(i1,j1,k1)(l1)<=En(i)-SMALL){maxdownshift=md.delta(i1,j1,k1)(l1)+SMALL-En(i);}
 		   //}
 		   //}}} 
-		     ints(i)=intcalc_approx(dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+		     if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
+                     ints(i)=intcalc_approx(intsbey(i),dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
                      //printout rectangular function to .mdcisp.qom
-	             fprintf (fout, " %4.4g ",ints(i));
-                     fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i));
-                 if(do_verbose==1){fprintf(stdout, " %4.4g ",ints(i));}
-                     if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);}
+	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
+                     fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
+                 if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g",ints(i),intsbey(i));}
+                     if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
-    fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint);
+    fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
 
               //initialize output file for display
             errno = 0;
             fout1 = fopen_errchk ("./results/.mcdisp.qom","w");
             fprintf (fout1, "#{%s ",MCDISPVERSION);
             curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout1);
-            fprintf (fout1,"\n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] intensities [barn/meV/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+            fprintf (fout1,"\n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] intensities(dip approx for FF) [barn/meV/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 		     if (do_Erefine==0) epsilon=(Max(En)-Min(En))/100;
 		     if (epsilon<=0) epsilon=0.1;
                   for (i=1;i<=dimA;++i)
@@ -630,14 +644,26 @@ diffint=0;
 		     if (ints(i)>SMALLINT)  // draw triangles to show calculated intensity
 		      {for (E=0;E<=ints(i)/epsilon;E+=ints(i)/2/epsilon/10)
                        {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
-	                fprintf (fout1, " %4.4g %4.4g \n",En(i)-epsilon+E*epsilon*epsilon/ints(i),E);
+	                fprintf (fout1, " %4.4g %4.4g %4.4g 0\n",En(i)-epsilon+E*epsilon*epsilon/ints(i),E,En(i));
 		       }
 		       for (E=ints(i)/epsilon;E>=0;E-=ints(i)/2/epsilon/10)
                        {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
-	                fprintf (fout1, " %4.4g %4.4g \n",En(i)+epsilon-E*epsilon*epsilon/ints(i),E);
+	                fprintf (fout1, " %4.4g %4.4g %4.4g 0\n",En(i)+epsilon-E*epsilon*epsilon/ints(i),E,En(i));
 		       }
                        fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
-	               fprintf (fout1, " %4.4g 0 \n",En(i)+epsilon);
+	               fprintf (fout1, " %4.4g 0 %4.4g 0\n",En(i)+epsilon,En(i));
+		      }
+		     if (intsbey(i)>SMALLINT)  // draw triangles to show calculated intensity
+		      {for (E=0;E<=intsbey(i)/epsilon;E+=intsbey(i)/2/epsilon/10)
+                       {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
+	                fprintf (fout1, " %4.4g 0 %4.4g %4.4g \n",En(i),En(i)-epsilon+E*epsilon*epsilon/intsbey(i),E);
+		       }
+		       for (E=ints(i)/epsilon;E>=0;E-=ints(i)/2/epsilon/10)
+                       {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
+	                fprintf (fout1, " %4.4g 0 %4.4g %4.4g 0 \n",En(i),En(i)+epsilon-E*epsilon*epsilon/intsbey(i),E);
+		       }
+                       fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
+	               fprintf (fout1, " %4.4g 0 %4.4g 0 \n",En(i),En(i)+epsilon);
 		      }
 		    }
 	  fclose(fout1);   
@@ -652,7 +678,7 @@ diffint=0;
           foutds1 = fopen_errchk ("./results/.mcdisp.dsigma","w");
           fprintf (foutds1, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds1);
-          fprintf (foutds1, "#Scattering Cross Section \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] dsigma/dOmegadE'[barn/mev/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutds1, "#Scattering Cross Section \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] dsigma/dOmegadE'[barn/mev/sr/f.u.] (dipolar approx for FF) f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 		     double intensity;
 		     intensity=intcalc(dimA,ini.emin,ini,inputpars,J,q,hkl,md,do_verbose,epsilon);   
                      fprintf (foutds1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));

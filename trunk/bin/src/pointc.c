@@ -60,7 +60,7 @@ int main (int argc, char **argv)
                   # radial wave function parameters Np XIp Cp values are\n\
                   # tabulated in clementi & roetti Atomic data and \n\
                   # nuclear data tables 14 (1974) 177-478\n\
-                  # e.g. Co2+ is isoelectronic to Fe+, looking at page 422\n\ 
+                  # e.g. Co2+ is isoelectronic to Fe+, looking at page 422\n\
                   # of Clemente & Roetti the parameters are \n\
                   N1=3 XI1=4.95296 C1=0.36301 \n\
                   N2=3 XI2=12.2963 C2=0.02707 \n\
@@ -128,7 +128,7 @@ float invalues[100];invalues[0]=99;
  }
  else
  {printf ("#!cfield\n#<!--mcphase.sipf-->\n");
-  iops=new ionpars(argv[1]);  // read ion parameters from internal table 
+  iops=new ionpars(argv[1]);  // read ion parameters from internal table  
   printf ("IONTYPE=%s\n",(*iops).iontype);
 // printout the information used in pointc to output 
   printf("#J=%4g\n",(*iops).J);

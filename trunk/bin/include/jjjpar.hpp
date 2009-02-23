@@ -32,8 +32,12 @@ class jjjpar
    int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta);
    int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
 
+   // returns transition element matrix N(Q) in order to be able to go beyond 
+   // dipolar approximation in mcdisp - it requires a call to eigenstates first
+   int dncalc(Vector & Qvec, double & T, ComplexMatrix & nat, ComplexMatrix & ests);
+
    // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
-   // according to stored eigenstate matrix est
+   // according to stored eigenstate matrix est, requires a call to eigenstates first
    ComplexVector & MQ(Vector & Qvec);
    ComplexVector Mq;
 
@@ -104,6 +108,7 @@ class jjjpar
   // external module functions, intern_mcalc=0
   void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*);  
   int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*);
+  int  (*ddnn)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*);
   void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
   void (*estates)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
   void *handle;

@@ -1,7 +1,9 @@
 #include<myev.h>
 
 #define VERYSMALL 1e-04
+#ifndef MAXNOFCHARINLINE
 #define MAXNOFCHARINLINE 1000
+#endif
 
 // subs to be able to check and directly diagonalize hermitean
 // matrizes, inverse a nearly singular matrix

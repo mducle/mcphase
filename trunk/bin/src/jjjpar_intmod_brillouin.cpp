@@ -110,10 +110,14 @@ int pr;
 // calculate Z and R
 if (X==1.0){Z=2*JJ+1;R=0;}
 else
-{Z=(XJ*X-1/XJ)/(X-1.0);
- R=JJ*(1/XJ-XJ*X*X)+(JJ+1)*X*(XJ-1.0/XJ);
- R/=0.5*(X-1)*(X-1);
+{if(X>1e50){Z=XJ;R=-2.0*JJ*XJ;}
+ else
+ {Z=(XJ*X-1/XJ)/(X-1.0);
+  R=JJ*(1/XJ-XJ*X*X)+(JJ+1)*X*(XJ-1.0/XJ);
+  R/=0.5*(X-1)*(X-1);
+ }
 }
+//printf("module brillouin -dmcalc: Z=%g R=%g X=%g XJ=%g |gjmbH|=%g\n",Z,R,X,XJ,gmh);
 
 // calculate coefficients bx,by,bz
  hxxyy=gjmbH(1)*gjmbH(1)+gjmbH(2)*gjmbH(2);
@@ -133,7 +137,7 @@ else
  }
   bz=-i*sinth*0.5;
 // -----------------------------------------
-
+//printf("module brillouin -dmcalc: bx=%g by=%g bz=%g\n",bx,by,bz);
 if (tn==2) // transition to finite energy
  {delta=gmh; //set delta !!!
 
@@ -165,14 +169,19 @@ if (tn==2) // transition to finite energy
  else
  { delta=-SMALL; // tn=1 ... transition within the same level
    if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/K_BT/(2*JJ+1);}
-   else {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
+   else {if(X>1e50)
+         {jjkt=-JJ*JJ*K_BT;}
+         else 
+         {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
          jjkt+=JJ*JJ/X/XJ;
 	 jjkt+=(JJ*JJ+2*JJ+1)*X/XJ;
 	 jjkt-=(JJ+1)*(JJ+1)*XJ;
 	 jjkt+=(2*JJ*JJ+2*JJ-1)*XJ*X;
 	 jjkt-=JJ*JJ*XJ*X*X;
 	 jjkt*=X/(1-X)/(1-X);
-	 jjkt/=(1/XJ-X*XJ)*K_BT;}
+	 jjkt/=(1/XJ-X*XJ)*K_BT;
+         }
+        }
  // now lets calculate mat
  mat(1,1)=gjmbH(1)*gjmbH(1)*jjkt;
  mat(1,2)=gjmbH(1)*gjmbH(2)*jjkt;

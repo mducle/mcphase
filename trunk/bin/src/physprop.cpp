@@ -300,6 +300,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
+   strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmomentum-components\n");
 fprintf (fout, "    #<Ja(1)> <Ja(2)> .... selfconsistent Spinconfiguration  \n");
@@ -327,7 +328,7 @@ fprintf (fout, "    #<Jc(1)> <Jc(2)> ....}\n");
    fprintf (fout, "#{%s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
    // printout the lattice and atomic positions
-   inputpars.rems[2]=" ";
+   strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmeanfield-components\n");
    fprintf (fout, "    #mfa(1) mfa(2) .... selfconsistent Mean field configuration \n"); 

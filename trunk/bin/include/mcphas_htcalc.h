@@ -24,7 +24,7 @@ void checkini(testspincf & testspins,qvectors & testqs);
  // returns 1 if too maxnofspinconfigurations is exceeded 
  // returns 2 if no spinconfiguration has been found at ht point
  */
- int htcalc(Vector H,double T,par & inputpars,qvectors & testqs,
+int htcalc(Vector H,double T,par & inputpars,qvectors & testqs,
                      testspincf & testspins,physproperties & physprops);
 
 // calculate physical properties for stabilized HT point

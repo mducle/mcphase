@@ -87,10 +87,10 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 
                                              if(J[i]==0){ // go beyond dipole approximation for rare earth
                                                          ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
-					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);
+					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);//MQ(123)=MQ(xyz)
 					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
 					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
-                                                       msfdipx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);
+                                                       msfdipx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);// mom(123)=mom(abc)=mom(yzx)
 					               msfdipy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
 					               msfdipz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
 					                  }
@@ -822,7 +822,10 @@ printf("                 reading magnetic atoms and moments ...\n");
 
 for(i=1;i<=natmagnetic;++i){ 
                             instr[0]='#';J[i]=-1;
-                            while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
+                            while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);
+                                                                   if(feof(fin_coq)==1){fprintf(stderr,"mcdiff Error: end of file before all magnetic atoms could be read\n");exit(EXIT_FAILURE);}
+                                                                  fgets(instr,MAXNOFCHARINLINE,fin_coq);
+                                                                  }
 			     // get cffilename out of "{filename}   ..."
 
                             if(instr[strspn(instr," \t")]!='{'){fprintf(stderr,"ERROR mcdiff: magnetic atom line has to start with '{'\n");exit (EXIT_FAILURE);}
@@ -849,45 +852,37 @@ for(i=1;i<=natmagnetic;++i){
                                                       else {(*jjjpars[i]).gJ=2;} // just use spin formfactor
                                        }
                             instr[0]='#';
-                            while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
+                            while(instr[strspn(instr," \t")]=='#'&&feof(fin_coq)==0){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
 
-                            if (strchr(instr,'>')==NULL){fseek(fin_coq,pos,SEEK_SET);} // no ">" found --> do dipole approx
-                             else          {J[i]=0; // J=0 tells that full calculation should be done for this ion
-                            fseek(fin_coq,pos+strchr(instr,'>')-instr+1,SEEK_SET); 
-                            j=inputline(fin_coq,numbers);printf("dimension of mf = %i\n",j);
-                            Vector heff(1,j);for(k=1;k<=j;++k){heff(k)=numbers[k];}
-                            if ((*jjjpars[i]).gJ==0)
-			    {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
- 			     (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
-			    }
-			    else
-			    {// beyond formalism for rare earth		    
-                             // do some consistency checks
-                             Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U);
-                             if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i\n",i);}
-                             if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i\n",i);}
-                             if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i\n",i);}
-                             (*jjjpars[i]).mom(1)=(*jjjpars[i]).gJ*moment(1);
-                             (*jjjpars[i]).mom(2)=(*jjjpars[i]).gJ*moment(2);
-                             (*jjjpars[i]).mom(3)=(*jjjpars[i]).gJ*moment(3);
+                            if (strchr(instr,'>')==NULL)
+                             {fseek(fin_coq,pos,SEEK_SET);} // no ">" found --> do dipole approx
+                             else          
+                             {J[i]=0; // J=0 tells that full calculation should be done for this ion
+                              fseek(fin_coq,pos+strchr(instr,'>')-instr+1,SEEK_SET); 
+                              j=inputline(fin_coq,numbers);printf("dimension of mf = %i\n",j);
+                              Vector heff(1,j);for(k=1;k<=j;++k){heff(k)=numbers[k];}
+                              if ((*jjjpars[i]).gJ==0)
+			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
+ 			       (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
+			      }
+			      else
+			      {// beyond formalism for rare earth		    
+                               // do some consistency checks
+                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U);
+                               if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i\n",i);}
+                               if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i\n",i);}
+                               if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i\n",i);}
+                               (*jjjpars[i]).mom(1)=(*jjjpars[i]).gJ*moment(1);
+                               (*jjjpars[i]).mom(2)=(*jjjpars[i]).gJ*moment(2);
+                               (*jjjpars[i]).mom(3)=(*jjjpars[i]).gJ*moment(3);
                             
-                             (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
+                               (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
                      
-                             int dj;dj=(int)(2.0*(*jjjpars[i]).J()+1.0);
-                                          //myPrintComplexMatrix (stdout,(*jjjpars[i]).est); 
-                                                //calculate partition sum
-                                               double z=0;double KBT=T*KB,E0;
-    		                               E0=real((*jjjpars[i]).est(0,1));
-                                               for(j=1;j<=dj;++j)
-                                               {z+=exp(-((real((*jjjpars[i]).est(0,j))-E0)/KBT));}
-                                               // put boltzmann population into row 0 of eigenstates...
-                                               for(j=1;j<=dj;++j)
-                                               {(*jjjpars[i]).est(0,j)=complex<double>(exp(-(real((*jjjpars[i]).est(0,j))-E0)/KBT)/z,0);}
-                             if(Norm((*jjjpars[i]).Zc)==0){fprintf(stderr,"WARNING mcdiff: Z(K) coefficients not found or zero in file %s\n",cffilename);}
-                            }
-                             if(Norm((*jjjpars[i]).magFFj4)==0){fprintf(stderr,"WARNING mcdiff: <j4(Q)> coefficients not found or zero in file %s\n",cffilename);}
-                             if(Norm((*jjjpars[i]).magFFj6)==0){fprintf(stderr,"WARNING mcdiff: <j6(Q)> coefficients not found or zero in file %s\n",cffilename);}
- 			                 }
+                               if(Norm((*jjjpars[i]).Zc)==0){fprintf(stderr,"WARNING mcdiff: Z(K) coefficients not found or zero in file %s\n",cffilename);}
+                               }
+                               if(Norm((*jjjpars[i]).magFFj4)==0){fprintf(stderr,"WARNING mcdiff: <j4(Q)> coefficients not found or zero in file %s\n",cffilename);}
+                               if(Norm((*jjjpars[i]).magFFj6)==0){fprintf(stderr,"WARNING mcdiff: <j6(Q)> coefficients not found or zero in file %s\n",cffilename);}
+ 			      }
 
                              if((*jjjpars[i]).SLR==0){fprintf(stderr,"WARNING mcdiff: SCATTERINGLENGTHREAL not found or zero in file %s\n",cffilename);}
                              if((*jjjpars[i]).gJ==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s - gJ=0 means Ja=Sy Jb=Ly Jc=Sz Jd=Lz Je=Sx Jf=Lx !\n",cffilename);}

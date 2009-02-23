@@ -31,7 +31,9 @@ int * jq::ijk(int in)
 
 // the inverse: get number of spin from indizes i,j,k
 int jq::in(int i, int j, int k)
-{return ((i*mxb+j)*mxc+k);}
+{int ret;ret=(i*mxb+j)*mxc+k;
+ if(ret>mx-1){fprintf(stderr,"ERROR mcdisp - internal indexing error\n");exit(EXIT_FAILURE);}
+ return ret;}
 
 int jq::iin(int i, int j)
 {return (i*mx+j);}

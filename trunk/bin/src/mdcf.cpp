@@ -24,11 +24,20 @@ int sum(IntVector & v)
 ComplexMatrix & mdcf::U(int na, int nb, int nc)
 { return (*s[in(na,nb,nc)]);
 }
+ComplexMatrix & mdcf::V(int na, int nb, int nc)
+{ return (*sb[in(na,nb,nc)]);
+}
 ComplexMatrix & mdcf::M(int na, int nb, int nc)
 { return (*m[in(na,nb,nc)]);
 }
+ComplexMatrix & mdcf::N(int na, int nb, int nc)
+{ return (*mb[in(na,nb,nc)]);
+}
 ComplexMatrix & mdcf::sqrt_gamma(int na, int nb, int nc)
 { return (*l[in(na,nb,nc)]);
+}
+ComplexMatrix & mdcf::sqrt_Gamma(int na, int nb, int nc)
+{ return (*lb[in(na,nb,nc)]);
 }
 Vector & mdcf::delta(int na, int nb, int nc)
 { return (*d[in(na,nb,nc)]);
@@ -37,11 +46,20 @@ Vector & mdcf::delta(int na, int nb, int nc)
 ComplexMatrix & mdcf::Ui(int i)
 { return (*s[i]);
 }
+ComplexMatrix & mdcf::Vi(int i)
+{ return (*sb[i]);
+}
 ComplexMatrix & mdcf::Mi(int i)
 { return (*m[i]);
 }
+ComplexMatrix & mdcf::Ni(int i)
+{ return (*mb[i]);
+}
 ComplexMatrix & mdcf::sqrt_gammai(int i)
 { return (*l[i]);
+}
+ComplexMatrix & mdcf::sqrt_Gammai(int i)
+{ return (*lb[i]);
 }
 Vector  & mdcf::deltai(int i)
 { return (*d[i]);
@@ -59,6 +77,9 @@ int * mdcf::ijk(int in)
 int mdcf::in(int i, int j, int k)
 {return ((i*mxb+j)*mxc+k);}
 
+// get number of cf from indizes i,j,k,l
+int mdcf::ind(int i, int j, int k, int l)
+{return (((i*mxb+j)*mxc+k)*nofatoms+l);}
 
 // return number of cfs
 int mdcf::n()
@@ -82,7 +103,7 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
    nofa=n1;nofb=n2;nofc=n3;
    mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
    nofatoms=n;nofcomponents=nc;
-   
+
 //dimension arrays
   s = new ComplexMatrix * [mxa*mxb*mxc+1];//(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
   if (s == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
@@ -90,12 +111,30 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
   if (m == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   l = new ComplexMatrix * [mxa*mxb*mxc+1];
   if (l == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  sb = new ComplexMatrix * [mxa*mxb*mxc+1];//(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
+  if (sb == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  mb = new ComplexMatrix * [mxa*mxb*mxc+1];
+  if (mb == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  lb = new ComplexMatrix * [mxa*mxb*mxc+1];
+  if (lb == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   d = new Vector * [mxa*mxb*mxc+1]; //(1,nofatoms);
   if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
   nt= new IntVector [mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){nt[i]=IntVector(1,nofatoms);}
   if (nt == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  
+  eigenstates= new ComplexMatrix * [mxa*mxb*mxc*nofatoms+1];   
+  if (eigenstates == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
+  
+
 }
- 
+
+ComplexMatrix & mdcf::est(int i, int j, int k, int l)
+{return (*eigenstates[ind(i,j,k,l)]);}
+
+void mdcf::est_ini(int i, int j, int k, int l,ComplexMatrix & M) // initialize est
+{eigenstates[ind(i,j,k,l)]=new ComplexMatrix(M.Rlo(),M.Rhi(),M.Clo(),M.Chi());
+ (*eigenstates[ind(i,j,k,l)])=M;}
+
 // has to be called before mdcf object can be used for calculation
 void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)
 {      
@@ -103,6 +142,9 @@ void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)
      s[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
      m[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
      l[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     sb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     mb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
+     lb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
      d[in(i,j,k)]= new Vector(1,sum(nt[in(i,j,k)]));
       
 }
@@ -137,9 +179,13 @@ mdcf::~mdcf ()
  delete s[in(i,j,k)];
  delete m[in(i,j,k)];
  delete l[in(i,j,k)];
+ delete sb[in(i,j,k)];
+ delete mb[in(i,j,k)];
+ delete lb[in(i,j,k)];
  delete d[in(i,j,k)];
  }}}
  delete []s;delete []m;delete []d;delete []l;delete []nt;
+ delete []sb;delete []mb;delete []lb;
 }
 
 
@@ -163,6 +209,8 @@ mdcf::mdcf (const mdcf & p)
   nt = new IntVector[mxa*mxb*mxc+1](1,nofatoms);
   if (nt == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
 
+  eigenstates= new ComplexMatrix * [mxa*mxb*mxc*nofatoms+1];   
+  if (eigenstates == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
 
 
  for (i=1;i<=nofa;++i)

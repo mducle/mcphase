@@ -15,16 +15,21 @@ class mdcf
    int nofa,nofb,nofc;
    int mxa,mxb,mxc;
    ComplexMatrix ** m; //matrix to store M
-   ComplexMatrix ** s; //matrix to store S
+   ComplexMatrix ** s; //matrix to store U
    ComplexMatrix ** l; //matrix to store eigenvalues sqrt_gamma
+   ComplexMatrix ** mb; //matrix to store N
+   ComplexMatrix ** sb; //matrix to store V
+   ComplexMatrix ** lb; //matrix to store eigenvalues sqrt_gamma
    Vector ** d;
    IntVector * nt; // vector to store number of transitions for each atom
+   ComplexMatrix ** eigenstates; // matrix to store the eigenstates of ions
    int iv[4];
        
   public:
  // array of spins 
     int nofatoms,nofcomponents;
-    int in(int i,int j, int k); 
+    int in(int i,int j, int k); // indexing functions
+    int ind(int i,int j, int k,int l); 
    
     ComplexMatrix & M(int i,int j,int k); // returns pointer to  matrix M(ijk) 
     ComplexMatrix & Mi(int in); // returns pointer to matrix M(i)
@@ -32,6 +37,14 @@ class mdcf
     ComplexMatrix & Ui(int in); // returns pointer to eigenvector matrix i
     ComplexMatrix & sqrt_gamma(int i,int j,int k); // returns pointer to eigenvaluematrix (ijk) 
     ComplexMatrix & sqrt_gammai(int in); // returns pointer to eigenvalue matrix i
+    ComplexMatrix & N(int i,int j,int k); // returns pointer to  matrix M(ijk) 
+    ComplexMatrix & Ni(int in); // returns pointer to matrix M(i)
+    ComplexMatrix & V(int i,int j,int k); // returns pointer to eigenvector matrix (ijk) 
+    ComplexMatrix & Vi(int in); // returns pointer to eigenvector matrix i
+    ComplexMatrix & sqrt_Gamma(int i,int j,int k); // returns pointer to eigenvaluematrix (ijk) 
+    ComplexMatrix & sqrt_Gammai(int in); // returns pointer to eigenvalue matrix i
+    ComplexMatrix & est(int i, int j, int k, int l); // returns pointer to eigenstate matrix for atom ijkl
+    void est_ini(int i, int j, int k, int l,ComplexMatrix & M); // initialize est
 
     Vector & delta(int i,int j,int k); // returns pointer to matrix (ijk) 
     Vector & deltai(int in); // returns pointer to mean field i
@@ -47,13 +60,15 @@ class mdcf
     int noft(int i, int j, int k, int l); // returns number of transitions of ion l in cryst unit ijk
 //    mdcf & operator= (const mdcf & op2); // zuweisung
 
-   mdcf (int n1,int n2,int n3,int n,int nc);	//konstruktor
+   
+mdcf (int n1,int n2,int n3,int n,int nc);	//konstruktor
 
 // initialisierung 
     void set_noftransitions (int i, int j, int k, IntVector & notr);
 
 //   mdcf (const mdcf & spins);	// kopier-konstruktor
-   ~mdcf ();		//destruktor
+   
+~mdcf ();		//destruktor
 
 };
 

@@ -3,6 +3,7 @@
 
 #include"chargedensity.hpp"
 #include<cstdio>
+#include<cstdlib>
 #include<cstring>
 #include<cerrno>
 #include<martin.h>

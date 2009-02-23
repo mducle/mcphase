@@ -958,7 +958,7 @@ void ionpars::savLlm(FILE * outfile)
    int ionpars::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);}
    int ionpars::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);}
 
-void ionpars::save_radial_wavefunction(char * filename)
+void ionpars::save_radial_wavefunction(const char * filename)
    {double r=0.1;
     FILE * fout;
     if (radial_wavefunction(r)==0){fprintf(stderr,"Warning: save_radial_wavefunction not possible\n");return;}
@@ -1104,11 +1104,13 @@ static Vector JJ(1,gjmbH.Hi());
 return JJ;
 }
 /**************************************************************************/
-ComplexMatrix & ionpars::cfeigenstates(Vector & gjmbH)
+ComplexMatrix & ionpars::cfeigenstates(Vector & gjmbH, double & T)
 {   /*on input
     gJmbH	vector of effective field [meV]
       on output
     Matrix containing the eigenvalues and eigenfunctions of the crystalfield problem
+    eigenvalues ares stored as real part of row zero
+    boltzmann population numbers are stored as imaginary part of row zero
 */
 
 // check dimensions of vector
@@ -1162,9 +1164,15 @@ static ComplexMatrix eigenstates(0,dj,1,dj);
    int sort=1;int maxiter=1000000;
    EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
 
-   for(i=1;i<=dj;++i){eigenstates(0,i)=complex <double> (En(i),0);
+   for(i=1;i<=dj;++i){//eigenstates(0,i)=complex <double> (En(i),0);
      for(j=1;j<=dj;++j){eigenstates(i,j)=complex <double> (zr(i,j),zi(i,j));
    }}
+    //calculate partition sum
+     double zz=0;double KBT,E0;KBT=T*K_B;E0=En(1);
+      for(j=1;j<=dj;++j){zz+=exp(-((En(j)-E0)/KBT));}
+        // put boltzmann population into row 0 of eigenstates...
+        for(j=1;j<=dj;++j)
+         {eigenstates(0,j)=complex<double>(En(j),exp(-(En(j)-E0)/KBT)/zz);}
    
  return eigenstates;
 }
@@ -1174,8 +1182,7 @@ static ComplexMatrix eigenstates(0,dj,1,dj);
 int ionpars::cfielddm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
 {  /*on input
     tn      ... number of transition to be computed 
-    ABC[i]	(not used)saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
-    gJ		lande factor
+    sign(tn)... 1... without printout, -1 with extensive printout
     T		temperature[K]
     gjmbH	vector of effective field [meV]
   on output    
@@ -1257,6 +1264,8 @@ exit(0);
       }
      Zs=Sum(wn);wn/=Zs;  
      Zs*=exp(-x/K_B/T);
+
+
    // calculate Ja,Jb,Jc
      ComplexMatrix z(1,dj,1,dj);
      ComplexMatrix * zp[gjmbH.Hi()+1];
@@ -1316,6 +1325,90 @@ if (delta>SMALL)
  return (int)((J+1)*(2*J+1)); 
 }
 
+int ionpars::cfielddn(int & tn,double & th,double & ph,double & J0,double & J2,double & J4,double & J6,Vector & Zc,ComplexMatrix & est,double & T,ComplexMatrix & nat)
+{/*on input
+    tn      ... number of transition to be computed 
+    sign(tn)... 1... without printout, -1 with extensive printout
+    est		matrix with eigenstates, eigenvalues [meV], population numbers
+    gjmbH	vector of effective field [meV]
+  on output    
+    int   	total number of transitions
+    N(i,j)	<-|Q|+><+|Q|-> (n+-n-),  n+,n-
+     // note that  <M(Q)>=-2x<Q>_TH in units of mb
+    .... occupation number of states (- to + transition chosen according to transitionnumber)
+*/
+  int pr;pr=1;if (tn<0) {pr=0;tn*=-1;}
+  int i,j,k,l,m;
+  int dj=(int)(2*J+1);
+  double delta;
+// calculate nat for transition number tn
+// 1. get i and j from tn (as in dmcalc
+k=0;
+for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
+{++k;if(k==tn)break;
+}if(k==tn)break;}
+
+// 2. set delta
+delta=real(est(0,j))-real(est(0,i));
+
+if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dncalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
+if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
+
+	 ComplexMatrix * MQMi[4];
+         MQMi[1]=new ComplexMatrix(1,dj,1,dj);
+         MQMi[2]=new ComplexMatrix(1,dj,1,dj);
+         MQMi[3]=new ComplexMatrix(1,dj,1,dj);
+         MQM((*MQMi[3]),(*MQMi[1]),(*MQMi[2]),th,ph,J0,J2,J4,J6,Zc);
+        //      x           y         z
+        //      c           a         b
+
+// 3. set nat
+         int K,M,Md;
+         ComplexVector Malpha(1,3);Malpha=0;
+          for(K=1;K<=3;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
+             Malpha(K)+=conj(est(M,i))*(*MQMi[K])(M,Md)*est(Md,j); 
+            }}} 
+if(i==j){//take into account thermal expectation values <Jl>
+         ComplexVector mm(1,3); mm=0;
+         for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){          
+           mm(1)+=imag(est(0,K))*conj(est(M,K))*(*MQMi[1])(M,Md)*est(Md,K); 
+           mm(2)+=imag(est(0,K))*conj(est(M,K))*(*MQMi[2])(M,Md)*est(Md,K); 
+           mm(3)+=imag(est(0,K))*conj(est(M,K))*(*MQMi[3])(M,Md)*est(Md,K); 
+         }}} // --> mm(1,..3)  thermal expextation values of M
+          Malpha-=mm;// subtract thermal expectation values
+         
+         }
+         delete MQMi[1],MQMi[2],MQMi[3];
+
+
+       // set matrix <i|Ml|j><j|Mm|i>
+       nat=0;
+          for(l=1;l<=3;++l)for(m=1;m<=3;++m)
+          {nat(l,m)=Malpha(l)*conj(Malpha(m));}
+
+// multiply by occupation number difference ...
+
+if (delta>SMALL)
+   { if(pr==1){
+      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+      printf(" |<%i|Qa|%i>|^2=%4.4g |<%i|Qb|%i>|^2=%4.4g |<%i|Qc|%i>|^2=%4.4g",i,j,real(nat(1,1)),i,j,real(nat(2,2)),i,j,real(nat(3,3)));
+      printf(" n%i-n%i=%4.4g\n",i,j,imag(est(0,i))-imag(est(0,j)));}
+    nat*=(imag(est(0,i))-imag(est(0,j))); // occupation factor    
+     }else
+   {// quasielastic scattering has not wi-wj but wj*epsilon/kT
+     if(pr==1){
+      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+      printf(" |<%i|Qa-<Qa>|%i>|^2=%4.4g |<%i|Qb-<Qb>|%i>|^2=%4.4g |<%i|Qc-<Qc>|%i>|^2=%4.4g",i,j,real(nat(1,1)),i,j,real(nat(2,2)),i,j,real(nat(3,3)));
+      printf(" n%i=%4.4g\n",i,imag(est(0,i)));}
+    nat*=(imag(est(0,i))/K_B/T);
+   }
+
+
+// return number of all transitions     
+ return (int)((J+1)*(2*J+1)); 
+
+}
+
 //**********************************************************************/
 // routine to calculate the scattering operator to go beyond dip approx
 // *********************************************************************
@@ -1331,16 +1424,9 @@ double Z(int K, float J0, float J2, float J4, float J6, Vector Zc)
  return 0;
 }
 
-// calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
-// according to stored eigenstate matrix est
-// calculates the scattering operator given the polar angles th, ph (with respect to the CEF coordinate 
-// system xyz and the <jl(qr)> and the eigenstate matrix with eigenstates and thermal population numbers
-ComplexVector & ionpars::MQ(double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc,ComplexMatrix & est)
-    {  complex <double> im(0,1);
-       int dj=(int)(2*J+1);
-       
-	 ComplexMatrix MQXM(1,dj,1,dj),MQYM(1,dj,1,dj),MQZM(1,dj,1,dj);
-         // .... calculate these matrices ...(formula 11.141-143 in lovesey)
+void ionpars::MQM(ComplexMatrix & MQXM,ComplexMatrix & MQYM,ComplexMatrix & MQZM, double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc)
+{complex <double> im(0,1);
+         // .... calculate scattering operator ...(formula 11.141-143 in lovesey)
 	    int K,Qd,M,Md;double MJ,MJd,PKdQd,thj,factor;
 	    complex <double>bracketx,brackety,bracketz;
 	    MQXM=0;MQYM=0;MQZM=0;
@@ -1393,23 +1479,35 @@ ComplexVector & ionpars::MQ(double th, double ph,double J0,double J2,double J4,d
                                              }
 							      }
                                                              }
+
+}
+// calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+// according to stored eigenstate matrix est
+// calculates the scattering operator given the polar angles th, ph (with respect to the CEF coordinate 
+// system xyz and the <jl(qr)> and the eigenstate matrix with eigenstates and thermal population numbers
+ComplexVector & ionpars::MQ(double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc,ComplexMatrix & est)
+    {  
+       int dj=(int)(2*J+1);
+       
+	 ComplexMatrix MQXM(1,dj,1,dj),MQYM(1,dj,1,dj),MQZM(1,dj,1,dj);
+         MQM(MQXM,MQYM,MQZM,th,ph,J0,J2,J4,J6,Zc);
 							     // ... calculate thermal expectation values
 							     // using the eigenstates and T 
 							     // mom(1) = ....
           						     //
-							     static ComplexVector mm(1,3); 
-                                                             mm=0;
-	                                                     for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
-                                                                mm(1)+=est(0,K)*conj(est(M,K))*MQXM(M,Md)*est(Md,K); 
-                                                                mm(2)+=est(0,K)*conj(est(M,K))*MQYM(M,Md)*est(Md,K); 
-                                                                mm(3)+=est(0,K)*conj(est(M,K))*MQZM(M,Md)*est(Md,K); 
-                                                                }}}
+       static ComplexVector mm(1,3); mm=0;
+       int K,M,Md;
+       for(K=1;K<=dj;++K){for(M=1;M<=dj;++M){for(Md=1;Md<=dj;++Md){
+         mm(1)+=imag(est(0,K))*conj(est(M,K))*MQXM(M,Md)*est(Md,K); 
+         mm(2)+=imag(est(0,K))*conj(est(M,K))*MQYM(M,Md)*est(Md,K); 
+         mm(3)+=imag(est(0,K))*conj(est(M,K))*MQZM(M,Md)*est(Md,K); 
+       }}}
 // myPrintComplexMatrix(stdout,MQXM);
 // myPrintComplexMatrix(stdout,MQYM);
 // myPrintComplexMatrix(stdout,MQZM);
 // 					       myPrintComplexMatrix(stdout,est);}
 					       
-                                                         mm*=2; // this is now <M(Q)>=-2x<Q>_TH in units of mb
+                     mm*=2; // this is now <M(Q)>=-2x<Q>_TH in units of mb
 // myPrintComplexVector(stdout,mm);//equivalent to moment ...
     return mm;
     }
