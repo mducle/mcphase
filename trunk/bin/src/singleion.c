@@ -25,7 +25,7 @@ int main (int argc, char **argv)
 
   par inputpars("./mcphas.j");
 // check command line
-  if (argc < 5||argc-2>inputpars.nofcomponents)
+  if (argc < 3||argc-2>inputpars.nofcomponents)
     { printf (" program single ion  - display single ion properties at HT point\n \
                 use as: single ion  T[K] gjmbHa gmbHb gjmbHc[meV] ...\n");
       exit (1);
@@ -48,9 +48,9 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
 {
 
 
-            m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u);
+            m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T));
 	    (*inputpars.jjj[i]).transitionnumber=-1;
-            nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d); 
+            nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*inputpars.jjj[i]).est); 
 
   printf("%3i %13g ",i,T);
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %10g ",h(j));
@@ -58,7 +58,7 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %4g ",m(j));
   for(j=1;j<=nt;++j)
   {(*inputpars.jjj[i]).transitionnumber=-j;
-  (*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d);
+  (*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*inputpars.jjj[i]).est);
   printf(" %4g ",d);
   }
   printf("\n");

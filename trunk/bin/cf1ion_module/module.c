@@ -254,8 +254,13 @@ dummyc=Jbb;Jbb=Jcc;Jcc=Jaa;Jaa=dummyc;
 }
 
 ionpars iops("#ATTENTION in module cfield.so the AXES xyz are parallel to cab\n#The higher order interactions are described by the  PKQ Operators defined in cfield:\n#O20(c) .... Jd\n#O22(c) .... Je\n#O40(c) .... Jf\n#O42(c) .... Jg\n#O44(c) .... Jh\n#O60(c) .... Ji\n#O62(c) .... Jj\n#O64(c) .... Jk\n#O66(c) .... Jl\n");  // get 1ion parameters - operator matrices
-  
-extern "C" void mcalc(Vector & J,double & T,Vector & gjmbH, double & gJ,Vector & ABC,  char ** sipffile,double & lnZ,double & U)
+#ifdef __linux__
+extern "C" void mcalc(Vector & J,double & T, Vector & gjmbH,double * g_J, Vector & ABC,char ** sipffile,
+                      double & lnZ,double & U)
+#else
+extern "C" __declspec(dllexport) void mcalc(Vector & J,double & T, Vector & gjmbH,double * g_J, Vector & ABC,char ** sipffile,
+                      double & lnZ,double & U)
+#endif  
 {//ABC not used !!!
     /*on input
     T		temperature[K]
@@ -368,7 +373,13 @@ return;
 
 /**************************************************************************/
 // for mcdisp this routine is needed
-extern "C" int dmcalc(int & tn,double & T,Vector & gjmbH,double & gJ,Vector & ABC, char ** sipffile,ComplexMatrix & mat,float & delta)
+#ifdef __linux__
+extern "C" int dmcalc(int & tn,double & T,Vector & gjmbH,double * gJ,Vector & ABC, char ** sipffile,
+                       ComplexMatrix & mat,float & delta)
+#else
+extern "C" __declspec(dllexport) int dmcalc(int & tn,double & T,Vector & gjmbH,double * gJ,Vector & ABC, char ** sipffile,
+                       ComplexMatrix & mat,float & delta)
+#endif
 {//ABC not used !!!
     /*on input
     tn          transitionnumber
@@ -379,7 +390,6 @@ extern "C" int dmcalc(int & tn,double & T,Vector & gjmbH,double & gJ,Vector & AB
     mat         transition element matrix
     delta       energy of transition
 */
-
 // check dimensions of vector
 if(gjmbH.Hi()>12)
    {fprintf(stderr,"Error loadable module cfield.so: wrong number of dimensions - check number of columns in file mcphas.j\n");
@@ -417,12 +427,15 @@ if(gjmbH.Hi()>12)
    if(gjmbH.Hi()>=11){Ham-=gjmbH(11)*iops.O64;
    if(gjmbH.Hi()>=12){Ham-=gjmbH(12)*iops.O66;
    }}}}}}}}}
+
 /*   int i1,j1; //printout matrix
    for (i1=1;i1<=dj;++i1){
     for (j1=1;j1<=dj;++j1) printf ("%4.6g ",iops.O20(i1,j1));
     printf ("\n");
     }*/
       
+int pr=1;
+if(tn<0) {tn=-tn;pr=0;}
     
    // diagonalize
    Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
@@ -477,24 +490,32 @@ if(j==i)delta=-SMALL; //if transition within the same level: take negative delta
 for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=gjmbH.Hi();++m)
 {if(i==j){//take into account thermal expectation values <Jl>
           mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-J(l))*((z.Column(j)*(*zp[m]).Column(i))-J(m));}
- else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}}
+ else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}
+}
+
 
 if (delta/K_B/T>0.000001)
    {mat*=(wn(i)-wn(j)); // occupation factor    
-      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
-      printf(" |<%i|Ja|%i>|^2=%4.4g |<%i|Jb|%i>|^2=%4.4g |<%i|Jc|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
-      printf(" n%i-n%i=%4.4g\n",i,j,wn(i)-wn(j));
+    if(pr==1)
+      {printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+       printf(" |<%i|Ja|%i>|^2=%4.4g |<%i|Jb|%i>|^2=%4.4g |<%i|Jc|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
+       printf(" n%i-n%i=%4.4g\n",i,j,wn(i)-wn(j));
+      }
    }else
    {// quasielastic scattering has not wi-wj but wj*epsilon/kT
-      printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
-      printf(" |<%i|Ja-<Ja>|%i>|^2=%4.4g |<%i|Jb-<Jb>|%i>|^2=%4.4g |<%i|Jc-<Jc>|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
-      printf(" n%i=%4.4g\n",i,wn(i));
+      if (pr==1)
+      {printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
+       printf(" |<%i|Ja-<Ja>|%i>|^2=%4.4g |<%i|Jb-<Jb>|%i>|^2=%4.4g |<%i|Jc-<Jc>|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
+       printf(" n%i=%4.4g\n",i,wn(i));
+      }
     mat*=(wn(i)/K_B/T);
    }
 
 //clean up memory
      for(l=1;l<=gjmbH.Hi();++l)
       {delete zp[l];}
+
+
      
 return (int)((iops.J+1)*(2*iops.J+1)); // return number of all transitions
 //return (int)(2*iops.J); // only exc from groundstate are counted

@@ -29,12 +29,12 @@
 // keep this routine as efficient as possible
 // at the moment we do only groundstate doublet
 /****************************************************************************/
-Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U)
+Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
 {switch (intern_mcalc)
   {case 1: return kramer(T,gjmbH,lnZ,U);break;
-   case 2: return (*iops).cfield(T,gjmbH,lnZ,U);break;
+   case 2: return (*iops).cfield(T,gjmbH,lnZ,U,ests);break;
    case 3: return brillouin(T,gjmbH,lnZ,U);break;
-   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U);return mom;
+   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);return mom;
   }
 }
 
@@ -43,12 +43,15 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U)
 // the transition matrix mat corresponding to jjjpar.transitionnumber and delta
 // for effective field heff and temperature given on input
 /****************************************************************************/
-int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta)
+int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta,ComplexMatrix & ests)
 {switch (intern_mcalc)
-  {case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
-   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta);break;
+  {case 0: if (dm!=NULL){return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&cffilename,&mat,&delta,&ests);}
+           else return 0;
+           break;
+   case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta,ests);break;
    case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
-   default: return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&cffilename,&mat,&delta);
+   default: return 0;
   }
 }
 
@@ -61,8 +64,7 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
   {case 0:  if(estates!=NULL){(*estates)(&est,&gjmbheff,&gJ,&T,&ABC,&cffilename);}
             return est;break;
    case 2:  est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
-   default: fprintf (stderr, "warning class jjjpar: single ion module does not allow to return eigenvalues and eigenstates \n"); 
-            est=0;return est;
+   default: est=0;return est;
   }
 }
 
@@ -522,7 +524,6 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
      }
      else
      {   
-#ifdef __linux__
   instr[1]='=';
   extract(instr,"#",modulefilename,(size_t)MAXNOFCHARINLINE);
   fprintf (stderr,"#[external]\n");
@@ -539,6 +540,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
     fprintf(stderr,"\n");
 
   char * error;intern_mcalc=0;
+#ifdef __linux__
   handle=dlopen (modulefilename,RTLD_NOW | RTLD_GLOBAL);
   if (!handle){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
                if ((error=dlerror())!=NULL) 
@@ -563,11 +565,31 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);ddnn=NULL;}
 
 
-
 #else
-  fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
-  exit(EXIT_FAILURE);
+  handle=LoadLibrary(modulefilename);
+  if ((int)handle<= HINSTANCE_ERROR){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
+	       exit (EXIT_FAILURE);
+	      }
+  
+    m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*))GetProcAddress(handle,"mcalc");
+     if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %d  module %s loading function mcalc not possible\n",GetLastError(),modulefilename);exit (EXIT_FAILURE);}
+    dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*))GetProcAddress(handle,"dmcalc");
+     if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d module %s loading function dmcalc not possible - continuing\n",GetLastError(),modulefilename);}
+    mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mq");
+     if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mq not possible - continuing\n",GetLastError(),modulefilename);}
+    estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"estates");
+     if (estates==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function estates not possible - continuing\n",GetLastError(),modulefilename);
+                                est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
+                                est=0;
+                               }
+
+  ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
+     if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",GetLastError(),modulefilename);}
+  
+// fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
+// exit(EXIT_FAILURE);
 #endif
+
     }
    }
   }

@@ -126,7 +126,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
    
    (*inputpars.jjj[l]).transitionnumber=1;
    fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-   i1=(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d); 
+   i1=(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l)); 
 
       // here Mijkl is a nxn matrix n ... numberofcomponents
    noftransitions(l)=0;
@@ -135,7 +135,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      fprintf(stdout," .... transition not stored because out of interval [minE,maxE]=[%g,%g]meV\n",minE,maxE);
      ++(*inputpars.jjj[l]).transitionnumber;
      fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-     (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d);
+     (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
      if((*inputpars.jjj[l]).transitionnumber>i1){fprintf(stderr,"ERROR mcdisp.ini: no transition found within energy in range [minE,maxE]=[%g,%g] found\n (within first crystallographic unit of magnetic unit cell)\n please increase energy range in option -maxE and -minE\n",minE,maxE);
                             exit(EXIT_FAILURE);}
      }
@@ -164,7 +164,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       
         (*inputpars.jjj[l]).transitionnumber=j1; // try calculation for transition  j
       fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d);
+      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
         (*inputpars.jjj[l]).transitionnumber=jmin; // put back transition number for 1st transition
       
       if ((minE<d&&d<maxE)||(minE<-d&&-d<maxE)) //only consider transition if it is in interval emin/emax
@@ -206,8 +206,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       for(ll=1;ll<=ini.nofcomponents;++ll)
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s in first 
                                                               //crystallographic unit of magnetic unit cell
-//       (*inputpars.jjj[l]).eigenstates(mf,ini.T);
-//       md.est_ini(i,j,k,l,(*inputpars.jjj[l]).est);
+
          md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T));
          if(NormFro(md.est(i,j,k,l))<SMALL){do_gobeyond=0;}
       }
@@ -236,7 +235,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
-      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d);
+      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
         (* inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
        j1=md.baseindex(i,j,k,l,jmin); 

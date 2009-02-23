@@ -146,9 +146,11 @@ int main (int argc, char **argv)
   Vector h(1,48);
   Vector moments(1,48);
   h=0; h(1)=gJ*MU_B*ha;h(2)=gJ*MU_B*hb;h(3)=gJ*MU_B*hc;
-  
+  int dj=(int)(2.0*(*iops).J+1);
+  ComplexMatrix ests(0,dj,1,dj);
+  ests=(*iops).cfeigenstates(h,T);
 //  cfield  has to be used to calculate all the <Olm>.
-  moments=(*iops).cfield(T,h,lnz,u);
+  moments=(*iops).cfield(T,h,lnz,u,ests);
   printf("Stevens factors: alpha beta gamma = %4g %4g %4g \n",tetan(2),tetan(4),tetan(6));
   printf("Lande Factor: gJ = %4g\n",gJ);
 

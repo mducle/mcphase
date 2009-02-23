@@ -48,7 +48,7 @@ int main (int argc, char **argv)
    T=1;
    h=0;for(i=1;i<=inputpars.nofcomponents;++i)h(i)=0.1;
   for(i=1;i<=inputpars.nofatoms;++i)
-  {nettom=(*inputpars.jjj[i]).mcalc(T,h,lnz,u); }
+  {nettom=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T)); }
 
   n1=strtol(argv[1],NULL,10);  
   n2=strtol(argv[2],NULL,10);  

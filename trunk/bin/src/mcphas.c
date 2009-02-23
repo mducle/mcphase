@@ -73,11 +73,11 @@ for(l=1;l<=inputpars.nofatoms;++l){cfin=fopen_errchk((*inputpars.jjj[l]).cffilen
                                   }
 
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
-T=1.0;for(l=1;l<=inputpars.nofatoms;++l){
+T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1,T); // initialize eigenstate matrix
       for (im=1;im<=inputpars.nofcomponents;++im){h1=0;
                             if((*inputpars.jjj[l]).gJ!=0){h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;}
                             else                         {h1(im)=20*MU_B;} //just put some high field
-                            mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u)(im);
+                            mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u,(*inputpars.jjj[l]).est)(im);
 			   }
                                         }
 for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}

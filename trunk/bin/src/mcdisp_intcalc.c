@@ -6,18 +6,20 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
  int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
- double intensity=1.2; intensitybey=1.2;
+ double intensity=1.2; 
  double ki,kf;
  complex <double> chileft;
  complex <double> chileftbey;
  float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
- Vector qxyz(1,3);
-    qxyz(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
-    qxyz(2)=hkl(2)*2*PI/inputpars.b;
-    qxyz(3)=hkl(3)*2*PI/inputpars.c;
-    QQ=Norm(qxyz);
+ Vector qabc(1,3);
+    qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
+    qabc(2)=hkl(2)*2*PI/inputpars.b;
+    qabc(3)=hkl(3)*2*PI/inputpars.c;
+    QQ=Norm(qabc);
 
-//***********************************************************************//
+
+if(intensitybey>0)
+{//***********************************************************************//
 // determine unitary transformation Matrix V (q)  Gamma and N for going beyond dip interaction
   Vector Gamma(1,ini.nofcomponents);
   complex<double> imaginary(0,1);
@@ -25,11 +27,15 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
   ComplexMatrix Nijkl(1,ini.nofcomponents,1,ini.nofcomponents);
   // transformation matrix Vij
   ComplexMatrix Vijkl(1,ini.nofcomponents,1,ini.nofcomponents);
-  FILE * fin; 
+  FILE * fin; //
   Vector mf(1,ini.nofcomponents);
-   int sort=0;int maxiter=1000000;
+   
+  int sort=0;int maxiter=1000000;
+
+
 
  for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
+  md.V(i,j,k)=0;  md.N(i,j,k)=0;
   for(l=1;l<=inputpars.nofatoms;++l){
   fin = fopen_errchk ("./results/mcdisp.trs","rb");
   jmin=0;
@@ -49,6 +55,7 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=-tn; // try calculation for transition  j
+      Vector qxyz(1,3);qxyz(1)=qabc(3);qxyz(2)=qabc(1);qxyz(3)=qabc(2);
       (*inputpars.jjj[l]).dncalc(qxyz,ini.T,Nijkl,md.est(i,j,k,l));
         (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
@@ -106,12 +113,15 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
 
 
 //**************************************************************************/
+}
  // determine chi
+
    ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    ComplexMatrix chibey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
 
 // determine chi
-     for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
+    
+ for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
 
 
 //     stau=(ini.mf.nb()*ini.mf.nc()*(i1-1)+ini.mf.nc()*(j1-1)+k1-1)*md.nofatoms;
@@ -133,13 +143,12 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
     for(i=1;i<=md.nofcomponents;++i){
     for(j=1;j<=md.nofcomponents;++j){
      chileft=PI*conj(md.sqrt_gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.U(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
-  chileftbey=PI*conj(md.sqrt_Gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.V(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
+if(intensitybey>0)chileftbey=PI*conj(md.sqrt_Gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.V(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
 
      chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
      chileft*conj(Tau(ss,level))*conj(md.U(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
-  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
-     chileft*conj(Tau(ss,level))*conj(md.V(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_Gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
-//     chileft*Tau.Conjugate().Transpose()(level,sstau+ja)*md.U(i2,j2,k2).Conjugate().Transpose()((ja-1)*md.nofcomponents+md.nofcomponents,(ja-1)*md.nofcomponents+j)*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*ja,md.nofcomponents*ja);
+if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
+     chileftbey*conj(Tau(ss,level))*conj(md.V(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_Gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);}
     }}
    }}}}
   }}}
@@ -167,7 +176,7 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
    }
   // bose=1.0;
    S=bose*2*chi;
-   Sbey=bose*2*chibey;
+if(intensitybey>0)  Sbey=bose*2*chibey;
    
  // polarization factor
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
@@ -175,7 +184,7 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
  Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
     pol=0;
     for(i=1;i<=3;++i){pol(i,i)=1.0;
-    for(j=1;j<=3;++j){pol(i,j)-=qxyz(i)*qxyz(j)/(qxyz*qxyz);
+    for(j=1;j<=3;++j){pol(i,j)-=qabc(i)*qabc(j)/(qabc*qabc);
     }}
 // yes and for intermediate coupling we need another polarization factor
 // because neutrons sense the first 6x6 part of S
@@ -216,13 +225,13 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ==0)
       {S(s+i,ss+j)*=polICIC(i,j); 
        S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
-       Sbey(s+i,ss+j)*=polICIC(i,j); 
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+if(intensitybey>0){Sbey(s+i,ss+j)*=polICIC(i,j);
+                   Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ);} //  debey waller factor
        if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
        S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+if(intensitybey>0) Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
        if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
@@ -230,21 +239,21 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ!=0)
       {S(s+i,ss+j)*=polICn(i,j); 
        S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
-       Sbey(s+i,ss+j)*=polICn(i,j); 
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+if(intensitybey>0){       Sbey(s+i,ss+j)*=polICn(i,j); 
+       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); }//  debey waller factor
        if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
        S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and debey waller factor
+if(intensitybey>0)  Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and debey waller factor
       }
       if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ==0)
       {S(s+i,ss+j)*=polnIC(i,j); 
        S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
        S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // debey waller factor
-       Sbey(s+i,ss+j)*=polnIC(i,j); 
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and  + debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+if(intensitybey>0){       Sbey(s+i,ss+j)*=polnIC(i,j); 
+       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and  + debey waller factor
+       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// debey waller factor
        if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
@@ -253,9 +262,9 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
       {S(s+i,ss+j)*=pol(i,j);
        S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
        S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
-       Sbey(s+i,ss+j)*=pol(i,j);
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and + debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and  + debey waller factor
+if(intensitybey>0){       Sbey(s+i,ss+j)*=pol(i,j);
+       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and + debey waller factor
+       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// and  + debey waller factor
       }
     }}   
   }}
@@ -266,7 +275,7 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
  // determine dsigma in barns per cryst unit cell !
  //divide by number of crystallographic unit cells  (ini.mf.n()) in magnetic unit cell
 intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
-intensitybey=abs(Sum(Sbey))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
+if(intensitybey>0){intensitybey=abs(Sum(Sbey))/ini.mf.n()/PI/2.0*3.65/4.0/PI; }else{intensitybey=-1;}
 
 // here should be entered factor  k/k' + absolute scale factor
 if (ini.ki==0)
@@ -389,15 +398,15 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
 // higher components in the polarization factor !!!
  Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
- Vector qxyz(1,3);
+ Vector qabc(1,3);
  pol=0;
-    qxyz(1)=hkl(1)/inputpars.a; // only correct for ortholattices !!!!
-    qxyz(2)=hkl(2)/inputpars.b;
-    qxyz(3)=hkl(3)/inputpars.c;
+    qabc(1)=hkl(1)/inputpars.a; // only correct for ortholattices !!!!
+    qabc(2)=hkl(2)/inputpars.b;
+    qabc(3)=hkl(3)/inputpars.c;
     for(i=1;i<=3;++i){pol(i,i)=1.0;
-    for(j=1;j<=3;++j){pol(i,j)-=qxyz(i)*qxyz(j)/(qxyz*qxyz);
+    for(j=1;j<=3;++j){pol(i,j)-=qabc(i)*qabc(j)/(qabc*qabc);
     }}
-    QQ=Norm(qxyz)*2*PI;
+    QQ=Norm(qabc)*2*PI;
 // yes and for intermediate coupling we need another polarization factor
 // because neutrons sense the first 6x6 part of S
     Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);

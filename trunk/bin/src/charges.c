@@ -246,6 +246,8 @@ int tt,ff,iii,iv;
 //  1. from the meanfieldconfiguration (savmf) the <Olm> have to be calculated for all l=2,4,6
 // 1.a: the mcphas.j has to be used to determine the structure + single ione properties (copy something from singleion.c)
 // 1.b: mcalc has to be used to calculate all the <Olm>.
+hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
+{(*inputpars.jjj[ii]).eigenstates(hh,T);} // initialize eigenstate matrices
 
  for (i=1;i<=savmf.na();++i){for(j=1;j<=savmf.nb();++j){for(k=1;k<=savmf.nc();++k)
  {
@@ -255,7 +257,7 @@ int tt,ff,iii,iv;
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
 
-            moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u); // here we trigger single ion 
+            moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
                                                            // module to calculate all 48
                                                            // higher order moments 
  

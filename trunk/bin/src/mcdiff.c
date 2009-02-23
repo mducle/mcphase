@@ -868,7 +868,7 @@ for(i=1;i<=natmagnetic;++i){
 			      else
 			      {// beyond formalism for rare earth		    
                                // do some consistency checks
-                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U);
+                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,(*jjjpars[i]).est);
                                if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i\n",i);}
                                if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i\n",i);}
                                if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i\n",i);}

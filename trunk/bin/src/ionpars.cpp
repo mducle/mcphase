@@ -980,7 +980,7 @@ void ionpars::save_radial_wavefunction(const char * filename)
 //------------------------------------------------------------------------------------------------
 // ROUTINE CFIELD mcalc for full crystal field + higher order interactions
 //------------------------------------------------------------------------------------------------
-Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
+Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests)
 {//ABC not used !!!
     /*on input
     T		temperature[K]
@@ -995,7 +995,6 @@ Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U)
     Z		single ion partition function
     U		single ion magnetic energy
 */
-
 // check dimensions of vector
 if(gjmbH.Hi()>48)
    {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
@@ -1016,9 +1015,11 @@ if(gjmbH.Hi()>48)
 // 			   int sort, int maxiter)
 static Vector JJ(1,gjmbH.Hi());
    // setup hamiltonian
-   int dj,j;
+   int dj,i,j,k,l;
+   double hkl,mukl;
    dj=Hcf.Rhi();
    Matrix Ham(1,dj,1,dj);
+//   Matrix Tam(1,dj,1,dj); // transformed Hamiltonian
    ComplexMatrix z(1,dj,1,dj);
    ComplexMatrix za(1,dj,1,dj);
    ComplexMatrix zb(1,dj,1,dj);
@@ -1034,8 +1035,21 @@ static Vector JJ(1,gjmbH.Hi());
     for (j1=1;j1<=dj;++j1) printf ("%4.6g ",(*Olm[j])(i1,j1));
     printf ("\n");
     }*/
-      
-    
+   // use old eigenstates ests to transform matrix to nearly diagonal form ... however we deleted this because it needs more time to transform than to solve the eigenvalue problem
+/*   Tam=0;
+   for(i=1;i<=dj;++i){for(j=1;j<=dj;++j){
+   if(i<j){for(k=1;k<=dj;++k){for(l=1;l<=dj;++l){
+           if(k<l){hkl=Ham(l,k);mukl=-Ham(k,l);}else{hkl=Ham(k,l);if(k==l){mukl=0;}else{mukl=Ham(l,k);}}           
+           Tam(i,j)-=-imag(ests(k,i))*hkl*real(ests(l,j))+imag(ests(k,i))*mukl*imag(ests(l,j))+real(ests(k,i))*mukl*real(ests(l,j))+real(ests(k,i))*hkl*imag(ests(l,j));    
+           }}
+          }
+   else   {for(k=1;k<=dj;++k){for(l=1;l<=dj;++l){
+           if(k<l){hkl=Ham(l,k);mukl=-Ham(k,l);}else{hkl=Ham(k,l);if(k==l){mukl=0;}else{mukl=Ham(l,k);}}            
+           Tam(i,j)+=real(ests(k,i))*hkl*real(ests(l,j))-real(ests(k,i))*mukl*imag(ests(l,j))+imag(ests(k,i))*mukl*real(ests(l,j))+imag(ests(k,i))*hkl*imag(ests(l,j));
+           }}
+          }
+   }}         
+  */  
    // diagonalize
    Vector En(1,dj);Matrix zr(1,dj,1,dj);Matrix zi(1,dj,1,dj);
    int sort=0;int maxiter=1000000;
@@ -1044,7 +1058,7 @@ static Vector JJ(1,gjmbH.Hi());
 
    // calculate Z and wn (occupation probability)
      Vector wn(1,dj);
-     double x,y;int i;
+     double x,y;
      x=Min(En);
      double Zs;
 
@@ -1079,7 +1093,12 @@ static Vector JJ(1,gjmbH.Hi());
      U=En*wn;
    // calculate Ja,Jb,Jc
      z=ComplexMatrix(zr,zi);
-    
+//     z=ests(1,dj,1,dj)*z; // transform to original eigenstates ... however we deleted this because it needs more time to transform than to solve the eigenvalue problem
+//     ests(1,dj,1,dj)=z;
+//     for (i=1;i<=dj;++i) {ests(0,i)=complex <double> (En(i),wn(i));}
+//     myPrintComplexMat(stdout,ests);     
+//     myPrintComplexMat(stdout,z);     
+     
      za=Jaa*z;
      zb=Jbb*z;
      zc=Jcc*z;
@@ -1179,7 +1198,7 @@ static ComplexMatrix eigenstates(0,dj,1,dj);
 
 /**************************************************************************/
 // for mcdisp this routine is needed
-int ionpars::cfielddm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
+int ionpars::cfielddm(int & tn,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta,ComplexMatrix & ests)
 {  /*on input
     tn      ... number of transition to be computed 
     sign(tn)... 1... without printout, -1 with extensive printout
@@ -1213,7 +1232,7 @@ if(gjmbH.Hi()>48)
 
 static Vector JJ(1,gjmbH.Hi());
 double lnz,u;
-JJ=cfield(T,gjmbH,lnz,u);  //expectation values <J>
+JJ=cfield(T,gjmbH,lnz,u,ests);  //expectation values <J>
   int pr;
   pr=1;
   if (tn<0) {pr=0;tn*=-1;}

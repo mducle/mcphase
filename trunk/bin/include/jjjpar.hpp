@@ -17,6 +17,8 @@
 
 #ifdef __linux__
 #include<dlfcn.h>
+#else
+#include <windows.h>
 #endif
 
 
@@ -26,10 +28,10 @@ class jjjpar
   public:
    
    // subroutine to calculate momentum <J> from effective field gjmbH [meV]
-   Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U);
+   Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U,ComplexMatrix & ests);
 
    // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
-   int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta);
+   int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);
    int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
 
    // returns transition element matrix N(Q) in order to be able to go beyond 
@@ -106,12 +108,20 @@ class jjjpar
   int intern_mcalc;
 
   // external module functions, intern_mcalc=0
-  void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*);  
-  int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*);
+  void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);  
+  int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*);
   int  (*ddnn)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*);
+
   void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
+  
   void (*estates)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
+  
+#ifdef __linux__
   void *handle;
+#else
+//  HANDLE handle;
+  HINSTANCE__* handle;
+#endif
 
   // kramers internal module functions, intern_mcalc=1
   Vector & kramer (double & T,Vector & H, double & Z,double & U);
