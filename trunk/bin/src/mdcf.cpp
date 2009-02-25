@@ -119,9 +119,10 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
   if (lb == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   d = new Vector * [mxa*mxb*mxc+1]; //(1,nofatoms);
   if (d == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);}
-  nt= new IntVector [mxa*mxb*mxc+1];for(i=0;i<=mxa*mxb*mxc;++i){nt[i]=IntVector(1,nofatoms);}
+  nt= new IntVector * [mxa*mxb*mxc+1];
   if (nt == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
-  
+  for(i=0;i<=mxa*mxb*mxc;++i){nt[i]=new IntVector(1,nofatoms);}
+
   eigenstates= new ComplexMatrix * [mxa*mxb*mxc*nofatoms+1];   
   if (eigenstates == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   
@@ -138,14 +139,14 @@ void mdcf::est_ini(int i, int j, int k, int l,ComplexMatrix & M) // initialize e
 // has to be called before mdcf object can be used for calculation
 void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)
 {      
-      nt[in(i,j,k)]=notr;
-     s[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     m[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     l[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     sb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     mb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     lb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-     d[in(i,j,k)]= new Vector(1,sum(nt[in(i,j,k)]));
+      (*nt[in(i,j,k)])=notr;
+     s[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     m[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     l[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     sb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     mb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     lb[in(i,j,k)]= new ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+     d[in(i,j,k)]= new Vector(1,sum((*nt[in(i,j,k)])));
       
 }
 
@@ -158,17 +159,17 @@ int mdcf::baseindex(int i, int j, int k, int l, int tn)
   int bi=0;
   int i1;
 for(i1=1;i1<=l;++i1)
-{bi+=nt[in(i,j,k)](i1);}
-bi-=nt[in(i,j,k)](l);
+{bi+=(*nt[in(i,j,k)])(i1);}
+bi-=(*nt[in(i,j,k)])(l);
 bi+=tn;
 return bi;
 }
 
 int mdcf::baseindex_max(int i, int j, int k)
-{return sum(nt[in(i,j,k)]);}
+{return sum((*nt[in(i,j,k)]));}
 
 int mdcf::noft(int i, int j, int k,int l)
-{return nt[in(i,j,k)](l);}
+{return (*nt[in(i,j,k)])(l);}
 
 //destruktor
 mdcf::~mdcf ()
@@ -217,12 +218,12 @@ mdcf::mdcf (const mdcf & p)
   {for (j=1;j<=nofb;++j)
     {for (k=1;k<=nofc;++k)
      {
-      nt[in(i,j,k)]=p.nt[in(i,j,k)];
+      (*nt[in(i,j,k)])=p.(*nt[in(i,j,k)]);
 
-      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      d[in(i,j,k)]= Vector(1,sum(nt[in(i,j,k)]),1,sum(nt[in(i,j,k)]));
+      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      d[in(i,j,k)]= Vector(1,sum((*nt[in(i,j,k)])),1,sum((*nt[in(i,j,k)])));
 
       d[in(i,j,k)]=p.d[in(i,j,k)];
       s[in(i,j,k)]=p.s[in(i,j,k)];
@@ -260,12 +261,12 @@ mdcf & mdcf::operator= (const mdcf & op2)
   {for (j=1;j<=nofb;++j)
     {for (k=1;k<=nofc;++k)
      {
-      nt[in(i,j,k)]=op2.nt[in(i,j,k)];
+      (*nt[in(i,j,k)])=op2.(*nt[in(i,j,k)]);
       
-      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum(nt[in(i,j,k)]),1,nofcomponents*sum(nt[in(i,j,k)]));
-      d[in(i,j,k)]= Vector(1,sum(nt[in(i,j,k)]),1,sum(nt[in(i,j,k)]));
+      s[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      m[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      l[in(i,j,k)]= ComplexMatrix(1,nofcomponents*sum((*nt[in(i,j,k)])),1,nofcomponents*sum((*nt[in(i,j,k)])));
+      d[in(i,j,k)]= Vector(1,sum((*nt[in(i,j,k)])),1,sum((*nt[in(i,j,k)])));
            
       d[in(i,j,k)]=op2.d[in(i,j,k)];
 

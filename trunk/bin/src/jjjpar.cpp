@@ -44,7 +44,7 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,Com
 // for effective field heff and temperature given on input
 /****************************************************************************/
 int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delta,ComplexMatrix & ests)
-{switch (intern_mcalc)
+{ switch (intern_mcalc)
   {case 0: if (dm!=NULL){return (*dm)(&transitionnumber,&T,&gjmbheff,&gJ,&ABC,&cffilename,&mat,&delta,&ests);}
            else return 0;
            break;
@@ -71,9 +71,22 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
 
 /****************************************************************************/
 // returns transition element matrix N(Q) in order to be able to go beyond 
-
+//
 // dipolar approximation in mcdisp - it requires a call to eigenstates first
-
+//
+//on input
+//    transitionnumber has to be set correctly to that one which is to be computed 
+//    sign(transitionnumber)... 1... without printout, -1 with extensive printout
+//    est		matrix with eigenstates, eigenvalues [meV], population numbers
+//    T                 temperature
+//     Q                 Qvector in euclidian coordinates xyz||cab
+//  on output    
+//    int   	total number of transitions
+//    N(i,j)	<-|Q|+><+|Q|-> (n+-n-),  n+,n- population numbers 
+//    with Q the scattering operator according to Lovesey 11.4, p 222, eq 6.87b
+//     (note that  <M(Q)>=-2x<Q>_TH in units of mb)
+//    .... occupation number of states (- to + transition chosen according to transitionnumber)
+//   
 /****************************************************************************/
 int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix & ests)
 
@@ -601,7 +614,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
   magFFj6=Vector(1,7);magFFj6=0;
   Zc=Vector(1,7);Zc=0;
 
-  DWF=0;  
+  DWF=0;  gJ=0;
 
   cf_file = fopen_errchk (cffilename, "rb");
 
@@ -658,7 +671,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 // check gJ
 if(intern_mcalc==2&&fabs(gJ-(*iops).gJ)>0.00001)
 {fprintf(stderr,"Error internal module cfield : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",cffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
-if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sy Jb=Ly Jc=Sz Jd=Lz Je=Sx Jf=Lx\n",cffilename);
+if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sx Jb=Lx Jc=Sy Jd=Ly Je=Sz Jf=Lz\n",cffilename);
            if (intern_mcalc==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (intern_mcalc==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (intern_mcalc==3){fprintf(stderr,"Error internal module brillouin: intermediate coupling not supported\n");exit(EXIT_FAILURE);}

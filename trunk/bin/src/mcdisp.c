@@ -124,6 +124,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s in first 
                                                               //crystallographic unit of magnetic unit cell
    
+   md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T)); 
    (*inputpars.jjj[l]).transitionnumber=1;
    fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
    i1=(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l)); 
@@ -166,6 +167,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
       (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
         (*inputpars.jjj[l]).transitionnumber=jmin; // put back transition number for 1st transition
+   //printf("noftransitions read by mcdisp: %i",i1);
       
       if ((minE<d&&d<maxE)||(minE<-d&&-d<maxE)) //only consider transition if it is in interval emin/emax
      { 
@@ -207,7 +209,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s in first 
                                                               //crystallographic unit of magnetic unit cell
 
-         md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T));
+       if(do_readtrs!=0)md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T)); // initialize ests if not already done above
          if(NormFro(md.est(i,j,k,l))<SMALL){do_gobeyond=0;}
       }
     md.U(i,j,k)=0; // initialize transformation matrix U
@@ -724,7 +726,7 @@ diffint=0;diffintbey=0;
 //*************************************************************************************************
 // main program
 int main (int argc, char **argv)
-{int i,do_Erefine=0,do_jqfile=0,do_verbose=0,maxlevels=100,do_createtrs=0,do_readtrs=0;
+{int i,do_Erefine=0,do_jqfile=0,do_verbose=0,maxlevels=10000000,do_createtrs=0,do_readtrs=0;
  const char * spinfile="mcdisp.mf"; //default spin-configuration-input file
  double epsilon; //imaginary part of omega to avoid divergence
  double minE=-100000.0,maxE=+100000.0;
@@ -765,7 +767,8 @@ inimcdis ini("mcdisp.ini",spinfile);
 if (argc > 10) {ini.errexit();}
   // as class load  parameters from file
   par inputpars("./mcphas.j");
-  
+  if(ini.nofcomponents!=inputpars.nofcomponents){fprintf(stderr,"Error mcdisp: number of components read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofcomponents,inputpars.nofcomponents);exit(1);}
+  if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
 
   //calculate dispersion and save on file
   dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,maxlevels,minE,maxE,epsilon);

@@ -1349,8 +1349,8 @@ int ionpars::cfielddn(int & tn,double & th,double & ph,double & J0,double & J2,d
     tn      ... number of transition to be computed 
     sign(tn)... 1... without printout, -1 with extensive printout
     est		matrix with eigenstates, eigenvalues [meV], population numbers
-    gjmbH	vector of effective field [meV]
-  on output    
+    th ph  .... polar angles of the scattering vector with respect to xyz=cab coordinate system  
+on output    
     int   	total number of transitions
     N(i,j)	<-|Q|+><+|Q|-> (n+-n-),  n+,n-
      // note that  <M(Q)>=-2x<Q>_TH in units of mb

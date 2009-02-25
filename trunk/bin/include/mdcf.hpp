@@ -21,7 +21,7 @@ class mdcf
    ComplexMatrix ** sb; //matrix to store V
    ComplexMatrix ** lb; //matrix to store eigenvalues sqrt_gamma
    Vector ** d;
-   IntVector * nt; // vector to store number of transitions for each atom
+   IntVector ** nt; // vector to store number of transitions for each atom
    ComplexMatrix ** eigenstates; // matrix to store the eigenstates of ions
    int iv[4];
        
