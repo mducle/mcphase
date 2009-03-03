@@ -79,7 +79,7 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
 //    sign(transitionnumber)... 1... without printout, -1 with extensive printout
 //    est		matrix with eigenstates, eigenvalues [meV], population numbers
 //    T                 temperature
-//     Q                 Qvector in euclidian coordinates xyz||cab
+//     Q                 components of Qvector in euclidian coordinates 123=abc
 //  on output    
 //    int   	total number of transitions
 //    N(i,j)	<-|Q|+><+|Q|-> (n+-n-),  n+,n- population numbers 
@@ -91,7 +91,7 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
 int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix & ests)
 
 {double J0,J2,J4,J6;
- double Q,d,s;
+ double Q,d,s,th,ph;
             Q = Norm(Qvec); //dspacing
             d = 2.0 * PI / Q; s=0.5 / d; 
       J0=magFFj0(1)*exp(-magFFj0(2)*s*s)+magFFj0(3)*exp(-magFFj0(4)*s*s)+magFFj0(5)*exp(-magFFj0(6)*s*s)+magFFj0(7);
@@ -102,21 +102,14 @@ int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix &
       J6=magFFj6(1)*exp(-magFFj6(2)*s*s)+magFFj6(3)*exp(-magFFj6(4)*s*s)+magFFj6(5)*exp(-magFFj6(6)*s*s)+magFFj6(7);
       J6*=s*s;
 	 // calculate th and ph (polar angles of Q with respect to xyz of CEF)
-         double th,ph,Qx,Qy,Qz;							 
-	 Qx=Qvec(1);Qy=Qvec(2);Qz=Qvec(3);
-	 th=acos(Qz/Q);
-	 if(sin(th)>=SMALL){
-	                    if(Qx>0){ph=acos(Qx/(Q*sin(th))-SMALL);}
-			    else    {ph=acos(Qx/(Q*sin(th))+SMALL);}
-			   }
-			 else{ph=0;}
-	 if (Qy<0){ph=2*PI-ph;} 
-
  switch (intern_mcalc)
   {static int washere=0;
    
-   case 0:if (ddnn!=NULL){return (*ddnn)(&transitionnumber,&th,&ph,&J0,&J2,&J4,&J6,&ests,&T,&nat);break;}
-   case 2:return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
+   case 0:if (ddnn!=NULL){getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph);
+                          return (*ddnn)(&transitionnumber,&th,&ph,&J0,&J2,&J4,&J6,&ests,&T,&nat);break;}
+          else {return 0;}
+   case 2: getpolar(Qvec(3),Qvec(1),Qvec(2),Q,th,ph); // for internal module cfield xyz||cba and we have to give cfielddn polar angles with respect to xyz
+           return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
    default: if(washere==0){fprintf(stderr,"Warning in scattering operator function dncalc - for ion %s \ngoing beyond dipolar approximation is not implemented\n",cffilename);
                            washere=1;}
             return 0;
@@ -130,10 +123,11 @@ int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix &
 /****************************************************************************/
 // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
 // according to stored eigenstate matrix est
+// input: Qvec ..... Q Vector components 123=xyz=cab
 /****************************************************************************/
 ComplexVector & jjjpar::MQ(Vector & Qvec)
 {double J0,J2,J4,J6;
- double Q,d,s;
+ double Q,d,s,th,ph;
             Q = Norm(Qvec); //dspacing
             d = 2.0 * PI / Q; s=0.5 / d; 
       J0=magFFj0(1)*exp(-magFFj0(2)*s*s)+magFFj0(3)*exp(-magFFj0(4)*s*s)+magFFj0(5)*exp(-magFFj0(6)*s*s)+magFFj0(7);
@@ -143,20 +137,17 @@ ComplexVector & jjjpar::MQ(Vector & Qvec)
       J4*=s*s;
       J6=magFFj6(1)*exp(-magFFj6(2)*s*s)+magFFj6(3)*exp(-magFFj6(4)*s*s)+magFFj6(5)*exp(-magFFj6(6)*s*s)+magFFj6(7);
       J6*=s*s;
-	 // calculate th and ph (polar angles of Q with respect to xyz of CEF)
-         double th,ph,Qx,Qy,Qz;							 
-	 Qx=Qvec(1);Qy=Qvec(2);Qz=Qvec(3);
-	 th=acos(Qz/Q);
-	 if(sin(th)>=SMALL){
-	                    if(Qx>0){ph=acos(Qx/(Q*sin(th))-SMALL);}
-			    else    {ph=acos(Qx/(Q*sin(th))+SMALL);}
-			   }
-			 else{ph=0;}
-	 if (Qy<0){ph=2*PI-ph;} 
-
- switch (intern_mcalc)
-  {case 0: (*mq)(&Mq,&th,&ph,&J0,&J2,&J4,&J6,&est);return Mq;break;
-   case 2: return (*iops).MQ(th,ph,J0,J2,J4,J6,Zc,est);break;
+            complex<double>dummy;
+switch (intern_mcalc)
+  {case 0:  getpolar(Qvec(2),Qvec(3),Qvec(1),Q,th,ph); // for external module we must provide th and ph with respect 
+                                                       // to abc coordinate system
+            (*mq)(&Mq,&th,&ph,&J0,&J2,&J4,&J6,&est);
+             // external module provide Mq(123)=Mq(abc)
+             // we must transform this to mcdiff internal xyz||cab coordinate system
+            dummy=Mq(3);Mq(3)=Mq(2);Mq(2)=Mq(1);Mq(1)=dummy;
+            return Mq;break;
+   case 2:  getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph); // internal module cfield does not need transformation
+            return (*iops).MQ(th,ph,J0,J2,J4,J6,Zc,est);break;
    default: fprintf(stderr,"ERROR in scattering operator function M(Q) for ion %s \nM(Q) is currently only implemented for internal module cfield:\n",cffilename);exit(EXIT_FAILURE);
   }
 }
@@ -186,6 +177,18 @@ ComplexVector & jjjpar::MQ(Vector & Qvec)
     s=Q/4/PI;
     return exp(-2*DWF*s*s);
    }
+
+// calculates polar coordinates from Vector X(1..3)
+void jjjpar::getpolar(double x,double y, double z, double & r, double & th, double & ph)
+{	 r=sqrt(x*x+y*y+z*z);
+         th=acos(z/r);
+	 if(sin(th)>=SMALL){
+	                    if(x>0) {ph=acos(x/(r*sin(th))-SMALL);}
+			    else    {ph=acos(x/(r*sin(th))+SMALL);}
+			   }
+			 else{ph=0;}
+	 if (y<0){ph=2*PI-ph;} 
+}
 
 
 // returns total angular momentum quantum number J

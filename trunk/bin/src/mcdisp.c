@@ -210,8 +210,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
                                                               //crystallographic unit of magnetic unit cell
 
        if(do_readtrs!=0)md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T)); // initialize ests if not already done above
-         if(NormFro(md.est(i,j,k,l))<SMALL){do_gobeyond=0;}
-      }
+       }
     md.U(i,j,k)=0; // initialize transformation matrix U
     md.M(i,j,k)=0; // initialize matrix M
     md.sqrt_gamma(i,j,k)=0; // and sqrt(gamma^s) matrix sqrt_gamma
@@ -624,6 +623,7 @@ diffint=0;diffintbey=0;
 		   //}}} 
 		     if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
                      ints(i)=intcalc_approx(intsbey(i),dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+                     if(intsbey(i)<0)do_gobeyond=0;
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
                      fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));

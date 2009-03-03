@@ -20,6 +20,7 @@ double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int lev
 
 if(intensitybey>0)
 {//***********************************************************************//
+if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
 // determine unitary transformation Matrix V (q)  Gamma and N for going beyond dip interaction
   Vector Gamma(1,ini.nofcomponents);
   complex<double> imaginary(0,1);
@@ -39,7 +40,7 @@ if(intensitybey>0)
   for(l=1;l<=inputpars.nofatoms;++l){
   fin = fopen_errchk ("./results/mcdisp.trs","rb");
   jmin=0;
-  while (feof(fin)==0)
+  while (feof(fin)==0&&intensitybey>0)
   {if ((i1=inputline(fin,nn))>=5)
    {if(i==(int)nn[1]&&j==(int)nn[2]&&k==(int)nn[3]&&l==(int)nn[4])
     {tn=(int)nn[5];++jmin;  
@@ -55,10 +56,14 @@ if(intensitybey>0)
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=-tn; // try calculation for transition  j
-      Vector qxyz(1,3);qxyz(1)=qabc(3);qxyz(2)=qabc(1);qxyz(3)=qabc(2);
-      (*inputpars.jjj[l]).dncalc(qxyz,ini.T,Nijkl,md.est(i,j,k,l));
-        (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
-
+      int nnt;
+      nnt=(*inputpars.jjj[l]).dncalc(qabc,ini.T,Nijkl,md.est(i,j,k,l));
+      (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
+      if(nnt==0)
+      {if(do_verbose)printf("warning mcdisp - function dncalc not implemented for single ion module, only doing dipolar intensity\n");
+       intensitybey=-1.1;}
+      else
+      {
        j1=md.baseindex(i,j,k,l,jmin); 
       
 //       if(fabs(fabs(d)-fabs(nn[6]))>SMALLEDIF)
@@ -67,7 +72,7 @@ if(intensitybey>0)
 //       md.delta(i,j,k)(j1)=nn[6]; // set delta
      // diagonalizeMs to get unitary transformation matrix Us
      myEigenSystemHermitean (Nijkl,Gamma,Vijkl,sort=1,maxiter); 
-	// conjugate:note the eigensystemhgermitean returns eigenvectors as column vectors, but
+	// conjugate:note the eigensystemhermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
          // treat correctly case for neutron energy loss
@@ -101,7 +106,7 @@ if(intensitybey>0)
         md.V(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Vijkl(m,n);
         md.N(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Nijkl(m,n);
         }}    
-
+       }
     }}}
     fclose(fin);
 
