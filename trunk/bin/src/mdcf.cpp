@@ -79,7 +79,9 @@ int mdcf::in(int i, int j, int k)
 
 // get number of cf from indizes i,j,k,l
 int mdcf::ind(int i, int j, int k, int l)
-{return (((i*mxb+j)*mxc+k)*nofatoms+l);}
+{int indd=(((i*mxb+j)*mxc+k)*nofatoms+l);
+ if(indd<0||indd>mxa*mxb*mxc*(nofatoms+1)) {fprintf(stderr,"mdcf indexing error");exit(EXIT_FAILURE);}
+ return indd;}
 
 // return number of cfs
 int mdcf::n()
@@ -123,7 +125,7 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
   if (nt == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   for(i=0;i<=mxa*mxb*mxc;++i){nt[i]=new IntVector(1,nofatoms);}
 
-  eigenstates= new ComplexMatrix * [mxa*mxb*mxc*nofatoms+1];   
+  eigenstates= new ComplexMatrix * [mxa*mxb*mxc*(nofatoms+1)+1];   
   if (eigenstates == NULL){ fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   
 
@@ -132,9 +134,9 @@ mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
 ComplexMatrix & mdcf::est(int i, int j, int k, int l)
 {return (*eigenstates[ind(i,j,k,l)]);}
 
+
 void mdcf::est_ini(int i, int j, int k, int l,ComplexMatrix & M) // initialize est
-{eigenstates[ind(i,j,k,l)]=new ComplexMatrix(M.Rlo(),M.Rhi(),M.Clo(),M.Chi());
- (*eigenstates[ind(i,j,k,l)])=M;}
+{eigenstates[ind(i,j,k,l)]=new ComplexMatrix(M);}
 
 // has to be called before mdcf object can be used for calculation
 void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)

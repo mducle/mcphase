@@ -34,7 +34,8 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,Com
   {case 1: return kramer(T,gjmbH,lnZ,U);break;
    case 2: return (*iops).cfield(T,gjmbH,lnZ,U,ests);break;
    case 3: return brillouin(T,gjmbH,lnZ,U);break;
-   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);return mom;
+   default: static Vector returnmoment(gjmbH.Lo(),gjmbH.Hi());
+            (*m)(&returnmoment,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);return returnmoment;
   }
 }
 
@@ -481,7 +482,9 @@ jjjpar::jjjpar(double x,double y,double z, char * sipffile)
 {xyz=Vector(1,3);xyz(1)=x;xyz(2)=y;xyz(3)=z;
   mom=Vector(1,9); mom=0; 
   Mq=ComplexVector(1,3);
- get_parameters_from_sipfile(sipffile);
+  cffilename= new char [MAXNOFCHARINLINE];
+  strcpy(cffilename,sipffile);
+  get_parameters_from_sipfile(cffilename);
 
 }
 
@@ -602,8 +605,6 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
   ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
      if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",GetLastError(),modulefilename);}
   
-// fprintf (stderr,"\n Error: non Linux operating system - external loadable modules not supported\n");
-// exit(EXIT_FAILURE);
 #endif
 
     }
@@ -674,7 +675,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 // check gJ
 if(intern_mcalc==2&&fabs(gJ-(*iops).gJ)>0.00001)
 {fprintf(stderr,"Error internal module cfield : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",cffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
-if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sx Jb=Lx Jc=Sy Jd=Ly Je=Sz Jf=Lz\n",cffilename);
+if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc (S... Spin, L... angular momentum)\n",cffilename);
            if (intern_mcalc==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (intern_mcalc==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (intern_mcalc==3){fprintf(stderr,"Error internal module brillouin: intermediate coupling not supported\n");exit(EXIT_FAILURE);}

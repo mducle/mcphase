@@ -117,13 +117,14 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
 					               }
-                                             if(J[i]==-3){ // go beyond dipole approximation for gJ=0
+                                     if(J[i]==-3){ // go beyond dipole approximation for gJ=0
                                                        ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
-					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);
+//                                             printf("MQxyz=(%g %+g i, %g %+g i,%g %+g i)",real(MQ(1)),imag(MQ(1)),real(MQ(2)),imag(MQ(2)),real(MQ(3)),imag(MQ(3)));
+					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);//MQ(123)=MQ(xyz)
 					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
 					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
-                                                        FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
-                                                        msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+                                             FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
+                                              msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
 					                msfdipy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
 					                msfdipx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
@@ -846,9 +847,14 @@ for(i=1;i<=natmagnetic;++i){
                               // store moment and components of S and L (if given)
                               for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
                               if((*jjjpars[i]).gJ==0){if(j>=15){J[i]=-2; // do not use input moment but spin and angular momentum for calculation
+                               // do some consistency checks
+                               if (fabs((*jjjpars[i]).mom(1)-2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5))>0.001){fprintf(stderr,"Warning mcdiff: a-component magnetic moment and <La>+2<Sa> not consistent for atom %i - setting moment=<L>+2<S> \n",i);}
+                               if (fabs((*jjjpars[i]).mom(2)-2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7))>0.001){fprintf(stderr,"Warning mcdiff: b-component magnetic moment and <Lb>+2<Sb> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
+                               if (fabs((*jjjpars[i]).mom(3)-2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9))>0.001){fprintf(stderr,"Warning mcdiff: c-component magnetic moment and <Lc>+2<Sc> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
                             (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
                             (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
-                            (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);}
+                            (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
+                                                      }
                                                       else {(*jjjpars[i]).gJ=2;} // just use spin formfactor
                                        }
                             instr[0]='#';
@@ -862,21 +868,29 @@ for(i=1;i<=natmagnetic;++i){
                               j=inputline(fin_coq,numbers);printf("dimension of mf = %i\n",j);
                               Vector heff(1,j);for(k=1;k<=j;++k){heff(k)=numbers[k];}
                               if ((*jjjpars[i]).gJ==0)
-			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
- 			       (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
+ 			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
+   			             (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
+                               // do some consistency checks
+                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,(*jjjpars[i]).est);
+                               for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
+                                                  (*jjjpars[i]).mom(3+k)=moment(k);
+                                                 }
+                               (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
+                               (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
+                               (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
 			      }
 			      else
 			      {// beyond formalism for rare earth		    
+                               (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
                                // do some consistency checks
                                Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,(*jjjpars[i]).est);
-                               if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i\n",i);}
-                               if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i\n",i);}
-                               if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i\n",i);}
+                               if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
+                               if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
+                               if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                (*jjjpars[i]).mom(1)=(*jjjpars[i]).gJ*moment(1);
                                (*jjjpars[i]).mom(2)=(*jjjpars[i]).gJ*moment(2);
                                (*jjjpars[i]).mom(3)=(*jjjpars[i]).gJ*moment(3);
                             
-                               (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
                      
                                if(Norm((*jjjpars[i]).Zc)==0){fprintf(stderr,"WARNING mcdiff: Z(K) coefficients not found or zero in file %s\n",cffilename);}
                                }
@@ -885,7 +899,7 @@ for(i=1;i<=natmagnetic;++i){
  			      }
 
                              if((*jjjpars[i]).SLR==0){fprintf(stderr,"WARNING mcdiff: SCATTERINGLENGTHREAL not found or zero in file %s\n",cffilename);}
-                             if((*jjjpars[i]).gJ==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s - gJ=0 means Ja=Sy Jb=Ly Jc=Sz Jd=Lz Je=Sx Jf=Lx !\n",cffilename);}
+//                             if((*jjjpars[i]).gJ==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s - gJ=0 means Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc !\n",cffilename);}
                              if(Norm((*jjjpars[i]).magFFj0)==0){fprintf(stderr,"WARNING mcdiff: <j0(Q)> coefficients not found or zero in file %s\n",cffilename);}
                              if(Norm((*jjjpars[i]).magFFj2)==0){fprintf(stderr,"WARNING mcdiff: <j2(Q)> coefficients not found or zero in file %s\n",cffilename);}
                            }

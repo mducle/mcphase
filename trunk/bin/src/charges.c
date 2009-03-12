@@ -95,7 +95,7 @@ int main (int argc, char **argv)
 // ComplexMatrix * eigenstates[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
-
+  int ext_nof_components=48;
 // check command line
   if (argc < 5)
     { printf (" program charges - display charges at HT point\n\
@@ -151,8 +151,8 @@ abc=0;char *token;
                    extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
                    extract(instr,"gJ",gJ[n]);
   if (gJ[n]==0)
-  {fprintf(stderr,"ERROR program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet\n",n);exit(EXIT_FAILURE);}
-  
+  {ext_nof_components=6;fprintf(stderr,"WARNING program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet, will create only charges.out and no chargeplot charges.jvx\n",n);}
+     
 //		   printf("%s\n",cffilenames[n]);
                   }
   }
@@ -222,10 +222,10 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
   Vector rrttff(1,3,1,3);
 int tt,ff,iii,iv;
   
-  Vector h(1,48);
-  Vector moments(1,48);
+  Vector h(1,ext_nof_components);
+  Vector moments(1,ext_nof_components);
   Vector hh(1,savmf.nofcomponents*savmf.nofatoms);
-  spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,48);
+  spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,ext_nof_components);
   chargedensity * cd[savmf.na()*savmf.nb()*savmf.nc()*savmf.nofatoms+1];
   for(i=1;i<=savmf.na()*savmf.nb()*savmf.nc()*savmf.nofatoms;++i)cd[i]=new chargedensity(dtheta,dfi);
 
@@ -258,7 +258,7 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
 
             moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
-                                                           // module to calculate all 48
+                                                           // module to calculate all 48 (ext_nof_components)
                                                            // higher order moments 
  
 
@@ -271,9 +271,9 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
 	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
                      for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}else{fprintf(fout," %4.4f",2*moments(nt)+moments(nt+3));}}
-                     for(nt=1;nt<=48;++nt)                                                               // this else is not yet implemented: gJ=0 means intermediate coupling
-		        {extendedspincf.m(i,j,k)(nt+48*(ii-1))=moments(nt);
-                         fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+48*(ii-1)));}
+                     for(nt=1;nt<=ext_nof_components;++nt)                                               // this else is not yet implemented: gJ=0 means intermediate coupling
+		        {extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1))=moments(nt);
+                         fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1)));}
                          fprintf(fout,"\n");
                       fprintf(fout,"                  corresponding effective fields gjmbHeff [meV]-->          ");
                       for(nt=1;nt<=savmf.nofcomponents;++nt)  // printout meanfields
@@ -282,6 +282,9 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
                              
 //	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
 							   // ... and the eigenvalues + eigenvectors !
+
+fclose(fout);
+if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
 
 
 // mind  if there is kramers or another si module, not all the Olm vectors are available - then we plot a sphere
@@ -386,8 +389,6 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 
 
   }}}}
-//  extendedspincf.printall(fout,abc,r,x,y,z,cffilenames);
-  fclose(fout);
 
 
 

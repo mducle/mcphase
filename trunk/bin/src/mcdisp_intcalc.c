@@ -56,6 +56,7 @@ if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=-tn; // try calculation for transition  j
+        if(do_verbose==1)(*inputpars.jjj[l]).transitionnumber=tn;
       int nnt;
       nnt=(*inputpars.jjj[l]).dncalc(qabc,ini.T,Nijkl,md.est(i,j,k,l));
       (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition

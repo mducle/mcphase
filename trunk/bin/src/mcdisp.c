@@ -208,9 +208,9 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       for(ll=1;ll<=ini.nofcomponents;++ll)
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s in first 
                                                               //crystallographic unit of magnetic unit cell
-
        if(do_readtrs!=0)md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T)); // initialize ests if not already done above
        }
+
     md.U(i,j,k)=0; // initialize transformation matrix U
     md.M(i,j,k)=0; // initialize matrix M
     md.sqrt_gamma(i,j,k)=0; // and sqrt(gamma^s) matrix sqrt_gamma
@@ -627,7 +627,7 @@ diffint=0;diffintbey=0;
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
                      fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
-                 if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g",ints(i),intsbey(i));}
+                 if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
@@ -637,7 +637,10 @@ diffint=0;diffintbey=0;
             fout1 = fopen_errchk ("./results/.mcdisp.qom","w");
             fprintf (fout1, "#{%s ",MCDISPVERSION);
             curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout1);
-            fprintf (fout1,"\n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] intensities(dip approx for FF) [barn/meV/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+            fprintf (fout1, "#displayytext=I(barns/meV/sr/f.u.)\n");
+            fprintf (fout1, "#displayxtext=E(meV)\n");
+            fprintf (fout1, "#displaytitle=(%4.4f %4.4f %4.4f)\n",hkl(1),hkl(2),hkl(3));
+            fprintf (fout1,"#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] intensities(dip approx for FF) [barn/meV/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 		     if (do_Erefine==0) epsilon=(Max(En)-Min(En))/100;
 		     if (epsilon<=0) epsilon=0.1;
                   for (i=1;i<=dimA;++i)
@@ -659,9 +662,9 @@ diffint=0;diffintbey=0;
                        {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 	                fprintf (fout1, " %4.4g 0 %4.4g %4.4g \n",En(i),En(i)-epsilon+E*epsilon*epsilon/intsbey(i),E);
 		       }
-		       for (E=ints(i)/epsilon;E>=0;E-=ints(i)/2/epsilon/10)
+		       for (E=intsbey(i)/epsilon;E>=0;E-=intsbey(i)/2/epsilon/10)
                        {fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
-	                fprintf (fout1, " %4.4g 0 %4.4g %4.4g 0 \n",En(i),En(i)+epsilon-E*epsilon*epsilon/intsbey(i),E);
+	                fprintf (fout1, " %4.4g 0 %4.4g %4.4g\n",En(i),En(i)+epsilon-E*epsilon*epsilon/intsbey(i),E);
 		       }
                        fprintf (fout1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 	               fprintf (fout1, " %4.4g 0 %4.4g 0 \n",En(i),En(i)+epsilon);
