@@ -57,6 +57,7 @@ class qvectors
        
     //save table of all qvectors on file
     void save();
+    void save(const char *filemode);
     
     //constructor - generate set of qvectors
     /* input 

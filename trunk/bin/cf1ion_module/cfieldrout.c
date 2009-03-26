@@ -92,6 +92,7 @@ extern INT create_Vkq();             /* definiert in EINGABE.C*/
 extern INT create_Wkq();             /* definiert in EINGABE.C*/
 extern INT create_xW();              /* definiert in EINGABE.C*/
 extern INT create_nn();              /* definiert in EINGABE.C*/
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/
  
 extern ITERATION *read_Akq();        /* definiert in EINGABE.C*/
 extern ITERATION *read_Bkq();        /* definiert in EINGABE.C*/
@@ -3220,7 +3221,7 @@ info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
     INT    dimj;                 /* Hmag in Einheiten von gJ*myB    */
     DOUBLE Bx,By,Bz;
 {
-    CHAR *name = "magnfeld.info";
+    CHAR *name = "results/magnfeld.info";
  
     FILE   *fp,*fopen();
     MATRIX *bmag,*calc_Bmag();
@@ -3234,7 +3235,7 @@ info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
  
     clearscreen;
     printf("Information given in the File %s .\n",name);
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
  
     gj   = 1.0;
     myB  = 1.0;
@@ -3285,7 +3286,7 @@ info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
  
     clearscreen;
     printf("Information given in the File %s.\n",name);
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
  
     fprintf(fp,"===========================================================\n");
     fprintf(fp,"º Table of implemented Symmetries                         º\n");
@@ -3328,14 +3329,14 @@ info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
 -----------------------------------------------------------------------------*/
 info_konstanten()   /* Liste der benutzten Naturkonstanten */
 {
-    CHAR *name = "konstntn.info";
+    CHAR *name = "results/konstntn.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15;
     CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
     CHAR *s11,*s12,*s13,*s14,*s15,*s16;
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information given in the File %s.\n",name);
  
@@ -3398,7 +3399,7 @@ info_Vlm(filename,symmetrienr,einheit)
     INT  symmetrienr;
     CHAR *einheit;
 {
-    CHAR *name = "Vlm.info";
+    CHAR *name = "results/Vlm.info";
     FILE *fp,*fopen();
     KOMPLEX      *z;
     KRISTALLFELD *kf,*init_iteration();
@@ -3409,7 +3410,7 @@ info_Vlm(filename,symmetrienr,einheit)
     DOUBLE       rt,it;
  
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information given in the File %s.\n",name);
  
@@ -3546,7 +3547,7 @@ info_Vlm(filename,symmetrienr,einheit)
 -----------------------------------------------------------------------------*/
 info_epsilonkq()   /* Liste der Faktoren epsilonkq */
 {
-    CHAR *name = "epsilonkq.info";
+    CHAR *name = "results/epsilonkq.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
@@ -3555,7 +3556,7 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
     CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
     CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information given in the File %s .\n",name);
  
@@ -3755,7 +3756,7 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
 -----------------------------------------------------------------------------*/
 info_hamilton() /* Liste der Auswahlregeln fuer die Vkq im Hamiltonian*/
 {
-    CHAR *name = "hamilton.info";
+    CHAR *name = "results/hamilton.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
@@ -3764,7 +3765,7 @@ info_hamilton() /* Liste der Auswahlregeln fuer die Vkq im Hamiltonian*/
     CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
     CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information given in the File %s .\n",name);
  
@@ -3846,7 +3847,7 @@ t32 = "-----------------------------------------------------------------------";
 info_omegakq(k,q)   /* Liste der Faktoren omegakq */
 INT k,q;
 {
-    CHAR *name = "omegakq.info";
+    CHAR *name = "results/omegakq.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
@@ -3884,7 +3885,7 @@ INT k,q;
  
  
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     printf("Information given in the File %s .\n",name);
  
     t01 = "===========================================================";

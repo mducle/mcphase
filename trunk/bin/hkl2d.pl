@@ -11,7 +11,7 @@ my ($file) = @ARGV;
 if ($file&&$file=~/-.*h/)
 {print "program hkl2d [options] [file] 
  produces neutron intensity graphic and postscript-file hkl.ps
- Options: -n .... plot reflex number n
+ Options: -n .... plot reflex number n
           -h .... help
  If no file is given the program uses file mcphas.hkl.\n";exit;
 }

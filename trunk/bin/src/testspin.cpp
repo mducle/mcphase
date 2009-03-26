@@ -26,16 +26,16 @@ return 0; //configuration could not be added
 }
 
 // print out table of all configurations
-void testspincf::save ()
-{save(savfilename);}
+void testspincf::save (const char * filemode)
+{save(savfilename,filemode);}
 
 
 // print out table of all configurations
-void testspincf::save (const char*filename)
+void testspincf::save (const char*filename, const char * filemode)
 {int i;
  FILE * fout;
 // we should print to a file all used configurations
- fout = fopen_errchk (filename,"w");
+ fout = fopen_errchk (filename,filemode);
  fprintf(fout,"#\n#<!--mcphase.mcphas.tst-->\n");
  fprintf(fout,"# nofatoms=%i\n",nofatoms);
  fprintf(fout,"#nofcomponents=%i\n",nofcomponents);

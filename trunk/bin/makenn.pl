@@ -100,8 +100,8 @@ my ($a,$b,$c,$nofatoms) = @{$latt};
   }}}
 print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
-     #initialize output file makenn.j
- my ($h,$l)=printlattice("./mcphas.j",$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb,">./makenn.j");
+     #initialize output file results/makenn.j
+ my ($h,$l)=printlattice("./mcphas.j",$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb,">./results/makenn.j");
 
  for ($nnn=1;$nnn<=$nofatoms;++$nnn)    
  {   my $gJ=$gJ[$nnn];
@@ -163,6 +163,7 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
  }
 
  endprint($h,$l);   
+ print "file results/makenn.j created\n";
    exit;
 #-----------------------------------------------------------------------
 

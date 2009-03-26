@@ -7,7 +7,7 @@ unless ($#ARGV>=2)
 {print " program to extend crystallographic unit cell n times in r1 (or r2,r3) direction\n\n";
 print " usage: extendunitcell 3 1 4\n\n";
 print " meaning take mcphas.j, mcphas.tst and mcdiff.in and generate an extended description of the unit cell 3xr1,1xr2,4xr3\n";
-print " put result into extend.j, extend.tst and extend.in\n";
+print " put result into results/extend.j, results/extend.tst and results/extend.in\n";
  exit 0;}
 
 my ($n1) = $ARGV[0];shift @ARGV; 
@@ -22,7 +22,7 @@ print "reading mcphas.j ....\n";
 
 
  #initialize output file extendj.j
- my ($h,$l)=printlattice("./mcphas.j",$n1,$n2,$n3,">./extend.j");
+ my ($h,$l)=printlattice("./mcphas.j",$n1,$n2,$n3,">./results/extend.j");
   printneighbourlist($h,$l,$n1,$n2,$n3,$p,$nofa);   
   endprint($h,$l);   
  # extend lattice
@@ -35,7 +35,7 @@ print "reading mcphas.j ....\n";
 print "reading mcphas.tst ...\n";
 
  open ($h,"mcphas.tst");
- open ($l,">./extend.tst"); 
+ open ($l,">./results/extend.tst"); 
  while(<$h>)
  {if (/^\s*#/)
   {$text=$_;
@@ -89,7 +89,7 @@ print "reading mcphas.tst ...\n";
 
 print "reading mcdiff.in ...\n";
  open ($h,"mcdiff.in");
- open ($l,">./extend.head"); 
+ open ($l,">./results/extend.head"); 
  while(<$h>)
  {$text=$_;
   if (/^\s*#/)

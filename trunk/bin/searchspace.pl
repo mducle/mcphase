@@ -23,12 +23,12 @@ sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$pare
 .
 format Fout =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$ii],$par[$ii],$parmin[$ii],$parmax[$ii],$parerr[$ii],$parstp[$ii])
 .
 
  @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parav=();
   $searchlevel=$ARGV[0]; shift @ARGV;
- open(Fout,">searchspace.status");
+ open(Fout,">results/searchspace.status");
  foreach (@ARGV)
  {$file=$_; system ("cp -f ".$file." ".$file.".par"); open (Fin, $file);
    while($line=<Fin>)
@@ -39,7 +39,7 @@ sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$par
 				 ($parmax[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parerr[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)|);
 				 ($parstp[$#par])=($line=~m|par\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^\Q]\E]+)|);
-                                 $i=$#par;write STDOUT; write Fout
+                                 $i=$#par;write STDOUT; $ii=$i;write Fout;
 				  #check if parmin<=parmax
                           if ($parmin[$#par]>$parmax[$#par]) 
                             {print "ERROR searchspace reading parameterrange: parmin > parmax\n";
@@ -54,10 +54,10 @@ $minnumber=1;$pointcounter=0;
 $starttime=time;$stamin=1e10;
 # open and initialize output file
 print "storing points in file searchspace.$searchlevel\n";
-open (Fout,">searchspace.$searchlevel");
-print Fout "#"; 
-foreach(@parnam){print Fout $_." ";} 
-print Fout "sta\n";
+open (Foutlevel,">results/searchspace.$searchlevel");
+print Foutlevel "#"; 
+foreach(@parnam){print Foutlevel $_." ";} 
+print Foutlevel "sta\n";
 
 if ($searchlevel==0)
 {
@@ -70,11 +70,11 @@ if ($searchlevel==0)
          {
           $par[$i]+=$dpar;
           ($sta)=sta();
-          open(Fin,"searchspace.status");$line=<Fin>;
+          open(Fin,"results/searchspace.status");$line=<Fin>;
           if ($line=~/exit searchspace/){$sta=0;close Fin;}
           else
-     {open(Fout,">searchspace.status");$i=0;
-     foreach(@par){write Fout;++$i;}
+     {open(Fout,">results/searchspace.status");$ii=0;
+     foreach(@par){write Fout;++$ii;}
      print Fout " ...  current sta=$sta\n";
      close Fout;}
           last if ($sta==0);
@@ -84,15 +84,15 @@ if ($searchlevel==0)
 			}
 
           if ($sta<=$staorigin){$minimum=0;}
-          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Fout $dd;++$ii} print Fout $sta."\n";
+          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Foutlevel $dd;++$ii} print Foutlevel $sta."\n";
 	   ++$pointcounter; 
           $par[$i]-=2*$dpar;
           ($sta)=sta();
-          open(Fin,"searchspace.status");$line=<Fin>;
+          open(Fin,"results/searchspace.status");$line=<Fin>;
           if ($line=~/exit searchspace/){$sta=0;close Fin;}
           else
-     {open(Fout,">searchspace.status");$i=0;
-     foreach(@par){write Fout;++$i;}
+     {open(Fout,">results/searchspace.status");$ii=0;
+     foreach(@par){write Fout;++$ii;}
      print Fout " ...  current sta=$sta\n";
      close Fout;}
           last if ($sta==0);
@@ -101,7 +101,7 @@ if ($searchlevel==0)
                                         system ("cp -f ".$file.".par ".$file.".parmin.$searchlevel");}
 			}
           if ($sta<=$staorigin){$minimum=0;}
-          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Fout $dd;++$ii} print Fout $sta."\n";
+          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Foutlevel $dd;++$ii} print Foutlevel $sta."\n";
           $par[$i]+=$dpar;
 	   ++$pointcounter;
           }
@@ -112,11 +112,11 @@ if ($searchlevel==0)
        if ($minimum==1&&$sta!=0)
         {#the input parameters are probably a (local) minimum - so save a file
           ($sta)=sta();
-          open(Fin,"searchspace.status");$line=<Fin>;
+          open(Fin,"results/searchspace.status");$line=<Fin>;
           if ($line=~/exit searchspace/){$sta=0;close Fin;}
           else
-     {open(Fout,">searchspace.status");$i=0;
-     foreach(@par){write Fout;++$i;}
+     {open(Fout,">results/searchspace.status");$ii=0;
+     foreach(@par){write Fout;++$ii;}
      print Fout " ...  current sta=$sta\n";
      close Fout;}
         last if ($sta==0);
@@ -130,7 +130,7 @@ if ($searchlevel==0)
 }
 else
 {print "reading point from file searchspace.".($searchlevel-1)."\n";
- open (Fin1,"searchspace.".($searchlevel-1));
+ open (Fin1,"results/searchspace.".($searchlevel-1));
  while($line=<Fin1>)
   {
    if ($line=~/^\s*#/) {;}
@@ -143,11 +143,11 @@ else
          if (abs($dpar)>abs($parstp[$i]))
          {$par[$i]+=$dpar;
           ($sta)=sta();
-          open(Fin,"searchspace.status");$line=<Fin>;
+          open(Fin,"results/searchspace.status");$line=<Fin>;
           if ($line=~/exit searchspace/){$sta=0;close Fin;}
           else
-     {open(Fout,">searchspace.status");$i=0;
-     foreach(@par){write Fout;++$i;}
+     {open(Fout,">results/searchspace.status");$ii=0;
+     foreach(@par){write Fout;++$ii;}
      print Fout " ...  current sta=$sta\n";
      close Fout;}
           last if ($sta==0);
@@ -157,15 +157,15 @@ else
 			}
 
           if ($sta<=$staorigin){$minimum=0;}
-          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Fout $dd;++$ii} print Fout $sta."\n";
+          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Foutlevel $dd;++$ii} print Foutlevel $sta."\n";
 	   ++$pointcounter; 
           $par[$i]-=2*$dpar;
           ($sta)=sta();
-          open(Fin,"searchspace.status");$line=<Fin>;
+          open(Fin,"results/searchspace.status");$line=<Fin>;
           if ($line=~/exit searchspace/){$sta=0;close Fin;}
           else
-     {open(Fout,">searchspace.status");$i=0;
-     foreach(@par){write Fout;++$i;}
+     {open(Fout,">results/searchspace.status");$ii=0;
+     foreach(@par){write Fout;++$ii;}
      print Fout " ...  current sta=$sta\n";
      close Fout;}
           last if ($sta==0);
@@ -174,7 +174,7 @@ else
                                         system ("cp -f ".$file.".par ".$file.".parmin.$searchlevel");}
 			}
           if ($sta<=$staorigin){$minimum=0;}
-          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Fout $dd;++$ii} print Fout $sta."\n";
+          $ii=0;foreach(@par){$dd=sprintf("%e ",$par[$ii]);print Foutlevel $dd;++$ii} print Foutlevel $sta."\n";
           $par[$i]+=$dpar;
 	   ++$pointcounter;
           }
@@ -201,10 +201,10 @@ else
 $hours=(time-$starttime)/3600;
 $estimate=$hours*2*$#par;
 print "$pointcounter points calculated in  $hours h.\n Time estimate for next level ".($searchlevel+1).": $estimate h\n";
-print Fout "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
-close Fout;
+print Foutlevel "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+close Foutlevel;
  foreach (@ARGV) {$file=$_; system ("cp ".$file.".parmin.$searchlevel  ".$file);}
-     open(Fout,">searchspace.status");print Fout " ... searchspace stopped\n"; close Fout;
+     open(Fout,">results/searchspace.status");print Fout " ... searchspace stopped\n"; close Fout;
 
 exit 0;
 
@@ -215,7 +215,7 @@ exit 0;
 sub sta {local $SIG{INT}='IGNORE'; 
  #print "#write modified parameterset to files *\n";
  foreach (@ARGV)
- {$file=$_; open (Fin, $file.".par");open (Fout1, ">".$file);open (Fout2,">searchspace.par");
+ {$file=$_; open (Fin, $file.".par");open (Fout1, ">".$file);open (Fout2,">results/searchspace.par");
    while($line=<Fin>)
      {$modline=$line;
       if ($line=~/^.*par/) {#here write modified parameter set to line
@@ -256,14 +256,14 @@ sub sta {local $SIG{INT}='IGNORE';
 				     ++$i;
 				    }
 				    # calculate the expression by a little perl program
-				    open (Foutcc, ">./ccccccc.ccc");
+				    open (Foutcc, ">./results/ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
-				    system "./ccccccc.ccc > ./cccccc1.ccc";
-                            system "chmod 755 ./ccccccc.ccc";
-				    open (Fincc,"./cccccc1.ccc");
+				    system "./results/ccccccc.ccc > ./results/cccccc1.ccc";
+                            system "chmod 755 ./results/ccccccc.ccc";
+				    open (Fincc,"./results/cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
-				    system "rm ./ccccccc.ccc ./cccccc1.ccc";
+				    system "rm ./results/ccccccc.ccc ./results/cccccc1.ccc";
 				    # $data contains now the result of the mathematical expression
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
@@ -276,12 +276,12 @@ sub sta {local $SIG{INT}='IGNORE';
      {die "\n error:perhaps (perl rename cannot cross filesystems) \n";}
  }
 # print "#call routine calcsta to calculate standard deviation\n";
- system ("./calcsta > searchspace.sta");
- open (Fin,"searchspace.sta"); 
+ system ("./calcsta > results/searchspace.sta");
+ open (Fin,"results/searchspace.sta"); 
  while($line=<Fin>){
            if($line=~/^.*sta\s*=/) {($sta)=($line=~m|sta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);} 
                    }close Fin;
- system ("rm searchspace.sta");
+ system ("rm results/searchspace.sta");
  return $sta;
 }  
 

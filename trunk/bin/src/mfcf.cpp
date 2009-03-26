@@ -175,6 +175,28 @@ mfcf & mfcf::operator= (const mfcf & op2)
   return *this;
 }
 
+//zuweisung of the same meanfield vector to all atoms
+mfcf & mfcf::operator= (const Vector & vec)
+{int i,j,k;
+  for (i=1;i<=nofa;++i)
+  {for (j=1;j<=nofb;++j)
+    {for (k=1;k<=nofc;++k)
+     {mfi[in(i,j,k)]=vec;} 
+    }
+  }           
+  return *this;
+}
+
+//set all meanfields zero
+void mfcf::clear()
+{int i,j,k;
+  for (i=1;i<=nofa;++i)
+  {for (j=1;j<=nofb;++j)
+    {for (k=1;k<=nofc;++k)
+     {mfi[in(i,j,k)]=0;} 
+    }
+  }           
+}
 
 
 //constructors

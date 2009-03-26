@@ -47,8 +47,8 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
   for(i=1;i<=inputpars.nofatoms;++i)
 {
 
-
-            m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T));
+            ComplexMatrix est((*inputpars.jjj[i]).eigenstates(h,T));
+            m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,est);
 	    (*inputpars.jjj[i]).transitionnumber=-1;
             nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*inputpars.jjj[i]).est); 
 

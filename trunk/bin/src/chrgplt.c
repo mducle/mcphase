@@ -111,7 +111,7 @@ int main (int argc, char **argv)
   double ccc=0.05; //surface value of chargedensity
 
  FILE * cf_file, * fout;
- fout = fopen_errchk ("./chrgplt.jvx", "w");
+ fout = fopen_errchk ("./results/chrgplt.jvx", "w");
 
 // read cf-parameters into class object ionpars
  ionpars * iops;

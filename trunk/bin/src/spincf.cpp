@@ -493,6 +493,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
       } 
   scale=0.5/(scale+0.01);
 
+ 
 
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
@@ -533,6 +534,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
    dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
    ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
   }  
+ 
 
  //determine bounding box for  specific view
   bbwidth=700;
@@ -565,6 +567,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
   fprintf(fout,"/mm {72 mul 25.4 div} bind def\n");
   fprintf(fout,"/mx {1.2 add 50 mul mm} bind def\n");
   fprintf(fout,"/my {-0.3 add 50 mul mm} bind def\n");
+ 
 
   // draw abc coordinate label 
    fprintf(fout,"/Helvetica findfont\n15 scalefont setfont\n");
@@ -602,6 +605,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
    dd=max;dd(1)=min(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
    a=xy(dd,orientation, min, max,bbwidth,bbheight);
    dd=min;dd(2)=max(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+ 
    
   // draw frame around primitive unit cell
   fprintf(fout,"1 setlinewidth\n");
@@ -638,7 +642,7 @@ int i1,j1,k1;
 for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
 for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
 for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
-
+//printf("%i %i %i %i %i %i %i %i %i\n",i1,j1,k1,(int)ijkmin(1),(int)ijkmin(2),(int)ijkmin(3),(int)ijkmax(1),(int)ijkmax(2),(int)ijkmax(3));
    dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
@@ -652,15 +656,11 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
             {
-//             i1true=1;j1true=1;k1true=1;       
-
-//	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
-//   fprintf(fout,"%g %g moveto \n (%c) show \n",a(1),a(2),r1);
-//   fprintf(fout,"%g %g moveto \n (O) show \n",a(1),a(2));
        if (gJ(l)==0)  //load magnetic moment into vector c
+       
        {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
-        c=0;
-        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+           c=0;
+           for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
                              else                {c((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
                             }
        }
@@ -681,8 +681,6 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 	  }
        }}}           
  }}}
-//}}}
-  
   
   
 fprintf(fout,"showpage\n");
@@ -1030,25 +1028,27 @@ spincf & spincf::operator + (const spincf & op2)
  if (nofa!=op2.nofa||nofb!=op2.nofb||nofc!=op2.nofc||nofatoms!=op2.nofatoms||nofcomponents!=op2.nofcomponents)
  {fprintf (stderr,"Error in adding spincfonfigurations - not equal dimension\n");
  exit (EXIT_FAILURE);}
- 
-// nofa=op2.nofa; nofb=op2.nofb; nofc=op2.nofc;
-// mxa=op2.mxa; mxb=op2.mxb; mxc=op2.mxc;
-// nofatoms=op2.nofatoms;
-// wasstable=op2.wasstable;
-// nofcomponents=op2.nofcomponents;
-//  delete []mom;
-//dimension arrays
-//  mom = new Vector[mxa*mxb*mxc+1](1,nofcomponents*nofatoms);
-//  if (mom == NULL)
-//    {fprintf (stderr, "Out of memory\n");
-//      exit (EXIT_FAILURE);}
+ static spincf op1((*this)); 
  for (i=1;i<=nofa;++i)
   {for (j=1;j<=nofb;++j)
     {for (k=1;k<=nofc;++k)
-     {mom[in(i,j,k)]+=op2.mom[in(i,j,k)];} 
+     {op1.mom[in(i,j,k)]=mom[in(i,j,k)]+op2.mom[in(i,j,k)];} 
     }
   }           
-  return *this;
+  return op1;
+}
+
+// multiplication of spinconfiguration with constant
+spincf & spincf::operator * (const double factor)
+{int i,j,k;
+ static spincf op1((*this)); 
+  for (i=1;i<=nofa;++i)
+  {for (j=1;j<=nofb;++j)
+    {for (k=1;k<=nofc;++k)
+     {op1.mom[in(i,j,k)]=mom[in(i,j,k)]*factor;} 
+    }
+  }           
+  return op1;
 }
 
 //vergleichsoperator

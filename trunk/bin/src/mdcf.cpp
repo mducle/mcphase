@@ -167,6 +167,18 @@ bi+=tn;
 return bi;
 }
 
+//void mdcf::baseindex2ltn(int baseindex, int i, int j, int k, int & l, int & tn)
+//{// the inverse of function baseindex -> returns l and tn for given baseindex, ijk
+//  int bi=0;
+//  int i1;
+//  for(i1=1;i1<=(*nt[in(i,j,k)]).Hi;++i1)
+//  {if(bi+(*nt[in(i,j,k)])(i1);}
+//   bi-=(*nt[in(i,j,k)])(l);
+//   bi+=tn;
+//?????
+//
+//}
+
 int mdcf::baseindex_max(int i, int j, int k)
 {return sum((*nt[in(i,j,k)]));}
 

@@ -29,6 +29,7 @@ void inimcdis::errexit() // type info and error exit
     printf ("		                        be considered\n");
     printf ("	       -r                   ... refine energies\n");
     printf ("	       -v                   ... verbose\n");
+    printf ("	       -a                   ... do not overwrite output files in results - append new results\n");
     printf ("	       -c                   ... only create single ion transition file ./results/mcdisp.trs and exit\n");
     printf ("	       -t                   ... read single ion transition file ./results/mcdisp.trs (do not create it)\n");
       exit (EXIT_FAILURE);

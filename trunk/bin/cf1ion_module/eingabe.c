@@ -80,6 +80,18 @@ extern MATRIX    *calc_Bmag();   /* definiert in CFIELD.C */
 extern MATRIX    *calcBmol();    /* definiert in CFIELD.C */
 extern STEVENS   *calc_Pkq();    /* definiert in STEVENS.C */
  
+/* open a file: similar fopen but with error check */
+FILE * fopen_errchk (const char * filename,const char * mode)
+{ FILE *file;
+ 
+  file = fopen (filename,mode);
+  if (file == NULL)
+    { 
+      fprintf (stderr, "Error: Couldn't open file %s\n",filename);
+      exit (EXIT_FAILURE);
+     }
+  return file;
+} 
 
 
  
@@ -119,7 +131,7 @@ create_Vkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     TABELLE *tabelle;
     INT     dimj,ionennr;
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -272,7 +284,7 @@ create_Dkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     TABELLE *tabelle;
     INT     dimj,ionennr;
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -427,7 +439,7 @@ create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     TABELLE *tabelle;
     INT     dimj,ionennr;
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -617,7 +629,7 @@ create_Wkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     INT     ionennr,dimj;
  
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -772,7 +784,7 @@ create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     INT     ionennr,dimj;
  
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -934,7 +946,7 @@ create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     INT     ionennr,dimj;
  
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -1089,7 +1101,7 @@ create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     INT  ionennr,dimj;
  
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
     write_title(fp);
  
     ionennr     = isimplementiert(ion);
@@ -1266,7 +1278,7 @@ pomtu= "---------------------------------------";
  
     ion = leftcopy(ion ,25);
  
-    fp  = fopen(name,"w");
+    fp  = fopen_errchk(name,"w");
  
     switch(modus){
          case 'r': s_modus = "KARTESISCHEN";
@@ -5164,7 +5176,7 @@ neben_create( modus,name_chi2 ) /* Eingabefile Chi2 erzeugen  */
    free_(read);
    ionname     = IONENIMP[ ionennr ].ionname;
  
-   fp  = fopen(name_chi2,"w");
+   fp  = fopen_errchk(name_chi2,"w");
    write_title(fp);
  
    fprintf(fp,"\n\n");
@@ -6297,7 +6309,7 @@ if( IS_POSFIT(iteration)==JA  &&  POSDATANZ(iteration) != 0 ){
     LAMBDA(iteration) = a_tof(line,48,56);
     while(  *(line=fgets( string , buffer_size , fp )) != '|');/* 1.|*/
     thetaname = file_name(line,30,56);
-    fp_theta = fopen(thetaname,"rb");
+    fp_theta = fopen_errchk(thetaname,"rb");
     NAMETHETAFILE(iteration) = thetaname;
     LESETHETAFILE(iteration) = NEIN;
     THETAA(       iteration) = 0.0;

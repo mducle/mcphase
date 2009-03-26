@@ -42,6 +42,21 @@ int index_s(int i,int j,int k,int l, int t, mdcf & md,inimcdis & ini)
  return s;
 }
 
+//void s2ijklt(int s, int & i, int & j, int & k, int & l, int & t, mdcf & md, inimcdis & ini)
+//{// the reverse of index_s function, returns i j k l t given the index_s
+//int ss=0,sss;
+// ijk ... index of crystallographic unit cell in magnetic unit cell
+// l   ... number of atom in crystallographic cell
+// t   ... transitionnumber
+ //for(i=1;i<=ini.mf.na();++i){
+ //for(j=1;j<=ini.mf.nb();++j){
+ //for(k=1;k<=ini.mf.nc();++k){
+ //sss=md.baseindex_max(i,j,k);
+ //if (ss+sss<	s){ss+=sss;}else{md.baseindex2ltn(s-ss,i,j,k,l,t);return;}
+ //}}}
+ //fprintf(stderr,"mcdisp internal error: index s too large in function s2ijklt\n");exit(1);
+//}
+
 void sortE(Vector & d,ComplexMatrix & z)
 {       int i,j,k;
     double p;
@@ -71,11 +86,12 @@ void sortE(Vector & d,ComplexMatrix & z)
 }
 
 // procedure to calculate the dispersion
-void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do_createtrs,int do_readtrs, int do_verbose,int maxlevels,double minE,double maxE,double epsilon)
+void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do_createtrs,int do_readtrs, int do_verbose,int maxlevels,double minE,double maxE,double epsilon, const char * filemode)
 { int i,j,k,l,ll,s,ss,i1,i2,j1,j2,k1,k2,l1,l2,t1,t2,b,bb,m,n,tn;
   FILE * fin;
   FILE * fout;
   FILE * foutqei;
+  FILE * foutqev;
   FILE * fout1;
   FILE * foutds;
   FILE * foutdstot;
@@ -298,17 +314,21 @@ if (do_verbose==1){
 //initialize output files
   errno = 0;
 if (do_jqfile==0)
-{ printf("saving mcdisp.qom and mcdisp.qei\n");
-  fout = fopen_errchk ("./results/mcdisp.qom","w");
-  foutqei = fopen_errchk ("./results/mcdisp.qei","w");
+{ printf("saving mcdisp.qom and mcdisp.qei and mcdisp.qev\n");
+  fout = fopen_errchk ("./results/mcdisp.qom",filemode);
+  foutqei = fopen_errchk ("./results/mcdisp.qei",filemode);
+  foutqev = fopen_errchk ("./results/mcdisp.qev",filemode);
   fprintf (fout, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
           fprintf (fout, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] > intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
   fprintf (foutqei, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqei);
           fprintf (foutqei, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+  fprintf (foutqev, "#{%s ",MCDISPVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqev);
+          fprintf (foutqev, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
-          foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot","w");
+          foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
           printf("saving mcdisp.dsigma.tot\n");
           fprintf (foutdstot, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutdstot);
@@ -316,7 +336,7 @@ if (do_jqfile==0)
 
    if (do_Erefine==1){
           errno = 0;
-          foutds = fopen_errchk ("./results/mcdisp.dsigma","w");
+          foutds = fopen_errchk ("./results/mcdisp.dsigma",filemode);
           printf("saving mcdisp.dsigma\n");
           fprintf (foutds, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds);
@@ -329,7 +349,7 @@ if (do_jqfile==0)
 // initialize file with jq matrix
 if (do_jqfile==1)
 {  printf("saving mcdisp.jq\n");
-  jqfile = fopen_errchk ("./results/mcdisp.jq","w");
+  jqfile = fopen_errchk ("./results/mcdisp.jq",filemode);
   fprintf (jqfile, "#Fourier Transform of 2 Ion Interaction - sta is calculated by comparing the larges eigenvalue\n# to that of the first q vector of the calculation");
    fputs (asctime(loctime),jqfile);
   if (do_verbose==1){   fprintf (jqfile, "#q=(hkl)\n #spin s() - spin s'()\n #3x3 matrix jss'(q) real im .... [meV]\n");}
@@ -605,28 +625,25 @@ if (do_jqfile==1){
    // calculate and printout intensities [the energies have already
    // been printed out above, so any refinement of energies during intcalc
    // is not included in the output file]
-  double QQ;
+  double QQ; mfcf ev_real(ini.mf),ev_imag(ini.mf);
   double diffint=0,diffintbey=0;
   if(do_verbose==1){fprintf(stdout,"\ncalculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
 diffint=0;diffintbey=0;
+                  if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
                   for (i=1;i<=dimA;++i)
-		  {//double maxupshift=1e10; if (i<ini.mf.n()) {maxupshift=En(i+1)-En(i);}
-		   //double maxdownshift=-En(i); if(i>1){maxdownshift=En(i-1)-En(i);}		 
-		   //i2=1;//check if eigenvalue is equal to some delta(s)
-                   //for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-                   //for(l1=1;l1<=inputpars.nofatoms;++l1){    
-		   //if(abs(En(i)-md.delta(i1,j1,k1))<SMALL)i2=0; 
-                   //if(En(i)+maxupshift+SMALL>md.delta(i1,j1,k1)(l1)&&md.delta(i1,j1,k1)(l1)>=En(i)+SMALL){maxupshift=md.delta(i1,j1,k1)(l1)-SMALL-En(i);}
-                   //if(En(i)-maxdownshift-SMALL<md.delta(i1,j1,k1)(l1)&&md.delta(i1,j1,k1)(l1)<=En(i)-SMALL){maxdownshift=md.delta(i1,j1,k1)(l1)+SMALL-En(i);}
-		   //}
-		   //}}} 
-		     if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
-                     ints(i)=intcalc_approx(intsbey(i),dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
-                     if(intsbey(i)<0)do_gobeyond=0;
+		  {  if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
+                     ints(i)=intcalc_approx(intsbey(i),ev_real,ev_imag,dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+                     if(intsbey(i)<0)intsbey(i)=-1;
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
                      fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
+                     fprintf (foutqev, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
+                     fprintf (foutqev, "#eigenvector real part\n");
+                     ev_real.print(foutqev); // here we printout the eigenvector of the excitation
+                     fprintf (foutqev, "#eigenvector imaginary part\n");
+                     ev_imag.print(foutqev); // 
+                     fprintf (foutqev, "#\n");
                  if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
@@ -720,6 +737,7 @@ diffint=0;diffintbey=0;
     fprintf (stdout, "#sta= %8.6g \n",sta);
    
     fclose(foutqei);
+    fclose(foutqev);
     fclose(fout);
                  if (do_Erefine==1){fclose(foutds);}
     fclose(foutdstot);
@@ -731,6 +749,7 @@ diffint=0;diffintbey=0;
 int main (int argc, char **argv)
 {int i,do_Erefine=0,do_jqfile=0,do_verbose=0,maxlevels=10000000,do_createtrs=0,do_readtrs=0;
  const char * spinfile="mcdisp.mf"; //default spin-configuration-input file
+ const char * filemode="w";
  double epsilon; //imaginary part of omega to avoid divergence
  double minE=-100000.0,maxE=+100000.0;
 // check command line and initialize parameters ini
@@ -742,20 +761,21 @@ for (i=1;i<=argc-1;++i){
          else {if(strcmp(argv[i],"-jq")==0) {do_jqfile=1;minE=SMALL;maxlevels=1;}       
           else {if(strcmp(argv[i],"-t")==0) do_readtrs=1;       
            else {if(strcmp(argv[i],"-c")==0) do_createtrs=1;       
-            else {if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"-verbose")==0) do_verbose=1;       
-             else {if(strcmp(argv[i],"-max")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -max needs argument(s)\n");exit(EXIT_FAILURE);}
+            else {if(strcmp(argv[i],"-a")==0) filemode="a";       
+             else {if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"-verbose")==0) do_verbose=1;       
+              else {if(strcmp(argv[i],"-max")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -max needs argument(s)\n");exit(EXIT_FAILURE);}
 		                                  maxlevels=(int)strtod(argv[i+1],NULL);++i;
 						  fprintf(stdout,"maximum number of single ion excitations taken into account (starting with lowest energy): %i\n",maxlevels);
 					         }       
-              else {if(strcmp(argv[i],"-maxE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -maxE needs argument(s)\n");exit(EXIT_FAILURE);}
+               else {if(strcmp(argv[i],"-maxE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -maxE needs argument(s)\n");exit(EXIT_FAILURE);}
 		                                  maxE=strtod(argv[i+1],NULL);++i;
 						  fprintf(stdout,"maximum Energy of single ion excitations taken into account: %g\n",maxE);
   					         }       
-               else {if(strcmp(argv[i],"-minE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -minE needs argument(s)\n");exit(EXIT_FAILURE);}
-		                                  minE=strtod(argv[i+1],NULL);++i;
+                else {if(strcmp(argv[i],"-minE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -minE needs argument(s)\n");exit(EXIT_FAILURE);}
+ 		                                  minE=strtod(argv[i+1],NULL);++i;
 						  fprintf(stdout,"minimum Energy of single ion excitations taken into account: %g\n",minE);
 					         }       
-         	 else{spinfile=argv[i];}
+           	 else{spinfile=argv[i];}
 		   }
 		  }          
 		 }
@@ -763,7 +783,7 @@ for (i=1;i<=argc-1;++i){
 	      }
 	     }
 	    }
-	
+           }	
     }
 inimcdis ini("mcdisp.ini",spinfile);
 
@@ -774,7 +794,7 @@ if (argc > 10) {ini.errexit();}
   if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
 
   //calculate dispersion and save on file
-  dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,maxlevels,minE,maxE,epsilon);
+  dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,maxlevels,minE,maxE,epsilon,filemode);
   exit(0);
  
 }

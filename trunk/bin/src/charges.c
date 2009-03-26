@@ -109,11 +109,11 @@ int main (int argc, char **argv)
     { printf ("mind: the 4f wavefunction R4f(r) is taken the same for all RE.\n");}
 
  if (argc <6) 
- { fin_coq = fopen_errchk ("./mcphas.mf", "rb");}
+ { fin_coq = fopen_errchk ("./results/mcphas.mf", "rb");}
  else
  { fin_coq = fopen_errchk (argv[5], "rb");}
     
- fout = fopen_errchk ("./charges.out", "w");
+ fout = fopen_errchk ("./results/charges.out", "w");
 
 
 
@@ -256,7 +256,6 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
  {
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
-
             moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
                                                            // module to calculate all 48 (ext_nof_components)
                                                            // higher order moments 
@@ -270,8 +269,10 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
          dd0=p.Inverse()*dd3;dd0(1)*=savmf.na();dd0(2)*=savmf.nb();dd0(3)*=savmf.nc();
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
 	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
+              printf("{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f \n",
+	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
                      for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}else{fprintf(fout," %4.4f",2*moments(nt)+moments(nt+3));}}
-                     for(nt=1;nt<=ext_nof_components;++nt)                                               // this else is not yet implemented: gJ=0 means intermediate coupling
+                     for(nt=1;nt<=ext_nof_components;++nt)                                                               // this else is not yet implemented: gJ=0 means intermediate coupling
 		        {extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1))=moments(nt);
                          fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1)));}
                          fprintf(fout,"\n");
@@ -283,10 +284,8 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
 //	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
 							   // ... and the eigenvalues + eigenvectors !
 
-fclose(fout);
-if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
 
-
+if(ext_nof_components>=48){
 // mind  if there is kramers or another si module, not all the Olm vectors are available - then we plot a sphere
 
 // how do we get the stevens factors - look into cfield if they are there !!!
@@ -387,9 +386,11 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 //     postscript output and a jvx file. Call this for every spin subsequently. Maybe for the postscript
 //     files look a bit on the .eps3d function in how to create such a plot
 
-
+}
   }}}}
 
+fclose(fout);
+if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
 
 
 
@@ -398,7 +399,7 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
   printf("%s - spin configuration <Olm>(i)\n",outstr);
   extendedspincf.print(stdout);
 
-  fout = fopen_errchk ("./charges.jvx", "w");
+  fout = fopen_errchk ("./results/charges.jvx", "w");
 
  fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n");
  fprintf(fout,"<!DOCTYPE jvx-model SYSTEM \"http://www.javaview.de/rsrc/jvx.dtd\">\n");

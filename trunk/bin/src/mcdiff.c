@@ -871,7 +871,8 @@ for(i=1;i<=natmagnetic;++i){
  			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
    			             (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
                                // do some consistency checks
-                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,(*jjjpars[i]).est);
+                               ComplexMatrix est((*jjjpars[i]).est);
+                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
                                for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
                                                   (*jjjpars[i]).mom(3+k)=moment(k);
                                                  }
@@ -883,7 +884,8 @@ for(i=1;i<=natmagnetic;++i){
 			      {// beyond formalism for rare earth		    
                                (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
                                // do some consistency checks
-                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,(*jjjpars[i]).est);
+                               ComplexMatrix est((*jjjpars[i]).est);
+                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
                                if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}

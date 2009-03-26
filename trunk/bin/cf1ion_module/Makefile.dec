@@ -14,7 +14,7 @@
 
 #for dec alpha
 CC= g++ 
-COPTS= -ansi  -fomit-frame-pointer -fforce-addr  -x c 
+COPTS= -ansi  -fomit-frame-pointer -fforce-addr -fPIC -x c 
 
 #LIBL= /usr/lib/libfl.a
 ###########################################################################

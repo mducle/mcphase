@@ -1,6 +1,6 @@
 // routines for mcphas for calculation of magnetic phases
 // htcalc.c
-//#include "myev.h"
+#include "myev.h"
 
 void checkini(testspincf & testspins,qvectors & testqs)
 {struct stat filestatus;
@@ -24,8 +24,8 @@ void checkini(testspincf & testspins,qvectors & testqs)
       sleep(1);
       loaderr=ini.load();
       if(ini.exit_mcphas==1)
-        {testspins.save();  //exit normally
-         testqs.save();
+        {testspins.save(filemode);  //exit normally
+         testqs.save(filemode);
          exit(0);
 	}
 
@@ -136,7 +136,8 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
       mf=new mfcf(sps.na(),sps.nb(),sps.nc(),inputpars.nofatoms,inputpars.nofcomponents);
       fe=fecalc(H ,T,inputpars,sps,(*mf),u,testspins,testqs);
       delete mf;
-           // test spinconfiguration  and remember it                                    
+     
+      // test spinconfiguration  and remember it                                    
       if (fe<femin)
             {               // first - reduce the spinconfiguration if possible
 	       sps1=sps;sps1.reduce();
@@ -175,7 +176,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
                            // see if spinconfiguration is already stored
 	     if (0==checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,physprops))//0 means error in checkspincf/addspincf
 	        {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
-                 testspins.save();testqs.save(); 
+                 testspins.save(filemode);testqs.save(filemode); 
 		 return 1;}
 	     femin=fe;	  
             //printout fe
@@ -627,7 +628,7 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  ComplexMatrix ** ests;ests=new ComplexMatrix*[inputpars.nofatoms*sdim+2];
  for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
  {for (l=1;l<=inputpars.nofatoms;++l){
-  ests[inputpars.nofatoms*sps.in(i,j,k)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).est);
+  ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).est);
   }}}}
  int diagonalexchange=1;
  FILE * fin_coq;
@@ -714,7 +715,7 @@ for (r=1;sta>ini.maxstamf;++r)
     {delete []jj;delete []lnzi;delete []ui;
      for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i,j,k)+l-1];
+      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
      }}}} delete []ests;
 
      if (verbose==1) fprintf(stderr,"feDIV!MAXlooP");
@@ -723,7 +724,7 @@ for (r=1;sta>ini.maxstamf;++r)
     {delete []jj;delete []lnzi;delete []ui;
           for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i,j,k)+l-1];
+      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
      }}}} delete []ests;
      if (verbose==1) fprintf(stderr,"feDIV!MAXspinchangE");
      return 20001;}
@@ -784,7 +785,7 @@ for (r=1;sta>ini.maxstamf;++r)
    lm1m3=inputpars.nofcomponents*(l-1);
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
-   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i,j,k)+l-1]));
+   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
   }
@@ -861,7 +862,7 @@ if (ini.displayall==1)
  delete []jj;delete []lnzi;delete []ui;
      for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i,j,k)+l-1];
+      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
      }}}} delete []ests;
 
 return fe;     

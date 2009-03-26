@@ -15,6 +15,7 @@
 
 inipar ini("mcphas.ini");
 int verbose=0;
+const char * filemode="w";
 
 #include "mcphas_htcalc.h"
 #include "mcphas_htcalc.c"
@@ -42,6 +43,7 @@ int main (int argc, char **argv)
   for (im=1;im<=argc-1;++im)
   {if (strcmp(argv[im],"-v")==0) {verbose=1;if (options<im)options=im;}// set verbose mode on
    if (strcmp(argv[im],"-h")==0) ini.errexit(); // display help message
+   if (strcmp(argv[im],"-a")==0) filemode="a"; // append output files
    if (strcmp(argv[im],"-stamax")==0&&im+1<=argc-1)
                                  {stamax=strtod (argv[im+1], NULL); // read stamax
                                   if (options<im)options=im+1;}
@@ -86,12 +88,12 @@ for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}
 T=0.0;h=0;
 // load testspinconfigurations (nooftstspinconfigurations,init-file,sav-file)
    testspincf testspins (MAXNOFSPINCF,"./mcphas.tst","./results/mcphas.phs",inputpars.nofatoms,inputpars.nofcomponents);
-   testspins.save("./results/mcphas.tst");
+   testspins.save("./results/mcphas.tst","w");
    qvectors testqs (ini,inputpars.rez,mmax,"./results/mcphas.qvc",inputpars.nofatoms,inputpars.nofcomponents,verbose);
 
 // declare variable physprop (typa class physproperties)
    physproperties physprop(ini.nofspincorrs,ini.maxnofhkls,inputpars.nofatoms,inputpars.nofcomponents);
-   
+   	
 // transform mmax to contain saturation moments [muB] 
 for(l=1;l<=inputpars.nofatoms;++l){for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){if((*inputpars.jjj[l]).gJ!=0)mmax(3*(l-1)+im)*=inputpars.gJ(l);}}
 
@@ -143,16 +145,16 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
        switch (j)
        {case 0:
             //save physical properties of HT-point
-	    //sta=(sta*nofstapoints+physprop.save (verbose,j,inputpars))/(nofstapoints+1);
+	    //sta=(sta*nofstapoints+physprop.save (verbose,filemode,j,inputpars))/(nofstapoints+1);
           // 12.3.07 fancy calculation above substituted by normal summing of sta
-          sta+=physprop.save (verbose,j,inputpars);
+          sta+=physprop.save (verbose,filemode,j,inputpars);
 	    ++nofstapoints;
           if (sta>stamax){fprintf(stdout,"stamax=%g exceeded - exiting\n",stamax);goto endproper;}
 	      break; 
 	 case 1: goto endproper;
 	      break;
          case 2: //ht calculation leads to no results- save dummy line
-	         physprop.save (verbose,j,inputpars);
+	         physprop.save (verbose,filemode,j,inputpars);
 		 sta+=1.0; // increment sta because within manifold of spincf no good solution could be found
 	      break;	 
 	 default:  ;
@@ -162,7 +164,7 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
     }
  }  
 endproper:
-  testspins.save();testqs.save();
+  testspins.save(filemode);testqs.save(filemode);
    if(argc>options&&strncmp(argv[argc-1],"-",1)!=0) fclose(fin);
 fprintf(stdout,"sta=%g\n",sta);
 

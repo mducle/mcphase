@@ -4,7 +4,7 @@ $Tmin=$ARGV[0];
 $Tmax=$ARGV[1];
 $deltaT=$ARGV[2];
 unless($#ARGV>=2)
-  {print "Program cpcalc - calculates specific heat from output file cfield.out\n";
+  {print "Program cpcalc - calculates specific heat from output file results/cfield.out\n";
    print "             use as :  cpcalc tmin tmax deltat [-option]\n"; 
    print "             alternatively \n";
    print "             use as: cpcalc col1 col2 datafile [-option]\n";
@@ -24,7 +24,8 @@ unless($#ARGV>=2)
        if($ARGV[3]=~/-u/){$cptext="u(J/mol)";}
        if($ARGV[3]=~/-s/){$cptext="s(J/molK)";}
 
-unless (open (Fin,"cfield.out")) {print "ERROR cpcalc: file cfield.out not found\n";exit(1);}
+unless (open (Fin,"results/cfield.out")) {unless (open (Fin,"cfield.out")){print "ERROR cpcalc: file results/cfield.out not found\n";exit(1);}else{print "#reading cfield.out\n"; }}
+else {print "#reading results/cfield.out\n";}
 
 $noflevels=1; # initialize noflevels
 # read energies from cfield.out

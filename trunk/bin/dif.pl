@@ -23,12 +23,12 @@ $coly=$ARGV[0];shift @ARGV;
             if (!@numbers1){@numbers1=@numbers;}
                  unless(0==($numbers[$colx-1]-$numbers1[$colx-1]))
 		  {@numout=@numbers;
-		   $numout[$coly-1]=($numbers[$coly-1]-$numbers1[$coly-1])/($numbers[$colx-1]-$numbers1[$colx-1]);
-                   $numout[$colx-1]=($numbers[$colx-1]+$numbers1[$colx-1])/2;    
+		   $numout[$coly-1]=($numbers[$coly-1]-$numbers1[$coly-1])/($numbers[$colx-1]-$numbers1[$colx-1]);                       
 		   $i=0;
 		   foreach (@numout)
-		   {++$i;print Fout $numout[$i-1]." ";}     
-                   print Fout "\n";
+		   {unless($i==$coly-1){$numout[$i]=($numbers[$i]+$numbers1[$i])/2;}
+                    print Fout $numout[$i]." ";++$i;}     
+                    print Fout "\n";
 		  } 
 	    @numbers1=@numbers;
            }

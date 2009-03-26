@@ -63,6 +63,7 @@ class spincf
      
     spincf & operator + (const spincf & op2); // addition    
     spincf & operator= (const spincf & op2); // zuweisung
+    spincf & operator * (const double factor);
     int operator== (spincf & op2); // vergleich
 
    

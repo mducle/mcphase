@@ -1285,13 +1285,13 @@ benutzte Defines definieren
 #define VKQNAME     "vkq.parmeter"
 #define WKQNAME     "wkq.parmeter"
 #define XWNAME      "xw.parmeter"
-#define CFIELDSETUP "cfield.setup"
-#define OUTPUT      "cfield.out"
-#define ORTHO       "cfield.ortho"
-#define CHI2        "cfield.chi2"
-#define SUSZEPT     "suszept.rtplot"
-#define MAGNETM     "moment.rtplot"
-#define KPOLY       "kpoly.rtplot"
+#define CFIELDSETUP "results/cfield.setup"
+#define OUTPUT      "results/cfield.out"
+#define ORTHO       "results/cfield.ortho"
+#define CHI2        "results/cfield.chi2"
+#define SUSZEPT     "results/suszept.rtplot"
+#define MAGNETM     "results/moment.rtplot"
+#define KPOLY       "results/kpoly.rtplot"
  
 #define LOOPMAX      100  /*  Maximale Anzahl der moeglichen */
                           /*  Datensaetzen in Datenfiles     */

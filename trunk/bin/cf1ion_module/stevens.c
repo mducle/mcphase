@@ -59,7 +59,7 @@ extern DOUBLE omegan6n();
  
 extern IONEN  IONENIMP[];
  
- 
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/ 
 /*----------------------------------------------------------------------------
                                norm_Pkq()
 ------------------------------------------------------------------------------*/
@@ -306,7 +306,7 @@ fkq_tabelle(anz_ionen)/* Fkq Faktoren fuer die implementierten Ionen ausgeben */
  LONG   f40,f41,f42,f43,f44;
  LONG   f60,f61,f62,f63,f64,f65,f66;
  
- out = fopen(filename,"w");
+ out = fopen_errchk(filename,"w");
  
  clearscreen;
 printf("Information is contained in the file %s .\n",filename);
@@ -423,7 +423,7 @@ gkq_tabelle(anz_ionen)/* Gkq Faktoren fuer die implementierten Ionen ausgeben */
  LONG   g4m1,g4m2,g4m3,g4m4;
  LONG   g6m1,g6m2,g6m3,g6m4,g6m5,g6m6;
  
- out = fopen(filename,"w");
+ out = fopen_errchk(filename,"w");
  
  clearscreen;
 printf("Information contained in the file %s.\n",filename);
@@ -719,7 +719,7 @@ STEVkq_tabelle()
     INT dimj,k,q;
     CHAR *name="STEVkq.tabelle";
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Inofmation is contained in the file %s .\n",name);
  
@@ -751,14 +751,14 @@ info_Pkq(k,q,dimj,modus)
 INT k,q,dimj;
 CHAR modus;
 {
-    CHAR    *name  = "Pkq.info";
+    CHAR    *name  = "results/Pkq.info";
     MATRIX  *pn0n(),*pn1n(),*pn2n(),*pn3n(),*mx;
     MATRIX  *pn4n(),*pn5n(),*pn6n(),*Pkq();
  
     DOUBLE  j;
     FILE    *fopen(),*out;
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Inofmation is contained in the file %s.\n",name);
  
@@ -1003,13 +1003,13 @@ info_STEVkq(k,q,dimj,modus)
 INT k,q,dimj;
 CHAR modus;
 {
-    CHAR    *name  = "STEVkq.info";
+    CHAR    *name  = "results/STEVkq.info";
  
     DOUBLE  j;
     FILE    *fopen(),*out;
     MATRIX  *stevkq(),*mx;
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Information is contained in the file %s.\n",name);
  
@@ -1367,14 +1367,14 @@ CHAR *tnorm="Die Norm || STEV%1d%1d(%3.1f) || ist null.\n";
 info_Fkq(k,q,dimj)
 INT k,q,dimj;
 {
-    CHAR    *name  = "Fkq.info";
+    CHAR    *name  = "results/Fkq.info";
     LONG    fkq(),_fkq;
     DOUBLE  z;
     DOUBLE  j;
     INT     n,m;
     FILE    *fopen(),*out;
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Information is contained in the file %s .\n",name);
  
@@ -1426,14 +1426,14 @@ fclose(out);
 info_Gkq(k,q,dimj)
 INT k,q,dimj;
 {
-    CHAR    *name  = "Gkq.info";
+    CHAR    *name  = "results/Gkq.info";
     LONG    gkq(),_gkq;
     DOUBLE  z;
     DOUBLE  j;
     INT     n,m;
     FILE    *fopen(),*out;
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Information is contained in the file %s.\n",name);
  
@@ -1865,7 +1865,7 @@ info_tensor_Clm(l,m,theta,phi) /* Tensor Clm  auf file name ausgeben */
     INT l,m;
     DOUBLE theta,phi;
 {
-    CHAR *name = "Clm.info";
+    CHAR *name = "results/Clm.info";
  
     FILE    *fopen(),*out;
     KOMPLEX *Clm(),*z;
@@ -1873,7 +1873,7 @@ info_tensor_Clm(l,m,theta,phi) /* Tensor Clm  auf file name ausgeben */
     CHAR *textr="Realteil      von C%1d%1d(%6.2f, %6.2f) : %13.6e\n";
     CHAR *texti="Imaginaerteil von C%1d%1d(%6.2f, %6.2f) : %13.6e\n";
  
-    out = fopen(name,"w");
+    out = fopen_errchk(name,"w");
     clearscreen;
     printf("Informationen werden auf File %s ausgegeben.\n",name);
  

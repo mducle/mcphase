@@ -81,6 +81,7 @@ extern DOUBLE    epn6n();       /* definiert in CFIELD.C*/
 extern DOUBLE    spline();      /* definiert in SPLINE.C*/
 extern INT       lesedaten();   /* definiert in EINGABE.C*/
 extern INT       is_pbekannt(); /* definiert in EINGABE.C*/
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/
  
 /*----------------------------------------------------------------------------
                               output()
@@ -122,7 +123,7 @@ INT output( setup,ewproblem,kristallfeld,modus )
     DOUBLE magnetm();
  
     if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
-        fp=fopen(FILENAME(kristallfeld),"w");
+        fp=fopen_errchk(FILENAME(kristallfeld),"w");
 	
         write_titlecom(fp);
 t01="#-------------------------------------------------------------- \n";
@@ -132,7 +133,7 @@ t04="#\n#\n";
         fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
  
     }
-    else      fp=fopen(FILENAME(kristallfeld),"a");
+    else      fp=fopen_errchk(FILENAME(kristallfeld),"a");
  
  
     iteration   = ITERATION(   kristallfeld );
@@ -494,7 +495,7 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
              }
              fprintf(fp,t43);
        }
-    ewev=fopen("levels.cef","w"); /* output also  in uncommented format with states to be used in mcdiff.in */
+    ewev=fopen_errchk("results/levels.cef","w"); /* output also  in uncommented format with states to be used in mcdiff.in */
     fprintf(ewev,"#J=value {atom-file}  <Ja>(=<Jy>) <Jb>(=<Jz>) <Jc>(=<Jx>)\n");
     fprintf(ewev,"# Eigenvalues [%s] and eigenvectors [as columns]\n",EINHEITIMP[einheitnr_out].einheit); 
     fprintf(ewev,"J= %4.1f {%s} %6.3f %6.3f %6.3f\n",j,INFILE(kristallfeld),
@@ -870,7 +871,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
    VALUE(x_s,i)=suszept(mat_Jx2,ewproblem,einheitnr_in,VALUE(temp,i),gj);
  
   printf("calculating inverse Susceptibility %s ... \n",SUSZEPT);
-  fp           = fopen( SUSZEPT, "w");
+  fp           = fopen_errchk( SUSZEPT, "w");
   anz_daten    = 0;
   for( i=1; i<= anz_temp ; ++i )
      if( !is_equal(VALUE(x_s,i),0.0,macheps) && VALUE(x_s,i) >0.0 )
@@ -895,7 +896,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
    VALUE(y_s,i)=suszept(mat_Jy2,ewproblem,einheitnr_in,VALUE(temp,i),gj);
  
   printf("calculating inverse Susceptibility  %s ...... \n",SUSZEPT);
-  fp           = fopen( SUSZEPT, "a");
+  fp           = fopen_errchk( SUSZEPT, "a");
   anz_daten    = 0;
   for( i=1; i<= anz_temp ; ++i )
      if( !is_equal(VALUE(y_s,i),0.0,macheps) && VALUE(y_s,i) >0.0 )
@@ -921,7 +922,7 @@ INT raus_suszept(setup,iteration,ewproblem,kristallfeld)
    VALUE(z_s,i)=suszept(mat_Jz2,ewproblem,einheitnr_in,VALUE(temp,i),gj);
  
   printf("calculating inverse Susceptibility  %s ... \n",SUSZEPT);
-  fp           = fopen( SUSZEPT, "a");
+  fp           = fopen_errchk( SUSZEPT, "a");
   anz_daten    = 0;
   for( i=1; i<= anz_temp ; ++i )
      if( !is_equal(VALUE(z_s,i),0.0,macheps) && VALUE(z_s,i) >0.0 )
@@ -950,7 +951,7 @@ for( i=1; i<= anz_temp ; ++i ){
            ++anz_daten;
 }
 printf("calculating inverse Susceptibility  %s ... \n",SUSZEPT);
-fp           = fopen( SUSZEPT, "a");
+fp           = fopen_errchk( SUSZEPT, "a");
 if( anz_daten != 0 ){
  if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
  t03="Param. inv. Suszeptib. fuer ein Polykristall(mol/emu)";
@@ -1070,7 +1071,7 @@ INT raus_kpoly( setup,ewproblem,kristallfeld,anf_feld,end_feld,
  
  
       printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
-      fp = fopen( KPOLY, "w");
+      fp = fopen_errchk( KPOLY, "w");
       if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
       fprintf(fp,t05,datensatz_nr,anz_feld,ionname);
       for( i=1; i<= anz_feld; ++i )
@@ -1204,7 +1205,7 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
                               (b1*VALUE(feld,i)),(b2*VALUE(feld,i)),(b3*VALUE(feld,i)),temp);
     }
     printf("Berechnetes Moment auf %s rausschreiben ... \n",MAGNETM);
-    fp = fopen( MAGNETM, "w");
+    fp = fopen_errchk( MAGNETM, "w");
     if(NUMMERIERUNG(setup)==JA) --datensatz_nr;
     fprintf(fp,t05,datensatz_nr,anz_feld,ionname,1,0,0,b1,b2,b3);
     for( i=1; i<= anz_feld; ++i )

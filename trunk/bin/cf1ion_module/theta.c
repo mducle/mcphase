@@ -61,6 +61,7 @@ Includedateien holen
 /*----------------------------------------------------------------------------
 Extern definierte Funktionen
 -----------------------------------------------------------------------------*/
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/ 
 
 /*ionenanzahl muss mit ANZ_IONEN in cfield.c und cfieldrout.c uebereinstimmen !!!*/
 
@@ -175,7 +176,7 @@ DOUBLE gamma_J[NR_RE]={
 -----------------------------------------------------------------------------*/
 info_thetakq()     /* Liste der Stevensfaktoren alpha_J,beta_J,gamma_J zeigen*/
 {
-    CHAR *name = "thetakq.info";
+    CHAR *name = "results/thetakq.info";
  
     FILE *fopen(),*fp;
     CHAR *s,*text=" %4s  %2i     %10.4f     %10.4f      %10.4f\n";
@@ -185,7 +186,7 @@ info_thetakq()     /* Liste der Stevensfaktoren alpha_J,beta_J,gamma_J zeigen*/
     DOUBLE z=1000000.0;
     INT i;
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information contained in the File %s .\n",name);
  
@@ -223,7 +224,7 @@ info_thetakq()     /* Liste der Stevensfaktoren alpha_J,beta_J,gamma_J zeigen*/
                    /*             n                   */
 info_rn()          /* Liste der <r > n=2,4,6 ausgeben */
 {
-    CHAR *name = "rn.info";
+    CHAR *name = "results/rn.info";
  
     FILE   *fopen(),*fp;
     DOUBLE a,b,c,a2,a4,a6;
@@ -235,7 +236,7 @@ info_rn()          /* Liste der <r > n=2,4,6 ausgeben */
     CHAR *sexti =" %2s      %10.4f    %10.4f    %10.4f nach U. Walter\n";
     CHAR *sextfw=" %2s      %10.4f    %10.4f    %10.4f              \n";
  
-    fp = fopen(name,"w");
+    fp = fopen_errchk(name,"w");
     clearscreen;
     printf("Information contained in the file %s.\n",name);
  

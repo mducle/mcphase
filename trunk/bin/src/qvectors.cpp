@@ -6,13 +6,13 @@
  // methods for class qvectors 
 
 //save qvectors on file
-void qvectors::save()
+void qvectors::save(const char * filemode)
 { FILE * fout;
  int k;
  spincf sps(1,1,1,nofatoms,3);
     
  printf("saving %s\n",savfilename); 
- fout=fopen_errchk (savfilename,"w");
+ fout=fopen_errchk (savfilename,filemode);
  fprintf (fout, "#{(h k l) of test-Qvectors (nr1 nr2 nr3) unitcellsize (no) structure number / momentum arrangement <J(i)>}\n");
  for (k=1;k<=nofqs();++k)
  {Vector hkl(1,3);

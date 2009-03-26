@@ -23,7 +23,7 @@ $delta=1e22;
 	 $const=-$numbers[$column-1];
        # print $numbers[$colx-1]." $const\n";
         }    
-         
+         
    }
  
   close Fin;

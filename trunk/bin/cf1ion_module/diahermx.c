@@ -76,6 +76,8 @@ extern INT     a_toi();
 extern DOUBLE  a_tof();
 extern INT     free_vr();  /* Vektor-Speicher wieder freigeben */
 extern DOUBLE  log();      /* Logarithmus               */
+
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/
  
  
 /*----------------------------------------------------------------------------
@@ -293,7 +295,7 @@ SETUP *create_setup(setup)  /* setupfile erzeugen */
    DOUBLE accuracy(),log();
    INT stelle;
  
-   fp=fopen(CFIELDSETUP,"w");
+   fp=fopen_errchk(CFIELDSETUP,"w");
    write_title(fp);
  
  
@@ -1311,7 +1313,7 @@ info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
     CHAR   *tdelta  = "< %2d , %2d | %2d , %2d > =  %20.12e + i * %20.12e\n";
     FILE   *fopen(),*out;
  
-    out    = fopen("egnwert.info","w");
+    out    = fopen_errchk("results/egnwert.info","w");
  
     comhes = ewproblem->comhes;
     mx     = comhes   ->matrix;        /* urspruengliche Matrix holen       */

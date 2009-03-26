@@ -11,7 +11,7 @@ if ($#ARGV<2)
 		      
     use as spectrum h k l [filename(s)] 
           hkl  ...... scattering vector (millerindices)
-	  filename... filename to be read (mcdisp.qom as default)
+	  filename... filename to be read (results/mcdisp.qom as default)
 	  
     
 \n";
@@ -27,8 +27,8 @@ $eps=0.00001;
 my (@file) = @ARGV;
 
  unless ($file[0])
-{$file[0] = "./mcdisp.qom";
- print "using data from file ./mcdisp.qom\n";}
+{$file[0] = "./results/mcdisp.qom";
+ print "using data from file ./results/mcdisp.qom\n";}
  
     my ($data,$Limits) = get_detector_data_2D($file[0]);
     my ($intcol,$Ecol) = @{$Limits};

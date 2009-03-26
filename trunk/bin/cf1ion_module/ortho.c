@@ -79,6 +79,7 @@ extern MATRIX    *calcBmol();        /* definiert in CFIELD.C  */
 extern FIT       FITIMP[];           /* definiert in Minima.c  */
  
 extern NEBENBEDINGUNG *neben_read(); /* definiert in EINGABE.C */
+extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/ 
  
 #define r0    (-1.91*_e*_e/_m )/*  * 10**(-12) cm  = -0.54*10(-12)cm */
 #define const (r0*r0*pi)       /* in barn            2   */
@@ -238,7 +239,7 @@ if( ANZ_VAR(neben) != 0  && ANZAHL(neben) != 0 ){
     printf("Ergebnisse auf %s herausschreiben...\n",ORTHO);
  
  
-    fp = fopen(FILENAME(kristallfeld),"w");
+    fp = fopen_errchk(FILENAME(kristallfeld),"w");
     write_title(fp);
  
 t01=" -------------------------------------------------------------- \n";

@@ -30,8 +30,8 @@ open (Fout,"> plotbook.tex");
 print Fout 
 '%\documentclass[twoside]{article}
 \documentclass[a4paper,10pt,twoside]{article}
-\hoffset -2.5cm    %-2.5
-\voffset -1cm    %-4
+\hoffset -2.5cm    %-2.5
+\voffset -1cm    %-4
 \textwidth16cm
 \textheight26cm
 \oddsidemargin2.4cm
@@ -47,8 +47,8 @@ print Fout
 
 \input{plotbookfig.tex}
 
-\end{document}';
-close Fout;
+\end{document}';
+close Fout;
  
 system ("latex plotbook");
 system ("dvips plotbook");

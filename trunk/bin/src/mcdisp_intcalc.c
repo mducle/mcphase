@@ -2,25 +2,20 @@
 #define PI 3.1415926535
 #define KB 0.0862     // Boltzmanns constant in mev/K
 
-double intcalc_approx(double & intensitybey,int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
-{//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
- int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
- double intensity=1.2; 
- double ki,kf;
- complex <double> chileft;
- complex <double> chileftbey;
- float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
- Vector qabc(1,3);
+//***********************************************************************//
+// initialize intensity calculation for going beyond dipole approximation
+//***********************************************************************
+// returns 1 on success and zero on failure
+//***********************************************************************
+int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,Vector & hkl)
+{int i,j,k,l,m,n,jmin,i1,j1,tn; Vector qabc(1,3);
     qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
     qabc(2)=hkl(2)*2*PI/inputpars.b;
     qabc(3)=hkl(3)*2*PI/inputpars.c;
-    QQ=Norm(qabc);
 
-
-if(intensitybey>0)
-{//***********************************************************************//
-if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
+ float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
+ if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
 // determine unitary transformation Matrix V (q)  Gamma and N for going beyond dip interaction
   Vector Gamma(1,ini.nofcomponents);
   complex<double> imaginary(0,1);
@@ -40,7 +35,7 @@ if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
   for(l=1;l<=inputpars.nofatoms;++l){
   fin = fopen_errchk ("./results/mcdisp.trs","rb");
   jmin=0;
-  while (feof(fin)==0&&intensitybey>0)
+  while (feof(fin)==0)
   {if ((i1=inputline(fin,nn))>=5)
    {if(i==(int)nn[1]&&j==(int)nn[2]&&k==(int)nn[3]&&l==(int)nn[4])
     {tn=(int)nn[5];++jmin;  
@@ -62,7 +57,7 @@ if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
       (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
       if(nnt==0)
       {if(do_verbose)printf("warning mcdisp - function dncalc not implemented for single ion module, only doing dipolar intensity\n");
-       intensitybey=-1.1;}
+       fclose(fin);return 0;}
       else
       {
        j1=md.baseindex(i,j,k,l,jmin); 
@@ -112,14 +107,28 @@ if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
     fclose(fin);
 
   }}}}
-
-
-
-
-
+  return 1;
+}
 
 //**************************************************************************/
-}
+double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
+{//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
+
+ int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
+ double intensity=1.2; 
+ double ki,kf;
+ complex <double> chileft;
+ complex <double> chileftbey;
+ float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
+ Vector qabc(1,3);
+    qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
+    qabc(2)=hkl(2)*2*PI/inputpars.b;
+    qabc(3)=hkl(3)*2*PI/inputpars.c;
+    QQ=Norm(qabc);
+ 
+ // init eigenvector to zero
+  ev_real.clear();ev_imag.clear();
+
  // determine chi
 
    ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
@@ -153,6 +162,12 @@ if(intensitybey>0)chileftbey=PI*conj(md.sqrt_Gamma(i1,j1,k1)(md.nofcomponents*b,
 
      chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
      chileft*conj(Tau(ss,level))*conj(md.U(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
+
+     // here we fill the eigenvector mf with the information from chi
+     if((s-1)*md.nofcomponents+i==1){ev_real.mf(i2,j2,k2)(md.nofcomponents*(l2-1)+j)+=real(chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j));// add this transition
+                                     ev_imag.mf(i2,j2,k2)(md.nofcomponents*(l2-1)+j)+=imag(chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j));
+                                     }
+
 if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
      chileftbey*conj(Tau(ss,level))*conj(md.V(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_Gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);}
     }}
@@ -281,7 +296,7 @@ if(intensitybey>0){       Sbey(s+i,ss+j)*=pol(i,j);
  // determine dsigma in barns per cryst unit cell !
  //divide by number of crystallographic unit cells  (ini.mf.n()) in magnetic unit cell
 intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
-if(intensitybey>0){intensitybey=abs(Sum(Sbey))/ini.mf.n()/PI/2.0*3.65/4.0/PI; }else{intensitybey=-1;}
+if(intensitybey>0){intensitybey=abs(Sum(Sbey))/ini.mf.n()/PI/2.0*3.65/4.0/PI; }
 
 // here should be entered factor  k/k' + absolute scale factor
 if (ini.ki==0)

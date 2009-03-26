@@ -44,6 +44,7 @@ mfcf mf;
 
 void update_maxnofhkls(int mxnofhkli);
 double save(int verbose, int j,par & inputpars);
+double save(int verbose, const char *filemode, int j, par &inputpars);
 
 };
 
