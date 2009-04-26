@@ -862,7 +862,7 @@ if (ini.displayall==1)
  delete []jj;delete []lnzi;delete []ui;
      for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
+ delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
      }}}} delete []ests;
 
 return fe;     

@@ -1,179 +1,69 @@
+
+/* ---------------------
+ * BubbleChartDemo1.java
+ * ---------------------
+ * (C) Copyright 2003-2008, by Object Refinery Limited.
+ */
+
+//package demo;
+
+import java.awt.Color;
 import java.awt.*;
-import java.awt.image.*;
 import java.awt.event.*;
-import javachart.chart.*;
+import java.awt.image.*;
+import javax.swing.JPanel;
 import java.io.*;
-import java.lang.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.xy.DefaultXYZDataset;
+import org.jfree.data.xy.XYZDataset;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
+
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
-public class displaybubbles extends Panel implements Runnable {
- public BubbleChart chart = new BubbleChart("displaybubbles");
- Button bRot=new Button("save displaybubbles.jpg");                       //erstellt einen Button
- Thread myThread = null;
- static   double vals[]={0.,1.};
+/**
+ * A bubble chart demo.
+ */
+public class displaybubbles extends ApplicationFrame {
+ Button bRot=new Button("save display.jpg");                       //erstellt einen Button
  static String[] file;
  static int[] colx;
  static int[] coly;
  static int[] colint;
- 
- public void start(){ myThread = new Thread (this); myThread.start();}
+ static String [] legend; 
+ static String xText = "";
+ static String yText = "";
+ static String Title = "";
+ static LegendTitle Legendt;
+ static DefaultXYZDataset dataset;
+ static JFreeChart chart;
+ static JPanel chartPanel;
+    /**
+     * A demonstration application showing a bubble chart.
+     *
+     * @param title  the frame title.
+     */
+    public displaybubbles(String title) {
+        super(title);
+        chartPanel = createDemoPanel();
+        chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+        setContentPane(chartPanel);
+        chartPanel.setAlignmentY(Component.LEFT_ALIGNMENT);
+        chartPanel.add(bRot);
 
- public void stop(){myThread = null;}
-
- public void run(){ while(myThread!=null){
-    try{Thread.sleep(5000);
-       }catch(Exception ignored){}
-       // here do something
-
- File fileIni;
- try{
- for (int i=0;i<file.length;++i)
- {String s="";
-      Dataset ds = chart.getDataset(file[i]+s.valueOf(i));
-      ds.getData().removeAllElements();
-
- fileIni = new File(file[i]);
-
-    //ï¿½ffnen der Datei
-    DataInputStream inStream = new DataInputStream(new FileInputStream(fileIni));
-    String strLine;
-    String sx;
-    String sy;
-    String sint;
-    int clx = colx[i];
-    int cly = coly[i];   
-    int clint = colint[i];
-
-//    display app = new display();
-//    app.setSize(640, 640);
-
-//    Dataset ds = chart.getDataset("xy");
-//    ds.getGc().setMarkerStyle(Gc.MK_DIAMOND);
-//    ds.getGc().setMarkerSize(7);
-    
-    
-//    ds.getGc().setLineWidth(0);
-//    ds.getGc().setFillColor(Color.blue);
-
-     //Auslesen der Datei
-    while (inStream.available() > 0)
-    {
-      strLine = inStream.readLine();
-      if ((strLine.length() == 0)
-        ||(TrimString(strLine).substring(0, 1).equalsIgnoreCase("#")))
-      {
-        continue;
-      }
-      
-      // select colx and coly
-      sx=TrimString(strLine);
-      sy=TrimString(strLine);
-      sint=TrimString(strLine);
-      int cx =clx-1;
-      int cy =cly-1;      
-      int cint =clint-1;      
-
-      while (cx>0)
-      {--cx;
-       int iPos = sx.indexOf(" ");
-       if (iPos < 0)
-       {
-         continue;
-       }
-       sx=sx.substring(iPos);
-       sx=TrimString(sx); 
-      }
-
-      while (cy>0)
-      {--cy;
-       int iPos = sy.indexOf(" ");
-       if (iPos < 0)
-       {
-         continue;
-       }
-       sy=sy.substring(iPos);
-       sy=TrimString(sy); 
-      }
-
-      while (cint>0)
-      {--cint;
-       int iPos = sint.indexOf(" ");
-       if (iPos < 0)
-       {
-         continue;
-       }
-       sint=sint.substring(iPos);
-       sint=TrimString(sint); 
-      }
-       cx=sx.indexOf(" ");
-       cy=sy.indexOf(" ");
-       cint=sint.indexOf(" ");
-       if (cx>0) {sx=sx.substring(0,cx);}
-       if (cy>0) {sy=sy.substring(0,cy);}
-       if (cint>0) {sint=sint.substring(0,cint);}
-
-      Double p = new Double(0.0);
-      
-      System.out.println(sx+" "+sy+" "+sint);
-//      p.valueOf(strLine);
-//    double[] myDatax = {p.parseDouble(sx)};
-//    double[] myDatay = {p.parseDouble(sy)};
-   try{
-      Datum d = new Datum(p.parseDouble(sx), p.parseDouble(sy), p.parseDouble(sint),0,null);
-      //ds.getGc().setMarkerSize((int)p.parseDouble(sint));
-      ds.addDatum(d);}
-      catch(NumberFormatException e){System.exit(1);}
-    }   
-  
-    //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
-    }
-// double[] myDatax = {1, 3, 2, 3,33};
-// double[] myDatay = {123, 432, 223, 345,33};
-
- 
-// app.setVisible(true);
-//  repaint();
-
- }
- catch(EOFException e)
-    {
-      System.out.println("EOF: " + e.getLocalizedMessage());
-      //EntSession.CWatch("Unplanmï¿½ï¿½iges 'End Of File' in DSN-Konfigurationsdatei!");
-    }
-
-    catch (FileNotFoundException e)
-    {
-      System.out.println("File not found: " + e.getLocalizedMessage());
-      //EntSession.CWatch("Konfigurationsdatei cti_listener.ini nicht gefunden!");
-    }
-
-    //Sonstiger Dateifehler
-    catch (IOException e)
-    {
-      System.out.println("Dateifehler: " + e.getLocalizedMessage());
-      //EntSession.CWatch("Fehler beim Zugriff auf Datei cti_listener.ini!");
-    }
-
- 
-
-       //  
-        repaint();
- }}
-
- protected void initChart(){ 
- String s="";
-       chart.setZScale(0.05);
- for (int i=0;i<file.length;++i)
-      { chart.addDataset(file[i]+s.valueOf(i),vals,vals);
-   }  
-    bRot.addActionListener(new ActionListener(){
+   bRot.addActionListener(new ActionListener(){
     public void actionPerformed(ActionEvent ed){
     try{
-         FileOutputStream fos=new FileOutputStream("displaybubbles.jpg");
-         BufferedImage image= new BufferedImage(chart.getWidth(),chart.getHeight(), BufferedImage.TYPE_INT_RGB); 
-         Graphics g=image.getGraphics();
-         paint(g);
+         FileOutputStream fos=new FileOutputStream("display.jpg");
+         BufferedImage image= chart.createBufferedImage(chartPanel.getWidth(),chartPanel.getHeight(),BufferedImage.TYPE_INT_RGB,null); 
          JPEGImageEncoder encoder= JPEGCodec.createJPEGEncoder(fos); 
          encoder.encode(image);
          fos.close();
@@ -189,76 +79,255 @@ public class displaybubbles extends Panel implements Runnable {
          //EntSession.CWatch("Fehler beim Zugriff auf Datei cti_listener.ini!");
     }
 
+      } });
+                                               
+    }
+
+    /**
+     * Creates a chart.
+     *
+     * @param dataset  the dataset.
+     *
+     * @return The chart.
+     */
+    private static JFreeChart createChart(XYZDataset dataset) {
+        chart = ChartFactory.createBubbleChart(
+                Title, xText, yText, dataset,
+                PlotOrientation.HORIZONTAL, true, true, false);
+        XYPlot plot = (XYPlot) chart.getPlot();
+        plot.setBackgroundPaint(Color.white);
+        plot.setForegroundAlpha(1.0f);
+
+        XYItemRenderer renderer = plot.getRenderer();
+        renderer.setSeriesPaint(0, Color.blue);
+        renderer.setSeriesPaint(1, Color.red);
+        renderer.setSeriesPaint(2, Color.green);
+
+        // increase the margins to account for the fact that the auto-range
+        // doesn't take into account the bubble size...
+        NumberAxis domainAxis = (NumberAxis) plot.getDomainAxis();
+        domainAxis.setLowerMargin(0.15);
+        domainAxis.setUpperMargin(0.15);
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setLowerMargin(0.15);
+        rangeAxis.setUpperMargin(0.15);
+        return chart;
+    }
+
+    /**
+     * Creates a sample dataset.
+     *
+     * @return A sample dataset.
+     */
+    public static XYZDataset createDataset() {
+        
+         dataset = new DefaultXYZDataset();
+        //double[] x = {2.1, 2.3, 2.3, 2.2, 2.2, 1.8, 1.8, 1.9, 2.3, 3.8};
+        //double[] y = {14.1, 11.1, 10.0, 8.8, 8.7, 8.4, 5.4, 4.1, 4.1, 25};
+        //double[] z = {2.4, 2.7, 2.7, 2.2, 2.2, 2.2, 2.1, 2.2, 1.6, 4};
+        //double[][] series = new double[][] { x, y, z };
+        //dataset.addSeries("Series 1", series);
+        return dataset;
+    }
+
+    /**
+     * Creates a panel for the demo (used by SuperDemo.java).
+     *
+     * @return A panel.
+     */
+    public static JPanel createDemoPanel() {
+        JFreeChart chart = createChart(createDataset());
+        ChartPanel chartPanel = new ChartPanel(chart);
+       	
+        chartPanel.setDomainZoomable(true);
+        chartPanel.setRangeZoomable(true);
+        return chartPanel;
+    }
+
+    /**
+     * Starting point for the demonstration application.
+     *
+     * @param args  ignored.
+     */
+    public static void main(String[] args) {
+          String ss;
+      if (args.length<3)
+      {System.out.println("- too few arguments...\n");
+       System.out.println("  program displaybubbles - show and watch data file by viewing a xy graphic on screen\n\n");
+       System.out.println("use as:  displaybubbles xcol ycol intcol filename [xcol1 ycol1 intcol filename1 ...]\n\n");
+       System.out.println("         xcol,ycol ... column to be taken as x-, y- and intensity-axis\n");
+       System.out.println("	 filename ..... filename of datafile\n\n");
+       System.exit(0);
       }
-                                                 });
- }
+       file = new String[args.length/3];
+       colx = new int[args.length/3];
+       coly = new int[args.length/3];
+       colint = new int[args.length/3];
+       Double p = new Double(0.0);
+       //      System.out.println(sx+" "+sy);
+       //      p.valueOf(strLine);
+       //    double[] myDatax = {};
+       int j=0;
+       String title="";
+       for(int i=0; i<args.length-1;	i+=4)
+       {file[j]=args[i+3];
+       Integer pp;
+       ss=args[i];
+       colx[j]=p.valueOf(ss).intValue();
+       ss=args[i+1];
+       coly[j]=p.valueOf(ss).intValue();
+       ss=args[i+2];
+       colint[j]=p.valueOf(ss).intValue();
+       ++j; 
+       title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3]+" ";
+       }
+        displaybubbles demo = new displaybubbles(title);
+        demo.pack();
+        RefineryUtilities.centerFrameOnScreen(demo);
+        demo.setVisible(true);
+        final Thread updater = demo.new UpdaterThread();
+        updater.setDaemon(true);
+        updater.start();
+    
 
+    }
+     /**
+     * A thread for updating the dataset.
+     */
+    private class UpdaterThread extends Thread {
+        /**
+         * @see java.lang.Runnable#run()
+         */
+        public void run() {
+            setPriority(MIN_PRIORITY); // be nice
+          while(true){
+                try {
+                    sleep(500);
+                }
+                catch (InterruptedException e) {
+                    // suppress
+                }
 
- 
- public void update(Graphics g){paint(g);}
+            File fileIni;
+       try{
+           for (int i=0;i<file.length;++i)
+           {           
+            String s="";
+            //XYDataset ds = chart.getXYPlot().getDataset(i);
+            //ds.getData().removeAllElements();
+            int maxnofpoints=1000;int j=maxnofpoints;
+           while(j==maxnofpoints)           
+           {double [][] data=new double [3][maxnofpoints];//={{0,1},{0,1},{0,1}};             
 
- public void paint(Graphics g){try{chart.paint(this,g);}catch(ArrayIndexOutOfBoundsException e){;}}
+            fileIni = new File(file[i]);
 
- public static void main(String[] args){ 
-  String ss;
-  if (args.length<3)
-  {System.out.println("- too few arguments...\n");
-    System.out.println("  program displaybubbles - show and watch data file by viewing a xy graphic on screen\n\n");
-    System.out.println("use as:  displaybubbles xcol ycol intcol filename [xcol1 ycol1 intcol filename1 ...]\n\n");
-    System.out.println("         xcol,ycol ... column to be taken as x-, y- and intensity-axis\n");
-    System.out.println("	 filename ..... filename of datafile\n\n");
-  System.exit(0);
+            //?ffnen der Datei
+             DataInputStream inStream = new DataInputStream(new FileInputStream(fileIni));
+             String strLine;
+             String sx;
+             String sy;
+             String sint;
+             int clx = colx[i];
+             int cly = coly[i];   
+             int clint = colint[i];
+
+             j=0;
+             //Auslesen der Datei
+            while (inStream.available() > 0&&j<maxnofpoints)
+            {
+             strLine = inStream.readLine();
+             if ((strLine.length() == 0)
+             ||(TrimString(strLine).substring(0, 1).equalsIgnoreCase("#")))
+             {
+      for(int i1=0;i1<=strLine.length();++i1)
+       {//if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylegend=true")){legend[i]="true";chart.addLegend(chart.getXYPlot().Legendt);}}
+        //if(i1<=strLine.length()-19){if(strLine.substring(i1,i1+19).equalsIgnoreCase("displaylegend=false")){legend[i]="false";Legendt=chart.getLegend();chart.removeLegend();}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayxtext=")){chart.getXYPlot().getRangeAxis().setLabel(strLine.substring(i1+13,strLine.length()));}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayytext=")){chart.getXYPlot().getDomainAxis().setLabel(strLine.substring(i1+13,strLine.length()));}}
+        //if(i1<=strLine.length()-17){if(strLine.substring(i1,i1+17).equalsIgnoreCase("displaylines=true")){chart.setLineVisible(true);}}
+        //if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylines=false")){chart.setLineVisible(false);}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displaytitle=")){chart.setTitle(strLine.substring(i1+13,strLine.length()));}}
+        }
+
+        continue;
+       }
+             // select colx and coly
+              sx=TrimString(strLine);
+              sy=TrimString(strLine);
+              sint=TrimString(strLine);
+              int cx =clx-1;
+              int cy =cly-1;      
+              int cint =clint-1;      
+
+               while (cx>0)
+               {--cx;
+               int iPos = sx.indexOf(" ");
+               if (iPos < 0){continue;}
+               sx=sx.substring(iPos);
+               sx=TrimString(sx); 
+               }
+
+               while (cy>0)
+               {--cy;
+               int iPos = sy.indexOf(" ");
+               if (iPos < 0){continue;}
+               sy=sy.substring(iPos);
+               sy=TrimString(sy); 
+               }
+
+               while (cint>0)
+               {--cint;
+                int iPos = sint.indexOf(" ");
+                if (iPos < 0){continue;}
+                sint=sint.substring(iPos);
+                sint=TrimString(sint); 
+               }
+               cx=sx.indexOf(" ");
+               cy=sy.indexOf(" ");
+               cint=sint.indexOf(" ");
+               if (cx>0) {sx=sx.substring(0,cx);}
+               if (cy>0) {sy=sy.substring(0,cy);}
+               if (cint>0) {sint=sint.substring(0,cint);}
+              //System.out.println(sx+" "+sy+" "+sint);
+
+               Double p = new Double(0.0);
+               try{data[1][j]=p.parseDouble(sx);
+                   data[0][j]=p.parseDouble(sy);
+                   data[2][j]=p.parseDouble(sint);
+                    ++j;
+                   }
+                   catch(NumberFormatException e){System.exit(1);}
+               }   
+               if(j==maxnofpoints){maxnofpoints*=2;j=maxnofpoints;}
+               else
+              {dataset.removeSeries(file[i]);
+              dataset.addSeries(file[i],data);}
+             }
+  
+    //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
+             
+
+             }
+    }
+    catch(EOFException e)
+    {
+      System.out.println("EOF: " + e.getLocalizedMessage());
+    }
+
+    catch (FileNotFoundException e)
+    {
+      System.out.println("File not found: " + e.getLocalizedMessage());
+    }
+
+    //Sonstiger Dateifehler
+    catch (IOException e)
+    {
+      System.out.println("Dateifehler: " + e.getLocalizedMessage());
+      //EntSession.CWatch("Fehler beim Zugriff auf Datei cti_listener.ini!");
+    }
+    repaint();
   }
-
-  file = new String[args.length/3];
-  colx = new int[args.length/3];
-  coly = new int[args.length/3];
-  colint = new int[args.length/3];
-   Double p = new Double(0.0);
-//      System.out.println(sx+" "+sy);
-//      p.valueOf(strLine);
-//    double[] myDatax = {};
- int j=0;
- String title="";
- for(int i=0; i<args.length-1;	i+=4)
- {file[j]=args[i+3];
-  Integer pp;
-  ss=args[i];
-  colx[j]=p.valueOf(ss).intValue();
-  ss=args[i+1];
-  coly[j]=p.valueOf(ss).intValue();
-  ss=args[i+2];
-  colint[j]=p.valueOf(ss).intValue();
-  ++j; 
- title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3]+" ";
-}
-
- Frame myFrame = new Frame(title);
- displaybubbles myPanel = new displaybubbles();
-	myFrame.addWindowListener(new WindowAdapter() {
-	    public void windowClosing(WindowEvent e) {System.exit(0);}
-	});
- myPanel.initChart();
-       myFrame.add(myPanel.bRot);                                          //fügt dem JFrame den Button hinzu
-       myFrame.pack();
- myFrame.add(myPanel);
- myFrame.setSize(300,300);
- myFrame.setVisible(true);
- myPanel.start();	
-
-//	frame = new JFrame("FileChooserDemo");
-//	frame.addWindowListener(new WindowAdapter() {
-//	    public void windowClosing(WindowEvent e) {System.exit(0);}
-//	});
-//	frame.getContentPane().add("Center", panel);
-//	frame.pack();
-//	frame.setVisible(true);
-
-//	panel.updateState();
-
-
- }
-
+ }}
  static private String FirstWord(String strSource)
  {String fw;
   fw=TrimString(strSource);
@@ -299,5 +368,7 @@ public class displaybubbles extends Panel implements Runnable {
 
     return(strSource);
  }
+
+
 
 }

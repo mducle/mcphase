@@ -71,7 +71,10 @@ unless ($#ARGV >=0)
                  if ($IONTYPE=~/.*V3+/){$gJ=2;}
                  if ($gJ==0) {print "ERROR: ion not recognized\n exiting ...\n"; exit(1);}
             }
-   print "|Q|(1/A)  F(Q) |F(Q)|^2\n";
+   print "#Note the formfactor in dipole approximation is different for rare earth and transition metals\n";
+   print "#FRE= <j0(Q)>+<j2(Q)> (2/GJ - 1)\n";
+   print "#FTM= <j0(Q)>-<j2(Q)> (2/GJ - 1)\n";
+   print "#|Q|(1/A)  FRE(Q) |FRE(Q)|^2 FTM(Q) |FTM(Q)|^2\n";
   for($Q=0;$Q<10;$Q+=0.1)
    {$s=$Q/4/3.1415;
    $j0 = $FFj0A * exp(-$FFj0a * $s * $s) + $FFj0B  * exp(-$FFj0b * $s * $s);
@@ -81,6 +84,8 @@ unless ($#ARGV >=0)
    $j2 = $j2 + $FFj2C * $s * $s * exp(-$FFj2c * $s * $s) + $s * $s * $FFj2D;
    $F=$j0 + $j2 * (2 / $gJ - 1);
    $FF=$F*$F;
-   print "$Q $F $FF\n";
+   $FTM=$j0 - $j2 * (2 / $gJ - 1);
+   $FFTM=$FTM*$FTM;
+   print "$Q $F $FF $FTM $FFTM\n";
    }
   }

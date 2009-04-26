@@ -1,4 +1,4 @@
-cat << EOF > simannfit.status
+cat << EOF > results/simannfit.status
 starting up
 EOF
 java simannfitstatus &

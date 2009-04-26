@@ -42,7 +42,7 @@ public class searchspacestatus extends JPanel implements ActionListener {
     protected displaytext text;
     protected JScrollPane scrollPane;
     private final static String newline = "\n";
-    private static String filename="searchspace.status";
+    private static String filename="results/searchspace.status";
 
     public searchspacestatus() {
         super(new GridBagLayout());

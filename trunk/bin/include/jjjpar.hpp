@@ -43,7 +43,7 @@ class jjjpar
    ComplexVector & MQ(Vector & Qvec);
    ComplexVector Mq;
 
-  ComplexMatrix est; // eigenstates 
+   ComplexMatrix est; // eigenstates 
    // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
    ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
 

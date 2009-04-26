@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string>
 
 #include "dfile.h"
 #include "formula.h"
@@ -37,32 +38,31 @@ int main(int iArgC, char ** szArgV)
  int iSet=1,iPrint=0;
  
  char szF[MAX_LINELENGTH+1];
- const char *szManPath="Usage: Calc [-s #] [-f string] [-t type] [-v] [-h] InputFile
-        -s #: (int) number of data set to perform calculation
-                (Only valid if file type supports multiple data sets)  
-   -f string: Formula defining calculation
-               Allowed formulas  (#: Column number : 1 - n)
-                c# = 1.23 <+-*/^> c#
-                c# = c# <+-*/^> 1.234 
-                c# = c# <+-*/^> c# 
-                c# = FUN(c#) 
-                c# = FUN(1.234)  
-                FUN: ABS, COS, EXP, LOG, SIN,  TAN, SEQ,
- 	             ACOS, ASIN, ATAN, SQRT,
-                Not case sensitive; blancs are ignored
-    -t dos : OutFile in DOS <lf><cr> format
-    -t unix: OutFile in UNIX <lf> format
-         -t: ommited: OutFile same as InputFile format
-         -v: verify: print header before and after operation (stderr)          
-         -h: Print this help message 
-  InputFile: Input data file
-RESULT:
-The operation defined by the formula is performed.
-Columns not involved in the formula are unchanged.
-InputFile can be piped (|). 
-Output is written to stdout.
-$Id: Calc.man,v 1.4 1999/07/12 10:51:10 herbie Exp herbie $
-";
+ const char *szManPath="Usage: Calc [-s #] [-f string] [-t type] [-v] [-h] InputFile\n"
+                       "        -s #: (int) number of data set to perform calculation\n"
+                       "                (Only valid if file type supports multiple data sets)\n"
+                       "   -f string: Formula defining calculation\n"
+                       "               Allowed formulas  (#: Column number : 1 - n)\n"
+                       "                c# = 1.23 <+-*/^> c#\n"
+                       "                c# = c# <+-*/^> 1.234 \n"
+                       "                c# = c# <+-*/^> c# \n"
+                       "                c# = FUN(c#) \n"
+                       "                c# = FUN(1.234) \n" 
+                       "                FUN: ABS, COS, EXP, LOG, SIN,  TAN, SEQ,\n"
+                       " 	             ACOS, ASIN, ATAN, SQRT,\n"
+                       "                Not case sensitive; blancs are ignored\n"
+                       "    -t dos : OutFile in DOS <lf><cr> format\n"
+                       "    -t unix: OutFile in UNIX <lf> format\n"
+                       "         -t: ommited: OutFile same as InputFile format\n"
+                       "         -v: verify: print header before and after operation (stderr)\n"
+                       "         -h: Print this help message \n"
+                       "  InputFile: Input data file\n"
+                       "RESULT:\n"
+                       "The operation defined by the formula is performed.\n"
+                       "Columns not involved in the formula are unchanged.\n"
+                       "InputFile can be piped (|). \n"
+                       "Output is written to stdout.\n"
+                       "$Id: Calc.man,v 1.4 1999/07/12 10:51:10 herbie Exp herbie $\n";
  
  if(iArgC<1)exit(EXIT_FAILURE);
 

@@ -40,7 +40,7 @@ sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$par
   if ($ARGV[0]=~"-t") {shift @ARGV; $maxtim=$ARGV[0]; shift @ARGV;}
   if ($ARGV[0]=~"-s") {shift @ARGV; $maxstep=$ARGV[0]; shift @ARGV;}
  
- open(Fout,">simannfit.status");
+ open(Fout,">results/simannfit.status");
  foreach (@ARGV)
  {$file=$_; system ("copy ".$file." ".$file.".par"); open (Fin, $file);
    while($line=<Fin>)
@@ -90,11 +90,11 @@ if($sta>0)
    ($sta)=sta(); # CALCULATE sta !!!!
    ++$stepnumber;
    print " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
-   open(Fin,"simannfit.status");$line=<Fin>;
+   open(Fin,"results/simannfit.status");$line=<Fin>;
     if ($line=~/exit simannfit/){$sta=0;close Fin;}
     else
     {close Fin;
-     open(Fout,">simannfit.status");$i=0;
+     open(Fout,">results/simannfit.status");$i=0;
      foreach(@par){write Fout;++$i;}
      print Fout " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
      close Fout;
@@ -156,7 +156,7 @@ if($sta>0)
             system ("copy ".$file." ".$file.".fit");
             system ("del $file");
             system ("copy ".$file.".par ".$file);}
-     open(Fout,">simannfit.status");print Fout " ... simannfit stopped\n"; close Fout;
+     open(Fout,">results/simannfit.status");print Fout " ... simannfit stopped\n"; close Fout;
 exit 0;
 # END OF MAIN PROGRAM
 #****************************************************************************** 
@@ -182,7 +182,7 @@ sub catch_zap {
 sub sta {local $SIG{INT}='IGNORE'; 
  #print "#write modified parameterset to files *\n";
  foreach (@ARGV)
- {$file=$_; open (Fin, $file.".par");open (Fout1, ">".$file);open (Fout2,">simannfit.par");
+ {$file=$_; open (Fin, $file.".par");open (Fout1, ">".$file);open (Fout2,">results/simannfit.par");
    while($line=<Fin>)
      {$modline=$line;
       if ($line=~/^.*par/) {#here write modified parameter set to line
@@ -223,13 +223,13 @@ sub sta {local $SIG{INT}='IGNORE';
 				     ++$i;
 				    }
 				    # calculate the expression by a little perl program
-				    open (Foutcc, ">ccccccc.ccc");
+				    open (Foutcc, ">results/ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
-				    system "perl ccccccc.ccc > cccccc1.ccc";
-				    open (Fincc,"cccccc1.ccc");
+				    system "perl results/ccccccc.ccc > results/cccccc1.ccc";
+				    open (Fincc,"results/cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
-				    system "del ccccccc.ccc cccccc1.ccc";
+				    system "del results/ccccccc.ccc results/cccccc1.ccc";
 				    # $data contains now the result of the mathematical expression
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
@@ -243,13 +243,13 @@ sub sta {local $SIG{INT}='IGNORE';
  }
 # print "#call routine calcsta to calculate standard deviation\n";
 $staboundary=$stasave-log($rnd)*$stattemp;
- system ("calcsta $staboundary > simannfit.sta");
- open (Fin,"simannfit.sta"); 
+ system ("calcsta $staboundary > results/simannfit.sta");
+ open (Fin,"results/simannfit.sta"); 
  while($line=<Fin>){
            if($line=~/^.*sta\s*=/) {($sta)=($line=~m|sta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);} 
                    }
  close Fin;
- system ("del simannfit.sta");
+ system ("del results/simannfit.sta");
  return $sta;
 }  
 

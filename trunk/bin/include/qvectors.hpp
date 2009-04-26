@@ -48,7 +48,7 @@ class qvectors
     int nofatoms; //number of atoms in primitive cryst unit cell
     int nofcomponents; //number of moments in spin vector
     int verbose;  /*    switch: if 1 the generation of q vectors is commented explicitely on stdout
-	                and qvectors::save() puts a large set of information into mcphas.qom (including
+	                and qvectors::save(const char * filemode) puts a large set of information into mcphas.qom (including
 			magnetic structures corresponding to qvector)*/
 
     Vector & nettom(int i); // nettomoment
@@ -56,8 +56,7 @@ class qvectors
     Vector & phi(int i); // phase
        
     //save table of all qvectors on file
-    void save();
-    void save(const char *filemode);
+    void save(const char * filemode);
     
     //constructor - generate set of qvectors
     /* input 
@@ -67,15 +66,17 @@ class qvectors
         rz              reciproval lattice
 	A,B,C           maximum values of the moments in a b c direction
 	verbose         switch: if 1 the generation of q vectors is commented explicitely on stdout
-	                and qvectors::save() puts a large set of information into mcphas.qom (including
+	                and qvectors::save(char * filemode) puts a large set of information into mcphas.qom (including
 			magnetic structures corresponding to qvector)
     */
-    qvectors (inipar & ini,Matrix & rz,
+   
+ qvectors (inipar & ini,Matrix & rz,
               Vector & mmax,const char * filename,int nofatoms,int nofcomponents,int v);	//konstruktor
 
     qvectors (const qvectors & qs);	// kopier-konstruktor
 
-    ~qvectors ();		//destruktor
+    
+~qvectors ();		//destruktor
 
 };
 

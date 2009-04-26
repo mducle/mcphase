@@ -16,6 +16,9 @@ class ionpars
    // calculates scattering operator 
    void MQM(ComplexMatrix & MQXM,ComplexMatrix & MQYM,ComplexMatrix & MQZM, double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc);
 
+   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
+   void set_zlm_constants();
+
  public:
    char * iontype; // description string
    double J;// momentum quantum number
@@ -48,7 +51,10 @@ class ionpars
    int r2_from_radial_wavefunction();
    int r4_from_radial_wavefunction();
    int r6_from_radial_wavefunction();
- 
+
+   // calculation of chargedensity
+   double rocalc (double & teta,double & fi,double & R, Vector & moments);
+
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U, ComplexMatrix & ests);
    ComplexMatrix & cfeigenstates (Vector & H, double & T);

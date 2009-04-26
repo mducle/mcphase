@@ -92,6 +92,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   FILE * fout;
   FILE * foutqei;
   FILE * foutqev;
+  FILE * foutqee;
   FILE * fout1;
   FILE * foutds;
   FILE * foutdstot;
@@ -104,23 +105,27 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   double jqsta=-1.0;
   double jq0=0;
   Vector hkl(1,3),q(1,3);
-  Vector mf(1,ini.nofcomponents);
+  Vector mf(1,ini.nofcomponents),extmf(1,ini.extended_eigenvector_dimension);
   int jmin,tl,tll;
   IntVector noftransitions(1,inputpars.nofatoms); // vector to remember how many transitions are on each atom
   int offset[inputpars.nofatoms+1]; // vector to remember where higher  transitions are stored 
                                     // (as "separate ions on the same unit cell position")
-  mf=0;
+  mf=0;extmf=0;
    int sort=0;int maxiter=1000000;
   time_t curtime;
   struct tm *loctime;
   float d;
   
-  Vector gamma(1,ini.nofcomponents);
+  Vector gamma(1,ini.nofcomponents);Vector extgamma(1,ini.extended_eigenvector_dimension);
   complex<double> imaginary(0,1);
   // transition matrix Mij
   ComplexMatrix Mijkl(1,ini.nofcomponents,1,ini.nofcomponents);
+ // extended transition matrix Mij
+  ComplexMatrix extMijkl(1,ini.extended_eigenvector_dimension,1,ini.extended_eigenvector_dimension);
   // transformation matrix Uij
   ComplexMatrix Uijkl(1,ini.nofcomponents,1,ini.nofcomponents);
+// extended transformation matrix Uij
+  ComplexMatrix extUijkl(1,ini.extended_eigenvector_dimension,1,ini.extended_eigenvector_dimension);
 
   //calculate single ion properties of every atom in magnetic unit cell
   mdcf md(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),inputpars.nofatoms,ini.nofcomponents);
@@ -231,6 +236,15 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
     md.M(i,j,k)=0; // initialize matrix M
     md.sqrt_gamma(i,j,k)=0; // and sqrt(gamma^s) matrix sqrt_gamma
  }}}
+
+// determine the dimension of the matrix Ass' s,s'=1....dimA
+int dimA=0;
+for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
+ dimA+=md.baseindex_max(i1,j1,k1);
+ }}}
+
+// matrix E^s_alpha' used to store the coefficients for extending the eigenvector (see manual)
+ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
   
  for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   for(l=1;l<=inputpars.nofatoms;++l){
@@ -245,7 +259,8 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
 
       // do calculation for atom s=(ijkl)
       for(ll=1;ll<=ini.nofcomponents;++ll)
-       {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s
+       {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);    //mf ... mean field vector of atom s
+        extmf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);}
 
       fprintf(stdout,"transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
       if(nn[6]<SMALL){fprintf(stdout,"-");}else{fprintf(stdout,"+");}
@@ -253,6 +268,11 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
       (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
+
+       // here we if required calculate the higher dimension matrix used to do the
+       // extension of chi to higher value of (uncoupled) nofcomponents in intcalc_approx ... needed for chargedensityfluctuations, extended eigenvectors ...
+             (*inputpars.jjj[l]).dmcalc(ini.T,extmf,extMijkl,d,md.est(i,j,k,l));
+
         (* inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
        j1=md.baseindex(i,j,k,l,jmin); 
@@ -262,37 +282,41 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
          exit(EXIT_FAILURE);}
        md.delta(i,j,k)(j1)=nn[6]; // set delta
      // diagonalizeMs to get unitary transformation matrix Us
-     myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
+     myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter);myEigenSystemHermitean (extMijkl,extgamma,extUijkl,sort=1,maxiter); 
 	// conjugate:note the eigensystemhgermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
          // treat correctly case for neutron energy loss
-	 if (nn[6]>=0){Uijkl=Uijkl.Conjugate();}
-
+	 if (nn[6]>=0){Uijkl=Uijkl.Conjugate();extUijkl=extUijkl.Conjugate();}
+        // here we should also go for complex conjugate for the vector
+         complex <double> extgammas;
      if (gamma(ini.nofcomponents)>=0&&fabs(gamma(ini.nofcomponents-1))<SMALL) 
                            // mind in manual the 1st dimension alpha=1 corresponds
 			   // to the nth dimension here, because myEigensystmHermitean
 			   // sorts the eigenvalues according to ascending order !!!
                            {if (nn[6]>SMALL)
 			    {md.sqrt_gamma(i,j,k)(ini.nofcomponents*(j1-1)+ini.nofcomponents,ini.nofcomponents*(j1-1)+ini.nofcomponents)=sqrt(gamma(ini.nofcomponents));// gamma(ini.nofcomponents)=sqr(gamma^s)
-                            }
+                            extgammas=sqrt(extgamma(ini.extended_eigenvector_dimension));}
 			    else if (nn[6]<-SMALL)
                             {md.sqrt_gamma(i,j,k)(ini.nofcomponents*(j1-1)+ini.nofcomponents,ini.nofcomponents*(j1-1)+ini.nofcomponents)=imaginary*sqrt(gamma(ini.nofcomponents));// gamma(ini.nofcomponents)=sqr(gamma^s)
-                            }
+                            extgammas=imaginary*sqrt(extgamma(ini.extended_eigenvector_dimension));}
  			    else
 			    { //quasielastic line needs gamma=SMALL .... because Mijkl and therefore gamma have been set to 
 			      // wn/kT instead of wn-wn'=SMALL*wn/kT (in jjjpar.cpp -mdcalc routines)
 			      //set fix delta but keep sign
 			          if (nn[6]>0){md.delta(i,j,k)(j1)=SMALL;
   			     md.sqrt_gamma(i,j,k)(ini.nofcomponents*(j1-1)+ini.nofcomponents,ini.nofcomponents*(j1-1)+ini.nofcomponents)=sqrt(SMALL*gamma(ini.nofcomponents));
-                                              }
+                                              extgammas=sqrt(extgamma(ini.extended_eigenvector_dimension));}
 				  else        {md.delta(i,j,k)(j1)=-SMALL;
                              md.sqrt_gamma(i,j,k)(ini.nofcomponents*(j1-1)+ini.nofcomponents,ini.nofcomponents*(j1-1)+ini.nofcomponents)=imaginary*sqrt(SMALL*gamma(ini.nofcomponents));
-			                      }
+			                      extgammas=imaginary*sqrt(extgamma(ini.extended_eigenvector_dimension));}
 			    }
 			   }else 
                            {fprintf(stderr,"ERROR eigenvalue of single ion matrix <0: ev1=%g ev2=%g ev3=%g ... evn=%g\n",gamma(1),gamma(2),gamma(3),gamma(ini.nofcomponents));
                             exit(EXIT_FAILURE);}
+//printf("extgamma %g %+g i\n",real(extgammas),imag(extgammas));
+        for(k1=1;k1<=ini.extended_eigenvector_dimension;++k1){Ec(index_s(i,j,k,l,jmin,md,ini),k1)=extgammas*extUijkl(k1,ini.extended_eigenvector_dimension);}
+
         for(m=1;m<=ini.nofcomponents;++m){for(n=1;n<=ini.nofcomponents;++n){
         md.U(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Uijkl(m,n);
         md.M(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Mijkl(m,n);
@@ -318,6 +342,7 @@ if (do_jqfile==0)
   fout = fopen_errchk ("./results/mcdisp.qom",filemode);
   foutqei = fopen_errchk ("./results/mcdisp.qei",filemode);
   foutqev = fopen_errchk ("./results/mcdisp.qev",filemode);
+  foutqee = fopen_errchk ("./results/mcdisp.qee",filemode);
   fprintf (fout, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
           fprintf (fout, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] > intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
@@ -326,7 +351,18 @@ if (do_jqfile==0)
           fprintf (foutqei, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
   fprintf (foutqev, "#{%s ",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqev);
-          fprintf (foutqev, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutqev, "#spins_wave_amplitude=1.0\n");
+          fprintf (foutqev, "#spins_show_ellipses=1.0\n");
+          fprintf (foutqev, "#spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqev, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+
+  fprintf (foutqee, "#{%s ",MCDISPVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqee);
+          fprintf (foutqee, "#spins_wave_amplitude=1.0\n");
+          fprintf (foutqee, "#spins_show_ellipses=1.0\n");
+          fprintf (foutqee, "#spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqee, "#extended_eigenvector_dimension=%i\n",ini.extended_eigenvector_dimension); 
+          fprintf (foutqee, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
           foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
           printf("saving mcdisp.dsigma.tot\n");
@@ -440,14 +476,11 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
           for(tl=1;tl<=md.noft(i1,j1,k1,ll);++tl){
 	  for(tll=1;tll<=md.noft(i,j,k,sl);++tll){
 	  
-//	  for(sll=1;sll<=noftransitions[sl];++sll)    
-//          {sublat=sl;if(sll>1){sublat=sll+offset[sl]-1;}   
-        
+       
 	     for(m=1;m<=ini.nofcomponents;++m){for(n=1;n<=ini.nofcomponents;++n){ //this should also be ok for nofcomponents > 3 !!! (components 1-3 denote the magnetic moment)
-//            jsss(ini.nofcomponents*(ll-1)+m,ini.nofcomponents*(sublat-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
-            jsss(ini.nofcomponents*(md.baseindex(i1,j1,k1,ll,tl)-1)+m,ini.nofcomponents*(md.baseindex(i,j,k,sl,tll)-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
-           }} // but orbitons should be treated correctly by extending 3 to n !!
-	  }} 
+             jsss(ini.nofcomponents*(md.baseindex(i1,j1,k1,ll,tl)-1)+m,ini.nofcomponents*(md.baseindex(i,j,k,sl,tll)-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
+                                              }                                 } // but orbitons should be treated correctly by extending 3 to n !!
+	                                         }} 
 // increase Js,ss(q) taking into account the phase factors for the distance l-ll
           J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d));
 
@@ -488,11 +521,6 @@ if (do_verbose==1){
   }}}
  }}}
 
-// determine the dimension of the matrix A
-int dimA=0;
-for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
- dimA+=md.baseindex_max(i1,j1,k1);
- }}}
 
 // calculate Ac
 if(do_verbose==1){fprintf(stdout,"calculating matrix A\n");}
@@ -626,6 +654,8 @@ if (do_jqfile==1){
    // been printed out above, so any refinement of energies during intcalc
    // is not included in the output file]
   double QQ; mfcf ev_real(ini.mf),ev_imag(ini.mf);
+             mfcf eev_real(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
+             mfcf eev_imag(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
   double diffint=0,diffintbey=0;
   if(do_verbose==1){fprintf(stdout,"\ncalculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
@@ -633,17 +663,25 @@ diffint=0;diffintbey=0;
                   if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
                   for (i=1;i<=dimA;++i)
 		  {  if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
-                     ints(i)=intcalc_approx(intsbey(i),ev_real,ev_imag,dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+                     ints(i)=intcalc_approx(intsbey(i),ev_real,ev_imag,eev_real,eev_imag,Ec,dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
                      if(intsbey(i)<0)intsbey(i)=-1;
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
                      fprintf (foutqei, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
+
                      fprintf (foutqev, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
                      fprintf (foutqev, "#eigenvector real part\n");
                      ev_real.print(foutqev); // here we printout the eigenvector of the excitation
                      fprintf (foutqev, "#eigenvector imaginary part\n");
                      ev_imag.print(foutqev); // 
                      fprintf (foutqev, "#\n");
+
+                     fprintf (foutqee, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g  %4.4g  %4.4g\n",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),QQ,En(i),ints(i),intsbey(i));
+                     fprintf (foutqee, "#eigenvector real part\n");
+                     eev_real.print(foutqee); // here we printout the eigenvector of the excitation
+                     fprintf (foutqee, "#eigenvector imaginary part\n");
+                     eev_imag.print(foutqee); // 
+                     fprintf (foutqee, "#\n");
                  if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
@@ -738,6 +776,7 @@ diffint=0;diffintbey=0;
    
     fclose(foutqei);
     fclose(foutqev);
+    fclose(foutqee);
     fclose(fout);
                  if (do_Erefine==1){fclose(foutds);}
     fclose(foutdstot);

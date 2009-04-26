@@ -65,7 +65,7 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
   FILE *fin_coq;
   errno = 0;
   qmin=Vector(1,3);qmax=Vector(1,3);deltaq=Vector(1,3);
-  emin=0;emax=10;
+  emin=0;emax=10;extended_eigenvector_dimension=nofcomponents;
   printf("reading file %s\n",file);
   fin_coq = fopen(file, "rb"); if (fin_coq==NULL) {fprintf(stderr,"ERROR - file %s not found \n",file);errexit();}
   ki=0;kf=0;
@@ -86,6 +86,7 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
      extract(instr,"emax",emax); 
      extract(instr,"ki",ki); 
      extract(instr,"kf",kf); 
+     extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
    }
   }
   if (ki==0) {if (kf==0) kf=10;
@@ -115,6 +116,7 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
      }
    else
      {hkllist=0;}
+
 }
 
 //kopier-konstruktor 
@@ -130,6 +132,7 @@ inimcdis::inimcdis (const inimcdis & p)
   emax=p.emax;
   kf=p.kf;
   ki=p.ki;
+  extended_eigenvector_dimension=p.extended_eigenvector_dimension;
   deltaq=p.deltaq;  
   nofatoms=p.nofatoms;
   nofcomponents=p.nofcomponents;

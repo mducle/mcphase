@@ -168,7 +168,7 @@ switch (intern_mcalc)
     j2=magFFj2(1)*exp(-magFFj2(2)*s*s)+magFFj2(3)*exp(-magFFj2(4)*s*s)+magFFj2(5)*exp(-magFFj2(6)*s*s)+magFFj2(7);
     j2*=s*s;
     if(gJ==0&&Q<0){return j0+j2;} // in case of intermediate coupling return angular form factor 
-   return (j0 + j2 * (2 / gJ - 1)); // formfactor F(Q)
+   return (j0 + j2 * (2 / gJ - 1)); // formfactor F(Q) for rare earth 
 
    }
 
@@ -477,7 +477,7 @@ jjjpar::jjjpar(FILE * file)
   }
 }
 
-// constructor with filename of singleion parameter file
+// constructor with filename of singleion parameter  used by mcdiff and charges-chargeplot
 jjjpar::jjjpar(double x,double y,double z, char * sipffile)
 {xyz=Vector(1,3);xyz(1)=x;xyz(2)=y;xyz(3)=z;
   mom=Vector(1,9); mom=0; 

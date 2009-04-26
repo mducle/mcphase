@@ -232,13 +232,13 @@ jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) io
 mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS)
 	$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS)
 
-mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o
+mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
 
-spins: spincf.o spins.o martin.o  $(VOBS)
+spins: spincf.o spins.o martin.o  $(VOBS) chargedensity.o ionpars.o $(CFIELDOBJS) $(FUNCTIONOBJS)
 	$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
-spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o
+spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
 
 singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o
@@ -247,7 +247,7 @@ singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIE
 charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o myev.o
 	$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
-chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
+chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o spincf.o
 	$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
 pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) 

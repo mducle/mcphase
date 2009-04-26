@@ -8,14 +8,16 @@
 # Intel Pentium PC, use -m486 for 486 CPU or -mpentium for Pentium Systems
 ###########################################################################
 
-# C compiler 
-CC= g++ -pipe
-COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -m486 -x c 
+include ../Makefile.common
 
-# C++ compiler
-CCC= g++ -pipe
-CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium -x c++ 
-
+## C compiler 
+#CC= g++ -pipe
+#COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -m486 -x c 
+#
+## C++ compiler
+#CCC= g++ -pipe
+#CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium -x c++ 
+#
 #LIBL= /usr/lib/libfl.a
 ###########################################################################
 ### include directory: don't change !					  #
@@ -27,13 +29,13 @@ INCLUDE= ./
 ### general rules							  #
 ###########################################################################
 
-.SUFFIXES: .cc .o
+.SUFFIXES: .cpp .o
 
 .c.o: 
-	${CC} -c ${COPTS}  -I ${INCLUDE} $<
+	${CC} -c ${COPTS} -I ${INCLUDE} ${BLAS} $<
 
-.cc.o: 
-	${CCC} -c ${CCOPTS}   -I ${INCLUDE} $<
+.cpp.o: 
+	${CCC} -c ${CCOPTS} -I ${INCLUDE} ${BLAS} $<
 
 ###########################################################################
 ###########################################################################
@@ -49,11 +51,8 @@ INCLDIRS =      -I. \
 
 all : calc fileop
 
-
 CFOBJS= cdata.o dfile.o formula.o simplex.o spline.o stdfunc.o strings.o thefunc.o 
 PROGS = calc.o fileop.o
-
-
 
 ${CFOBJS}:
 
@@ -70,11 +69,10 @@ ${PROGS}:
 #	g++  -Wall -o cfield.so $^ -shared 
 
 calc: calc.o  $(CFOBJS)
-	g++  -Wall -o ../../bin/calc $^ 
+	${CCC} $(LDFLAGS) -Wall -o ../../calc $^ 
 
 fileop: fileop.o  $(CFOBJS)
-	g++  -Wall -o ../../bin/fileop $^ 
-
+	${CCC} $(LDFLAGS) -Wall -o ../../fileop $^ 
 
 clean:
 	rm -vf ./*.o 

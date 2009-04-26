@@ -30,7 +30,8 @@
 struct FitFn
    {   char FnName[MAX_FN_NAME_LEN+1];
         int nFixP,nSumP,nConstP;
-     double (*FitFunc)(const double x, const int nP, double *p, const int nC=0, double *c=0);       
+//     double (*FitFunc)(const double x, const int nP, double *p, const int nC=0, double *c=0);       
+       double (*FitFunc)(const double x, const int nP, double *p, const int nC, double *c);       
       char **szPName;
    };
 //nSumP: number of pars to sum

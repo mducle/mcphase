@@ -9,9 +9,12 @@
 #include <vector.h>
 #include <complex>
 #include "spincf.hpp"
+#include "chargedensity.hpp"
+#include "ionpars.hpp"
 
 #define MAXNOFSPINS  200
 #define SMALL 0.03
+#define PI  3.1415
 int spincf::spequal(Vector a,Vector b)
 {// in this function we look if two spins are equal or not (used in order to compare or reduce
  // spinconfigurations
@@ -35,6 +38,29 @@ Vector & spincf::m(int na, int nb, int nc)
 // the same but for spin number "i"
 Vector & spincf::mi(int i)
 { return mom[i];
+}
+
+Vector spincf::moment(int i,int j,int k,int l) // returns moment of atom l (1,nofcomponents)
+{Vector xyz(1,nofcomponents);
+ int m;
+ for(m=1;m<=nofcomponents;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+ return xyz;
+}
+Vector spincf::magmom(int i,int j,int k,int l,Vector & gJ) // returns magnetic moment 
+{       Vector xyz(1,3);int m,maxm;
+       xyz=0;
+       if (gJ(l)==0)  //load magnetic moment into vector xyz
+       {             // intermediate coupling  <M>=2*<S>+<L>
+        if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                             else                {xyz((m+1)/2)+=2.0*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
+                            }
+       }
+       else // LS coupling
+       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
+        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+       }
+       return xyz;
 }
 
 // (Slow) Fourier Transform of momentumconfiguration <J> ... i.e. for magnetic moments multiply by lande factor !!!
@@ -102,16 +128,7 @@ Vector spincf::nettomagmom(Vector & gJ) // returns nettomagnetic moment [mu_b]
  { for (j=1;j<=nofb;++j)
    {for (k=1;k<=nofc;++k)
     {for (l=1;l<=nofatoms;++l)
-     {if(gJ(l)==0) // intermediate coupling  <M>=2*<S>+<L>
-        {if (nofcomponents>=6){m=6;}else{m=nofcomponents;}
-         for (n=1;n<=m;++n){if (m==2||m==4||m==6) {ret((n+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+n);}
-                            else                  {ret((n+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+n)*2;}
-                           }
-        }
-      else        // LS coupling
-        {if (nofcomponents>=3){m=3;}else{m=nofcomponents;}
-         for (n=1;n<=m;++n){ret(n)+=mom[in(i,j,k)](nofcomponents*(l-1)+n)*gJ(l);}
-        }
+     {ret+=magmom(i,j,k,l,gJ);
      }    
     }
    }
@@ -416,7 +433,62 @@ void spincf::epsarrow(FILE * fout,Vector x,Vector y)
 
   }
 
-Vector spincf::xy(Vector & xyz,int orientation,Vector min,Vector max,float bbwidth,float bbheight)
+
+void spincf::calc_prim_mag_unitcell(Matrix & p,Vector & abc, Matrix & r)
+{ int i,j;
+  Vector dd(1,3),nofabc(1,3);
+  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
+  for (i=1;i<=3;++i)
+  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
+  }
+ // pa=p.Column(1);  //primitive magnetic unit cell
+ // pb=p.Column(2);
+ // pc=p.Column(3);
+}
+
+void spincf::calc_minmax(Vector & min,Vector & max,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc)
+{calc_minmax_scale(min,max,ijkmin,ijkmax,p,abc,1.0,1.0,1.0);
+}
+
+void spincf::calc_minmax_scale(Vector & min,Vector & max,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc,double scale_view_1,double scale_view_2,double scale_view_3)
+{// determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
+  Vector ddd(1,8),dd0(1,3),dd(1,3);
+  int i;
+ double t;
+  for (i=1;i<=3;++i)
+  {ddd(1)=p.Column(1)(i);
+   ddd(2)=p.Column(2)(i);
+   ddd(3)=p.Column(3)(i);
+   ddd(4)=p.Column(1)(i)+p.Column(2)(i);
+   ddd(5)=p.Column(1)(i)+p.Column(3)(i);
+   ddd(6)=p.Column(2)(i)+p.Column(3)(i);
+   ddd(7)=0;
+   ddd(8)=p.Column(1)(i)+p.Column(2)(i)+p.Column(3)(i);
+   min(i)=Min(ddd);max(i)=Max(ddd);
+   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
+   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
+  }
+  max(1)=min(1)+(max(1)-min(1))*scale_view_1;
+  max(2)=min(2)+(max(2)-min(2))*scale_view_2;
+  max(3)=min(3)+(max(3)-min(3))*scale_view_3;
+  // determine ijkmin ijkmax by calculating the 8 corners of the  quader
+  // in terms of primitive lattice 
+  // i*p.Column(1)+j*p.Column(2)+k*p.Column(3)=cornerpointvector ... i,j,k =?
+  // ijk=p^-1*corerpointvector
+  for (i=1;i<=3;++i)
+  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
+   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
+   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
+   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
+   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
+   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
+   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
+   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
+   ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
+  }  
+}
+
+Vector spincf::xy(Vector xyz,int orientation,Vector min,Vector max,float bbwidth,float bbheight)
  {Vector p(1,2);
   switch(orientation)
   {case 1: p(1)=(xyz(1)-min(1))/(max(1)-min(1))*bbwidth*0.8+bbwidth*0.15;
@@ -445,20 +517,13 @@ Vector spincf::xy(Vector & xyz,int orientation,Vector min,Vector max,float bbwid
 Vector spincf::pos(int i, int j, int k, int l,Vector & abc,Matrix & r,float * x,float *y,float*z)
 {//returns position of atom l at lattice site (i j k) (Angstrom)
 Vector dd(1,3),dd0(1,3);
-  Vector nofabc(1,3),pa(1,3),pb(1,3),pc(1,3);
   Matrix p(1,3,1,3);
-  int ii,jj;
-  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
-  for (ii=1;ii<=3;++ii)
-  {for(jj=1;jj<=3;++jj) {dd(jj)=nofabc(jj)*r(ii,jj)*abc(ii);p(ii,jj)=dd(jj);}
-  }
-  pa=p.Column(1);  //primitive magnetic unit cell
-  pb=p.Column(2);
-  pc=p.Column(3);
+  calc_prim_mag_unitcell(p,abc,r);
+  
          dd(1)=x[l]*abc(1);
          dd(2)=y[l]*abc(2);
          dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+         dd+=p.Column(1)*((double)(i-1)/nofa)+p.Column(2)*((double)(j-1)/nofb)+p.Column(3)*((double)(k-1)/nofc);
 return dd;
 }
 
@@ -478,17 +543,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
     for (j=1;j<=nofb;++j)
      for (k=1;k<=nofc;++k)
       for(l=1;l<=nofatoms;++l)
-      {if (gJ(l)==0)
-       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
-        c=0;
-        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                             else                {c((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                            }
-       }
-       else
-       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
-        for(m=1;m<=maxm;++m){c(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
-       }
+      {c=magmom(i,j,k,l,gJ);
        if ((d=Norm(c))>scale)scale=d;
       } 
   scale=0.5/(scale+0.01);
@@ -496,45 +551,13 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
  
 
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
-  Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
-  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
-  for (i=1;i<=3;++i)
-  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
-  }
-  pa=p.Column(1);  //primitive magnetic unit cell
-  pb=p.Column(2);
-  pc=p.Column(3);
-  for (i=1;i<=3;++i)
-  {ddd(1)=pa(i);
-   ddd(2)=pb(i);
-   ddd(3)=pc(i);
-   ddd(4)=pa(i)+pb(i);
-   ddd(5)=pa(i)+pc(i);
-   ddd(6)=pb(i)+pc(i);
-   ddd(7)=0;
-   ddd(8)=pa(i)+pb(i)+pc(i);
-   min(i)=Min(ddd);max(i)=Max(ddd);
-   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
-   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
-  }
+  Vector max(1,3),min(1,3),dd(1,3),max_min(1,3);
+  Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
+
+  Matrix p(1,3,1,3);
+  calc_prim_mag_unitcell(p,abc,r);
+  calc_minmax(min,max,ijkmin,ijkmax,p,abc);
   max_min=max-min;    
-  // determine ijkmin ijkmax by calculating the 8 corners of the  quader
-  // in terms of primitive lattice 
-  // i*pa+j*pb+k*pc=cornerpointvector ... i,j,k =?
-  // ijk=p^-1*corerpointvector
-  for (i=1;i<=3;++i)
-  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
-   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
-   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
-   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
-   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
-   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
-   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
-   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
-   ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
-  }  
- 
 
  //determine bounding box for  specific view
   bbwidth=700;
@@ -611,22 +634,22 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
   fprintf(fout,"1 setlinewidth\n");
    dd=0;
    a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   b=xy(pa,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   b=xy(pb,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   b=xy(pc,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pa+pb+pc;a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=pa+pb;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pa+pc;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pb+pc;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pa+pb;a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=pa;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pb;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pa+pc;a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=pa;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pc;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pb+pc;a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=pb;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=pc;b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   b=xy(p.Column(1),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   b=xy(p.Column(2),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   b=xy(p.Column(3),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(2)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
+   dd=p.Column(1)+p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2)+p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(2);a=xy(dd,orientation, min, max,bbwidth,bbheight);
+   dd=p.Column(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
+   dd=p.Column(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
+   dd=p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
   
   
   // plot atoms and moments in region xmin to xmax (quader)
@@ -638,36 +661,20 @@ int i1,j1,k1;
 //i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
 //j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
 //k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
+//   dd0=p.Column(1)*(double)(i2*i1)+p.Column(2)*(double)(j2*j1)+p.Column(3)*(double)(k2*k1);
 for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
 for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
 for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //printf("%i %i %i %i %i %i %i %i %i\n",i1,j1,k1,(int)ijkmin(1),(int)ijkmin(2),(int)ijkmin(3),(int)ijkmax(1),(int)ijkmax(2),(int)ijkmax(3));
-   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd+=dd0;
 	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
-            {
-       if (gJ(l)==0)  //load magnetic moment into vector c
-       
-       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
-           c=0;
-           for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){c((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                             else                {c((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                            }
-       }
-       else
-       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
-        for(m=1;m<=maxm;++m){c(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
-       }
+            {c=magmom(i,j,k,l,gJ);
               xyz(1)=dd(1)+scale*c(1);
               xyz(2)=dd(2)+scale*c(2);
               xyz(3)=dd(3)+scale*c(3);
@@ -687,50 +694,457 @@ fprintf(fout,"showpage\n");
   
 
  }
+double spincf::nndist(float * x, float * y, float * z,Vector & abc,Matrix & p,Vector &dd)
+{int i,j,k,l;double d,mindist=1e10;Vector ddl(1,3);
+         
+ for(i=-1;i<=1;++i)for(j=-1;j<=1;++j)for(k=-1;k<=1;++k)for(l=1;l<=nofatoms;++l)
+ {ddl(1)=x[l]*abc(1);
+  ddl(2)=y[l]*abc(2);
+  ddl(3)=z[l]*abc(3);
+  ddl+=p.Column(1)*((double)(i-1)/nofa)+p.Column(2)*((double)(j-1)/nofb)+p.Column(3)*((double)(k-1)/nofc);
+  d=Norm(dd-ddl);if(d>0.0001&&d<mindist)mindist=d;
+ }
+return mindist;
+}
+
+
+// output for javaview
+void spincf::jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
+                 double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
+                 int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
+                 double spins_show_ellipses,double spins_show_direction_of_static_moment) 
+              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+              // omega t= phase
+{char *cffilenames[0];
+ jvx_cd(fout,text,abc,r,x,y,z,gJ,
+                 show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,
+                 show_atoms,scale_view_1,scale_view_2,scale_view_3,
+                 showprim,phase,savev_real,savev_imag,amplitude,hkl,
+                 spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,0.0,1.0);
+}
+
+
+void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
+                 double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
+                 int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
+                 double spins_show_ellipses,double spins_show_direction_of_static_moment,char ** cffilenames,double show_chargedensity,double show_spindensity)
+{ int i,j,k,l,ctr=0,maxm,m;int i1,j1,k1;
+ // some checks
+ if(nofatoms!=savev_real.nofatoms||nofcomponents!=savev_real.nofcomponents||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
+    nofatoms!=savev_imag.nofatoms||nofcomponents!=savev_imag.nofcomponents||nofa!=savev_imag.na()||nofb!=savev_imag.nb()||nofc!=savev_imag.nc())
+    {fprintf(stderr,"Error creating jvx movie files: eigenvector read from .qev file does not match dimension of spins structure read from sps file\n");exit(1);}
+
+  Vector max(1,3),min(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
+  Matrix p(1,3,1,3);
+  calc_prim_mag_unitcell(p,abc,r);
+  calc_minmax_scale(min,max,ijkmin,ijkmax,p,abc,scale_view_1,scale_view_2,scale_view_3);
+   if(showprim==1){ijkmin(1)=1;ijkmin(2)=1;ijkmin(3)=1;ijkmax(1)=-2+(int)(scale_view_1);ijkmax(2)=-2+(int)(scale_view_2);ijkmax(3)=-2+(int)(scale_view_3);} // show only primitive magnetic unit cell
+  max_min=max-min;    
+  double scale=0,d,mindist=1e10;
+
+fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n"); 
+fprintf(fout,"<jvx-model>\n"); 
+fprintf(fout,"  <title>%s</title>\n",text); 
+fprintf(fout,"  <geometries>\n"); 
+
+if(show_abc_unitcell>0)
+ {  // plot frame around crystallographic unit cell
+fprintf(fout,"    <geometry name=\"crystallographic unit cell\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <points>\n"); 
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",0.0,0.0,0.0); 
+fprintf(fout,"          <p name=\"a\">  %g       %g       %g </p>\n",abc(1),0.0,0.0); 
+fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",abc(1),abc(2),0.0); 
+fprintf(fout,"          <p name=\"b\"> %g       %g       %g </p>\n",0.0,abc(2),0.0); 
+fprintf(fout,"          <p name=\"c\"> %g       %g       %g </p>\n",0.0,0.0,abc(3)); 
+fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",abc(1),0.0,abc(3)); 
+fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",abc(1),abc(2),abc(3)); 
+fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",0.0,abc(2),abc(3)); 
+fprintf(fout,"          <thickness>0.0</thickness>\n"); 
+fprintf(fout,"          <colorTag type=\"rgb\">255 0 0</colorTag>\n");
+fprintf(fout,"			<labelAtt horAlign=\"head\" visible=\"show\" font=\"fixed\" verAlign=\"top\">\n"); 
+fprintf(fout,"				<xOffset>0</xOffset>\n"); 
+fprintf(fout,"				<yOffset>0</yOffset>\n"); 
+fprintf(fout,"			</labelAtt>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+fprintf(fout,"          <l>0 1</l>\n"); 
+fprintf(fout,"          <l>1 2</l>\n"); 
+fprintf(fout,"          <l>2 3</l>\n"); 
+fprintf(fout,"          <l>3 0</l>\n"); 
+fprintf(fout,"          <l>0 4</l>\n"); 
+fprintf(fout,"          <l>1 5</l>\n"); 
+fprintf(fout,"          <l>2 6</l>\n"); 
+fprintf(fout,"          <l>3 7</l>\n"); 
+fprintf(fout,"          <l>4 5</l>\n"); 
+fprintf(fout,"          <l>5 6</l>\n"); 
+fprintf(fout,"          <l>6 7</l>\n"); 
+fprintf(fout,"          <l>7 4</l>\n"); 
+fprintf(fout,"          <thickness>1.0</thickness>\n"); 
+fprintf(fout,"        <color type=\"rgb\">%i 0 0</color>\n",(int)(255*show_abc_unitcell));
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+ }
+if(show_primitive_crystal_unitcell>0)
+ {
+ // plot frame around primitive crystallographic unit cell
+fprintf(fout,"    <geometry name=\"primitive crystallographic unit cell\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <points>\n"); 
+dd=0;           fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(1)/(double)nofa;fprintf(fout,"          <p name=\"r1\">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(2)/(double)nofb;fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd-=p.Column(1)/(double)nofa;fprintf(fout,"          <p name=\"r2\">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd =p.Column(3)/(double)nofc;fprintf(fout,"          <p name=\"r3\">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(1)/(double)nofa;fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(2)/(double)nofb;fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd-=p.Column(1)/(double)nofa;fprintf(fout,"          <p name=\" \">  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+fprintf(fout,"			<labelAtt horAlign=\"head\" visible=\"show\" font=\"fixed\" verAlign=\"bottom\">\n"); 
+fprintf(fout,"				<xOffset>0</xOffset>\n"); 
+fprintf(fout,"				<yOffset>0</yOffset>\n"); 
+fprintf(fout,"                          <colorTag type=\"rgb\">0 255 0</colorTag>\n");
+fprintf(fout,"			</labelAtt>\n"); 
+fprintf(fout,"          <thickness>0.0</thickness>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+fprintf(fout,"          <l>0 1</l>\n"); 
+fprintf(fout,"          <l>1 2</l>\n"); 
+fprintf(fout,"          <l>2 3</l>\n"); 
+fprintf(fout,"          <l>3 0</l>\n"); 
+fprintf(fout,"          <l>0 4</l>\n"); 
+fprintf(fout,"          <l>1 5</l>\n"); 
+fprintf(fout,"          <l>2 6</l>\n"); 
+fprintf(fout,"          <l>3 7</l>\n"); 
+fprintf(fout,"          <l>4 5</l>\n"); 
+fprintf(fout,"          <l>5 6</l>\n"); 
+fprintf(fout,"          <l>6 7</l>\n"); 
+fprintf(fout,"          <l>7 4</l>\n"); 
+fprintf(fout,"          <thickness>1.0</thickness>\n"); 
+fprintf(fout,"        <color type=\"rgb\">0 %i 0</color>\n",(int)(255*show_primitive_crystal_unitcell));
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+}
+if(show_magnetic_unitcell>0)
+ {
+  // plot frame around primitive magnetic unit cell
+fprintf(fout,"    <geometry name=\"magnetic unit cell\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"hide\">\n"); 
+fprintf(fout,"        <points>\n"); 
+dd=0;           fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(1);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(2);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd-=p.Column(1);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd =p.Column(3);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(1);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd+=p.Column(2);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+dd-=p.Column(1);fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+fprintf(fout,"          <l>0 1</l>\n"); 
+fprintf(fout,"          <l>1 2</l>\n"); 
+fprintf(fout,"          <l>2 3</l>\n"); 
+fprintf(fout,"          <l>3 0</l>\n"); 
+fprintf(fout,"          <l>0 4</l>\n"); 
+fprintf(fout,"          <l>1 5</l>\n"); 
+fprintf(fout,"          <l>2 6</l>\n"); 
+fprintf(fout,"          <l>3 7</l>\n"); 
+fprintf(fout,"          <l>4 5</l>\n"); 
+fprintf(fout,"          <l>5 6</l>\n"); 
+fprintf(fout,"          <l>6 7</l>\n"); 
+fprintf(fout,"          <l>7 4</l>\n"); 
+fprintf(fout,"          <thickness>%g</thickness>\n",show_magnetic_unitcell); 
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+}
+  // plot atoms in region xmin to xmax (quader)
+fprintf(fout,"    <geometry name=\"ions\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <points>\n"); 
+  for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+         dd+=dd0;
+	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+            {// determine scale factor of moments
+               c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));                                                                                                                              
+     ++ctr;
+	     }
+	  }
+       }}}           
+  }}}
+fprintf(fout,"          <thickness>3.0</thickness>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"        <colors type=\"rgb\">\n"); 
+  for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
+	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+            {// determine scale factor of moments
+               c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
+fprintf(fout,"          <c>  %i       %i       %i </c>\n",(int)(255*show_atoms),(int)(show_atoms*((l*97)%256)),0);
+	     }
+	  }
+       }}}           
+  }}}
+fprintf(fout,"        </colors>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+
+  // plot magnetic moments
+         for(l=1;l<=nofatoms;++l) // determine mindistance to neighbors
+	 {dd(1)=x[l]*abc(1);dd(2)=y[l]*abc(2);dd(3)=z[l]*abc(3);
+          if(mindist>(d=nndist(x,y,z,abc,p,dd)))mindist=d;
+         }
+         scale=0.4*mindist/(scale+0.001); // get a good scale factor 
+if(show_spindensity>0){
+fprintf(fout,"    <geometry name=\"magnetic moments\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"show\">\n"); 
+fprintf(fout,"        <points>\n"); 
+ ctr=0;
+ for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+ for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
+	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+            {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
+             xyz=magmom(i,j,k,l,gJ)+amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,gJ)+sin(phase-QR)*savev_imag.magmom(i,j,k,l,gJ));
+              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+              // omega t= phase
+              //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+//fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)-xyz(1)*scale,dd(2)-xyz(2)*scale,dd(3)-xyz(3)*scale); 
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+	     ++ctr;
+
+	     }
+	  }
+       }}}           
+  }}}
+fprintf(fout,"          <thickness>6.0</thickness>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"show\" line=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+  for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1); 
+fprintf(fout,"        <color type=\"rgb\">0 0 255</color>\n");
+fprintf(fout,"          <thickness>2.0</thickness>\n"); 
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+                     }
+
+if(spins_show_direction_of_static_moment>0)
+ {
+// plot a line along static magnetic moments for comparison
+fprintf(fout,"    <geometry name=\"static magnetic moments\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"hide\">\n"); 
+fprintf(fout,"        <points>\n"); 
+ ctr=0;
+ for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+ for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
+	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+            {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
+             xyz=magmom(i,j,k,l,gJ);
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+	     ++ctr;
+
+	     }
+	  }
+       }}}           
+  }}}
+fprintf(fout,"          <thickness>6.0</thickness>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+  for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1); 
+fprintf(fout,"          <thickness>%g</thickness>\n",spins_show_direction_of_static_moment); 
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+}
+if(spins_show_ellipses>0)
+ {
+// plot an ellipse along path of moment
+fprintf(fout,"    <geometry name=\"ellipses\">\n"); 
+fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"hide\">\n"); 
+fprintf(fout,"        <points>\n"); 
+ ctr=0;
+ for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
+ for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
+ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
+      for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
+         for(l=1;l<=nofatoms;++l)
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
+	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
+            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+            {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
+             int phi; 
+             for(phi=0;phi<=16;phi++)
+             {
+             xyz=magmom(i,j,k,l,gJ)+amplitude*(cos(-(double)phi*2*3.1415/16+QR)*savev_real.magmom(i,j,k,l,gJ)+sin((double)phi*2*3.1415/16-QR)*savev_imag.magmom(i,j,k,l,gJ));
+              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+              // omega t= phase
+              //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+	     }++ctr;
+
+	     }
+	  }
+       }}}           
+  }}}
+fprintf(fout,"          <thickness>6.0</thickness>\n"); 
+fprintf(fout,"        </points>\n"); 
+fprintf(fout,"      </pointSet>\n"); 
+fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n"); 
+fprintf(fout,"        <lines>\n"); 
+  for(i=0;i<ctr;++i)for(j=0;j<16;++j)fprintf(fout,"          <l>%i %i</l>\n",17*i+j,17*i+j+1); 
+fprintf(fout,"          <thickness>1.0</thickness>\n"); 
+fprintf(fout,"        <color type=\"rgb\">0 %i %i</color>\n",(int)(100*spins_show_ellipses),(int)(100*spins_show_ellipses));
+fprintf(fout,"        </lines>\n"); 
+fprintf(fout,"      </lineSet>\n"); 
+fprintf(fout,"    </geometry>\n"); 
+}
+if(show_chargedensity>0)
+{int ii,tt,ff;
+  double dtheta=0.2; //stepwidth to step surface
+  double dfi=0.2;
+  
+for(l=1;l<=nofatoms;++l)
+ {fprintf(fout,"    <geometry name=\"chargedensities in primitive magnetic unit cell - atom %i\">\n",l); 
+  fprintf(fout,"<pointSet color=\"hide\" point=\"show\" dim=\"1\">\n");
+  fprintf(fout,"<points >\n");
+  double radius=0;double dx,dy,dz,R,fi,theta;
+  extract(cffilenames[l],"radius",radius);  
+  if(radius!=0)
+  {     double rp=0.5*cbrt(abs(radius));
+        for (i=1;i<=(1+(nofa-1)*scale_view_1);++i){for(j=1;j<=(1+(nofb-1)*scale_view_2);++j){for(k=1;k<=(1+(nofc-1)*scale_view_3);++k){
+        dd=pos(i,j,k,l, abc, r,x,y,z);
+        for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
+             theta=(double)tt*dtheta;fi=(double)ff*dfi;
+             dx=rp*sin(theta)*cos(fi)+dd(3);dy=rp*sin(theta)*sin(fi)+dd(1);dz=rp*cos(theta)+dd(2);
+             fprintf(fout,"<p>%4g %4g %4g</p>\n",dy,dz,dx);
+             if(tt==0){ff=(int)(2*3.1415/dfi+1);}
+             }}
+        }}}
+  }
+  else
+  {FILE * cffile;cffile =fopen_errchk(cffilenames[l], "r");
+                 ionpars ionpar(cffile);
+   fclose(cffile);
+   chargedensity cd(dtheta,dfi);
+
+   for (i=1;i<=1+(nofa-1)*scale_view_1;++i){for(j=1;j<=1+(nofb-1)*scale_view_2;++j){for(k=1;k<=1+(nofc-1)*scale_view_2;++k){
+   dd=pos(i,j,k,l, abc, r,x,y,z);
+   Vector moments(1,nofcomponents); 
+   double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
+   moments=moment(i,j,k,l)+amplitude*(cos(-phase+QR)*savev_real.moment(i,j,k,l)+sin(phase-QR)*savev_imag.moment(i,j,k,l));
+              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+              // omega t= phase
+              //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
+   cd.calc_cd_surface(moments,ionpar,0.05);
+   for(ii=1;ii<=cd.nofpoints();++ii)
+     {// here we calculate the chargedensity of ion 
+     R=cd.rtf(ii)(1);theta=cd.rtf(ii)(2);fi=cd.rtf(ii)(3);
+     // mind abc||yzx
+     dx=R*sin(theta)*cos(fi)+dd(3);dy=R*sin(theta)*sin(fi)+dd(1);dz=R*cos(theta)+dd(2);
+     fprintf(fout,"<p>%4g %4g %4g</p>\n",dy,dz,dx);
+     }
+   }}}
+  }
+    fprintf(fout,"<thickness>0.0</thickness><color type=\"rgb\">255 0 0</color><colorTag type=\"rgb\">255 0 255</colorTag>\n");
+    fprintf(fout,"</points>			</pointSet>\n");
+    fprintf(fout,"<faceSet face=\"show\" edge=\"show\">\n");
+    fprintf(fout,"<faces >\n");
+    int offset=0;
+    for(i=1;i<=(1+(nofa-1)*scale_view_1)*(1+(nofb-1)*scale_view_2)*(1+(nofc-1)*scale_view_3);++i)
+    {int ntt,nff,pointnr,ffnr,p1,p2,p3,p4;
+    ntt=(int)(3.1415/dtheta);
+    nff=(int)(2*3.1415/dfi);
+    pointnr=ntt*(nff+1);
+    ffnr=nff+1;
+    for(tt=1;tt<=ntt;++tt){for(ff=0;ff<=nff;++ff){
+    p1 = ff + 1 + (tt - 2) * ffnr+offset;
+    p2 = ff + 2 + (tt - 2) * ffnr+offset;
+    p3 = ff + 2 + (tt - 1) * ffnr+offset;
+    p4 = ff + 1 + (tt - 1) * ffnr+offset;
+    if (ff==nff){p3 = p3 - ffnr; p2 = p2 - ffnr;}
+    if (tt==1) {p1 = offset; p2 = offset;}
+    fprintf(fout,"<f> %i %i %i %i </f>\n",p1,p2,p3,p4);
+    }}
+    offset+=pointnr+1;
+ }     
+ //fprintf(fout,"<color type=\"rgb\">100 230 255</color>\n");
+ if(radius>0)
+ {fprintf(fout,"<color type=\"rgb\"> 255 0 0</color>\n");}
+ else if (radius<0)
+ {fprintf(fout,"<color type=\"rgb\">0  0 255</color>\n");}
+ else
+ {fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",(int)(255*show_chargedensity),(int)(show_chargedensity*((l*97)%256)),0);
+ }
+ fprintf(fout,"<colorTag type=\"rgb\">255 0 255</colorTag>\n");
+ fprintf(fout,"</faces></faceSet>\n");
+ fprintf(fout,"    </geometry>\n"); 
+ }
+
+}
+
+
+fprintf(fout,"  </geometries>\n"); 
+fprintf(fout,"</jvx-model>\n"); 
+}
+
+//***********************************************************************************************************************************
 
 // output for fullprof studio
 void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
- double t;
-int maxm,m;  // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
-  Vector max(1,3),min(1,3),nofabc(1,3),dd(1,3),max_min(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
-  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
-  for (i=1;i<=3;++i)
-  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
-  }
-  pa=p.Column(1);  //primitive magnetic unit cell
-  pb=p.Column(2);
-  pc=p.Column(3);
-  for (i=1;i<=3;++i)
-  {ddd(1)=pa(i);
-   ddd(2)=pb(i);
-   ddd(3)=pc(i);
-   ddd(4)=pa(i)+pb(i);
-   ddd(5)=pa(i)+pc(i);
-   ddd(6)=pb(i)+pc(i);
-   ddd(7)=0;
-   ddd(8)=pa(i)+pb(i)+pc(i);
-   min(i)=Min(ddd);max(i)=Max(ddd);
-   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
-   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
-  }
+
+int maxm,m;  
+  Vector max(1,3),min(1,3),dd(1,3),max_min(1,3);
+  Vector xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
+  Matrix p(1,3,1,3);
+  calc_prim_mag_unitcell(p,abc,r);
+  calc_minmax(min,max,ijkmin,ijkmax,p,abc);
+
   max_min=max-min;    
-  // determine ijkmin ijkmax by calculating the 8 corners of the  quader
-  // in terms of primitive lattice 
-  // i*pa+j*pb+k*pc=cornerpointvector ... i,j,k =?
-  // ijk=p^-1*corerpointvector
-  for (i=1;i<=3;++i)
-  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
-   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
-   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
-   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
-   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
-   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
-   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
-   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
-   ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
-  }  
 
 
 fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
@@ -741,38 +1155,20 @@ fprintf(fout,"BOX   -0.15  1.15   -0.15  1.15    -0.15  1.15 \n");
 
   // plot atoms in region xmin to xmax (quader)
 int i1,j1,k1;
-//,i2,k2,j2;
-//,i1true,j1true,k1true;
-//these lines do not work if primitive lattice angles are > 90 deg ...
-//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
-//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
 for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
 for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
 for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 
-   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
 
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
-         dd+=dd0;
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
 	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
             {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
-//             i1true=1;j1true=1;k1true=1;       
-
-//	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
 
 fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd(2),dd(3)); 
                                                                                                                              
@@ -782,7 +1178,6 @@ fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd
 	  }
        }}}           
  }}}
-//}}} 
 
 fprintf(fout," \n");
 fprintf(fout,"{\n");
@@ -792,24 +1187,16 @@ fprintf(fout,"SYMM  x,y,z\n");
 fprintf(fout,"MSYM  u,v,w,0.0\n");
 
 // plot moments in region xmin to xmax (quader)
-//i1true=1;for (i1=0;i1true==1;++i1){i1true=0;for(i2=-1;i2<=1;i2+=2){if (i1==0){i2=2;}
-//j1true=1;for (j1=0;j1true==1;++j1){j1true=0;for(j2=-1;j2<=1;j2+=2){if (j1==0){j2=2;}
-//k1true=1;for (k1=0;k1true==1;++k1){k1true=0;for(k2=-1;k2<=1;k2+=2){if (k1==0){k2=2;}
-//   dd0=pa*(double)(i2*i1)+pb*(double)(j2*j1)+pc*(double)(k2*k1);
 for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
 for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
 for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 
-   dd0=pa*(double)(i1)+pb*(double)(j1)+pc*(double)(k1);
+   dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
 
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
-         dd+=dd0;
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+          dd+=dd0;
 	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
             dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
@@ -817,18 +1204,7 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //             i1true=1;j1true=1;k1true=1;       
 
 //	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
-       if (gJ(l)==0)  //load magnetic moment into vector xyz
-       {
-        if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
-        xyz=0;
-        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                             else                {xyz((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                            }
-       }
-       else
-       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
-        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
-       }
+            xyz=magmom(i,j,k,l,gJ);
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd(1),dd(2),dd(3));
 fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz(1),xyz(2),xyz(3));
 	     ++ctr;
@@ -841,41 +1217,32 @@ fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0
 fprintf(fout,"}\n");
 } 
 
+
 void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
 int maxm,m; 
 double alpha,beta,gamma;
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
-  Vector nofabc(1,3),dd(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);
-  Vector ddd(1,8),xyz(1,3),xyz0(1,3),dd0(1,3);
-  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
-  for (i=1;i<=3;++i)
-  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
-  }
-  pa=p.Column(1);  //primitive magnetic unit cell
-  pb=p.Column(2);
-  pc=p.Column(3);
+  Vector ddd(1,8),xyz(1,3),xyz0(1,3),dd0(1,3),dd(1,3);
 
-gamma=180/3.1415926*acos(pa*pb/Norm(pa)/Norm(pb));
-beta=180/3.1415926*acos(pa*pc/Norm(pa)/Norm(pc));
-alpha=180/3.1415926*acos(pb*pc/Norm(pb)/Norm(pc));
+  Matrix p(1,3,1,3);
+  calc_prim_mag_unitcell(p,abc,r);
+
+gamma=180/3.1415926*acos(p.Column(1)*p.Column(2)/Norm(p.Column(1))/Norm(p.Column(2)));
+beta=180/3.1415926*acos(p.Column(1)*p.Column(3)/Norm(p.Column(1))/Norm(p.Column(3)));
+alpha=180/3.1415926*acos(p.Column(2)*p.Column(3)/Norm(p.Column(2))/Norm(p.Column(3)));
 
 
 fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
 fprintf(fout,"!Title: %s \n",text);                                                                                         
 fprintf(fout,"SPACEG P 1           \n");
-fprintf(fout,"CELL     %g    %g    %g  %g %g %g   DISPLAY MULTIPLE\n",Norm(pa),Norm(pb),Norm(pc),alpha,beta,gamma);
+fprintf(fout,"CELL     %g    %g    %g  %g %g %g   DISPLAY MULTIPLE\n",Norm(p.Column(1)),Norm(p.Column(2)),Norm(p.Column(3)),alpha,beta,gamma);
 fprintf(fout,"BOX   -0.15  1.15   -0.15  1.15    -0.15  1.15 \n");
 
   // plot atoms 
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd0=p.Inverse()*dd;
 fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd0(1),dd0(2),dd0(3));
 	     ++ctr;
@@ -894,25 +1261,10 @@ fprintf(fout,"MSYM  u,v,w,0.0\n");
 // plot moments 
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd0=p.Inverse()*dd;
-       if (gJ(l)==0)  //load magnetic moment into vector xyz
-       {if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
-        xyz=0;
-        for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                             else                {xyz((m+1)/2)+=2*mom[in(i,j,k)](nofcomponents*(l-1)+m);}
-                            }
-       }
-       else
-       {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
-        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
-       }
-              xyz0=p.Inverse()*xyz; xyz0(1)*=Norm(pa);xyz0(2)*=Norm(pb);xyz0(3)*=Norm(pc);
-
+          xyz=magmom(i,j,k,l,gJ);
+          xyz0=p.Inverse()*xyz; xyz0(1)*=Norm(p.Column(1));xyz0(2)*=Norm(p.Column(2));xyz0(3)*=Norm(p.Column(3));
 
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd0(1),dd0(2),dd0(3));
 fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz0(1),xyz0(2),xyz0(3));
@@ -947,16 +1299,11 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
 { int i,j,k,l,lc,m,maxm;
 
  // determine primitive magnetic unit cell
-  Vector nofabc(1,3),dd(1,3),pa(1,3),pb(1,3),pc(1,3);
-  Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3),mmm(1,3);
-  nofabc(1)=nofa;nofabc(2)=nofb;nofabc(3)=nofc;
-  for (i=1;i<=3;++i)
-  {for(j=1;j<=3;++j) {dd(j)=nofabc(j)*r(i,j)*abc(i);p(i,j)=dd(j);}
-  }
-  pa=p.Column(1);  //primitive magnetic unit cell
-  pb=p.Column(2);
-  pc=p.Column(3);
-
+  Vector dd(1,3);
+  Vector xyz(1,3),dd0(1,3),mmm(1,3);
+  Matrix p(1,3,1,3);
+  calc_prim_mag_unitcell(p,abc,r);
+  
 
  fprintf(fout,"#nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",nofa,nofb,nofc,nofatoms*nofa*nofb*nofc);
  fprintf(fout,"#{atom file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ma> <Mb> <Mc> [mb] <Ja> <Jb> <Jc> <Jd> <Je> ...\n");
@@ -964,11 +1311,7 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
    // output atoms and moments in primitive unit cell
   for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {//         r1=l+'0';
-         dd(1)=x[l]*abc(1);
-         dd(2)=y[l]*abc(2);
-         dd(3)=z[l]*abc(3);
-         dd+=pa*(double)(i-1)/nofabc(1)+pb*(double)(j-1)/nofabc(2)+pc*(double)(k-1)/nofabc(3);
+	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd0=p.Inverse()*dd;dd0(1)*=nofa;dd0(2)*=nofb;dd0(3)*=nofc;
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
 	              cffilenames[l],dd(1)/abc(1),dd(2)/abc(2),dd(3)/abc(3),dd0(1),dd0(2),dd0(3));
@@ -1091,7 +1434,8 @@ spincf::spincf (int n1,int n2,int n3,int na,int nc)
   nofatoms=na;
   nofcomponents=nc;
 //dimension arrays
-  mom = new Vector[mxa*mxb*mxc+1];for(l=0;l<=mxa*mxb*mxc;++l){mom[l]=Vector(1,nofcomponents*nofatoms);}
+  mom = new Vector[mxa*mxb*mxc+1];
+  for(l=0;l<=mxa*mxb*mxc;++l){mom[l]=Vector(1,nofcomponents*nofatoms);mom[l]=0;}
   if (mom == NULL)
     { fprintf (stderr, "Out of memory\n");
       exit (EXIT_FAILURE);} 

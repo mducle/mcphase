@@ -44,7 +44,7 @@ public class simannfitstatus extends JPanel implements ActionListener {
     protected displaytext text;
     protected JScrollPane scrollPane;
     private final static String newline = "\n";
-    private static String filename="simannfit.status";
+    private static String filename="results/simannfit.status";
 
     public simannfitstatus() {
         super(new GridBagLayout());

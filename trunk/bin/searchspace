@@ -1,4 +1,4 @@
-cat << EOF > searchspace.status
+cat << EOF > results/searchspace.status
 starting up
 EOF
 java searchspacestatus &

@@ -6,6 +6,7 @@ cfdir = bin/cf1ion_module
 mcpdir = bin/src
 vecdir = bin/src/vector
 funcdir = bin/src/functions
+calcdir = bin/src/calc
 
 all: vector functions cfield mcphase
 
@@ -14,6 +15,9 @@ vector:
 
 functions:
 	cd $(funcdir) && $(MAKE)
+
+calc:
+	cd $(calcdir) && $(MAKE)
 
 cfield: vector
 	cd $(cfdir) && $(MAKE)

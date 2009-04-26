@@ -39,14 +39,16 @@ class mfcf
 
     void print(FILE * fout);
     int  load(FILE * fin_coq);	
-    void clear();
-    
+     
+    void clear(); // set all meanfields to zero    
     mfcf & operator= (const mfcf & op2); // zuweisung
-    mfcf & operator= (const Vector &vec);
-
-   mfcf (int n1=1,int n2=1,int n3=1, int nofatoms=1,int nofcomponents=3);	//konstruktor mit initialisierung (wenn noetig)
+   //zuweisung of the same meanfield vector to all atoms
+    mfcf & operator= (const Vector & vec);
+   
+mfcf (int n1=1,int n2=1,int n3=1, int nofatoms=1,int nofcomponents=3);	//konstruktor mit initialisierung (wenn noetig)
    mfcf (const mfcf & spins);	// kopier-konstruktor
-   ~mfcf ();		//destruktor
+   
+~mfcf ();		//destruktor
 
 };
 

@@ -29,6 +29,28 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
     }
 }    
 
+void ionpars::set_zlm_constants()
+{// cnst is the Zlm constants - put them into the matrix
+ cnst= Matrix(0,6,-6,6);
+
+cnst(2,0) = 0.3153962;
+cnst(2,1)=  1.092548;
+cnst(2,2)=  0.5462823;
+cnst(4,0)=  0.1057871;
+cnst(4,1)=  0.6690465;
+cnst(4,2)=  0.4730943;
+cnst(4,3)=  1.77013;
+cnst(4,4)=  0.625845;
+cnst(6,0)=  0.06357014;
+cnst(6,1)=  1.032669;
+cnst(6,2)=  0.4606094;
+cnst(6,3)=  0.921205;
+cnst(6,4)=  0.5045723;
+cnst(6,5)=  2.366619;
+cnst(6,6)=  0.6831942;
+int l,m;
+for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);} 
+}
 
  ionpars::ionpars (const ionpars & p) //copy constructor
  {J=p.J;
@@ -39,6 +61,7 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
   Llm=p.Llm; // vector of crystal field parameters
+  set_zlm_constants();
  
   Np=p.Np; Xip=p.Xip;Cp=p.Cp;
   
@@ -59,7 +82,7 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
 
 }
 ionpars::ionpars (int dimj) // constructor from dimj
- {
+ {set_zlm_constants();
   J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
   Jb=Matrix(1,dimj,1,dimj);
@@ -97,6 +120,7 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
   getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
    iontype = new char [strlen(ion)+1];
    strcpy(iontype,ion);
+  set_zlm_constants();
 
   J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
@@ -139,8 +163,8 @@ ionpars::~ionpars(){
 
 ionpars::ionpars(FILE * cf_file) 
 //constructor with commands from file handle (filename of cf parameters etc)
-{ 
-static int pr=1;
+{ set_zlm_constants();
+  static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
   int i,j,l,dj=30; //30 ... maximum number of 2j+1
@@ -154,13 +178,12 @@ static int pr=1;
    Xip=Vector(1,9);Xip=0;
    Cp=Vector(1,9);Cp=0;
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
-
+   
   // read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
         extract(instr,"IONTYPE",iontype,(size_t)MAXNOFCHARINLINE);
-        
         extract(instr,"N1",Np(1));extract(instr,"XI1",Xip(1));extract(instr,"C1",Cp(1));
         extract(instr,"N2",Np(2));extract(instr,"XI2",Xip(2));extract(instr,"C2",Cp(2));
         extract(instr,"N3",Np(3));extract(instr,"XI3",Xip(3));extract(instr,"C3",Cp(3));
@@ -281,12 +304,10 @@ static int pr=1;
 
 
 	}}
-  
-  
- // instr[strspn(instr," \t")]=='#');
-  // take parameters from standard input file if no filename is given
- // if(instr[strspn(instr," \t")]=='#'||strlen(instr)-strspn(instr," \t")<=1)
- if(i==1){fprintf(stderr,"Error: no line in single ion property file contains IONTYPE field, e.g. IONTYPE=Nd3+\n");exit(EXIT_FAILURE);}
+
+if(Norm(Np)<SMALL){fprintf (stderr,"Warning: radial wave function parameters not found for ion %s, will use 4f hydrogen radial wave function\n",iontype);}
+
+if(i==1){fprintf(stderr,"Error: no line in single ion property file contains IONTYPE field, e.g. IONTYPE=Nd3+\n");exit(EXIT_FAILURE);}
 // get filename of parameter file out of first uncommented line in FILE * cf_file   
 //  cf_filename=strtok(instr," \t\n");
   
@@ -924,16 +945,29 @@ void ionpars::savLlm(FILE * outfile)
 }
    // evaluate radial wave function
    double ionpars::radial_wavefunction(double rr) // rr given in Angstroems, returns R(r) in units of 1/A^1.5
-   {double R=0;int p;double a0=0.5292;
+   {//printf("%g ",rr);
+    double R=0;int p;double a0=0.5292;
+    int ok=0;
     double r=rr/a0;// r is the distance in units of a0
-    for(p=1;p<=9;++p){if(Np(p)!=0){
+    for(p=1;p<=9;++p){if(Np(p)!=0){ok=1;
                                    R+=exp(-Xip(p)*r)*pow(r,Np(p)-1)*Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
                                    if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of radial wave function R(r=%g) failed due to Xi%i<=0 - continuing with R(r=%g)=0\n",r,p,r);return 0;}
                      }            }    
     // now we have R in units of 1/a0^1.5
     R/=sqrt(a0*a0*a0);
     // now we have R in units of 1/A^1.5
-    return R;
+//printf("%g ",R);
+    if (ok==1) return R;
+
+//  we have to find the 4f wavefunction R4f(r) for each single ion and the Zlm, cfield has nothing: so we have
+//     to take this from chrgplt.bas - a little problem: how do we get the correct R4f(r) ? for a first attempt
+//     we could just take the same for all RE.
+double rs;
+//k^2 = 11 / 10 * 11 / 9 * 11 / 8 * 11 / 7 * 11 / 6 * 11 / 5 * 11 / 4 * 11 / 3 * 11 / 2 * 11 / 1 * 11
+rs = rr * exp(-rr);
+R = 280.4 * rs * rs * rs * rs  * exp(-1.5 * rr);
+//printf("R4f(%g)=%g\n ",rr,R);
+return R;
    }
 
    //functions to calculate radial matrix elements <r^n> from radial wave function in units of a0=0.5292 A
@@ -977,6 +1011,102 @@ void ionpars::save_radial_wavefunction(const char * filename)
     for(r=0.01;r<=10;r*=1.05){fprintf(fout,"%8.8g  %8.8g\n",r,radial_wavefunction(r));}
     fclose(fout);
    }
+
+
+// sub for calculation of charge density given a radiu R and polar angles teta, 
+// fi and expansion coeff. alm
+double ionpars::rocalc (double & teta,double & fi,double & R, Vector & moments)
+{double ro,ct,ct2,st,st2,sfi,cfi,rs,rr;
+if (R>3.0||R<0){ro = 1e+10;}else{
+ct = cos(teta);                      //z
+ct2 = ct * ct;
+st = sin(teta);
+st2 = st * st;
+sfi = sin(fi);
+cfi = cos(fi);
+ int l,m;
+  Vector tetan(1,6);
+  tetan=0; 
+ tetan(2)=alpha;// stevens parameters
+ tetan(4)=beta;
+ tetan(6)=gamma;
+
+Matrix a(0,6,-6,6);
+  a(0, 0) = 1 / sqrt(4.0 * 3.1415);
+
+a(2,-2)=moments(4);
+a(2,-1)=moments(5);
+a(2,0)=moments(6);
+a(2,1)=moments(7);
+a(2,2)=moments(8);
+
+a(4,-4)=moments(16);
+a(4,-3)=moments(17);
+a(4,-2)=moments(18);
+a(4,-1)=moments(19);
+a(4, 0)=moments(20);
+a(4, 1)=moments(21);
+a(4, 2)=moments(22);
+a(4, 3)=moments(23);
+a(4, 4)=moments(24);
+
+a(6,-6)=moments(36);
+a(6,-5)=moments(37);
+a(6,-4)=moments(38);
+a(6,-3)=moments(39);
+a(6,-2)=moments(40);
+a(6,-1)=moments(41);
+a(6,-0)=moments(42);
+a(6, 1)=moments(43);
+a(6, 2)=moments(44);
+a(6, 3)=moments(45);
+a(6, 4)=moments(46);
+a(6, 5)=moments(47);
+a(6, 6)=moments(48);
+
+for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=tetan(l)*cnst(l,m)*cnst(l,m);}}
+
+// r given in Angstroems, returns R(r) in units of 1/A^1.5
+rr=radial_wavefunction(R);
+rr=rr*rr;// then the chargedensity will be in units of 1/A^3
+
+ro = a(0, 0) / sqrt(4.0 * 3.1415);
+ro = ro + a(2, -2)  * 2 * st2 * sfi * cfi;
+ro = ro + a(2, -1)  * st * sfi * ct;
+ro = ro + a(2, 0)  * (3 * ct2 - 1);
+ro = ro + a(2, 1)  * st * cfi * ct;
+ro = ro + a(2, 2)  * st2 * (cfi * cfi - sfi * sfi);
+
+ro = ro + a(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ro = ro + a(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ro = ro + a(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
+ro = ro + a(4, -1) * st * sfi * ct * (7 * ct2 - 3);
+ro = ro + a(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
+ro = ro + a(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
+ro = ro + a(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
+ro = ro + a(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ro = ro + a(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+
+ro = ro + a(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
+ro = ro + a(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
+ro = ro + a(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ro = ro + a(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ro = ro + a(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
+ro = ro + a(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ro = ro + a(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
+ro = ro + a(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ro = ro + a(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
+ro = ro + a(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ro = ro + a(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+ro = ro + a(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
+ro = ro + a(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
+ro = ro * rr;
+}
+
+return ro;
+}
+
+
 //------------------------------------------------------------------------------------------------
 // ROUTINE CFIELD mcalc for full crystal field + higher order interactions
 //------------------------------------------------------------------------------------------------

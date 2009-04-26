@@ -266,7 +266,7 @@ int CreateTmpFile(char *szFile, char * szName, const int Flag)
     else exit(EXIT_FAILURE);
    }  
  sprintf(szFile,"%sXXXXXX",szName);
-     if(!mktemp(szFile))
+     if(!mkstemp(szFile))
        {perror("ERROR Calc: Cannot create temporary file");
         if(Flag==TMPFILE_RETURN)return 0;
         else exit(EXIT_FAILURE);

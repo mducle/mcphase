@@ -15,6 +15,9 @@ public class displaydsigma extends Panel implements Runnable {
  static String[] file;
  static int[] colx;
  static int[] coly;
+ static String [] legend; 
+ static String xText = "";
+ static String yText = "";
  
  public void start(){ myThread = new Thread (this); myThread.start();}
 
@@ -60,6 +63,16 @@ public class displaydsigma extends Panel implements Runnable {
       if ((strLine.length() == 0)
         ||(strLine.substring(0, 1).equalsIgnoreCase("#")))
       {
+      for(int i1=0;i1<=strLine.length();++i1)
+       {if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylegend=true")){legend[i]="true";chart.setLegendVisible(true);}}
+        if(i1<=strLine.length()-19){if(strLine.substring(i1,i1+19).equalsIgnoreCase("displaylegend=false")){legend[i]="false";chart.setLegendVisible(false);}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayxtext=")){xText=strLine.substring(i1+13,strLine.length());}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayytext=")){yText=strLine.substring(i1+13,strLine.length());}}
+        if(i1<=strLine.length()-17){if(strLine.substring(i1,i1+17).equalsIgnoreCase("displaylines=true")){chart.setLineVisible(true);}}
+        if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylines=false")){chart.setLineVisible(false);}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displaytitle=")){chart.getBackground().setTitleString(strLine.substring(i1+13,strLine.length()));}}
+        }
+
         continue;
       }
       
@@ -123,6 +136,8 @@ public class displaydsigma extends Panel implements Runnable {
 // double[] myDatax = {1, 3, 2, 3,33};
 // double[] myDatay = {123, 432, 223, 345,33};
 
+   chart.getXAxis().setTitleString(xText); 
+   chart.getYAxis().setTitleString(yText); 
  
 // app.setVisible(true);
 //  repaint();
@@ -156,6 +171,8 @@ public class displaydsigma extends Panel implements Runnable {
  protected void initChart(){ 
     chart.setLineVisible(true);
     chart.setLegendVisible(false);
+chart.getXAxis().setTitleString("hallo"); 
+chart.getYAxis().setTitleString(yText); 
     String s="abcdefghijkl";
  for (int i=0;i<file.length;++i)
    {//char ii=i;   

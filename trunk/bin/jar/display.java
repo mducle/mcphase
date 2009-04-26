@@ -17,6 +17,9 @@ public class display extends Panel implements Runnable {
  static String[] file;
  static int[] colx;
  static int[] coly;
+ static String [] legend; 
+ static String xText = "";
+ static String yText = "";
  
  public void start(){ myThread = new Thread (this); myThread.start();}
 
@@ -31,6 +34,7 @@ public class display extends Panel implements Runnable {
  try{
  for (int i=0;i<file.length;++i)
  {String s="";
+  legend[i]="false";
       Dataset ds = chart.getDataset(file[i]+s.valueOf(i));
       ds.getData().removeAllElements();
 
@@ -60,8 +64,18 @@ public class display extends Panel implements Runnable {
       if ((strLine.length() == 0)
         ||(TrimString(strLine).substring(0, 1).equalsIgnoreCase("#")))
       {
+      for(int i1=0;i1<=strLine.length();++i1)
+       {if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylegend=true")){legend[i]="true";chart.setLegendVisible(true);}}
+        if(i1<=strLine.length()-19){if(strLine.substring(i1,i1+19).equalsIgnoreCase("displaylegend=false")){legend[i]="false";chart.setLegendVisible(false);}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayxtext=")){xText=strLine.substring(i1+13,strLine.length());}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displayytext=")){yText=strLine.substring(i1+13,strLine.length());}}
+        if(i1<=strLine.length()-17){if(strLine.substring(i1,i1+17).equalsIgnoreCase("displaylines=true")){chart.setLineVisible(true);}}
+        if(i1<=strLine.length()-18){if(strLine.substring(i1,i1+18).equalsIgnoreCase("displaylines=false")){chart.setLineVisible(false);}}
+        if(i1<=strLine.length()-13){if(strLine.substring(i1,i1+13).equalsIgnoreCase("displaytitle=")){chart.getBackground().setTitleString(strLine.substring(i1+13,strLine.length()));}}
+        }
+
         continue;
-      }
+       }
       
       // select colx and coly
       sx=TrimString(strLine);
@@ -108,11 +122,13 @@ public class display extends Panel implements Runnable {
       ds.addDatum(d);}
       catch(NumberFormatException e){;}
     }   
-  
     //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
     }
 // double[] myDatax = {1, 3, 2, 3,33};
 // double[] myDatay = {123, 432, 223, 345,33};
+
+   chart.getXAxis().setTitleString(xText); 
+   chart.getYAxis().setTitleString(yText); 
 
  
 // app.setVisible(true);
@@ -149,9 +165,15 @@ public class display extends Panel implements Runnable {
 
 
  protected void initChart(){ 
+ // Give it a title
+ //     chart.getBackground().setTitleFont(new Font("Serif", Font.PLAIN, 24));
+ //     chart.getBackground().setTitleString("Comparing Apples and Oranges");
+chart.getXAxis().setTitleString("hallo"); 
+chart.getYAxis().setTitleString(yText); 
  String s="";
  for (int i=0;i<file.length;++i)
-   {   chart.addDataset(file[i]+s.valueOf(i),vals,vals);
+   {
+   chart.addDataset(file[i]+s.valueOf(i),vals,vals);
    }  
 
     bRot.addActionListener(new ActionListener(){
@@ -194,10 +216,17 @@ public class display extends Panel implements Runnable {
     System.out.println("use as:  display xcol ycol filename [xcol1 ycol1 filename1 ...]\n\n");
     System.out.println("         xcol,ycol ... column to be taken as x- and y-axis\n");
     System.out.println("	 filename ..... filename of datafile\n\n");
+    System.out.println("	 Data files may contain lines to tune the display output, such as\n");
+    System.out.println("	 # displayytext=intensity\n");
+    System.out.println("	 # displayxtext=meV \n");
+    System.out.println("	 # displaylines=true \n");
+    System.out.println("	 # displaytitle=My new Graph\n");
+    System.out.println("	 # displaylegend=false \n\n");
   System.exit(0);
   }
 
   file = new String[args.length/3];
+  legend = new String[args.length/3];
   colx = new int[args.length/3];
   coly = new int[args.length/3];
    Double p = new Double(0.0);
@@ -208,6 +237,7 @@ public class display extends Panel implements Runnable {
  String title="";
  for(int i=0; i<args.length-1;	i+=3)
  {file[j]=args[i+2];
+  legend[j]="false";
   Integer pp;
   ss=args[i];
   colx[j]=p.valueOf(ss).intValue();

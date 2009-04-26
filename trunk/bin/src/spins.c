@@ -34,19 +34,30 @@ int main (int argc, char **argv)
 // check command line
   if (argc < 5)
     { printf (" program spins - display spincf at HT point\n \
-                use as: spins T Ha Hb Hc [file.sps||file.mf]\n");
+                use as: spins T Ha Hb Hc [file.sps||file.mf]\n \
+                        (default input file is results/mcphas.sps)\n \
+                    or: spins T Ha Hb Hc h k l E\n \
+                        (reads from results/mcphas.sps and results/mcdisp.qev\n\n \
+                This program outputs a magnetic structure (and magnetic excitation)\n \
+                graphic/movie in the output files of different format:\n \
+                                     spins*.eps (postscript), spins*.fst (fp_studio), \n \
+                                     spins.out (ascii) and spins*.jvx (javaview)\n\n \
+                the graphics output format can be fine tuned in .sps and .qev input files\n\n \
+                jvx files can be viewed by: java javaview results/spins.jvx \n \
+                                            java javaview \"model=results/spins.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n \
+               \n");
       exit (1);
     }
 
- if (argc <6) 
- { fin_coq = fopen_errchk ("./results/mcphas.sps", "rb");}
- else
+ if (argc==6) 
  { fin_coq = fopen_errchk (argv[5], "rb");}
+ else
+ { fin_coq = fopen_errchk ("./results/mcphas.sps", "rb");}
     
  fout = fopen_errchk ("./results/spins.out", "w");
 
 
-
+double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0;
 abc=0;
  // input file header ------------------------------------------------------------------
   instr[0]='#';
@@ -62,6 +73,14 @@ abc=0;
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
    }
+   extract(instr,"show_abc_unitcell",show_abc_unitcell);
+   extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
+   extract(instr,"show_magnetic_unitcell",show_magnetic_unitcell);
+   extract(instr,"show_atoms",show_atoms);
+   extract(instr,"scale_view_1",scale_view_1);
+   extract(instr,"scale_view_2",scale_view_2);
+   extract(instr,"scale_view_3",scale_view_3);
+
    extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
    extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
    extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
@@ -154,10 +173,26 @@ abc=0;
      savspins.fstprim(fin_coq,outstr,abc,r,x,y,z,gJJ);
     fclose (fin_coq);
 
+             Vector hkl(1,3);hkl=0;
+             spincf savev_real(savspins*0.0);
+             spincf savev_imag(savspins*0.0);
+            // to do jvx output of static structure put zeros into these spinconfigurations
+
+// create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
+   fin_coq = fopen_errchk ("./results/spins.jvx", "w");
+     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
+                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0);
+    fclose (fin_coq);
+
+// create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
+   fin_coq = fopen_errchk ("./results/spins_prim.jvx", "w");
+     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
+                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0);
+    fclose (fin_coq);
+
 if (argc>=9){// try a spinwave picture
              double h,k,l,E,ddh,ddk,ddl,ddE;
-             spincf savev_real(savspins);
-             spincf savev_imag(savspins);
+             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_direction_of_static_moment=1.0; 
              fin_coq = fopen_errchk ("./results/mcdisp.qev", "rb");
              // input file header ------------------------------------------------------------------
              instr[0]='#';
@@ -169,6 +204,9 @@ if (argc>=9){// try a spinwave picture
                 // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
                 for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
                // load evs and check which one is nearest -------------------------------   
+               extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
+               extract(instr,"spins_show_ellipses",spins_show_ellipses);
+               extract(instr,"spins_show_direction_of_static_moment",spins_show_direction_of_static_moment);
               }
                j=fseek(fin_coq,pos,SEEK_SET); 
                if (j!=0){fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
@@ -184,16 +222,16 @@ if (argc>=9){// try a spinwave picture
                  ddHa=strtod(argv[2],NULL)-numbers[1];ddHa*=ddHa;
                  ddHb=strtod(argv[3],NULL)-numbers[2];ddHb*=ddHb;
                  ddHc=strtod(argv[4],NULL)-numbers[3];ddHc*=ddHc;
-                 ddh=strtod(argv[6],NULL)-numbers[5];ddh*=ddh;
-                 ddk=strtod(argv[7],NULL)-numbers[6];ddk*=ddk;
-                 ddl=strtod(argv[8],NULL)-numbers[7];ddl*=ddl;
-                 ddE=strtod(argv[9],NULL)-numbers[9];ddE*=ddE;
+                 ddh=strtod(argv[5],NULL)-numbers[5];ddh*=ddh;
+                 ddk=strtod(argv[6],NULL)-numbers[6];ddk*=ddk;
+                 ddl=strtod(argv[7],NULL)-numbers[7];ddl*=ddl;
+                 ddE=strtod(argv[8],NULL)-numbers[9];ddE*=ddE;
                  
                  dd=sqrt(ddT+ddHa+ddHb+ddHc+ddh+ddk+ddl+ddE+0.000001);
                  if (dd<delta)
                  {delta=dd;
                   sprintf(outstr,"T=%g Ha=%g Hb=%g Hc=%g h=%g k=%g l=%g E=%g",numbers[4],numbers[1],numbers[2],numbers[3],numbers[5],numbers[6],numbers[7],numbers[9]);
-                  savev_real=ev_real;savev_imag=ev_imag;h=numbers[5];k=numbers[6];l=numbers[7];E=numbers[9];        
+                  savev_real=ev_real;savev_imag=ev_imag;hkl(1)=numbers[5];hkl(2)=numbers[6];hkl(3)=numbers[7];E=numbers[9];        
                  }
                }
               fclose (fin_coq);
@@ -203,19 +241,24 @@ if (argc>=9){// try a spinwave picture
               fprintf(stdout,"#imag\n");
               savev_imag.print(stdout);
               spincf spins(savspins);
-               sleep(10);                 
 
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
-              double phase=0,amplitude=1.0; // should be controlled
+              double phase;
               complex <double> im(0,1);
-              while(phase<10000)
-              {spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
-               fin_coq = fopen_errchk ("./results/spins_prim.fst", "w");
-                spins.fstprim(fin_coq,outstr,abc,r,x,y,z,gJJ);
+              for(i=0;i<16;++i)
+              {phase=2*3.1415*i/15;
+               printf("\n calculating movie sequence %i(16)\n",i+1);
+               sprintf(outstr,"./results/spins.%i.jvx",i+1);
+               fin_coq = fopen_errchk (outstr, "w");
+                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
+                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
                fclose (fin_coq);
-               sleep(1);                 
-               phase+=0.1;
+               sprintf(outstr,"./results/spins_prim.%i.jvx",i+1);
+               fin_coq = fopen_errchk (outstr, "w");
+                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
+                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
+               fclose (fin_coq);
               }
           }
 

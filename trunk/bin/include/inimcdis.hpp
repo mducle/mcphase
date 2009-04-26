@@ -23,6 +23,9 @@ class inimcdis
   int hkllist; 
   int nofatoms; //nofatoms in primitive cryst unit cell
   int nofcomponents; //number of components of mean field (including magnetic, quadrupolar fields ...
+  int extended_eigenvector_dimension; // for the creation of eiegnevectors in mcdisp.eev which 
+   // may be used to plot charge density waves. extended_eigenvevtor_dimension must not be 
+   // larger than allowed by dmcalc, the routine which creates the matrix Malphabeta (see model section)
   double T;
   double Ha;
   double Hb;

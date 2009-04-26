@@ -24,9 +24,8 @@ class testspincf
 int  addspincf(spincf & sps);
 
 // print out table of all configurations
-void save();
-void save(const char*filename);
-void save (const char*filename, const char * filemode);
+void save(const char * filemode);
+void save(const char*filename,const char * filemode);
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 
 // remember filename for later on save of the list (savfile)

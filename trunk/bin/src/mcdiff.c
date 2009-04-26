@@ -94,7 +94,8 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					               msfdipy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
 					               msfdipz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
 					                  }
- 					      if(J[i]==-1){// dipole approximation - use magnetic moments 
+ 					      if(J[i]==-1){// dipole approximation - use magnetic moments and rare earth formfactor
+                                                           //                        for transition metals always set gJ=2 (spin only moment)
                                                         msfx+=(*jjjpars[i]).mom(3)*FQ/2*exp(-2*PI*qr*im);
 					                msfy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
 					                msfz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
@@ -102,7 +103,7 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					                msfdipy+=(*jjjpars[i]).mom(1)*FQ/2*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(2)*FQ/2*exp(-2*PI*qr*im);
 					               }
-					      if(J[i]==-2){// dipole approximation - use S and L moments (only if gJ=0!)
+					      if(J[i]==-2){// dipole approximation - use S and L moments (only if gJ=0)
                                                         FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
                                                         msfx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
 					                msfy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
@@ -117,7 +118,7 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
 					               }
-                                     if(J[i]==-3){ // go beyond dipole approximation for gJ=0
+                                     if(J[i]==-3){ // go beyond dipole approximation for gJ=0 (intermediate coupling)
                                                        ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
 //                                             printf("MQxyz=(%g %+g i, %g %+g i,%g %+g i)",real(MQ(1)),imag(MQ(1)),real(MQ(2)),imag(MQ(2)),real(MQ(3)),imag(MQ(3)));
 					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);//MQ(123)=MQ(xyz)
@@ -410,7 +411,8 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
   }
   fprintf(fout, "# %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f%+6.3fi %6.3f %6.3f ",(*jjjpars[i]).xyz(1),(*jjjpars[i]).xyz(2),(*jjjpars[i]).xyz(3),(*jjjpars[i]).mom(1),(*jjjpars[i]).mom(2),(*jjjpars[i]).mom(3),(*jjjpars[i]).SLR,(*jjjpars[i]).SLI,(*jjjpars[i]).DWF,(*jjjpars[i]).gJ);
   if(J[i]==0||J[i]==-3){fprintf(fout,"F(Q) beyond dip.approx.");}
-  if(J[i]==-2){fprintf(fout,"separate spin and orb. moments F(Q) dip.approx.");}
+  if(J[i]==-1){fprintf(fout,"F(Q)=j0-(1-2/gJ)j2 formfactor for rare earth/transition metals with gJ=2");}
+  if(J[i]==-2){fprintf(fout,"FL(Q)=(j0+j2)/2 and FS(Q)=j0 formfactors separate for spin and orb. moments");}
 
   for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",(*jjjpars[i]).magFFj0(j));}
   for (j = 1;j<=7;++j)  {fprintf(fout,"%6.3f ",(*jjjpars[i]).magFFj2(j));}
@@ -847,16 +849,16 @@ for(i=1;i<=natmagnetic;++i){
                               // store moment and components of S and L (if given)
                               for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
                               if((*jjjpars[i]).gJ==0){if(j>=15){J[i]=-2; // do not use input moment but spin and angular momentum for calculation
-                               // do some consistency checks
-                               if (fabs((*jjjpars[i]).mom(1)-2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5))>0.001){fprintf(stderr,"Warning mcdiff: a-component magnetic moment and <La>+2<Sa> not consistent for atom %i - setting moment=<L>+2<S> \n",i);}
-                               if (fabs((*jjjpars[i]).mom(2)-2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7))>0.001){fprintf(stderr,"Warning mcdiff: b-component magnetic moment and <Lb>+2<Sb> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
-                               if (fabs((*jjjpars[i]).mom(3)-2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9))>0.001){fprintf(stderr,"Warning mcdiff: c-component magnetic moment and <Lc>+2<Sc> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
-                            (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
-                            (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
-                            (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
+                                                                // do some consistency checks
+                                                                if (fabs((*jjjpars[i]).mom(1)-2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5))>0.001){fprintf(stderr,"Warning mcdiff: a-component magnetic moment and <La>+2<Sa> not consistent for atom %i - setting moment=<L>+2<S> \n",i);}
+                                                                if (fabs((*jjjpars[i]).mom(2)-2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7))>0.001){fprintf(stderr,"Warning mcdiff: b-component magnetic moment and <Lb>+2<Sb> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
+                                                                if (fabs((*jjjpars[i]).mom(3)-2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9))>0.001){fprintf(stderr,"Warning mcdiff: c-component magnetic moment and <Lc>+2<Sc> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
+                                                                (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
+                                                                (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
+                                                                (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
+                                                                }
+                                                           else {J[i]=-1;(*jjjpars[i]).gJ=2;} // just use spin formfactor
                                                       }
-                                                      else {(*jjjpars[i]).gJ=2;} // just use spin formfactor
-                                       }
                             instr[0]='#';
                             while(instr[strspn(instr," \t")]=='#'&&feof(fin_coq)==0){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
 

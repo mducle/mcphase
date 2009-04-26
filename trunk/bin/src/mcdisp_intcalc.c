@@ -111,7 +111,7 @@ int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,V
 }
 
 //**************************************************************************/
-double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
+double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf & eev_real,mfcf & eev_imag,ComplexMatrix & Ec,int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
  int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
@@ -128,6 +128,7 @@ double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,int di
  
  // init eigenvector to zero
   ev_real.clear();ev_imag.clear();
+  eev_real.clear();eev_imag.clear();
 
  // determine chi
 
@@ -155,21 +156,26 @@ double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,int di
       bb=md.baseindex(i2,j2,k2,l2,t2);
         
     
-    for(i=1;i<=md.nofcomponents;++i){
     for(j=1;j<=md.nofcomponents;++j){
-     chileft=PI*conj(md.sqrt_gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.U(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
-if(intensitybey>0)chileftbey=PI*conj(md.sqrt_Gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.V(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
+     if((ss-1)*md.nofcomponents+j==1){for(i=1;i<=ini.extended_eigenvector_dimension;++i)
+                                        {eev_real.mf(i1,j1,k1)(ini.extended_eigenvector_dimension*(l1-1)+i)+=real(Ec(s,i)*Tau(s,level));// add this transition
+                                         eev_imag.mf(i1,j1,k1)(ini.extended_eigenvector_dimension*(l1-1)+i)+=imag(Ec(s,i)*Tau(s,level));
+                                        }
+                                     }
+    for(i=1;i<=md.nofcomponents;++i){
+     chileft=conj(md.sqrt_gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.U(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
+if(intensitybey>0)chileftbey=conj(md.sqrt_Gamma(i1,j1,k1)(md.nofcomponents*b,md.nofcomponents*b))*md.V(i1,j1,k1)((b-1)*md.nofcomponents+i,(b-1)*md.nofcomponents+md.nofcomponents)*Tau(s,level);
 
      chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
-     chileft*conj(Tau(ss,level))*conj(md.U(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
+     PI*chileft*conj(Tau(ss,level))*conj(md.U(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);
 
      // here we fill the eigenvector mf with the information from chi
-     if((s-1)*md.nofcomponents+i==1){ev_real.mf(i2,j2,k2)(md.nofcomponents*(l2-1)+j)+=real(chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j));// add this transition
-                                     ev_imag.mf(i2,j2,k2)(md.nofcomponents*(l2-1)+j)+=imag(chi((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j));
-                                     }
+     if((ss-1)*md.nofcomponents+j==1){ev_real.mf(i1,j1,k1)(md.nofcomponents*(l1-1)+i)+=real(chileft);// add this transition
+                                      ev_imag.mf(i1,j1,k1)(md.nofcomponents*(l1-1)+i)+=imag(chileft);
+                                      }
 
 if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
-     chileftbey*conj(Tau(ss,level))*conj(md.V(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_Gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);}
+     PI*chileftbey*conj(Tau(ss,level))*conj(md.V(i2,j2,k2)((bb-1)*md.nofcomponents+j,(bb-1)*md.nofcomponents+md.nofcomponents))*md.sqrt_Gamma(i2,j2,k2)(md.nofcomponents*bb,md.nofcomponents*bb);}
     }}
    }}}}
   }}}

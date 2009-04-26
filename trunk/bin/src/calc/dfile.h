@@ -265,7 +265,7 @@ typedef struct spect_pars
 class TheFile : public AsciiFile
 {
  protected:
- int TheFile::SaveHeader(void);
+ int SaveHeader(void);
   
  public:
  TheFile(const char *szFile);
