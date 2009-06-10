@@ -172,7 +172,7 @@ switch (intern_mcalc)
 
    }
 
-//   debyewallerfactor = exp(-2 * DWF *s*s)
+//   debyewallerfactor = exp(-2 * DWF *s*s)      (sf ~ exp(-2 DWF sin^2(theta) / lambda^2)=EXP (-W),  (2*DWF=B=8 pi^2 <u^2>)
    double jjjpar::debyewallerfactor(double & Q)
    {double s;
     s=Q/4/PI;
@@ -590,9 +590,9 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 	       exit (EXIT_FAILURE);
 	      }
   
-    m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*))GetProcAddress(handle,"mcalc");
+    m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mcalc");
      if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %d  module %s loading function mcalc not possible\n",GetLastError(),modulefilename);exit (EXIT_FAILURE);}
-    dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*))GetProcAddress(handle,"dmcalc");
+    dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))GetProcAddress(handle,"dmcalc");
      if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d module %s loading function dmcalc not possible - continuing\n",GetLastError(),modulefilename);}
     mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mq");
      if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mq not possible - continuing\n",GetLastError(),modulefilename);}

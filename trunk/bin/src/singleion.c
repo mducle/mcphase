@@ -15,29 +15,40 @@
 #include<par.hpp>
 
 /**********************************************************************/
+void helpexit()
+{ printf (" program single ion  - display single ion expectations values <Ja> <Jb> ... and transition energies at given T and H\n \
+                use as: singleion T[K] gjmbHa gmbHb gjmbHc[meV] ...\n\n \
+             by default only 5 transition energies are output, start with option -nt n to output n transition energies\n\n");
+      exit (1);
+}
+
 // hauptprogramm
 int main (int argc, char **argv)
-{ int i,j,nt;
+{ int i,j,i0,nt;
   double lnz,u;
   float d;
   double T;
 
+// check command line
+  if (argc < 3)helpexit();
 
   par inputpars("./mcphas.j");
-// check command line
-  if (argc < 3||argc-2>inputpars.nofcomponents)
-    { printf (" program single ion  - display single ion properties at HT point\n \
-                use as: single ion  T[K] gjmbHa gmbHb gjmbHc[meV] ...\n");
-      exit (1);
-    }
+// check command line again
+  if (argc-4>inputpars.nofcomponents)helpexit();
 
   Vector h(1,inputpars.nofcomponents);
   Vector m(1,inputpars.nofcomponents);
   // transition matrix Mij
   ComplexMatrix Mijkl(1,inputpars.nofcomponents,1,inputpars.nofcomponents);
 
-      T=strtod(argv[1],NULL);
-   h=0;for(i=1;i<=argc-2;++i)h(i)=strtod(argv[i+1],NULL);
+int nmax=5;// max number of transtions to  be output
+                             i=1;if(!strcmp(argv[i],"-nt")){nmax=(int)strtod(argv[i+1],NULL);i+=2;}
+                             T=strtod(argv[i],NULL);i0=i;
+
+h=0;for(j=1;j<=argc-i0-1;++j){++i;if(!strcmp(argv[i],"-nt")){nmax=(int)strtod(argv[i+1],NULL);i+=2;i0+=2;}
+                             if(i<argc){h(j)=strtod(argv[i],NULL);}
+                            }
+
 
 printf("#\n#atom-number T[K] ");
 for(j=1;j<=inputpars.nofcomponents;++j)printf("gjmbH%c(meV) ",'a'-1+j);
@@ -47,21 +58,28 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
   for(i=1;i<=inputpars.nofatoms;++i)
 {
 
-            ComplexMatrix est((*inputpars.jjj[i]).eigenstates(h,T));
-            m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,est);
-	    (*inputpars.jjj[i]).transitionnumber=-1;
-            nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*inputpars.jjj[i]).est); 
+   ComplexMatrix * est;(*inputpars.jjj[i]).eigenstates(h,T);
+   est= new ComplexMatrix((*inputpars.jjj[i]).est.Rlo(),(*inputpars.jjj[i]).est.Rhi(),(*inputpars.jjj[i]).est.Clo(),(*inputpars.jjj[i]).est.Chi()); 
+   (*est)=(*inputpars.jjj[i]).est;
+   m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).est); // here calculate magnetic moment, mind (*inputpars.jjj[i]).est
+                                                                   //can be changed as user wishes in ext singleion module
 
-  printf("%3i %13g ",i,T);
-  for(j=1;j<=inputpars.nofcomponents;++j)printf(" %10g ",h(j));
-//  printf("        ");
-  for(j=1;j<=inputpars.nofcomponents;++j)printf(" %4g ",m(j));
-  for(j=1;j<=nt;++j)
+  printf("%3i %13g ",i,T); // printout ion number and temperature
+  for(j=1;j<=inputpars.nofcomponents;++j)printf(" %10g ",h(j)); // printout meanfield as requested
+  for(j=1;j<=inputpars.nofcomponents;++j)printf(" %4g ",m(j));  // printout corresponding moments 
+
+   (*inputpars.jjj[i]).transitionnumber=-1;
+   nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*est)); // get nt = number of transitions, mind: here we use est, 
+                                                   //because (*inputpars.jjj[i]).est might have been changed by the mcalc call above
+
+  for(j=1;j<=nt&&j<=nmax;++j)
   {(*inputpars.jjj[i]).transitionnumber=-j;
-  (*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*inputpars.jjj[i]).est);
+  (*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*est));
   printf(" %4g ",d);
   }
+  if(nmax<nt){printf("...");}
   printf("\n");
+ delete est;
 }
 
 

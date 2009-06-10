@@ -17,7 +17,7 @@
 #include "mprandom.h"
 
 // needed for initializing random generator
-#include <time.h>
+#include <ctime>
 
 //-----------------------------------------------------------------------------//
 

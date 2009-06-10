@@ -84,7 +84,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	      }
  if (verbose==1)
  { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
-   fprintf(fin_coq,"time(s) log(iteration) log(sta) spinchange stepratio\n");
+   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=red:log(sta) green:stepratio\n#time(s) log(iteration) log(sta) spinchange stepratio\n");
    fclose(fin_coq);	      
    printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
  }
@@ -628,7 +628,8 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  ComplexMatrix ** ests;ests=new ComplexMatrix*[inputpars.nofatoms*sdim+2];
  for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
  {for (l=1;l<=inputpars.nofatoms;++l){
-  ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).est);
+  ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).est.Rlo(),(*inputpars.jjj[l]).est.Rhi(),(*inputpars.jjj[l]).est.Clo(),(*inputpars.jjj[l]).est.Chi());
+  (*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1])=(*inputpars.jjj[l]).est;
   }}}}
  int diagonalexchange=1;
  FILE * fin_coq;
@@ -814,6 +815,8 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
  }
 
 }
+
+//printf ("hello end of mf procedure");
 
 // calculate free energy fe and energy u
 fe=0;u=0;
