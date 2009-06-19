@@ -211,7 +211,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
  }
   if (do_createtrs==1){fprintf(stdout,"single ion transition file ./results/mcdisp.trs created - please comment transitions which should not enter the calculation and restart with option -t\n");exit(0);}
 
-  printf("\nreading ./results/mcdisp.trs\n\n");
+  printf("\n#reading ./results/mcdisp.trs\n\n");
 // read transitions to beconsidered from file
  for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   fin = fopen_errchk ("./results/mcdisp.trs","rb");
@@ -262,8 +262,8 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);    //mf ... mean field vector of atom s
         extmf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);}
 
-      fprintf(stdout,"transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
-      if(nn[6]<SMALL){fprintf(stdout,"-");}else{fprintf(stdout,"+");}
+      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
+      if(nn[6]<SMALL){fprintf(stdout,"#-");}else{fprintf(stdout,"#+");}
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
@@ -322,11 +322,11 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
         md.M(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Mijkl(m,n);
         }}    
 if (do_verbose==1){
-                  fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
+                  fprintf(stdout,"#Matrix M(s=%i %i %i)\n",i,j,k);
                   myPrintComplexMatrix(stdout,Mijkl); 
-                  fprintf(stdout,"Eigenvalues:\n");
+                  fprintf(stdout,"#Eigenvalues:\n");
                   myPrintVector(stdout,gamma); 
-                  fprintf(stdout,"Matrix U(s=%i%i%i)\n",i,j,k);
+                  fprintf(stdout,"#Matrix U(s=%i%i%i)\n",i,j,k);
                   myPrintComplexMatrix(stdout,Uijkl); 
                  }
 
@@ -338,7 +338,7 @@ if (do_verbose==1){
 //initialize output files
   errno = 0;
 if (do_jqfile==0)
-{ printf("saving mcdisp.qom and mcdisp.qei and mcdisp.qev\n");
+{ printf("#saving mcdisp.qom and mcdisp.qei and mcdisp.qev\n");
   fout = fopen_errchk ("./results/mcdisp.qom",filemode);
   foutqei = fopen_errchk ("./results/mcdisp.qei",filemode);
   foutqev = fopen_errchk ("./results/mcdisp.qev",filemode);
@@ -365,7 +365,7 @@ if (do_jqfile==0)
           fprintf (foutqee, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
           foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
-          printf("saving mcdisp.dsigma.tot\n");
+          printf("#saving mcdisp.dsigma.tot\n");
           fprintf (foutdstot, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutdstot);
           fprintf (foutdstot, "#Total Scattering Cross Section in energy range [emin;emax]=[%g;%g]\n#Ha[T] Hb[T] Hc[T] T[K] h k l  dsigma/dOmeg [barn/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}",ini.emin,ini.emax);
@@ -373,7 +373,7 @@ if (do_jqfile==0)
    if (do_Erefine==1){
           errno = 0;
           foutds = fopen_errchk ("./results/mcdisp.dsigma",filemode);
-          printf("saving mcdisp.dsigma\n");
+          printf("#saving mcdisp.dsigma\n");
           fprintf (foutds, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds);
           fprintf (foutds, "#Scattering Cross Section \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] dsigma/dOmegadE' [barn/mev/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
@@ -384,7 +384,7 @@ if (do_jqfile==0)
  
 // initialize file with jq matrix
 if (do_jqfile==1)
-{  printf("saving mcdisp.jq\n");
+{  printf("#saving mcdisp.jq\n");
   jqfile = fopen_errchk ("./results/mcdisp.jq",filemode);
   fprintf (jqfile, "#Fourier Transform of 2 Ion Interaction - sta is calculated by comparing the larges eigenvalue\n# to that of the first q vector of the calculation");
    fputs (asctime(loctime),jqfile);
@@ -405,8 +405,8 @@ for (hkl(3)=ini.qmin(3);hkl(3)<=ini.qmax(3);hkl(3)+=ini.deltaq(3)){
  		    }
  q=inputpars.r.Transpose()*hkl;
                
-fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
- if(do_verbose==1){fprintf(stdout,"Setting up J(q) matrix .... \n");}
+fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
+ if(do_verbose==1){fprintf(stdout,"#Setting up J(q) matrix .... \n");}
  // calculate J(q)
  jq J(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),md);
  jq Jl(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),md);
@@ -430,11 +430,17 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
    int sl,sll,sublat;
    for(ll=1;ll<=inputpars.nofatoms;++ll){for(l=1;l<=(*inputpars.jjj[ll]).paranz;++l)
    { //sum up l.th neighbour interaction of crystallographic atom ll
-     // 1. transform dn(l) to primitive lattice
-    xyz=(*inputpars.jjj[ll]).dn[l];
+     // 1. transform dn(l) to primitive lattice and round it to integer value
+    sd=(*inputpars.jjj[ll]).sublattice[l];
+    xyz=(*inputpars.jjj[ll]).xyz+(*inputpars.jjj[ll]).dn[l]-(*inputpars.jjj[sd]).xyz; // line added 17.6.09 to remove rounding bug in PCSMO calculation
     d=inputpars.rez*(const Vector&)xyz;
-    for (i=1;i<=3;++i)d_rint(i)=rint(d(i));
-   
+    for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); // rint d for loop below to determine crystallographic unit ss ...
+
+    xyz=(*inputpars.jjj[ll]).dn[l];
+    d=inputpars.rez*(const Vector&)xyz;// set d to distance for later use to determie phase factor in J(Q) ...
+
+	  if (do_verbose==1) {printf("#adding neighbor %i (%6.3f %6.3f %6.3f) of atom %i (%6.3f %6.3f %6.3f)- it contributes to J(s,s'):\n",l,xyz(1),xyz(2),xyz(3),ll,(*inputpars.jjj[ll]).xyz[1],(*inputpars.jjj[ll]).xyz[2],(*inputpars.jjj[ll]).xyz[3]);
+                              } 
    //2. in order to sum up we must take into account that the magnetic unit cell is
    //   larger than the crystallographic one - the ll-l neighbor interaction contributes
    //   to many different components of Js,ss(q) ... note s,ss runs over all the atoms
@@ -446,11 +452,11 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 	 // i.e. if j1 is 2n then  say: the neighbour is at -d, this ensures that
 	 // for half of the atoms the interaction is counted at negative distances
 	 // [this makes no error if the lattice is primitive!!!] but for RCu2 it makes
-	 // a difference, because atoms at +-0.5c are not equal 
-	 sd=-1;if (inputpars.r[2][1]==0.5&&(double)j1/2.0==integer(1.0*j1/2)) sd=1;
+	 // a difference, because atoms at +-0.5c are not equal ... deleted 17.6.09 because it might give troubles in general !! 
+	 sd=1;//if (inputpars.r[2][1]==0.5&&(double)j1/2.0==integer(1.0*j1/2)) sd=-1;
   	// if (inputpars.r[2][1]==0.0&&(double)(i1+j1)/2.0==integer(1.0*(i1+j1)/2)) sd=1;
 
-         //calc ss (check in which magnetic cell ss the neighbour l-ll lies)	 
+         //calc ss (check in which crystallographic unit ss of the magnetic cell the neighbour l-ll lies)	 
          i=(int)(i1+sd*d_rint(1)-1); // calculate 
 	 j=(int)(j1+sd*d_rint(2)-1);
 	 k=(int)(k1+sd*d_rint(3)-1);
@@ -460,11 +466,13 @@ fprintf(stdout,"q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 	 else      ij(2)=(integer(1.0*(j+1)/ini.mf.nb())-1)*ini.mf.nb();
 	 if (k>=0) ij(3)=integer(1.0*k/ini.mf.nc())*ini.mf.nc();
 	 else      ij(3)=(integer(1.0*(k+1)/ini.mf.nc())-1)*ini.mf.nc();
-	 i=i-(int)ij(1)+1;
+//	 if (do_verbose==1) {printf("#ijk=%i %i %i  ij()=%6.3f %6.3f %6.3f ",i,j,k,ij(1),ij(2),ij(3));}
+         i=i-(int)ij(1)+1;
 	 j=j-(int)ij(2)+1;
 	 k=k-(int)ij(3)+1;
 	 ss=J.in(i,j,k);
-	   // sum up 
+          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
+          // sum up 
            ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
            jsss=0;
         
@@ -498,7 +506,7 @@ if (do_jqfile==1){if (do_verbose==1){fprintf (jqfile, "#q=(%g, %g, %g) ",hkl(1),
                   }
 
 
-if(do_verbose==1){fprintf(stdout,"Transform J(q) matrix  with U...\n");}
+if(do_verbose==1){fprintf(stdout,"#Transform J(q) matrix  with U...\n");}
 
 // transform J(s,ss) (with md.U) and multiply 
 // (with eigenvalues sqrt(gamma) [here md.sqrt_gamma]
@@ -509,13 +517,17 @@ if(do_verbose==1){fprintf(stdout,"Transform J(q) matrix  with U...\n");}
   ss=ini.mf.in(i2,j2,k2);
   Jl.mati(s,ss)=md.sqrt_gamma(i1,j1,k1)*md.U(i1,j1,k1).Conjugate().Transpose()*J.mati(s,ss)*md.U(i2,j2,k2)*md.sqrt_gamma(i2,j2,k2).Conjugate();
 if (do_verbose==1){
-                  fprintf(stdout,"J(s=%i%i%i,s''=%i%i%i)=\n",i1,j1,k1,i2,j2,k2);
+                  fprintf(stdout,"#J(s=%i%i%i,s''=%i%i%i)=\n",i1,j1,k1,i2,j2,k2);
                   myPrintComplexMatrix(stdout,J.mati(s,ss)); 
-                  fprintf(stdout,"sqr(gamma_s=%i%i%i)=\n",i1,j1,k1);
+                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i1,j1,k1);
                   myPrintComplexMatrix(stdout,md.sqrt_gamma(i1,j1,k1));
-                  fprintf(stdout,"sqr(gamma_s=%i%i%i)=\n",i2,j2,k2);
+                  fprintf(stdout,"#U(s=%i%i%i)=\n",i1,j1,k1);
+                  myPrintComplexMatrix(stdout,md.U(i1,j1,k1));
+                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i2,j2,k2);
                   myPrintComplexMatrix(stdout,md.sqrt_gamma(i2,j2,k2));
-                  fprintf(stdout,"sqr(gamma_s)*U(s)*J(s=%i%i%i,s''=%i%i%i)*U(s'')*sqr(gamma_s'')=\n",i1,j1,k1,i2,j2,k2);
+                  fprintf(stdout,"#U(s=%i%i%i)=\n",i2,j2,k2);
+                  myPrintComplexMatrix(stdout,md.U(i2,j2,k2));
+                  fprintf(stdout,"#sqr(gamma_s) U(s)T* J(s=%i%i%i,s''=%i%i%i) U(s'') sqr(gamma_s'')*=\n",i1,j1,k1,i2,j2,k2);
                   myPrintComplexMatrix(stdout,Jl.mati(s,ss)); 
                  }
   }}}
@@ -523,7 +535,7 @@ if (do_verbose==1){
 
 
 // calculate Ac
-if(do_verbose==1){fprintf(stdout,"calculating matrix A\n");}
+if(do_verbose==1){fprintf(stdout,"#calculating matrix A\n");}
 // Ac  is the matrix A which is given in manual chapter 9.2.1 (eq (30) ff) 
 // -- diagonalization gives omega_r and Tau
    ComplexMatrix Ac(1,dimA,1,dimA);
@@ -542,8 +554,8 @@ if(do_verbose==1){fprintf(stdout,"calculating matrix A\n");}
       b=md.baseindex(i1,j1,k1,l1,t1);
       if(md.delta(i1,j1,k1)(b)<0){Lambda(s,s)=-1;}else{Lambda(s,s)=+1;}
       Ac(s,s)=md.delta(i1,j1,k1)(b)*Lambda(s,s);
-      if(do_verbose==1){fprintf(stdout,"i=%i j=%i k=%i atomnr=%i trans=%i ... s=%i ",i1,j1,k1,l1,t1,s);
-                        fprintf(stdout,"lambda(%i,%i)xdelta(%i)=%g + i %g\n",s,s,s,real(Ac(s,s)),imag(Ac(s,s)));
+      if(do_verbose==1){fprintf(stdout,"#i=%i j=%i k=%i atomnr=%i trans=%i ... s=%i ",i1,j1,k1,l1,t1,s);
+                        fprintf(stdout,"#lambda(%i,%i)xdelta(%i)=%g + i %g\n",s,s,s,real(Ac(s,s)),imag(Ac(s,s)));
                        }
       }}
 
@@ -605,7 +617,7 @@ if (do_jqfile==1){
  }
  else
  {// no jqfile but excitations to be calculated
- if(do_verbose==1){fprintf(stdout,"diagonalizing %ix%i matrix A...\n",dimA,dimA);
+ if(do_verbose==1){fprintf(stdout,"#diagonalizing %ix%i matrix A...\n",dimA,dimA);
                            myPrintComplexMatrix(stdout,Ac); 
                    }
    // diagonalize Ac to get energies  and eigenvectors !!!
@@ -624,9 +636,9 @@ if (do_jqfile==1){
 	// that the eigensystemhgermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
- if(do_verbose==1){ fprintf(stdout,"eigenvectors (matrix Tau):\n");
+ if(do_verbose==1){ fprintf(stdout,"#eigenvectors (matrix Tau):\n");
                     myPrintComplexMatrix(stdout,Tau); 
-                    fprintf(stdout,"saving the following eigenvalues to mcdisp.qom:\n");}
+                    fprintf(stdout,"#saving the following eigenvalues (meV) to mcdisp.qom:\n");}
    int dim=3;
    if (ini.hkllist==1){dim=(int)ini.hkls[counter][0]-3;}
          Vector dd(1,dim);  dd+=100000.0;
@@ -638,7 +650,7 @@ if (do_jqfile==1){
 //    }}} //-if not: print it out and sum up standard deviation
 //    if (i2==1){
 	       fprintf (fout, " %4.4g ",En(i));
-                if(do_verbose==1){fprintf(stdout, " %4.4g meV",En(i));}
+                if(do_verbose==1){fprintf(stdout, " %4.4g",En(i));}
 	       if (En(i)<ini.emin) sta*=1.1-En(i)+ini.emin;
                if (ini.hkllist==1)
 	       {double test; // add to sta distance to nearest measured peak squared
@@ -657,7 +669,7 @@ if (do_jqfile==1){
              mfcf eev_real(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
              mfcf eev_imag(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
   double diffint=0,diffintbey=0;
-  if(do_verbose==1){fprintf(stdout,"\ncalculating  intensities approximately ...\n");}
+  if(do_verbose==1){fprintf(stdout,"\n#calculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
 diffint=0;diffintbey=0;
                   if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
@@ -682,7 +694,7 @@ diffint=0;diffintbey=0;
                      fprintf (foutqee, "#eigenvector imaginary part\n");
                      eev_imag.print(foutqee); // 
                      fprintf (foutqee, "#\n");
-                 if(do_verbose==1){fprintf(stdout, "IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
+                 if(do_verbose==1){fprintf(stdout, "#IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
@@ -732,7 +744,7 @@ diffint=0;diffintbey=0;
 		    
    // do refinement of energies by output of scattering cross section vs enrgy transfer if required
   if (do_Erefine==1){double totint=0;
-                if(do_verbose==1){fprintf(stdout, "refining calculation with exact calculation of energy dependence of scattering cross section\n");}
+                if(do_verbose==1){fprintf(stdout, "#refining calculation with exact calculation of energy dependence of scattering cross section\n");}
           errno = 0;
           foutds1 = fopen_errchk ("./results/.mcdisp.dsigma","w");
           fprintf (foutds1, "#{%s ",MCDISPVERSION);
@@ -795,7 +807,7 @@ int main (int argc, char **argv)
 for (i=1;i<=argc-1;++i){
    if(strcmp(argv[i],"-r")==0) {do_Erefine=1; if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -r needs argument epsilon\n");exit(EXIT_FAILURE);}
 		                                                epsilon=strtod(argv[i+1],NULL);++i;
-							        fprintf(stdout,"epsilon= %g\n",epsilon);
+							        fprintf(stdout,"#epsilon= %g\n",epsilon);
 				     }		
          else {if(strcmp(argv[i],"-jq")==0) {do_jqfile=1;minE=SMALL;maxlevels=1;}       
           else {if(strcmp(argv[i],"-t")==0) do_readtrs=1;       
@@ -804,15 +816,15 @@ for (i=1;i<=argc-1;++i){
              else {if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"-verbose")==0) do_verbose=1;       
               else {if(strcmp(argv[i],"-max")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -max needs argument(s)\n");exit(EXIT_FAILURE);}
 		                                  maxlevels=(int)strtod(argv[i+1],NULL);++i;
-						  fprintf(stdout,"maximum number of single ion excitations taken into account (starting with lowest energy): %i\n",maxlevels);
+						  fprintf(stdout,"#maximum number of single ion excitations taken into account (starting with lowest energy): %i\n",maxlevels);
 					         }       
                else {if(strcmp(argv[i],"-maxE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -maxE needs argument(s)\n");exit(EXIT_FAILURE);}
 		                                  maxE=strtod(argv[i+1],NULL);++i;
-						  fprintf(stdout,"maximum Energy of single ion excitations taken into account: %g\n",maxE);
+						  fprintf(stdout,"#maximum Energy of single ion excitations taken into account: %g\n",maxE);
   					         }       
                 else {if(strcmp(argv[i],"-minE")==0) {if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -minE needs argument(s)\n");exit(EXIT_FAILURE);}
  		                                  minE=strtod(argv[i+1],NULL);++i;
-						  fprintf(stdout,"minimum Energy of single ion excitations taken into account: %g\n",minE);
+						  fprintf(stdout,"#minimum Energy of single ion excitations taken into account: %g\n",minE);
 					         }       
            	 else{spinfile=argv[i];}
 		   }

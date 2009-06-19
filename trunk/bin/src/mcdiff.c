@@ -55,6 +55,47 @@ return;}
 
 int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vector rez2, Vector rez3,float scale,double T,float lambda,float ovalltemp,int lorenz,int & n,int * J,float & d,float & Theta,float & Imag,float & Imagdip,float & inuc,float & SF,float & lorentzf,complex <double> & mqx,complex <double> & mqy,complex <double> & mqz,complex <double> & mqxy,complex <double> & mqxz,complex <double> & mqyz,complex <double> & mqx2,complex <double> & mqy2,complex <double> & mqz2)
 {
+// this routine calculates the intensity of elastic neutrons for a reflection (hi ki li)
+//
+// input:
+// (*jjjpar[1...n]).xyz(1..3)         atomic positional parameters dr1 dr2 dr3
+//                                        '(with respect to primitive lattice)
+// (*jjjpars[1...n]).DWF              debye waller factors [A^2]
+// (*jjjpars[1...n]).SLR,SLI          nuclear scattering length[10^-12cm]
+// (*jjjpars[1...n]).mom(1..3)(45)(67)(89)        atomic magnetic moment Ma Mb Mc [mb] and (if input) Sa La Sb Lb Sc Lc
+//                                       ' (with respect to coordinates 1,2,3=yzx)
+// (*jjjpars[1...n]).gj		      Lande factor
+// J[1..n] // code for indicating if ion is nonmagnetic (J=1), 
+            //rare earth with dipole approx (J=-1), 
+            //rare earth beyond dipole approx, but with given nonzero gJ (stevens-balcar formalism) (J=0),
+            //gJ=0,general L and S moments given, use dipole approximation and separate formfactor for spin and orbital moment (J=-2)
+            //intermediate coupling (gJ=0), go beyond dipole approximation (J=-3)
+// (*jjjpars[1...n]).magFFj0(1..7)         formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
+// (*jjjpars[1...n]).magFFj2(1..7)         formfactor j2 for atom 1...n <j2(kr)>-terms A,a,B,b,C,c,D
+//     <jl(kr)> is defined as = integral[0,inf] U^2(r) jl(kr) 4 pi r^2 dr
+//     where U(r) is the Radial wave function for the unpaired electrons in the atom
+// (*jjjpars[1...n]).magFFj4(1..7)         formfactor j4 for atom 1...n  (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).magFFj6(1..7)         formfactor j6 for atom 1...n  (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).Zc		         Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
+// (*jjjpars[1...n]).eigenstates(1..2J+1,1..2J+1)   CF+MF eigenstates (needed to go beyond dipole approx)
+// thetamax  			      maximum theta value, if theta larger, routine returns false
+// rez1,rez2,rez3                     vectors of reciprocal lattice 
+// scale                              scaling factor for intensity
+// T				         temperature [K] (needed to go beyond dipole approx)
+// lambda                             wavelength[A]
+// ovalltemp                          overall temperature factor [A^2]
+// lorenz                             code for lorentzfactor to be used
+// n                                  number of atoms per unit cell
+//
+// output:
+// d                                  d spacing in A
+// theta                              scattering angle
+// Imag, Imagdip, inuc                scattering intensities
+// SF                                 structure factor
+// lorentzf                           Lorentz Factor
+// mx,my,mz,mxmy,mxmz,mymz,mx2my2mz2[].. fouriertransform of momentunitvectors (for mag xray scattering)
+
+
             double s,Q,FQ,FQL,sintheta,qr,sin2theta,ovallt,mux,muy,muz;
             int i,j;
             Vector Qvec(1,3);
@@ -205,18 +246,21 @@ void neutint(jjjpar ** jjjpars,int code,double T,float lambda, float thetamax, f
 // input:
 // code                               governs if a list of hkl given in hkl[] or all hkls should be generated
 // lambda                             wavelength[A]
-// ovalltemp                          overall temperature factor [A]
+// ovalltemp                          overall temperature factor [A^2]
 // r1(1..3),r2(),r3()                 vectors of primitive unit cell[A]
 // n                                  number of atoms per unit cell
 // (*jjjpar[1...n]).xyz(1..3)         atomic positional parameters dr1 dr2 dr3
 //                                        '(with respect to primitive lattice)
-// (*jjjpars[1...n]).DWF              debye waller factors [A]
+// (*jjjpars[1...n]).DWF              debye waller factors [A^2]
 // (*jjjpars[1...n]).SLR,SLI          nuclear scattering length[10^-12cm]
 // (*jjjpars[1...n]).mom(1..3)(45)(67)(89)        atomic magnetic moment Ma Mb Mc [mb] and (if input) Sa La Sb Lb Sc Lc
 //                                       ' (with respect to coordinates 1,2,3=yzx)
 // (*jjjpars[1...n]).gj		      Lande factor
 // J[1..n] // code for indicating if ion is nonmagnetic (J=1), 
-            //magnetic with dipole approx (J=-1), beyond dipole approx (J=0)
+            //rare earth with dipole approx (J=-1), 
+            //rare earth beyond dipole approx, but with given nonzero gJ (stevens-balcar formalism) (J=0),
+            //gJ=0,general L and S moments given, use dipole approximation and separate formfactor for spin and orbital moment (J=-2)
+            //intermediate coupling (gJ=0), go beyond dipole approximation (J=-3)
 // (*jjjpars[1...n]).magFFj0(1..7)         formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
 // (*jjjpars[1...n]).magFFj2(1..7)         formfactor j2 for atom 1...n <j2(kr)>-terms A,a,B,b,C,c,D
 //     <jl(kr)> is defined as = integral[0,inf] U^2(r) jl(kr) 4 pi r^2 dr
@@ -378,7 +422,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  fprintf(fout,"#                   \\ %6.3f A /     \\ %6.3f A /     \\ %6.3f A /\n", r1(3), r2(3), r3(3));
  fprintf(fout, "# Wavelength=%g A   number of atoms: %i\n",lambda, n);
  fprintf(fout, "# T= %g K Ha= %g T Hb= %g T Hc= %g T\n",T,Ha,Hb,Hc);
- fprintf(fout, "# Overall temperature factor: exp(-2*%g A^2*(sin(theta)/lambda)^2)\n",ovalltemp);
+ fprintf(fout, "# Overall temperature factor B=%g A^2: Intensity is proportional to exp(-2*B*(sin(theta)/lambda)^2)\n",ovalltemp);
 
  if(lorenz == 0){sprintf(l,"100 no lorentz factor calculated");}
  if(lorenz == 1){sprintf(l,"1 / sin^2(2theta)   neutron powder flat sample");}
@@ -391,21 +435,21 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  {fprintf(fout, "# Lorentz Factor not considered for resonant magnetic xray scattering - F1 and F2 transition intensities calculated\n");
   fprintf(fout, "# according to fRMXS as given in equation (2) of Longfield et al. PRB 66 054417 (2002) and maximized with respect to azimuth.\n#\n");
  }
- fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl, Debye Waller (defined as ovalltemp)\n");
+ fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl,\n# Debye Waller factor (sf ~ exp(-2 DWF sin^2(theta) / lambda^2)=EXP (-W),  (2*DWF=B=8 pi^2 <u^2>)\n");
  fprintf(fout, "#  and  Lande factors total angular momentum J (=0 if dipole approximation is used) <j0> and <j2> formfactor\n# coefficients\n");
  if (ortho==1)
- {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
  } else
- {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
   fprintf(fout, "#                         ...with x||(a x b), z||b and y normal to x and z\n");
  }
  for (i = 1;i<=n;++i)
  {if((double)(i)/50==(double)(i/50))
   {
    if (ortho==1)
-   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
    } else
-   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
     fprintf(fout, "#                         ...with x||a x b, z||b and y normal to x and z\n");
    }
   }
@@ -716,7 +760,7 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
                                                }
                                      else      {if (n<9) {fprintf (stderr,"ERROR mcdiff: Section 2 - Nonmagnetic Atoms: too few positional parameters for atom %i!\n",i);exit (EXIT_FAILURE);}
                                                 sl1r[i]=numbers[1];sl1i[i]=numbers[2]; x1[i] = numbers[6]; y1[i] = numbers[7]; z1[i] = numbers[8];dwf1[i]=numbers[9];
-                                                printf("                 sl=%g%+gi 10^-12cm at %g*r1%+g*r2%+g*r3 DWF=%g\n",sl1r[i],sl1i[i],x1[i],y1[i],z1[i],dwf1[i]);
+                                                printf("                 sl=%g%+gi 10^-12cm at %g*r1%+g*r2%+g*r3 DWF=%g A^2\n",sl1r[i],sl1i[i],x1[i],y1[i],z1[i],dwf1[i]);
                                                }
                                     }
               }
@@ -873,7 +917,8 @@ for(i=1;i<=natmagnetic;++i){
  			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
    			             (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
                                // do some consistency checks
-                               ComplexMatrix est((*jjjpars[i]).est);
+                               ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
+                                             est=(*jjjpars[i]).est;
                                Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
                                for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
                                                   (*jjjpars[i]).mom(3+k)=moment(k);
@@ -886,7 +931,8 @@ for(i=1;i<=natmagnetic;++i){
 			      {// beyond formalism for rare earth		    
                                (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
                                // do some consistency checks
-                               ComplexMatrix est((*jjjpars[i]).est);
+                               ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
+                                             est=(*jjjpars[i]).est;
                                Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
                                if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
@@ -919,7 +965,7 @@ for(na = 1;na<=nr1;++na){
    if(nat!=0){
     for(i=1;i<=nat;++i){
       ++ncryst;
-      J[ncryst]=-1;
+      J[ncryst]=1;
       jjjpars[ncryst]=new jjjpar((na + x1[i] - 1) / nr1,(nb + y1[i] - 1) / nr2,(nc + z1[i] - 1) / nr3,sl1r[i],sl1i[i],dwf1[i]);
       (*jjjpars[ncryst]).mom=0;
       (*jjjpars[ncryst]).gJ=0;
