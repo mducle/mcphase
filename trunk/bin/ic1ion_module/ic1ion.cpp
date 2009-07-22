@@ -1,0 +1,628 @@
+/* ic1ion.cpp
+ *
+ * Main routine for the stand-alone program, handles input/output, and calculates single-ion magnetisation, 
+ * energy levels and wavefunctions.
+ *
+ * Functions:
+ *   int  getdim(int n, orbital l);                                            // Number of states = ^{4l+2}C_{n}
+ *   void getfromionname(std::string &ion, icpars &flags);                     // Gets free ion parameters from tables
+ *   void ic_parsecfpars(std::string &n, std::string &v, icpars &p, int l=1);  // Parses CF parameter for k and q
+ *   void ic_parseinput(const char *file, icpars &flags);                      // Parses file for 1-ion pars & phys prop.
+ *   void ic_printheader(const char *filename, icpars &pars);                  // Prints header to file
+ *   void ic_showoutput(const char *filename, icpars &pars);                   // Prints calculated spectra to file
+ *   void ic_showoutput(const char*file, eigVE<double>&d, fconf&f, icpars&p);  // As above but with sMat<> format
+ *   void ic_cmag(const char *filename, icpars &pars);                         // Calcs. magnetisation using icmfmat::
+ *
+ * This file is part of the ic1ionmodule of the McPhase package, calculating the single-ion properties of a rare
+ * earth or actinide ion in intermediate coupling.
+ *
+ * (c) 2008 Duc Le - duc.le@ucl.ac.uk
+ * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
+ */
+
+#include "ic1ion.hpp"
+#include <fstream>
+#include <iomanip>
+#include <ctime>
+
+
+#ifdef _INTEGRAL
+#include "../include/vector.h"
+extern "C" void mcalc(Vector &J, double *T, Vector &gjmbH, double *gJ, Vector &ABC, char **sipffilename, double *lnZ, double *U, ComplexMatrix &est);
+extern "C" int estates(ComplexMatrix &est, Vector &gjmbheff, double *gJ, double *T, Vector &ABC, char **sipffilename);
+extern "C" int dmcalc(int &tn, double &T, Vector &gjmbH, double &g_J, Vector &ABC, char **sipffilename, ComplexMatrix &mat, float &delta, ComplexMatrix &est);
+extern "C" int mq(ComplexVector &Mq, double &th, double &ph, double &J0, double &J2, double &J4, double &J6, ComplexMatrix &est);
+extern "C" int dncalc(int &tn, double &th, double &ph, double &J0, double &J2, double &J4, double &J6, ComplexMatrix &est, double &T, ComplexMatrix &mat);
+#endif
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Calculates the number of allowed states from the number of electrons and l
+// --------------------------------------------------------------------------------------------------------------- //
+int getdim(int n, orbital l)                                    // Number of states = ^{4l+2}C_{n}
+{
+   int i,j,ns,nn=(n>(4*abs(l)+2))?(4*abs(l)+2-n):n; 
+   ns=1; for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i; 
+   j=1; for(i=n; i>1; i--) j*=i; ns/=j;
+   return ns;
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Looks up values of Slater and spin orbit radial integrals from published spectroscopic data
+// --------------------------------------------------------------------------------------------------------------- //
+void getfromionname(std::string &ionname, icpars &pars)
+{
+   int n,i; 
+   orbital l = (orbital)3;    // Defaults for f-electrons
+   std::vector<double> F,a;
+   double xi = 0.;
+   F.assign(4,0.); a.assign(3,0.);
+   pars.ionname.assign(ionname);
+   strtolower(ionname);
+   ionname.erase(ionname.find("+")+1);
+#define IONCMP ionname.compare
+   // Trivalent Lanthanides, from Carnall et al. J. Chem. Phys. v90, pp3443, 1989. All values in cm^{-1}, obtained from RE3+:LaCl_3
+   //                               F^2            F^4            F^6        spin-orbit              alpha      beta        gamma
+        if(IONCMP("ce3+")==0)                                              { xi = 647.3; n = 1; }
+   else if(IONCMP("pr3+")==0) { F[1] = 68878.; F[2] = 50347.; F[3] = 32901.; xi = 751.7; n = 2;  a[0] = 16.23; a[1] = -566.6; a[2] = 1371.; }
+   else if(IONCMP("nd3+")==0) { F[1] = 73018.; F[2] = 52789.; F[3] = 35757.; xi = 885.3; n = 3;  a[0] = 21.34; a[1] = -593.0; a[2] = 1445.; }
+   else if(IONCMP("pm3+")==0) { F[1] = 76400.; F[2] = 54900.; F[3] = 37700.; xi = 1025.; n = 4;  a[0] = 20.50; a[1] = -560.;  a[2] = 1475.; }
+   else if(IONCMP("sm3+")==0) { F[1] = 79805.; F[2] = 57175.; F[3] = 40250.; xi = 1176.; n = 5;  a[0] = 20.16; a[1] = -566.9; a[2] = 1500.; }
+   else if(IONCMP("eu3+")==0) { F[1] = 83125.; F[2] = 59268.; F[3] = 42560.; xi = 1338.; n = 6;  a[0] = 20.16; a[1] = -566.9; a[2] = 1500.; }
+   else if(IONCMP("gd3+")==0) { F[1] = 85669.; F[2] = 60825.; F[3] = 44776.; xi = 1508.; n = 7;  a[0] = 18.92; a[1] = -600.;  a[2] = 1575.; }
+   else if(IONCMP("tb3+")==0) { F[1] = 88995.; F[2] = 62919.; F[3] = 47252.; xi = 1707.; n = 8;  a[0] = 18.40; a[1] = -590.9; a[2] = 1650.; }
+   else if(IONCMP("dy3+")==0) { F[1] = 91903.; F[2] = 64372.; F[3] = 49386.; xi = 1913.; n = 9;  a[0] = 18.02; a[1] = -633.4; a[2] = 1790.; }
+   else if(IONCMP("ho3+")==0) { F[1] = 94564.; F[2] = 66397.; F[3] = 52022.; xi = 2145.; n = 10; a[0] = 17.15; a[1] = -607.9; a[2] = 1800.; }
+   else if(IONCMP("er3+")==0) { F[1] = 97483.; F[2] = 67904.; F[3] = 54010.; xi = 2376.; n = 11; a[0] = 17.79; a[1] = -582.1; a[2] = 1800.; }
+   else if(IONCMP("tm3+")==0) { F[1] = 100134.;F[2] = 69613.; F[3] = 55975.; xi = 2636.; n = 12; a[0] = 17.26; a[1] = -624.5; a[2] = 1820.; }
+   else if(IONCMP("yb3+")==0)                                              { xi = 2928.; n = 13;}
+   // Trivalent Actinides, from Carnall et al. J. Chem. Phys. v90, pp3443, 1989. All values in cm^{-1}, from An3+:LaCl_3 and An3+:LaF_3
+   else if(IONCMP("u3+")==0)  { F[1] = 39611.; F[2] = 32960.; F[3] = 23084.; xi = 1626.; n = 3;  a[0] = 29.26; a[1] = -824.6; a[2] = 1820.; }
+   else if(IONCMP("np3+")==0) { F[1] = 45382.; F[2] = 37242.; F[3] = 25644.; xi = 1937.; n = 4;  a[0] = 31.78; a[1] = -728.0; a[2] = 1820.; }
+   else if(IONCMP("pu3+")==0) { F[1] = 48679.; F[2] = 39333.; F[3] = 27647.; xi = 2242.; n = 5;  a[0] = 30.00; a[1] = -678.3; a[2] = 1820.; }
+   else if(IONCMP("am3+")==0) { F[1] = 51900.; F[2] = 41600.; F[3] = 29400.; xi = 2564.; n = 6;  a[0] = 26.71; a[1] = -426.6; a[2] = 1820.; }
+   else if(IONCMP("cm3+")==0) { F[1] = 55055.; F[2] = 43938.; F[3] = 32876.; xi = 2889.; n = 7;  a[0] = 29.42; a[1] = -362.9; a[2] = 1820.; }
+   else if(IONCMP("bk3+")==0) { F[1] = 57697.; F[2] = 45969.; F[3] = 32876.; xi = 3210.; n = 8;  a[0] = 29.56; a[1] = -564.9; a[2] = 1820.; }
+   else if(IONCMP("cf3+")==0) { F[1] = 60464.; F[2] = 48026.; F[3] = 34592.; xi = 3572.; n = 9;  a[0] = 27.36; a[1] = -587.5; a[2] = 1820.; }
+   else if(IONCMP("es3+")==0) { F[1] = 63174.; F[2] = 50034.; F[3] = 36199.; xi = 3944.; n = 10; a[0] = 30.21; a[1] = -761.0; a[2] = 1820.; }
+   else if(IONCMP("fm3+")==0) { F[1] = 65850.; F[2] = 52044.; F[3] = 37756.; xi = 4326.; n = 11; a[0] = 30.;   a[1] = -600.;  a[2] = 1820.; }
+   else if(IONCMP("md3+")==0) { F[1] = 68454.; F[2] = 54048.; F[3] = 39283.; xi = 4715.; n = 12; a[0] = 30.;   a[1] = -600.;  a[2] = 1820.; }
+   else if(IONCMP("no3+")==0)                                              { xi = 5144.; n = 13;}
+   // Trivalent parameters from Sytsma et al., Phys. Rev. B, v52, pp12668, 1995, in cm^{-1}, obtained from An4+:LuPO_4
+ //else if(IONCMP("cm3+")==0) { F[1] = 54669.1;F[2] = 44759.8; F[3]= 33021.4; xi= 2867.7;n = 7;  a[0] = 30.27; a[1] = -981.6; a[2] = 749.3; }
+ //else if(IONCMP("gd3+")==0) { F[1] = 84075.; F[2] = 61410.8; F[3]= 44425.9; xi= 1494.; n = 7;  a[0] = 18.92; a[1] = -600.;  a[2] = 1575.; }
+   // Tetravalent Actinides, from Conway, J. Chem. Phys. v41, pp904, 1964. All values in cm^{-1}, using hydrogenic wavefunctions.
+   //                               F_2            F_4            F_6        spin-orbit
+   else if(IONCMP("pa4+")==0)                                              {  xi= 1490.; n = 1; }
+ //else if(IONCMP("u4+")==0)  { F[1] = 206.;   F[2]=F[1]*F425;F[3]=F[1]*F625; xi= 1870.; n = 2; F = racah_F_ktoF(F); }
+ //else if(IONCMP("np4+")==0) { F[1] = 223.8;  F[2]=F[1]*F425;F[3]=F[1]*F625; xi= 2193.; n = 3; F = racah_F_ktoF(F); }
+ //else if(IONCMP("pu4+")==0) { F[1] = 242.9;  F[2]=F[1]*F425;F[3]=F[1]*F625; xi= 2429.; n = 3; F = racah_F_ktoF(F); }
+   else if(IONCMP("am4+")==0) { F[1] = 282.1;  F[2]=F[1]*F425;F[3]=F[1]*F625; xi= 2821.; n = 3; F = racah_F_ktoF(F); }
+   else if(IONCMP("cm4+")==0) { F[1] = 307.0;  F[2]=F[1]*F425;F[3]=F[1]*F625; xi= 3042.; n = 3; F = racah_F_ktoF(F); }
+   // Tetravalent Actinides parameters from Poirot et al., Phys. Rev. B, v39, pp6388, 1989, in cm^{-1}, obtained from An4+:ZrSiO_4
+   //                               F^2            F^4            F^6        spin-orbit              alpha      beta        gamma
+   else if(IONCMP("u4+")==0)  { F[1] = 44258.; F[2] = 40293.; F[3] = 31287.; xi = 1740.; n = 2;  a[0] = 23.; }
+   else if(IONCMP("np4+")==0) { F[1] = 47949.; F[2] = 41455.; F[3] = 26528.; xi = 2088.; n = 3;  a[0] = 39.2;  a[1] = -610.;  a[2] = 1200.; }
+   else if(IONCMP("pu4+")==0) { F[1] = 49394.; F[2] = 39495.; F[3] = 30684.; xi = 2366.; n = 3;  a[0] = 32.3;  a[1] = -783.;  a[2] = 1200.; }
+   // U4+:CsCdBr_3 and other parameters, from Karbowiak et al., Chemical Physics, v308, p135, 2005 (Elsevier)
+ //else if(IONCMP("u4+")==0)  { F[1] = 45601.; F[2] = 38622.; F[3] = 28423.; xi = 1718.; n = 2;  a[0] = 29.;   a[1] = -1440.; a[2] = 1532.; }
+ //else if(IONCMP("u3+")==0)  { F[1] = 36918.; F[2] = 32942.; F[3] = 19906.; xi = 1601.; n = 3;  a[0] = 27.;   a[1] = -830.;  a[2] = 1093.; }
+ //else if(IONCMP("cm3+")==0) { F[1] = 53309.; F[2] = 45993.; F[3] = 31047.; xi = 2800.; n = 7;  a[0] = 30.2;  a[1] = -947.;  a[2] = 910.;  }
+ //else if(IONCMP("pr3+")==0) { F[1] = 67459.; F[2] = 49029.; F[3] = 32366.; xi = 741.07;n = 2;  a[0] = 22.98; a[1] = -682.98;a[2] = 1422.; }
+   
+   else { std::cerr << "getfromionname(): Name of ion " << ionname << " not recognised.\n"; return; }
+
+   pars.n = n; pars.l = l; pars._F = F; pars._xi = xi; pars._alpha = a;
+   if(pars.e_units.find("cm")!=std::string::npos || pars.e_units.find("wave")!=std::string::npos) {}
+   // converts from cm^{-1} to meV
+   else if(pars.e_units.find("meV")!=std::string::npos) { for(i=0;i<4;i++) F[i]/=MEV2CM; xi/=MEV2CM; for(i=0;i<3;i++) a[i]/=MEV2CM; } 
+   // converts from cm^{-1} to K
+   else if(pars.e_units.find("K")!=std::string::npos)   { for(i=0;i<4;i++) F[i]*=CM2K;   xi*=CM2K;   for(i=0;i<3;i++) a[i]*=CM2K; }   
+   else std::cerr << "getfromionname(): Energy units " << pars.e_units << " not recognised. Accepted units are cm^{-1}, meV, K.\n";
+
+   pars.F = F; pars.xi = xi; pars.alpha = a; pars.B.find_rk(ionname); pars.B.calc_stevfact(n,l);
+}
+
+void ic_parsecfpars(std::string &varname, std::string &varval, icpars &pars, int length)
+{
+   std::string tmpstr = varname.substr(length,1);
+   int k = atoi(tmpstr.c_str()), q;
+   if((int)varname.length()==(length+3))
+   {
+      if(varname.compare(length+1,1,"m")==0 || varname.compare(length+1,1,"-")==0) tmpstr = varname.substr(length+2,1);
+      else if(varname.compare(length+2,1,"s")==0) tmpstr = varname.substr(length+1,1);
+      else { std::cerr << "ic_parseinput: CF parameter name " << varname << " not recognised.\n"; return; }
+      q = -atoi(tmpstr.c_str());
+   }
+   else { tmpstr = varname.substr(length+1,1); q = atoi(tmpstr.c_str()); }
+   tmpstr = varname.substr(0,length);
+   pars.B.assign(tmpstr,k,q,atof(varval.c_str()));
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Parses input file for IC parameters
+// --------------------------------------------------------------------------------------------------------------- //
+void ic_parseinput(const char *filename, icpars &pars)
+{
+   std::string strline,varname,varval,tmpstr,issstr;
+   size_t equal_sym_pos,first_nonspace_pos,first_num_pos=std::string::npos,last_num_pos=std::string::npos;
+   std::istringstream iss;
+   int k;
+
+   std::fstream FILEIN; FILEIN.open(filename, std::fstream::in);
+   if(FILEIN.fail()==true) { std::cerr << "ic_parseinput(): Cannot open file " << filename << "\n"; return; }
+
+   // If the parameters file is from cfield, assume parameters are in meV, in Stevens normalisation, with theta_k=1.
+   getline(FILEIN,strline);
+   if(strline.compare(0,8,"#!cfield")==0)
+   {
+      tmpstr.assign("meV"); conv_e_units(pars,tmpstr); tmpstr.assign("B"); pars.B.conv(tmpstr);
+   }
+
+   while(!FILEIN.eof())
+   {
+      strline.clear(); getline(FILEIN,strline);
+      if(strline.find("#",0,1)!=std::string::npos)              // Line is a comment, ignores it
+         continue; 
+
+      first_nonspace_pos = strline.find_first_not_of(" \t");
+      equal_sym_pos = strline.find("=");
+    
+      varname.clear(); varval.clear();
+      if(first_nonspace_pos==std::string::npos || equal_sym_pos==std::string::npos) 
+         varname.assign(strline);
+      else
+      {
+         iss.clear();
+         varname = strline.substr(first_nonspace_pos,equal_sym_pos-first_nonspace_pos);
+         varname = varname.substr(0,varname.find_first_of(" \t"));
+         strtolower(varname);
+         varval = strline.substr(equal_sym_pos+1);
+         varval = varval.substr(varval.find_first_not_of(" \t"),varval.find_last_not_of(" \t")+1);
+         first_num_pos = varval.find_first_of("-0123456789.");
+         last_num_pos = varval.find_first_not_of("-0123456789.",first_num_pos);
+         if(first_num_pos!=std::string::npos)
+            iss.str(varval.substr(first_num_pos,last_num_pos));
+         else
+            iss.str(varval);
+      }
+
+      if(varname.find("iontype")!=std::string::npos)
+         getfromionname(varval,pars);                           // Looks up values of Fk and xi from tables
+      else if(varname.find("unit")!=std::string::npos)
+         conv_e_units(pars,varval);
+      else if(varname.find("conf")!=std::string::npos)
+      {  tmpstr = varval.substr(0,1); pars.l = Lin(tmpstr); tmpstr = varval.substr(1,1); pars.n = atoi(tmpstr.c_str()); }
+      else if(varname.compare("n")==0)
+      {  iss >> pars.n; pars.B.calc_stevfact(pars.n,pars.l); }
+      else if(varname.compare("l")==0)
+      {  tmpstr = varval.substr(0,1); pars.l = Lin(tmpstr); pars.B.calc_stevfact(pars.n,pars.l); }
+      else if(varname.compare("f")==0)                          // Slater integrals expressed as four floats
+         for(k=0; k<4; k++)
+         {
+            iss >> pars.F[k];
+            first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+            last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+            iss.str(varval.substr(first_num_pos,last_num_pos));
+         }
+      else if(varname.compare("f0")==0) { iss >> pars.F[0]; pars._F[0]=pars.F[0]*pars._econv; }
+      else if(varname.compare("f2")==0) { iss >> pars.F[1]; pars._F[1]=pars.F[1]*pars._econv; }
+      else if(varname.compare("f4")==0) { iss >> pars.F[2]; pars._F[2]=pars.F[2]*pars._econv; }
+      else if(varname.compare("f6")==0) { iss >> pars.F[3]; pars._F[3]=pars.F[3]*pars._econv; }
+      else if(varname.find("xi")!=std::string::npos) { iss >> pars.xi; pars._xi = pars.xi*pars._econv; }
+      else if(varname.compare("alpha")==0)
+      {
+         if(varval.find(",")!=std::string::npos)
+            for(k=0; k<3; k++)
+            {
+               iss >> pars.alpha[k]; pars._alpha[k] = pars.alpha[k]*pars._econv;
+               first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+               last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+               iss.str(varval.substr(first_num_pos,last_num_pos));
+            }
+         else                              { iss >> pars.alpha[0]; pars._alpha[0]=pars.alpha[0]*pars._econv; }
+      }
+      else if(varname.compare("beta")==0)  { iss >> pars.alpha[1]; pars._alpha[1]=pars.alpha[1]*pars._econv; }
+      else if(varname.compare("gamma")==0) { iss >> pars.alpha[2]; pars._alpha[2]=pars.alpha[2]*pars._econv; }
+
+      else if(varname.find_first_of("awbvld")==0 && varname.find_first_of("0123456789.")==1) 
+         ic_parsecfpars(varname, varval, pars);
+      else if(varname.compare(0,2,"ar")==0 && varname.find_first_of("0123456789.")==2)
+         ic_parsecfpars(varname, varval, pars, 2);
+      else if(varname.find("calc")!=std::string::npos)
+      {
+         if(varname.find("mag")!=std::string::npos)  // Physical properties calculation flags.
+            pars.calcphys += PHYSPROP_MAGBIT; 
+         else if(varname.find("cp")!=std::string::npos || varname.find("heat")!=std::string::npos)
+            pars.calcphys += PHYSPROP_CP_BIT; 
+         else if(varname.find("susc")!=std::string::npos) {
+            if(varname.find("inv")!=std::string::npos) 
+               pars.calcphys += PHYSPROP_INVBIT;
+            else 
+               pars.calcphys += PHYSPROP_SUSBIT; }
+      }
+      else if(varname.find("perturb")!=std::string::npos)
+         pars.perturb = true;
+      else if(varname.find("partial")!=std::string::npos)
+         pars.partial = true;
+      else if(varname.find("arnoldi")!=std::string::npos)
+         pars.arnoldi = true;
+      else if(varname.find("spectrelevels")!=std::string::npos)
+         iss >> pars.spectrelevels;
+      else if(varname.find("emu")!=std::string::npos)
+         pars.mag_units = 1;
+      else if(varname.find("simag")!=std::string::npos)
+         pars.mag_units = 2;
+      else if(varname.compare("xval")==0)
+      {
+         tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xT = atof(tmpstr.c_str());
+         first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+         last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	 if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+         {
+            tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xHa = atof(tmpstr.c_str());
+            first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+            last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+            if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+            {
+               tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xHb = atof(tmpstr.c_str());
+               first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+               last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+               if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+               {
+                  tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xHc = atof(tmpstr.c_str());
+               }
+            }
+         }
+      }
+      else if(varname.compare("xrange")==0)
+      {
+         tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xMin = atof(tmpstr.c_str());
+         first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+         last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	 if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+         {
+            tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xStep = atof(tmpstr.c_str());
+            first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+            last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	    if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+            {
+               tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xMax = atof(tmpstr.c_str());
+            }
+         }
+      }
+      else if(varname.compare("yval")==0)
+      {
+         tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yT = atof(tmpstr.c_str());
+         first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+         last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	 if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+         {
+            tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yHa = atof(tmpstr.c_str());
+            first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+            last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+            if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+            {
+               tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yHb = atof(tmpstr.c_str());
+               first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+               last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+               if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+               {
+                  tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yHc = atof(tmpstr.c_str());
+               }
+            }
+         }
+      }
+      else if(varname.compare("yrange")==0)
+      {
+         tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yMin = atof(tmpstr.c_str());
+         first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+         last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	 if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+         {
+            tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yStep = atof(tmpstr.c_str());
+            first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
+            last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
+	    if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+            {
+               tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.yMax = atof(tmpstr.c_str());
+            }
+         }
+      }
+      else if(varname.compare("xt")==0)    { tmpstr=iss.str(); pars.xT    = atof(tmpstr.c_str()); }
+      else if(varname.compare("xha")==0)   { tmpstr=iss.str(); pars.xHa   = atof(tmpstr.c_str()); }
+      else if(varname.compare("xhb")==0)   { tmpstr=iss.str(); pars.xHb   = atof(tmpstr.c_str()); }
+      else if(varname.compare("xhc")==0)   { tmpstr=iss.str(); pars.xHc   = atof(tmpstr.c_str()); }
+      else if(varname.compare("yt")==0)    { tmpstr=iss.str(); pars.yT    = atof(tmpstr.c_str()); }
+      else if(varname.compare("yha")==0)   { tmpstr=iss.str(); pars.yHa   = atof(tmpstr.c_str()); }
+      else if(varname.compare("yhb")==0)   { tmpstr=iss.str(); pars.yHb   = atof(tmpstr.c_str()); }
+      else if(varname.compare("yhc")==0)   { tmpstr=iss.str(); pars.yHc   = atof(tmpstr.c_str()); }
+      else if(varname.compare("xmin")==0)  { tmpstr=iss.str(); pars.xMin  = atof(tmpstr.c_str()); }
+      else if(varname.compare("xstep")==0) { tmpstr=iss.str(); pars.xStep = atof(tmpstr.c_str()); }
+      else if(varname.compare("xmax")==0)  { tmpstr=iss.str(); pars.xMax  = atof(tmpstr.c_str()); }
+      else if(varname.compare("ymin")==0)  { tmpstr=iss.str(); pars.yMin  = atof(tmpstr.c_str()); }
+      else if(varname.compare("ystep")==0) { tmpstr=iss.str(); pars.yStep = atof(tmpstr.c_str()); }
+      else if(varname.compare("ymax")==0)  { tmpstr=iss.str(); pars.yMax  = atof(tmpstr.c_str()); }
+   }  // while(!FILEIN.eof())
+   FILEIN.close();
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Prints out a header to a specified file
+// --------------------------------------------------------------------------------------------------------------- //
+void ic_printheader(const char *outfile, icpars &pars)
+{
+   time_t curtime = time(NULL);
+   std::fstream FILEOUT; FILEOUT.open(outfile, std::fstream::out);
+   std::string Lstr = Lout(pars.l); strtolower(Lstr);
+   FILEOUT << "#{ ic1ionmodule version " << IC1IONMODULE_VERSION << " " << ctime(&curtime);
+   if(!pars.ionname.empty()) FILEOUT << "# Ion name: " << pars.ionname << "\n";
+   FILEOUT << "# Free ion configuration: " << Lstr << "^" << pars.n << "\n";
+   FILEOUT << "# Free ion parameters (" << pars.e_units << "): F^2=" << pars.F[1] << " F^4=" << pars.F[2];
+   if(pars.l==F) FILEOUT << " F^6="; FILEOUT << pars.F[3] << " xi=" << pars.xi << " alpha=" << pars.alpha[0] << " beta=" << pars.alpha[1]; 
+   if(pars.l==D) FILEOUT << "\n"; else FILEOUT << " gamma=" << pars.alpha[2] << "\n";
+   FILEOUT << "# Crystal Field parameters normalisation: " << pars.B.norm() << "\n";
+   FILEOUT << "# Crystal Field parameters (" << pars.B.units() << "): " << pars.B.cfparsout(", ") << "\n";
+   FILEOUT.close();
+}
+ 
+// --------------------------------------------------------------------------------------------------------------- //
+// Outputs the energy and wavefunctions to a specified file
+// --------------------------------------------------------------------------------------------------------------- //
+void ic_showoutput(const char *filename,                        // Output file name - default "results/mcphas.icr"
+                   icpars &pars,                                // Input parameters
+                   iceig &VE,                                   // Eigenstates class
+		   int iconf=1)
+{
+   fconf conf(pars.n,iconf,pars.l);
+
+   unsigned int iE,iV,i=1,j=2,num_states=conf.states.size();
+   std::vector<int> isE,isV(num_states,0); isE.reserve(num_states);
+   int ii; 
+   double elem,conv=1.; complexdouble elc;
+
+   if(pars.e_units.find("meV")!=std::string::npos) conv = 1./MEV2CM; 
+   else if(pars.e_units.find("K")!=std::string::npos) conv = CM2K;
+
+   ic_printheader(filename,pars);
+   std::fstream FILEOUT; FILEOUT.open(filename, std::fstream::out | std::fstream::app); // Opens file for appending
+   if(!VE.iscomplex()) FILEOUT << "# Energy(" << pars.e_units << ")\tWavefunctions(^{2S+1}L_J,mJ) }\n"; else
+   FILEOUT << "# Energy(" << pars.e_units << ")\tAmplitude\t|Amplitude|^2\tWavefunctions(^{2S+1}L_J,mJ) }\n";
+
+   double *V=0; complexdouble *zV=0; if(VE.iscomplex()) zV = new complexdouble[num_states]; else V = new double[num_states];
+   for(iE=0; iE<num_states; iE++)
+   {
+      FILEOUT << (VE.E(iE)-VE.E(0))*conv << "\t\t";
+      for(ii=0; ii<(int)num_states; ii++) isV[ii]=ii;
+      i=1; j=2;
+      if(VE.iscomplex())
+      {
+         memcpy(zV,VE.zV(iE),num_states*sizeof(complexdouble));
+         while(i<num_states)
+         {
+            if((zV[i-1].r*zV[i-1].r+zV[i-1].i*zV[i-1].i) >= (zV[i].r*zV[i].r+zV[i].i*zV[i].i)) { i=j; j++; }
+            else { elc = zV[i-1]; zV[i-1] = zV[i]; zV[i] = elc; ii=isV[i-1]; isV[i-1]=isV[i]; isV[i]=ii; i--; if(i==0) i=1; }
+         }
+         elc = zV[0];
+         FILEOUT << " (" << elc.r; if(elc.i>0) FILEOUT << "+"; else FILEOUT << "-";
+         FILEOUT << "i" << elc.i << ")\t\t" << (elc.r*elc.r+elc.i*elc.i) << "\t";
+         FILEOUT << "|" << conf.states[isV[0]].id << ">";
+         for(iV=1; iV<4; iV++)
+         {
+            elc = zV[iV]; FILEOUT << "\n\t\t+";
+            FILEOUT << "(" << elc.r; if(elc.i>0) FILEOUT << "+"; else FILEOUT << "-";
+	    FILEOUT << "i" << elc.i << ")\t\t" << (elc.r*elc.r+elc.i*elc.i) << "\t";
+            FILEOUT << "|" << conf.states[isV[iV]].id << ">";
+         }
+         FILEOUT << "\n";
+      }
+      else
+      {
+         memcpy(V,VE.V(iE),num_states*sizeof(double));
+         while(i<num_states)
+         {
+            if(fabs(V[i-1])>=fabs(V[i])) { i=j; j++; }
+            else { elem = V[i-1]; V[i-1] = V[i]; V[i] = elem; ii=isV[i-1]; isV[i-1]=isV[i]; isV[i]=ii; i--; if(i==0) i=1; }
+         }
+         FILEOUT << V[0] << "|" << conf.states[isV[0]].id << ">\t";
+         for(iV=1; iV<4; iV++)
+         {
+            if(V[iV]>0) FILEOUT << "+";
+            FILEOUT << V[iV] << "|" << conf.states[isV[iV]].id << ">\t";
+         }
+         FILEOUT << "\n";
+      }
+   }
+   if(VE.iscomplex()) delete[]zV; else delete[]V;
+   FILEOUT.close();
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Calculates the magnetisation
+// --------------------------------------------------------------------------------------------------------------- //
+void ic_cmag(const char *filename, icpars &pars)
+{
+   if(!(pars.calcphys & PHYSPROP_MAGBIT)) return;
+   icmfmat mfmat(pars.n,pars.l,6);
+
+   ic_printheader(filename,pars);
+   std::fstream FILEOUT; FILEOUT.open(filename, std::fstream::out | std::fstream::app); // Opens file for appending
+
+   if(pars.xT==0. && pars.yT==0.) { std::cerr << "ic_showphysprop(): Either x- or y-axis must be temperature.\n"; return; }
+
+   double Tmin, Tstep, Tmax, Hmin, Hstep, Hmax;
+   if(pars.xT!=0.) { Tmin = pars.xMin; Tstep = pars.xStep; Tmax = pars.xMax; Hmin = pars.yMin; Hstep = pars.yStep; Hmax = pars.yMax; }
+              else { Tmin = pars.yMin; Tstep = pars.yStep; Tmax = pars.yMax; Hmin = pars.xMin; Hstep = pars.xStep; Hmax = pars.xMax; }
+
+   if(pars.xT!=0.) FILEOUT << "# T(K)\tHa(T)\tHb(T)\tHc(T)\t"; else FILEOUT << "# Ha(T)\tHb(T)\tHc(T)\tT(K)\t";
+   if(pars.mag_units==0) FILEOUT << "Magnetisation(uB/atom)\n";
+   else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\n";
+   else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\n";
+   int i,j,k; double Hm=0.,dt,Z;
+   int nT = ceil((Tmax-Tmin)/Tstep), nH = ceil((Hmax-Hmin)/Hstep) + 1;
+   std::vector<double> T(nT,0.); for(i=0; i<nT; i++) T[i] = Tmin+i*Tstep;
+   std::vector<double> mag(nT,0.);
+
+   if((pars.xHa!=0. && pars.yHa!=0.) || (pars.xHb!=0. && pars.yHb!=0.) || (pars.xHc!=0. && pars.yHc!=0.))
+   {
+      std::cerr << "ic_showphysprop(): You may only specify magnetic field on either x- and y-axis - not both.\n"; return;
+   }
+   double xnorm = sqrt(pars.xHa*pars.xHa+pars.xHb*pars.xHb+pars.xHc*pars.xHc);
+   double ynorm = sqrt(pars.yHa*pars.yHa+pars.yHb*pars.yHb+pars.yHc*pars.yHc);
+   std::vector<double> gjmbH(6,0.), gjmbHmeV(6,0.); 
+   if(pars.xHa!=0.) gjmbH[1]=pars.xHa/xnorm; else gjmbH[1]=pars.yHa/ynorm; gjmbH[0]=GS*gjmbH[1];
+   if(pars.xHb!=0.) gjmbH[3]=pars.xHb/xnorm; else gjmbH[3]=pars.yHb/ynorm; gjmbH[2]=GS*gjmbH[3];
+   if(pars.xHc!=0.) gjmbH[5]=pars.xHc/xnorm; else gjmbH[5]=pars.yHc/ynorm; gjmbH[4]=GS*gjmbH[5];
+
+   iceig VE;
+   std::vector<double> ex; std::vector< std::vector<double> > matel;
+   sMat<double> J,iJ,H,iH; H = ic_hmltn(iH,pars); H/=MEV2CM; iH/=MEV2CM;
+   complexdouble *zV=0;
+   if(pars.perturb) { VE.calc(H,iH); zV = new complexdouble[(H.nr()+1)*(H.nc()+1)];
+      for(i=0; i<H.nr(); i++) zV[i].r = VE.E(i); memcpy(&zV[H.nr()+1],VE.zV(0),H.nr()*H.nc()*sizeof(complexdouble)); }
+
+   double convfact=1; if(pars.mag_units==1) convfact = NAMUB*1e3; else if(pars.mag_units==2) convfact = NAMUB;
+
+   for(i=0; i<nH; i++)
+   {
+      for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUB*(Hmin+i*Hstep)); 
+      mfmat.Jmat(J,iJ,gjmbHmeV);
+      if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
+         else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
+      ex = mfmat.expJ(VE,Tmax,matel); ex.assign(matel[0].size(),0.);
+      for(k=0; k<(int)matel[0].size(); k++)
+         for(j=0; j<6; j++) ex[k] += gjmbH[j]*matel[j][k];
+      for(j=0; j<nT; j++) 
+      {
+         mag[j] = 0.; Z = 0.;
+         for(k=0; k<(int)matel[0].size(); k++) { dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt; mag[j]+=ex[k]*dt; } 
+         mag[j]/=Z;
+      }
+      if(pars.xT!=0.)
+      {
+         Hm = (Hmin+i*Hstep)/ynorm;
+         for(j=0; j<nT; j++) 
+            FILEOUT << T[j] << "\t" << Hm*pars.yHa << "\t" << Hm*pars.yHb << "\t" << Hm*pars.yHc << "\t" << mag[j]*convfact << "\n";
+      }
+      else
+      {
+         Hm = (Hmin+i*Hstep)/xnorm;
+         for(j=0; j<nT; j++) 
+            FILEOUT << Hm*pars.xHa << "\t" << Hm*pars.xHb << "\t" << Hm*pars.xHc << "\t" << T[j] << "\t" << mag[j]*convfact << "\n"; 
+      }
+   }
+   if(pars.perturb) delete[]zV;
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Reads in parameters from mcphas.ic or a file specified on the command line.
+// Calculates the IC Hamilton matrix; solve its eigensystem and outputs the energies and wavefunctions calculated.
+// Also calculates the magnetisation and heat capacity if desired (specify iccalcmag=1,2 and/or iccalcCp=1)
+// --------------------------------------------------------------------------------------------------------------- //
+int main(int argc, char *argv[])
+{
+   char infile[255], outfile[255], physfile[255];
+   icpars pars;
+   std::string norm,units;
+
+   if(argc>1) strcpy(infile,  argv[1]); else strcpy(infile,"mcphas.ic");
+   if(argc>2) strcpy(outfile, argv[2]); else strcpy(outfile,"results/ic1ion.out");
+   if(argc>3) strcpy(physfile,argv[3]); else strcpy(physfile,"results/ic1ion.mag");
+
+   // Gets input parameters and what to calculate from input single-ion parameters file
+   ic_parseinput(infile,pars);
+
+   // For quick and dirty timing routines...
+   clock_t start,end; start = clock();
+
+   // Calculates the intermediate coupling Hamilton matrix
+   sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars);
+
+   end = clock(); std::cerr << "Time to calculate Hic = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
+
+   // Fully diagonalise IC Hamilton matrix and saves results to <outfile>
+   iceig VE; if(iHic.isempty()) VE.calc(Hic); else VE.calc(Hic,iHic);
+   start = clock(); std::cerr << "Time to diagonalise = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+// iceig VE; VE.lcalc(pars,Hic,iHic); int i; for(i=0; i<6; i++) std::cout << (VE.E(i)-VE.E(0))/MEV2CM << " "; std::cout << "\n";
+   ic_showoutput(outfile,pars,VE);
+// sMat<double> Hcso = ic_Hcso(pars); VE.calc(Hcso); strcpy(outfile,"results/mcphas.icpJ"); ic_showoutput(outfile,pars,VE,0);
+   end = clock(); std::cerr << "Time to save file = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
+
+   // If required calculates some single-ion physical properties and saves to <physfile>
+   ic_cmag(physfile,pars);
+   start = clock(); std::cerr << "Time to calculate and save magnetisation is = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+
+// iceig VE(Hic,iHic);
+/* fconf conf(pars.n,0,pars.l);
+   int j,icv,imax=0; double vel,vmax; std::vector< std::vector<int> > cvSO2CF; std::vector<int> cvEl; icv=0;
+   eigVE<double> VEcso = eig(Hcso); //std::cout << "VEcso=" << VEcso.V.display_full() << "\n";
+   for(i=0; i<Hcso.nr(); i++) 
+   { 
+      vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
+      cvEl.push_back(icv); icv += conf.states[imax].J2+1; cvEl.push_back(icv-1); cvSO2CF.push_back(cvEl); cvEl.clear();
+   }
+   sMat<double> Vcso = convH2H(VEcso.V,Hic.nr(),cvSO2CF); //std::cout << "Vcso=" << Vcso.display_full() << "\n";
+   iceig VE2(Hic.nr(),En,Vcso.f_array());
+   strcpy(outfile,"results/mcphas.icpmJ"); ic_showoutput(outfile,pars,VE2);
+   delete []En; */
+   
+#ifdef _INTEGRAL
+ //clock_t start,end; end = clock();
+   Vector J(1,6,0.), gmbH(1,6,.0578838263), ABC; gmbH[1]*=2; gmbH[3]*=2; gmbH[5]*=2; 
+   double T=2.0,lnZ=0.,U=0.,gJ=0;
+   char *filearray[1]; 
+   filearray[0] = infile;
+   ComplexMatrix est; int Hsz=getdim(pars.n,pars.l); est = ComplexMatrix(0,Hsz,0,Hsz);
+   end = clock();
+
+   mcalc(J,&T,gmbH,&gJ,ABC,filearray,&lnZ,&U,est);
+   start = clock(); std::cerr << "Time to do mcalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+   std::cerr << "lnZ = " << lnZ << ", U = " << U << "\n";
+   std::cerr << "J[1] = " << J[1] << ", J[2] = " << J[2] << ", J[3] = " << J[3] << ", J[4] = " << J[4] << ", J[5] = " << J[5] << ", J[6] = " << J[6] << "\n";
+
+   end = clock();
+   mcalc(J,&T,gmbH,&gJ,ABC,filearray,&lnZ,&U,est);
+   start = clock(); std::cerr << "Time to do mcalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+   std::cerr << "lnZ = " << lnZ << ", U = " << U << "\n";
+   std::cerr << "J[1] = " << J[1] << ", J[2] = " << J[2] << ", J[3] = " << J[3] << ", J[4] = " << J[4] << ", J[5] = " << J[5] << ", J[6] = " << J[6] << "\n";
+
+   gmbH[1] = 0.; gmbH[2] = 0.; gmbH[3] = 0.; gmbH[4] = 0.; gmbH[5] = 0.; gmbH[6] = 0.; 
+   estates(est,gmbH,&gJ,&T,ABC,filearray);
+   end = clock(); std::cerr << "Time to do estates() = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
+   
+   int imq, tn = 2; float delta=0.; ComplexMatrix mat6(1,6,1,6);
+   imq = dmcalc(tn,T,gmbH,gJ,ABC,filearray,mat6,delta,est);
+   start = clock(); std::cerr << "Time to calculate dmcalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+
+   ComplexVector Mq;
+   double th=PI/4, ph=PI/4, J0=1., J2=1., J4=1., J6=1.;
+ //double th=0., ph=0., J0=1., J2=1., J4=0., J6=0.;
+   imq = mq(Mq,th,ph,J0,J2,J4,J6,est);
+   end = clock(); std::cerr << "Time to calculate mq() = " << (double)(end-start)/CLOCKS_PER_SEC << "s.";
+   std::cerr << " Mq = [" << Mq[1].real() << "+" << Mq[1].imag() << "i "
+                          << Mq[2].real() << "+" << Mq[2].imag() << "i "
+                          << Mq[3].real() << "+" << Mq[3].imag() << "i]\n";
+
+   ComplexMatrix mat;
+   imq = dncalc(tn,th,ph,J0,J2,J4,J6,est,T,mat);
+   start = clock(); std::cerr << "Time to calculate dncalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+#endif
+
+/* int i, Hsz = est.Cols(); //complexdouble *cest = new complexdouble[Hsz*Hsz]; memcpy(cest,&est[0][0],Hsz*Hsz*sizeof(complexdouble));
+   std::vector<double> vgjmbH(6,.0578838263); //for(i=0; i<6; i++) vgjmbH[i] = gjmbH[i+1];
+   icmfmat mfmat(pars.n,pars.l);
+   sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); complexdouble *zJmat=0; zJmat = zmat2f(Jmat,iJmat);
+   complexdouble *zVd = new complexdouble[(Hsz-1)*(Hsz-1)]; double *eigval = new double[Hsz-1];
+   start = clock();
+   int info = ic_peig(Hsz-1, zJmat, (complexdouble*)&est[0][0], zVd, eigval);
+   end = clock(); std::cerr << "Time to do peig() = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
+   iceig VE(Hsz-1,eigval,zVd); strcpy(outfile,"results/mcphas.ic1"); ic_showoutput(outfile,pars,VE);
+   free(zJmat); delete[]zVd; delete[]eigval; //delete []cest;
+   start = clock();
+   Hic/=MEV2CM; iHic/=MEV2CM; 
+   VE.calc(Hic,iHic); strcpy(outfile,"results/mcphas.icp"); ic_showoutput(outfile,pars,VE);
+   end = clock(); std::cerr << "Time to do VE.calc() = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
+   Hic+=Jmat; iHic+=Jmat;
+   VE.calc(Hic,iHic); strcpy(outfile,"results/mcphas.ic2"); ic_showoutput(outfile,pars,VE); */
+
+   return 0;
+}
