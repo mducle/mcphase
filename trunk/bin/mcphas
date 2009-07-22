@@ -52,9 +52,6 @@ fi
  rm -f ./results/.mag.gnu
  rm -f ./results/.fe_status.dat
  rm -f ./results/.gv;
- cp -f mcphas.j ./results
- cp -f mcphas.ini ./results
- cp -f mcphas.tst ./results
  
 else
 # do not do a calculation - only print version / help screen

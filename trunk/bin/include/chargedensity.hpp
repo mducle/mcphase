@@ -9,7 +9,7 @@
 #include<cerrno>
 #include<martin.h>
 #include<vector.h>
-#include<ionpars.hpp>
+#include<jjjpar.hpp>
 
 class chargedensity
 { private:
@@ -26,7 +26,7 @@ class chargedensity
   // fi and expansion coeff. alm
   double rocalc (double & teta,double & fi,double & R, Vector & moments,ionpars & ionpar);
 
-  void calc_cd_surface(Vector & moments,ionpars & ionpar,double ccc);
+  void calc_cd_surface(Vector & moments,jjjpar & ionpar,double ccc);
   //ccc ... surface value of chargedensity
 
 

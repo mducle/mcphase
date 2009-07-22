@@ -64,7 +64,7 @@ public class searchspacestatus extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e)
     {try {FileOutputStream fstream = new FileOutputStream(filename);
           PrintStream out= new PrintStream(fstream );   
-            out.println ("exit searchspace");
+            out.println ("exiting searchspace");
             out.close();
           }
          catch (Exception f) { System.err.println("Error writing to file"); } 

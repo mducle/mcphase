@@ -24,9 +24,7 @@ EOF
  kill $spinid
  rm -f ./results/.mcdisp.qom;
  rm -f ./results/.mcdisp.dsigma;
- cp -f mcdisp.ini ./results;
- cp -f mcdisp.mf ./results;
- cp -f mcphas.j ./results;
+ 
 
 else
 # do not do a calculation - only print version / help screen

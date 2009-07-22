@@ -76,7 +76,13 @@ public class display extends Panel implements Runnable {
 
         continue;
        }
-      
+
+     //      System.out.println(strLine);
+     // replace tabs by spaces
+      strLine=strLine.replaceAll("[\t\n\u000B\u0009\f]"," ");
+
+    //      System.out.println(strLine);
+
       // select colx and coly
       sx=TrimString(strLine);
       sy=TrimString(strLine);

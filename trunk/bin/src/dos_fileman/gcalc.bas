@@ -1,8 +1,8 @@
+DECLARE SUB inputline (n!, D1#(), col1%, D2$(), colII%)
 DECLARE SUB analizecommand (c0#, b#, ra#, ri#, file1$, file2$)
 DECLARE SUB gobackonestrg (n!, ala$)
-DECLARE SUB inputline (n!, d1#(), col1%)
 DECLARE SUB headerinput (text$(), j!, n!)
-version$ = "<GCALC v. 07.03.23 "
+version$ = "<GCALC v. 09.06.10 "
 PRINT version$; COMMAND$;
 IF LTRIM$(COMMAND$) = "" GOTO 333
 DATA "*************************************************************************"
@@ -17,8 +17,8 @@ DATA "  the formula:c(T)=ca(T)-ci(T)
 DATA ""
 DATA "  ca(T)= Aa(T)*epsilon_0 / g(T)* 2*(1-sqr(1-gamma^2))/gamma^2"
 DATA "  ci(T)= Ai(T)*epsilon_0 / g(T)* 2*(1-sqr(1-gammi^2))/gammi^2"
-DATA "  Aa(T)=Aa0*(1+dl/l_Ag(T))^2 ... capacitance area"
-DATA "  Ai(T)=Ai0*(1+dl/l_Ag(T))^2 ... capacitance area"
+DATA "  Aa(T)=Aa0*(1+dl/l_Ag(T)) ... capacitance area"
+DATA "  Ai(T)=Ai0*(1+dl/l_Ag(T)) ... capacitance area"
 DATA "           note: we do not use ^2 in these formula, because the gap "
 DATA "                 expands due to thermal expansion of silver bearings, too"
 DATA "  gammi= ri/b*(k(T)/g(T)-1)"
@@ -43,7 +43,7 @@ DATA " 11 3.14235 65367                                                        "
 DATA "  .    .     .                                                           "
 DATA " 32 2412.34 324.2                                                        "
 DATA "*************************************************************************"
-DIM text1$(300), text2$(300), text3$(300), d1#(30), D2A#(30), d2b#(30), D3A#(30), d3b#(30)
+DIM text1$(300), text2$(300), text3$(300), D1#(30), D2$(30), D2A#(30), d2b#(30), D3A#(30), d3b#(30)
 
 'ooooooooooooooooooooooooo OPEN FILES oooooooooooooooooooooooooooooooooooo
 999 CALL analizecommand(c0#, b#, r#, ri#, file1$, file2$)
@@ -60,8 +60,9 @@ ddd = 1E+10
 OPEN "i", 1, file2$
 CALL headerinput(text1$(), j1, 1)' open file1 and input header
  WHILE EOF(1) = 0
- CALL inputline(1, d1#(), col1%)
- IF ABS(d1#(1) - 300) < ddd THEN ddd = ABS(d1#(1) - 300): shiftc = d1#(2)
+ CALL inputline(1, D1#(), col1%, D2$(), colII%)
+ IF col1% < 2 THEN INPUT "error gcalc:reading less than two columns in lit file"; dd$: END
+ IF ABS(D1#(1) - 300) < ddd THEN ddd = ABS(D1#(1) - 300): shiftc = D1#(2)
  WEND
 CLOSE 1
 
@@ -70,9 +71,9 @@ CALL headerinput(text1$(), j1, 1)' open file1 and input header
 OPEN "o", 2, "GCALCAg.lit"
  PRINT #2, "{silver file}"
  WHILE EOF(1) = 0
-  CALL inputline(1, d1#(), col1%)
-  d1#(2) = d1#(2) - shiftc
-  PRINT #2, d1#(1); " "; d1#(2)
+  CALL inputline(1, D1#(), col1%, D2$(), colII%)
+  D1#(2) = D1#(2) - shiftc
+  PRINT #2, D1#(1); " "; D1#(2)
  WEND
 CLOSE 1
 CLOSE 2
@@ -105,19 +106,19 @@ REM input columns of #1 and #2 and #3 write result to #4
 '******************************************************************
 
     'input a data point on #1
-IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, d1#(), col1%)
+IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, D1#(), col1%, D2$(), colII%)
 
    'input first 2 values on file 2
-IF EOF(2) <> 0 GOTO 5 ELSE CALL inputline(2, D2A#(), col2%)
-IF EOF(2) <> 0 GOTO 5 ELSE CALL inputline(2, d2b#(), col2%)
+IF EOF(2) <> 0 GOTO 5 ELSE CALL inputline(2, D2A#(), col2%, D2$(), colII%)
+IF EOF(2) <> 0 GOTO 5 ELSE CALL inputline(2, d2b#(), col2%, D2$(), colII%)
   
 
 ' decide wether values in file 2 increase or decrease
 sign2% = SGN(d2b#(x2%) - D2A#(x2%))
 
 ' input d1 values until d1#(x1%)*sign2% is bigger than d2a#(x2%)*sign2%
-WHILE d1#(x1%) * sign2% < D2A#(x2%) * sign2%
-      IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, d1#(), col1%)
+WHILE D1#(x1%) * sign2% < D2A#(x2%) * sign2%
+      IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, D1#(), col1%, D2$(), colII%)
 WEND
 
 ' \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
@@ -127,37 +128,37 @@ WEND
 4 LOCATE 23, 1: PRINT USING "###%"; 100 * SEEK(1) / LOF(1); : LOCATE 24, 1
 '-----------------------------------------------------------------------
 'input d2a- d2b values going backward in file until d1 is in the interval
-      WHILE d1#(x1%) * sign2% < D2A#(x2%) * sign2%
+      WHILE D1#(x1%) * sign2% < D2A#(x2%) * sign2%
                
                  ' go back three strings in file2
   FOR cr% = 1 TO 3: CALL gobackonestrg(2, ala$)
   NEXT cr%
-   IF INSTR(ala$, "}") <> 0 THEN INPUT #2, a$: INPUT #2, a$: INPUT #2, a$: PRINT "out of range datapoint x="; d1#(x1%); "skipped": GOTO 15
+   IF INSTR(ala$, "}") <> 0 THEN INPUT #2, a$: INPUT #2, a$: INPUT #2, a$: PRINT "out of range datapoint x="; D1#(x1%); "skipped": GOTO 15
                               'we are at the beginning of the file
                             
- CALL inputline(2, D2A#(), col2%): CALL inputline(2, d2b#(), col2%)
+ CALL inputline(2, D2A#(), col2%, D2$(), colII%): CALL inputline(2, d2b#(), col2%, D2$(), colII%)
                         ' input d2a-d2b interval of before
         WEND
 '------------------------------------------------------------------------
 '........................................................................
 'input d2b values until d1#(x1%) is between d2a#(x2%) and d2b#(x2%)
-WHILE d2b#(x2%) * sign2% < d1#(x1%) * sign2%
+WHILE d2b#(x2%) * sign2% < D1#(x1%) * sign2%
 
-  IF EOF(2) <> 0 THEN PRINT "out of range datapoint x="; d1#(x1%); "skipped": GOTO 15
+  IF EOF(2) <> 0 THEN PRINT "out of range datapoint x="; D1#(x1%); "skipped": GOTO 15
                       'if d1 exceeds d2-range get next d1 value
   FOR coll% = 1 TO col2%: D2A#(coll%) = d2b#(coll%): NEXT
-  CALL inputline(2, d2b#(), col2%)
+  CALL inputline(2, d2b#(), col2%, D2$(), colII%)
 WEND
 '........................................................................
 '!!!!!!!!!!!!!!!!!!!!! DO GAPCALIBRATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ' linear interpolate d2a and d2b
-dllAg# = D2A#(y2%) + (d2b#(y2%) - D2A#(y2%)) / (d2b#(x2%) - D2A#(x2%)) * (d1#(x1%) - D2A#(x2%))
+dllAg# = D2A#(y2%) + (d2b#(y2%) - D2A#(y2%)) / (d2b#(x2%) - D2A#(x2%)) * (D1#(x1%) - D2A#(x2%))
 
-kT# = k0# ' * (1 + dllAg#) 'also the pivot changes with temperature - however
+kT# = k0# 'removed * (1 + dllAg#) 'also the pivot changes with temperature - however
                            ' this compensates with the fact that we look
                            ' at a virtual gap = real distance /(1+dllAg#)
-AaT# = Aa0# * (1 + dllAg#) ' (1+dllag)nicht quadrieren, da capacitaetssensor
-AiT# = Ai0# * (1 + dllAg#) ' einerseits durch vergroessern der platten mit      
+AaT# = Aa0# * (1 + dllAg#) ' square removed (1+dllag)nicht quadrieren, da capacitaetssensor
+AiT# = Ai0# * (1 + dllAg#) ' einerseits durch vergroessern der platten mit
                            'steigender T um (1+dllag)^2 zu grosse cap werte
                            'liefert, andererseits aber wegen der thermischen
                            'verkuerzung des plattenabstands um (1-dllag) zu
@@ -165,8 +166,8 @@ AiT# = Ai0# * (1 + dllAg#) ' einerseits durch vergroessern der platten mit
                            ' sollten der korrekturfaktor (1+dllag) am
                            ' besten beschreiben
 ' DO GapCalibration
-c# = d1#(y1%): ccalc# = 1000!
-IF c# <= 0 THEN PRINT "datapoint T="; d1#(x1%); "K skipped because C="; c#; "pF": GOTO 15
+c# = D1#(y1%): ccalc# = 1000!
+IF c# <= 0 THEN PRINT "datapoint T="; D1#(x1%); "K skipped because C="; c#; "pF": GOTO 15
 'initialize d#
 d# = (AaT# - AiT#) * eps0# / c#: dstep# = .001
 IF d# < kT# * r# / (b# + r#) THEN d# = 1.1 * kT# * r# / (b# + r#)
@@ -184,23 +185,23 @@ IF oldsign <> SGN(ccalc# - c#) THEN oldsign = SGN(ccalc# - c#): dstep# = dstep# 
 'PRINT d#, c#, ccalc#
 WEND
 
-IF ABS(c# - ccalc#) > .0001 THEN PRINT "error gcalc: iteration fails at datapoint T="; d1#(x1%); "K C="; c#; "pF": END
+IF ABS(c# - ccalc#) > .0001 THEN PRINT "error gcalc: iteration fails at datapoint T="; D1#(x1%); "K C="; c#; "pF": END
 
 'option -r calculates gap relatively to c0
 IF INSTR(LCASE$(COMMAND$), "-r") > 0 THEN d# = d# - k0#
 
-d1#(y1%) = d#
+D1#(y1%) = d#
 
 
 'save the datapoint
 FOR coll% = 1 TO col1%:
-nn$ = STR$(d1#(coll%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
+nn$ = STR$(D1#(coll%)): IF INSTR(nn$, "D") > 0 THEN MID$(nn$, INSTR(nn$, "D"), 1) = "E"
 PRINT #4, " " + nn$; : NEXT: PRINT #4,
 '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ' input next d1 value
 
-15 IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, d1#(), col1%)
+15 IF EOF(1) <> 0 GOTO 5 ELSE CALL inputline(1, D1#(), col1%, D2$(), colII%)
 
 GOTO 4
 ' / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / / /
@@ -303,19 +304,46 @@ SUB headerinput (text$(), j, n)
 
 END SUB
 
-SUB inputline (n, d1#(), col1%)
+SUB inputline (n!, D1#(), col1%, D2$(), colII%)
 'input data point line on #n as string and split into numbers
-' determine col1% and save data columns in d1#(1...col1%)
-a$ = INKEY$: IF a$ <> "" THEN IF ASC(a$) = 27 THEN END
-IF SCREEN(24, 10) <> 45 THEN PRINT "-";  ELSE LOCATE 24, 1: PRINT SPACE$(15); : LOCATE 24, 1
+' determine col1% and save data columns in D1#(1...col1%)
+'comments in {} are stored in d2$
+'if a comment is started somewhere in this line by "{" and not finished
+'then col1% is set -1 and the filepointer is set to the beginning of the
+'line (with seek)
 
-INPUT #n, ala$
-col1% = 0
+a$ = INKEY$: IF a$ <> "" THEN IF ASC(a$) = 27 THEN END
+
+
+aa = SEEK(n)
+LINE INPUT #n, ala$
+WHILE INSTR(ala$, CHR$(9)) > 0  'abandon tabs
+ i% = INSTR(ala$, CHR$(9))
+ ala$ = LEFT$(ala$, i% - 1) + " " + MID$(ala$, i% + 1)
+WEND
+'treat comments in input line
+klauf% = INSTR(ala$, "{")
+klzu% = INSTR(ala$, "}")
+colII% = 0
+WHILE klauf% < klzu% AND klauf% > 0   'take out closed bracketed expressions
+ colII% = colII% + 1
+ D2$(colII%) = MID$(ala$, klauf% + 1, klzu% - klauf% - 1)
+ ala$ = LEFT$(ala$, klauf% - 1) + " " + MID$(ala$, klzu% + 1)
+ klauf% = INSTR(ala$, "{")
+ klzu% = INSTR(ala$, "}")
+WEND
+
+
+IF klauf% > 0 THEN
+ col1% = -1: SEEK n, aa 'a comment bracket is not closed ... no data read
+ELSE
+ col1% = 0
  WHILE LEN(ala$) > 0
     col1% = col1% + 1
     ala$ = LTRIM$(ala$) + " "
-    d1#(col1%) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
+    D1#(col1%) = VAL(LEFT$(ala$, INSTR(ala$, " ")))
     ala$ = LTRIM$(RIGHT$(ala$, LEN(ala$) - INSTR(ala$, " ")))
  WEND
+END IF
 END SUB
 

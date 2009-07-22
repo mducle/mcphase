@@ -3,6 +3,7 @@
  // *************************************************************************
 // methods for class testspincf 
 #include "testspin.hpp"
+#include "../../version"
 
 #define MAXNOFCHARINLINE 1024
 
@@ -36,7 +37,11 @@ void testspincf::save (const char*filename, const char * filemode)
  FILE * fout;
 // we should print to a file all used configurations
  fout = fopen_errchk (filename,filemode);
- fprintf(fout,"#\n#<!--mcphase.mcphas.tst-->\n");
+ fprintf(fout,"# Test spin configurations for meanfield calculation - module %s\n#<!--mcphase.mcphas.tst-->\n",MCPHASVERSION);
+ fprintf(fout,"#*********************************************************\n");
+ fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+ fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+ fprintf(fout,"#**********************************************************\n"); 
  fprintf(fout,"# nofatoms=%i\n",nofatoms);
  fprintf(fout,"#nofcomponents=%i\n",nofcomponents);
  fprintf(fout,"# File Format: blocks of 3xnofatoms lines consisting of\n");
@@ -50,6 +55,7 @@ void testspincf::save (const char*filename, const char * filemode)
     configurations[i]->print(fout);
     }
   fclose(fout);
+  printf("file %s saved\n",filename);
 }
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 

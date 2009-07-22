@@ -1,11 +1,11 @@
-/***********************************************************************
- *
- * spins.c - program to display spinconfiguration at given htpoint
- *
- ***********************************************************************/
+/****************************************************
+ * spins - display spinconfiguration at given htpoint
+ * Author: Martin Rotter
+ ****************************************************/
 
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
+#include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
 #include<cstdio>
@@ -27,11 +27,16 @@ int main (int argc, char **argv)
  numbers[0]=13;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
+ char filename[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
 // check command line
+printf("#****************************************************\n");
+printf("# spins - display spinconfiguration at given htpoint\n");
+printf("# Author: Martin Rotter %s\n",MCPHASVERSION);
+printf("#****************************************************\n");
   if (argc < 5)
     { printf (" program spins - display spincf at HT point\n \
                 use as: spins T Ha Hb Hc [file.sps||file.mf]\n \
@@ -40,9 +45,11 @@ int main (int argc, char **argv)
                         (reads from results/mcphas.sps and results/mcdisp.qev\n\n \
                 This program outputs a magnetic structure (and magnetic excitation)\n \
                 graphic/movie in the output files of different format:\n \
-                                     spins*.eps (postscript), spins*.fst (fp_studio), \n \
-                                     spins.out (ascii) and spins*.jvx (javaview)\n\n \
-                the graphics output format can be fine tuned in .sps and .qev input files\n\n \
+                                     results/spins*.eps (postscript), results/spins*.fst (fp_studio), \n \
+                                     results/spins.out (ascii) and results/spins*.jvx (javaview)\n\n \
+                the graphics output format can be fine tuned in .sps and .qev input files\n \
+                by setting the variables show_abc_unitcell, show_primitive_crystal_unitcell, \n \
+                show_magnetic_unitcell, show_atoms, scale_view_1,scale_view_2, scale_view_3. \n\n \
                 jvx files can be viewed by: java javaview results/spins.jvx \n \
                                             java javaview \"model=results/spins.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n \
                \n");
@@ -249,20 +256,21 @@ if (argc>=9){// try a spinwave picture
               for(i=0;i<16;++i)
               {phase=2*3.1415*i/15;
                printf("\n calculating movie sequence %i(16)\n",i+1);
-               sprintf(outstr,"./results/spins.%i.jvx",i+1);
-               fin_coq = fopen_errchk (outstr, "w");
+               sprintf(filename,"./results/spins.%i.jvx",i+1);
+               fin_coq = fopen_errchk (filename, "w");
                      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                                   0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
                fclose (fin_coq);
-               sprintf(outstr,"./results/spins_prim.%i.jvx",i+1);
-               fin_coq = fopen_errchk (outstr, "w");
+               sprintf(filename,"./results/spins_prim.%i.jvx",i+1);
+               fin_coq = fopen_errchk (filename, "w");
                      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                                   1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
                fclose (fin_coq);
               }
+          printf("# %s\n",outstr);  
           }
 
-  
+
   for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
   return 0;
 }

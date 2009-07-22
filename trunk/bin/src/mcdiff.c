@@ -1,7 +1,8 @@
 /***********************************************************************
  *
- * mcdiff.c - program to calculate neutron diffraction pattern
+ * mcdiff - program to calculate neutron and magnetic xray diffraction
  *
+ * reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
  ***********************************************************************/
 
 #define PI 3.141592654
@@ -9,6 +10,7 @@
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFREFLECTIONS 10000
 #define SMALL 1e-8
+#include "../../version"
 #include <mpspecfunp.h>
 #include <martin.h>
 #include <myev.h>
@@ -113,7 +115,6 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
                complex <double> msfy=0,msfdipy=0;
                complex <double> msfz=0,msfdipz=0;
                complex <double> im(0,1);
-
                for(i=1;i<=n;++i){
                                  complex <double> scl((*jjjpars[i]).SLR,(*jjjpars[i]).SLI); 
                                  qr=hi*(*jjjpars[i]).xyz(1)+ki*(*jjjpars[i]).xyz(2)+li*(*jjjpars[i]).xyz(3);
@@ -166,13 +167,15 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
 					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
                                              FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
-                                              msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+                                                        msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
 					                msfdipy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
+//printf("%g %g %g\n",(*jjjpars[i]).mom(8),(*jjjpars[i]).mom(4),(*jjjpars[i]).mom(6));
 					                msfdipx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
 					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
 					               }
+//printf("%g %g %g\n",real(msfdipx),real(msfdipy),real(msfdipz));
 // myPrintVector(stdout,(*jjjpars[i]).mom);//equivalent to moment ...
                                           
                                                          //mux=(*jjjpars[i]).mom(3); // this should be done in future to implement
@@ -414,8 +417,16 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  time_t curtime;
  struct tm * loctime;
   fout = fopen_errchk (filename, "w");
- fprintf(fout, "#{%s input file: %s ",filename,infile);
+ fprintf(fout, "#{output file of program mcdiff %s input file: %s %s ",filename,infile,MCDIFFVERSION);
  curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+ fprintf(fout,"#!<--mcdiff.mcdiff.out-->\n");
+ fprintf(fout,"#***********************************************************************\n");
+ fprintf(fout,"#*\n");
+ fprintf(fout,"#* mcdiff - program to calculate neutron and magnetic xray diffraction\n");
+ fprintf(fout,"#*\n");
+ fprintf(fout,"#* reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+ fprintf(fout,"#***********************************************************************\n");
+
  fprintf(fout,"# unit cell:%s",unitcell);
  fprintf(fout,"#                   / %6.3f A \\     / %6.3f A \\     / %6.3f A \\ \n", r1(1), r2(1), r3(1));
  fprintf(fout,"#                r1=| %6.3f A |  r2=| %6.3f A |  r3=| %6.3f A |\n", r1(2), r2(2), r3(2));
@@ -435,7 +446,8 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  {fprintf(fout, "# Lorentz Factor not considered for resonant magnetic xray scattering - F1 and F2 transition intensities calculated\n");
   fprintf(fout, "# according to fRMXS as given in equation (2) of Longfield et al. PRB 66 054417 (2002) and maximized with respect to azimuth.\n#\n");
  }
- fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl,\n# Debye Waller factor (sf ~ exp(-2 DWF sin^2(theta) / lambda^2)=EXP (-W),  (2*DWF=B=8 pi^2 <u^2>)\n");
+ fprintf(fout, "# List of atomic positions dr1 dr2 dr3, moments m scattering lengths sl,\n");
+ fprintf(fout, "# Debye Waller factor (sqr(Intensity)~|sf| ~sum_i ()i exp(-2 DWFi sin^2(theta) / lambda^2)=EXP (-Wi),\n# units DWF [A^2], relation to other notations 2*DWF=B=8 pi^2 <u^2>)\n");
  fprintf(fout, "#  and  Lande factors total angular momentum J (=0 if dipole approximation is used) <j0> and <j2> formfactor\n# coefficients\n");
  if (ortho==1)
  {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
@@ -631,14 +643,20 @@ int main (int argc, char **argv)
   char instr[MAXNOFCHARINLINE+1];
   char cffilename[MAXNOFCHARINLINE+1];
   char unitcellstr[MAXNOFCHARINLINE+1];
-  float numbers[60];numbers[0]=60;
+  float numbers[70];numbers[0]=70;
   Vector r1(1,3),r2(1,3),r3(1,3);
   Vector rez1(1,3),rez2(1,3),rez3(1,3);
+fprintf(stderr,"***********************************************************************\n");
+fprintf(stderr,"*\n");
+fprintf(stderr,"* mcdiff - program to calculate neutron and magnetic xray diffraction\n");
+fprintf(stderr,"*\n");
+fprintf(stderr,"* reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+fprintf(stderr,"***********************************************************************\n");
 
   // check command line
    if (argc > 1)
     { if (strcmp(argv[1],"-h")==0)
-      {printf (" program mcdiff - calculate neutron diffraction pattern\n \
+      {printf (" \n \
                 use as: mcdiff [hkllistfilename]\n \
 		- for format of input file mcdiff.in see mcphase manual\n \
                 - optional an hkl list can be given in file hkllistfilename-in\n \
@@ -696,16 +714,28 @@ int main (int argc, char **argv)
 
 fin_coq = fopen_errchk ("./mcdiff.in", "rb");
  fprintf(stdout,"\n reading file mcdiff.in\n\n");
- pos=ftell(fin_coq);
-        char *token;
-        fout = fopen_errchk ("./results/mcdiff.in", "w"); //copy input file to results
-        while(feof(fin_coq)==false){if(fgets(instr, MAXNOFCHARINLINE, fin_coq))
-                                     {// strip /r (dos line feed) from line if necessary
-                                      while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
-                                      fprintf(fout,"%s",instr);}
-                                    }
-        fclose(fout);
- fseek(fin_coq,pos,SEEK_SET); 
+fout = fopen_errchk ("./results/_mcdiff.in", "w"); //copy input file parameters to results
+fprintf(fout,"# this file is the input file read by program %s ",MCDIFFVERSION);
+ time_t curtime;
+ struct tm * loctime;
+ curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+fprintf(fout,"#<!--mcdiff.mcdiff.in>\n");
+fprintf(fout,"#***************************************************************\n");
+fprintf(fout,"#      mcdiff is a program for the calculation of elastic\n");
+fprintf(fout,"#   neutron diffraction and resonant magnetic Xray scattering \n");
+fprintf(fout,"#  reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+fprintf(fout,"#*************************************************************** \n");
+fprintf(fout,"# this input file contains 4 sections corresponding to different\n");
+fprintf(fout,"# groups of parameters\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# - all lines have to start with a # sign with the  exception of \n");
+fprintf(fout,"#   the lines containing atomic positional parameters\n");
+fprintf(fout,"# - the other parameters have to be defined in the corresponding \n");
+fprintf(fout,"#   section by statements such as parameter=value\n");
+fprintf(fout,"# - the sequence of the parameters within a section is arbitrary\n");
+fprintf(fout,"# \n");
+fprintf(fout,"#\n");
+
 // input section 1 *******************************************************
 
   instr[0]='#';
@@ -729,6 +759,27 @@ if (thetamax == 0){fprintf(stderr,"ERROR mcdiff: no thetamax given or line does 
 printf("     section 1 - lambda=%g A thetamax= %g deg\n",lambda, thetamax);
 printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
 
+fprintf(fout,"# %%SECTION 1%%  OVERALL PARAMETERS\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# lambda   = %g  wavelength (A)\n",lambda);
+fprintf(fout,"#\n");
+fprintf(fout,"# thetamax = %g   maximum bragg angle (deg)\n",thetamax);
+fprintf(fout,"#\n");
+fprintf(fout,"# ovalltemp= %g  overall temperature factor (A^2) \n",ovalltemp);
+fprintf(fout,"#           ...I ~ EXP(-2 * ovalltemp * sintheta^2 / lambda^2) \n");
+fprintf(fout,"#                  relation to other notations:\n");
+fprintf(fout,"#                  ovalltemp = Biso = 8 pi^2 Uiso^2\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# lorentz=%i  type of lorentzfactor to be used\n",lorenz);
+fprintf(fout,"#            0.....no lorentzfactor \n");
+fprintf(fout,"#            1.....neutron powder flat sample\n");
+fprintf(fout,"#            2.....neutron powder cylindrical sample\n");
+fprintf(fout,"#            3.....neutron single crystal\n");
+fprintf(fout,"#            4.....neutron TOF powder cyl. sample - d-pattern log scaled\n");
+fprintf(fout,"#            5.....neutron TOF powder cyl. sample - d-pattern normal scaled\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
 
 // input section 2 *********************************************************
 
@@ -751,12 +802,28 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
   float x1[nat+1],y1[nat+1],z1[nat+1];
   float sl1r[nat+1],sl1i[nat+1],dwf1[nat+1];
 
+fprintf(fout,"# %%SECTION 2%% LIST OF NONMAGNETIC ATOMS IN CRYSTALLOGRAPHIC UNIT CELL\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# nat=%i      number of nonmagnetic atoms in primitive crystalographic unit cell\n",nat);
+fprintf(fout,"#\n");
+fprintf(fout,"# it follows a list of nat lines with nonmagnetic atoms\n");
+fprintf(fout,"# ... notes: - if an occupancy other than 1.0 is needed, just reduce \n");
+fprintf(fout,"#              the scattering length linear accordingly\n");
+fprintf(fout,"#            - da db and dc are not used by the program, dr1,dr2 and dr3 \n");
+fprintf(fout,"#              refer to the primitive lattice given below\n");
+fprintf(fout,"#            - Debye Waller Factor notation: sqr(Intensity) ~ structure factor ~ \n");
+fprintf(fout,"#              ~sum_n ()n exp(-2 DWFn sin^2(theta) / lambda^2)=EXP (-Wn),  \n");
+fprintf(fout,"#              relation to other notations: 2*DWF = B = 8 pi^2 <u^2>, units DWF (A^2)\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# Real Imag[scattering length(10^-12cm)]   da(a)    db(b)    dc(c)    dr1(r1)  dr2(r2)  dr3(r3)  DWF(A^2)\n");
+
   if (nat!=0){ for(i=1;i<=nat;++i) { pos=ftell(fin_coq); 
                                      n=inputline(fin_coq,numbers);
                                      if (n==0) {if(feof(fin_coq)==0){fprintf(stderr,"Error mcdiff: end of input file in section 2\n");exit (EXIT_FAILURE);}
                                                 fseek(fin_coq,pos,SEEK_SET); 
                                                 fgets(instr,MAXNOFCHARINLINE,fin_coq); 
-                                                if(strstr (instr, "%SECTION 3%")!=NULL){fprintf (stderr,"ERROR mcdiff: Section 3 started before all nat=%i atoms of crystallographic unit cell were listed !\n",nat);exit (EXIT_FAILURE);}
+                                                if(strstr (instr, "%%SECTION 3%%")!=NULL){fprintf (stderr,"ERROR mcdiff: Section 3 started before all nat=%i atoms of crystallographic unit cell were listed !\n",nat);exit (EXIT_FAILURE);}
                                                }
                                      else      {if (n<9) {fprintf (stderr,"ERROR mcdiff: Section 2 - Nonmagnetic Atoms: too few positional parameters for atom %i!\n",i);exit (EXIT_FAILURE);}
                                                 sl1r[i]=numbers[1];sl1i[i]=numbers[2]; x1[i] = numbers[6]; y1[i] = numbers[7]; z1[i] = numbers[8];dwf1[i]=numbers[9];
@@ -816,6 +883,35 @@ printf("                 r3= %5.3ga + %5.3gb + %5.3gc\n", r3(1), r3(2), r3(3));
 //printf("                    / %5.3ga \\     / %5.3ga \\     / %5.3ga \\    x||c \n", r1(1), r2(1), r3(1));
 //printf("                 r1=| %5.3gb |  r2=| %5.3gb |  r3=| %5.3gb |    y||a\n", r1(2), r2(2), r3(2));
 //printf("                    \\ %5.3gc /     \\ %5.3gc /     \\ %5.3gc /    z||b\n", r1(3), r2(3), r3(3));
+
+  if (nat!=0){ for(i=1;i<=nat;++i) {
+   // calculate da db dc from dr1 dr2 dr3 and print to results/_mcdiff.in
+   fprintf(fout,"  %8.5f  %8.5f                       %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f\n",sl1r[i],sl1i[i],x1[i]*r1(1)+y1[i]*r2(1)+z1[i]*r3(1),x1[i]*r1(2)+y1[i]*r2(2)+z1[i]*r3(2),x1[i]*r1(3)+y1[i]*r2(3)+z1[i]*r3(3),x1[i],y1[i],z1[i],dwf1[i]);
+                                   }
+             }
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# %%SECTION 3%% DESCRIPTION OF THE LATTICE\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# Note: what follows here may directly be taken from the output of program spins \n");
+fprintf(fout,"#       (file spins.out) or charges (file charges.out)\n");
+fprintf(fout,"# -----------------------------------------------------------------------------\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# lattice constants (A) and angles \n");
+fprintf(fout,"# a=%g b=%g c=%g alpha=  %g beta=  %g gamma=  %g\n",a,b,c,alpha,beta,gamma);
+fprintf(fout,"#\n");
+fprintf(fout,"# primitive lattice vectors \n");
+fprintf(fout,"# r1a= %7f r2a= %7f r3a= %7f\n",r1(1),r2(1),r3(1));
+fprintf(fout,"# r1b= %7f r2b= %7f r3b= %7f   primitive lattice vectors (a)(b)(c)\n",r1(2),r2(2),r3(2));
+fprintf(fout,"# r1c= %7f r2c= %7f r3c= %7f\n",r1(3),r2(3),r3(3));
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+
+
+Vector r1s(1,3),r2s(1,3),r3s(1,3);
+r1s=r1;r2s=r2;r3s=r3;
 Matrix rtoxyz(1,3,1,3); // define transformation matrix to calculate components of
                            // r1 r2 and r3 with respect to the xyz coordinate system
 rtoxyz(1,1)=0;
@@ -867,6 +963,39 @@ jjjpar ** jjjpars = new jjjpar * [n+1];
 double lnZ,U;
 printf("                 reading magnetic atoms and moments ...\n");
 
+fprintf(fout,"# %%SECTION 4%% DESCRIPTION OF MAGNETIC UNIT CELL AND LIST OF MAGNETIC ATOMS\n");
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# here follows the description of the magnetic unit cell with respect\n");
+fprintf(fout,"# to the primitive crystallographic unit cell:\n");
+fprintf(fout,"# 'nr1', 'nr2', 'nr3' ...the crystallographic unit cell has to be taken \n");
+fprintf(fout,"#                        nr1 nr2 and nr3 times along r1 r2 and r3,\n");
+fprintf(fout,"#                        respectively to get magnetic unit cell\n");
+fprintf(fout,"# 'nat' denotes the number of magnetic atoms in magnetic unit cell\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# Temperature,    Magnetic Field: Magnetic Unit Cell\n");
+fprintf(fout,"# T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i \n",T,Ha,Hb,Hc,nr1,nr2,nr3,natmagnetic);
+fprintf(fout,"#\n");
+fprintf(fout,"#\n");
+fprintf(fout,"# It follows a list of nat lines with to describe the magnetic moment configuration\n");
+fprintf(fout,"# Notes:\n");
+fprintf(fout,"# 'atom-filename' means the single ion property filename of this magnetic atom:\n");
+fprintf(fout,"#                 -it must contain the Formfactor Coefficients (e.g. see international tables)\n");
+fprintf(fout,"#                                      Lande factor\n");
+fprintf(fout,"#                                      Neutron Scattering Length (10^-12 cm) \n");
+fprintf(fout,"#                 -it may contain a    Debey Waller Factor\n");
+fprintf(fout,"# 'da' 'db' and 'dc' are not used by the program, \n");
+fprintf(fout,"# 'dr1','dr2' and 'dr3' refer to the primitive lattice given below\n");
+fprintf(fout,"# 'Ma','Mb','Mc' denote the magnetic moment components in Bohr magnetons\n");
+fprintf(fout,"# '<Ja>' '<Jb>' '<Jc>' (optional) denote the momentum components \n");
+fprintf(fout,"# 'gjmbHeffa' 'gjmbHeffb' 'gjmbHeffc' (optional line, used to go beyond dipole approx for formfactor)\n");
+fprintf(fout,"#                                     denote the corresponding meanfields multiplied by \n");
+fprintf(fout,"#                                     Lande factor and Bohr magneton \n");
+fprintf(fout,"#\n");
+fprintf(fout,"#{atom-file} da[a]  db[b]    dc[c]     dr1[r1]  dr2[r2]  dr3[r3]   <Ma>     <Mb>     <Mc> [mb] <Ja>     <Jb>     <Jc> ...\n");
+fprintf(fout,"#{corresponding effective fields gjmbHeff [meV]- if passed to mcdiff only these are used for caculation (not the magnetic moments)}\n");
+
+
 for(i=1;i<=natmagnetic;++i){ 
                             instr[0]='#';J[i]=-1;
                             while(instr[strspn(instr," \t")]=='#'){pos=ftell(fin_coq);
@@ -894,18 +1023,22 @@ for(i=1;i<=natmagnetic;++i){
                               for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
                               if((*jjjpars[i]).gJ==0){if(j>=15){J[i]=-2; // do not use input moment but spin and angular momentum for calculation
                                                                 // do some consistency checks
-                                                                if (fabs((*jjjpars[i]).mom(1)-2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5))>0.001){fprintf(stderr,"Warning mcdiff: a-component magnetic moment and <La>+2<Sa> not consistent for atom %i - setting moment=<L>+2<S> \n",i);}
-                                                                if (fabs((*jjjpars[i]).mom(2)-2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7))>0.001){fprintf(stderr,"Warning mcdiff: b-component magnetic moment and <Lb>+2<Sb> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
-                                                                if (fabs((*jjjpars[i]).mom(3)-2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9))>0.001){fprintf(stderr,"Warning mcdiff: c-component magnetic moment and <Lc>+2<Sc> not consistent for atom %i - setting moment=<L>+2<S>\n",i);}
+                                                                if (fabs((*jjjpars[i]).mom(1)-2*(*jjjpars[i]).mom(4)-(*jjjpars[i]).mom(5))/(fabs((*jjjpars[i]).mom(1))+1.0)>0.001){fprintf(stderr,"Warning mcdiff: a-component magnetic moment=%g and <La>+2<Sa>=%g not consistent for atom %i - setting moment=<La>+2<Sa>\n",(*jjjpars[i]).mom(1),2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5),i);}
+                                                                if (fabs((*jjjpars[i]).mom(2)-2*(*jjjpars[i]).mom(6)-(*jjjpars[i]).mom(7))/(fabs((*jjjpars[i]).mom(2))+1.0)>0.001){fprintf(stderr,"Warning mcdiff: b-component magnetic moment=%g and <Lb>+2<Sb>=%g not consistent for atom %i - setting moment=<Lb>+2<Sb>\n",(*jjjpars[i]).mom(2),2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7),i);}
+                                                                if (fabs((*jjjpars[i]).mom(3)-2*(*jjjpars[i]).mom(8)-(*jjjpars[i]).mom(9))/(fabs((*jjjpars[i]).mom(3))+1.0)>0.001){fprintf(stderr,"Warning mcdiff: c-component magnetic moment=%g and <Lc>+2<Sc>=%g not consistent for atom %i - setting moment=<Lc>+2<Sc>\n",(*jjjpars[i]).mom(3),2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9),i);}
                                                                 (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
                                                                 (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
                                                                 (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
                                                                 }
                                                            else {J[i]=-1;(*jjjpars[i]).gJ=2;} // just use spin formfactor
                                                       }
+fprintf(fout,"{%s} %8.5f %8.5f %8.5f  ",cffilename,numbers[4]*r1s(1)+numbers[5]*r2s(1)+numbers[6]*r3s(1),numbers[4]*r1s(2)+numbers[5]*r2s(2)+numbers[6]*r3s(2),numbers[4]*r1s(3)+numbers[5]*r2s(3)+numbers[6]*r3s(3));
+fprintf(fout,"%8.5f %8.5f %8.5f  ",numbers[4],numbers[5],numbers[6]); // positions
+fprintf(fout," %+8.5f %+8.5f %+8.5f ",(*jjjpars[i]).mom(1),(*jjjpars[i]).mom(2),(*jjjpars[i]).mom(3)); // magmoments
+for(k=10;k<=j;++k){fprintf(fout," %+8.5f",numbers[k]);}
+fprintf(fout,"\n");
                             instr[0]='#';
                             while(instr[strspn(instr," \t")]=='#'&&feof(fin_coq)==0){pos=ftell(fin_coq);fgets(instr,MAXNOFCHARINLINE,fin_coq);}
-
                             if (strchr(instr,'>')==NULL)
                              {fseek(fin_coq,pos,SEEK_SET);} // no ">" found --> do dipole approx
                              else          
@@ -946,14 +1079,18 @@ for(i=1;i<=natmagnetic;++i){
                                }
                                if(Norm((*jjjpars[i]).magFFj4)==0){fprintf(stderr,"WARNING mcdiff: <j4(Q)> coefficients not found or zero in file %s\n",cffilename);}
                                if(Norm((*jjjpars[i]).magFFj6)==0){fprintf(stderr,"WARNING mcdiff: <j6(Q)> coefficients not found or zero in file %s\n",cffilename);}
- 			      }
 
+fprintf(fout,"                  corresponding effective fields gjmbHeff [meV]-->");
+for(k=1;k<=j;++k){fprintf(fout," %+8.5f",heff(k));}
+fprintf(fout,"\n");
+ 			      }
                              if((*jjjpars[i]).SLR==0){fprintf(stderr,"WARNING mcdiff: SCATTERINGLENGTHREAL not found or zero in file %s\n",cffilename);}
 //                             if((*jjjpars[i]).gJ==0){fprintf(stderr,"WARNING mcdiff: GJ not found or zero in file %s - gJ=0 means Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc !\n",cffilename);}
                              if(Norm((*jjjpars[i]).magFFj0)==0){fprintf(stderr,"WARNING mcdiff: <j0(Q)> coefficients not found or zero in file %s\n",cffilename);}
                              if(Norm((*jjjpars[i]).magFFj2)==0){fprintf(stderr,"WARNING mcdiff: <j2(Q)> coefficients not found or zero in file %s\n",cffilename);}
                            }
   fclose(fin_coq);
+  fclose(fout);
 printf ("calculating ...\n");  
 
 //now insert also nonmagnetic elements into the unit cell
@@ -1039,6 +1176,10 @@ for(i=1;i<=m;++i){hhkkll=hkl[i];
 printeln(jjjpars,code,"./results/mcdiff.out","mcdiff.in", unitcellstr,T,Ha,Hb,Hc, lambda, ovalltemp, lorenz, r1, r2, r3, n,  J, m, hkl, ikern, intmag,intmagdip, D, theta, sf, lpg,mx,my,mz,mxmy,mxmz,mymz,mx2,my2,mz2,a,b,c);
 
 fprintf (stderr,"...results written to ./results/mcdiff.out\n");
+fprintf (stderr,"***********************************************************\n");
+fprintf (stderr,"                   End of Program mcdiff\n");
+fprintf (stderr,"reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+fprintf (stderr,"***********************************************************\n");
 
 //  for (i=1;i<=n;++i){delete jjjpars[i];}
 //  delete []jjjpars;

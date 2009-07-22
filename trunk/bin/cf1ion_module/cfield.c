@@ -605,7 +605,7 @@ main(argc,argv)
  
     init_einheit();
  
-    setup =  cfield_setup(); /* setup's aus SETUP-file holen */
+    setup =  cfield_setup(); /* setup's aus SETUP-file holen (in diahermx.c) */
  
     if( argc>1){ /* es wurden Argumente uebergeben */
          c = VALUE(argv[1],0);
@@ -1338,8 +1338,12 @@ if( c=='r'||c=='R'||c=='s'||c=='S'||c=='M'||c=='m' ||c=='k'||c=='K'||
                                           cs = DKQ;
                                           break;
                                case 'L' :
-                               case 'l' : kristallfeld=init_iteration(LKQNAME,
-                                          symmetrienr,LKQ );
+                               case 'l' : if(i==0)
+                                          {kristallfeld=init_iteration(LKQNAME,
+                                          symmetrienr,LKQ );}
+                                          else
+                                          {kristallfeld=init_iteration(filenameB,
+                                          symmetrienr,LKQ );}
                                           ewproblem=solve(setup,
                                           (EWPROBLEM*)0,NEIN,
                                           kristallfeld,LKQ);
@@ -3043,8 +3047,8 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
-/*                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // strange rule  - removed because it gave errors 
-//                                IT(V21(iter)) = 0.0;                     // upon rotating coordinate systems */
+//                             if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // strange rule  - removed because it gave errors 
+//                                IT(V21(iter)) = 0.0;                     // upon rotating coordinate systems
                  }
                  break;
  
@@ -5097,7 +5101,7 @@ if(c=='r'||c=='R'){
     printf("%s -r[ead] -A[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] [filename] -B[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -D[kq] [symmetrienummer] \n",PROGRAMMNAME);
-    printf("%s -r[ead] -L[kq] [symmetrienummer] \n",PROGRAMMNAME);
+    printf("%s -r[ead] [filename] -L[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -V[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -W[kq] [symmetrienummer] \n",PROGRAMMNAME);
     printf("%s -r[ead] -x[W ]                   \n",PROGRAMMNAME);

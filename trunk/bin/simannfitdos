@@ -3,11 +3,11 @@
 unless ($#ARGV >0) 
 {print " program simannfit used to perform simulating annealing\n";
  print " usage: simannfit  10 * \n  10 .. initial temperature \n * .. filename(s) of paramter file(s)\n";
- print " ... there must exist a program calcsta, the output of which\n";
+ print " ... there must exist a program calcsta.bat, the output of which\n";
  print " contains 'sta = 249' - this program is called from this output\n";
  print " at every iteration step and  the standard sta deviation is minimzed\n";
  print " simannfit gives as a parameter a maximum number for sta - if during the\n";
- print " calculation of sta in calcsta this number is exceeded calcsta can exit (saves time)\n";
+ print " calculation of sta in calcsta.bat this number is exceeded calcsta.bat can exit (saves time)\n";
  print " option -t sets time limit until program end (in seconds)\n";
  print " option -s gives maximal number of iteration steps to be done\n";
  exit 0;}
@@ -26,11 +26,11 @@ unless ($#ARGV >0)
 #.
 format STDOUT =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
 .
 format Fout =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
 .
 
  @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parstp0=();@parav=();@thisparstp=();
@@ -42,8 +42,9 @@ sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$par
  
  open(Fout,">results/simannfit.status");
  foreach (@ARGV)
- {$file=$_; system ("copy ".$file." ".$file.".par"); open (Fin, $file);
-   while($line=<Fin>)
+ {$file=$_; if(system ("copy ".$file." ".$file.".par")){die "\n error copying $file \n";} 
+     unless (open (Fin, $file)){die "\n error:unable to open $file\n";}   
+    while($line=<Fin>)
  {while ($line=~/^.*par\w+\s*\Q[\E/) {++$#par;#load another parameter
 				 ($parname)=($line=~m|(par\w+)\s*\Q[\E|);
                                  foreach(@parnam){if (/$parname/){print "ERROR simannfit: parameter $parname occurs more than one time in input files\n";exit 1;}}
@@ -91,12 +92,12 @@ if($sta>0)
    ++$stepnumber;
    print " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
    open(Fin,"results/simannfit.status");$line=<Fin>;
-    if ($line=~/exit simannfit/){$sta=0;close Fin;}
+    if ($line=~/exiting simannfit/){$sta=0;close Fin;}
     else
     {close Fin;
      open(Fout,">results/simannfit.status");$i=0;
+     print Fout "current sta=$sta  statistical T=$stattemp  step ratio=$stps\nsta of stored parameters=$stasave\nparameter[value,      min,           max,           variation,     stepwidth]\n";
      foreach(@par){write Fout;++$i;}
-     print Fout " ...  current sta=$sta, statistical T=$stattemp, step ratio=$stps\nsta of stored parameters=$stasave\n";
      close Fout;
     }
 
@@ -130,7 +131,7 @@ if($sta>0)
    $parstp[$i]+=$parstp[$i]*0.1*abs($thisparstp[$i]); # adapt parstp to be more bold in this direction
    $hx=int(($p-$parmin[$i])/$parstp0[$i]);
    ++$parhisto[($hx+$perlhistostart[$i])];
-   open(Fout,">".$parnam[$i].".hst");
+   open(Fout,">results/".$parnam[$i].".hst");
    print Fout "#{Histogram of parameter ".$parnam[$i]."\n# value vs. number of  occurrences in good solutions (sta decreased)}\n";
    $hx=0;
    for($hx=0;$hx<=int(($parmax[$i]-$parmin[$i])/$parstp0[$i])+1;++$hx)
@@ -152,10 +153,10 @@ if($sta>0)
    print "      sta=$sta\n";
 # move files
  foreach (@ARGV)
- {$file=$_; system ("del $file.fit");
-            system ("copy ".$file." ".$file.".fit");
-            system ("del $file");
-            system ("copy ".$file.".par ".$file);}
+ {$file=$_; if(system ("del $file.fit")){die "\n error deleting $file.fit \n";}
+            if(system ("copy ".$file." ".$file.".fit")){die "\n error copying file $file\n";}
+            if(system ("del $file")){die "\n error deleting $file \n";}
+            if(system ("copy ".$file.".par ".$file)){die "\n error copying $file.par \n";}}
      open(Fout,">results/simannfit.status");print Fout " ... simannfit stopped\n"; close Fout;
 exit 0;
 # END OF MAIN PROGRAM
@@ -212,12 +213,13 @@ sub sta {local $SIG{INT}='IGNORE';
 #				  }
 
                              while ($line=~/^.*?function\s*\Q[\E(.*?)\Q]\E/) 
-			          {$expression=$1;
+			          {$expression=" ".$1." ";
+#                   print $expression."\n";
 				   #substitute into the expression the paramter values
 				   $i=0;#insert a function parameter
 				   foreach (@parnam)
 				    {$pnam=$_;
-				     while ($expression=~/.*$pnam/)
+				     while ($expression=~/.*\W$pnam\W/)
                                         {$expression=~s|$pnam|$par[$i]|;
 					}
 				     ++$i;
@@ -226,11 +228,13 @@ sub sta {local $SIG{INT}='IGNORE';
 				    open (Foutcc, ">results/ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
-				    system "perl results/ccccccc.ccc > results/cccccc1.ccc";
+ #                  print $expression."\n";
+				    if(system "perl results\\ccccccc.ccc > results\\cccccc1.ccc"){die "error evalutaing expression in results\\ccccc*";}
 				    open (Fincc,"results/cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
-				    system "del results/ccccccc.ccc results/cccccc1.ccc";
+				    system "del results\\ccccccc.ccc results\\cccccc1.ccc";
 				    # $data contains now the result of the mathematical expression
+  #                    print $data."\n";
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
 
@@ -238,18 +242,20 @@ sub sta {local $SIG{INT}='IGNORE';
 
                             } print Fout1 $line;print Fout2 $modline;
      } close Fin;close Fout1;close Fout2;
-     unless (rename "simannfit.par",$file.".par")
-     {die "\n error:perhaps (perl rename cannot cross filesystems) \n";}
+#         system ("del $file.par");
+#exit;
+     if (system ("copy results\\simannfit.par ".$file.".par"))
+     {die "\n error copying results/simannfit.par to  $file.par\n";}
  }
-# print "#call routine calcsta to calculate standard deviation\n";
+# print "#call routine calcsta.bat to calculate standard deviation\n";
 $staboundary=$stasave-log($rnd)*$stattemp;
- system ("calcsta $staboundary > results/simannfit.sta");
+if(system ("calcsta.bat $staboundary > results\\simannfit.sta")){die "\n error executing calcsta.bat\n";}
  open (Fin,"results/simannfit.sta"); 
  while($line=<Fin>){
            if($line=~/^.*sta\s*=/) {($sta)=($line=~m|sta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);} 
                    }
  close Fin;
- system ("del results/simannfit.sta");
+ system ("del results\\simannfit.sta");
  return $sta;
 }  
 

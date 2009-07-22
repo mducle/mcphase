@@ -37,7 +37,7 @@ class inimcdis
   // qvectors to be considered
   Vector qmin,qmax,deltaq;
   mfcf mf;
-  
+   void save(); // save parameters to results/_mcdisp.ini results/_mcdisp.mf
    void errexit();
   inimcdis (const char * file,const char * spinfile); //constructor
   inimcdis (const inimcdis & p);//kopier-konstruktor

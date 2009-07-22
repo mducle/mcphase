@@ -1,11 +1,11 @@
 /***********************************************************************
- *
- * spins.c - program to create spinsconfiguration from q vector
- *
+ * spinfromq - program to create spinsconfiguration from q vector
+ * Author: Martin Rotter
  ***********************************************************************/
 
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
+#include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
 #include<cstdio>
@@ -20,6 +20,10 @@
 // hauptprogramm
 int main (int argc, char **argv)
 { 
+printf("#*****************************************************\n");
+printf("#* spinfromq - create spin configuration from q vector\n");
+printf("#* Author: Martin Rotter %s\n",MCPHASVERSION);
+printf("#*****************************************************\n");
 
 // check command line
   if (argc < 6)

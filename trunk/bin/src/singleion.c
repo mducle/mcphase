@@ -1,10 +1,10 @@
-/***********************************************************************
- *
- * singleion.c - program to display single ion momentum  at given htpoint
- *
- ***********************************************************************/
+/**************************************************************
+ * singleion.c - display single ion momentum  at given htpoint
+ * Author: Martin Rotter
+ **************************************************************/
 
 #define MAXNOFCHARINLINE 1000
+#include "../../version"
 #include<cstdio>
 #include "martin.h"
 #include<cerrno>
@@ -29,6 +29,10 @@ int main (int argc, char **argv)
   float d;
   double T;
 
+printf("#**************************************************************\n");
+printf("# * singleion.c - display single ion momentum  at given htpoint\n");
+printf("# * Author: Martin Rotter %s\n",MCPHASVERSION);
+printf("# **************************************************************\n");
 // check command line
   if (argc < 3)helpexit();
 

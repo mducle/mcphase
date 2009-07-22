@@ -1,9 +1,9 @@
-/***********************************************************************
+/**************************************************************************
  *
- * mcphas.c - program to calculate the magnetic properties for external fields
- *                    of arbitrary direction
+ * mcphas - program to calculate static magnetic properties (phase diagram)
  *
- ***********************************************************************/
+ * reference: M. Rotter JMMM 272-276 (2004) 481
+ **************************************************************************/
 
 #include<mcphas.h>
 
@@ -22,8 +22,7 @@ const char * filemode="w";
 
 // main program
 int main (int argc, char **argv)
-{ FILE * fin=NULL; FILE * cfout; FILE * cfin;
-  char cfoutfilename[MAXNOFCHARINLINE+10]="./results/";
+{ FILE * fin=NULL; 
   char instr[MAXNOFCHARINLINE];
   int im,j,l;
   int nofstapoints=0;
@@ -38,6 +37,13 @@ int main (int argc, char **argv)
   Vector yv(0,3),yvsav(0,3);
   Vector h(1,3);Vector mmax1(1,3);
   xvsav=0;yvsav=0;
+
+fprintf(stderr,"**************************************************************************\n");
+fprintf(stderr,"*\n");
+fprintf(stderr,"* mcphas - program to calculate static magnetic properties (phase diagram)\n");
+fprintf(stderr,"*\n");
+fprintf(stderr,"* reference: M. Rotter JMMM 272-276 (2004) 481\n");
+fprintf(stderr,"**************************************************************************\n\n");
   
 // check command line
   for (im=1;im<=argc-1;++im)
@@ -51,28 +57,17 @@ int main (int argc, char **argv)
 
   if (ini.exit_mcphas!=0)
   {ini.exit_mcphas=0;ini.print();} // if exit was 1 - save parameters and set exit=0
-   ini.print("./results/mcphas.ini");  // copy mcphas.ini to results directory
+   ini.print("./results/_mcphas.ini");  // copy mcphas.ini to results directory
 
 
 // as class par load  parameters from file
  if(verbose==1){printf("reading parameters from file mcphas.j\n");}
- par inputpars("./mcphas.j"); inputpars.save("./results/mcphas.j"); 
+ par inputpars("./mcphas.j"); inputpars.save("./results/_mcphas.j"); 
   Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
   Vector h1(1,inputpars.nofcomponents);
  
 // here save single ion property files to results
-char *token;
-for(l=1;l<=inputpars.nofatoms;++l){cfin=fopen_errchk((*inputpars.jjj[l]).cffilename,"rb");
-                                   strcpy(cfoutfilename+10,(*inputpars.jjj[l]).cffilename);
-                                   cfout=fopen_errchk(cfoutfilename,"w");
-                    while(feof(cfin)==false){fgets(instr, MAXNOFCHARINLINE, cfin);
-                                            // strip /r (dos line feed) from line if necessary
-                                            while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
-                                            fprintf(cfout,"%s",instr);
-                                           }
-                                   fclose(cfin);
-                                  fclose(cfout);
-                                  }
+inputpars.save_sipfs("./results/_");
 
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
 T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1,T); // initialize eigenstate matrix
@@ -88,7 +83,7 @@ for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}
 T=0.0;h=0;
 // load testspinconfigurations (nooftstspinconfigurations,init-file,sav-file)
    testspincf testspins (MAXNOFSPINCF,"./mcphas.tst","./results/mcphas.phs",inputpars.nofatoms,inputpars.nofcomponents);
-   testspins.save("./results/mcphas.tst","w");
+   testspins.save("./results/_mcphas.tst","w");
    qvectors testqs (ini,inputpars.rez,mmax,"./results/mcphas.qvc",inputpars.nofatoms,inputpars.nofcomponents,verbose);
 
 // declare variable physprop (typa class physproperties)
@@ -166,7 +161,23 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
 endproper:
   testspins.save(filemode);testqs.save(filemode);
    if(argc>options&&strncmp(argv[argc-1],"-",1)!=0) fclose(fin);
-fprintf(stdout,"sta=%g\n",sta);
+   printf("RESULTS saved in directory ./results/  - files:\n");
+   printf("  mcphas.fum  - total magnetic moment, energy at different T,H\n");
+   printf("  mcphas.sps  - stable configurations at different T,H\n");
+   printf("  mcphas.mf   - mean fields at different T,H\n");
+   printf("  mcphas.hkl  - strong magnetic satellites, neutron diffraction intensity\n");
+   printf("  mcphas*.hkl - strong magnetic satellites, Fourier Comp.of moment in * dir\n");
+   printf("  mcphas*.j*  - JJ correlation functions (for exchange magnetostriction)\n");
+   printf("  mcphas.xyt  - phasediagram (stable conf.nr, angular and multipolar moments)\n");
+   printf("  mcphas.qvc  - ...corresponding table of all qvector generated test configs\n");
+   printf("  mcphas.phs  - ...corresponding table of all test configurations (except qvecs)\n");
+   printf("  _mcphas.*   - parameters read from input parameter files (.tst,.ini,.j)\n");
+   printf("  ...         - and a copy of the single ion parameter files used.\n\n");
+   fprintf(stdout,"sta=%g\n",sta);
+   fprintf(stderr,"**********************************************\n");
+   fprintf(stderr,"          End of Program mcphas\n");
+   fprintf(stderr," reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(stderr,"**********************************************\n");
 
 exit(0);
 }

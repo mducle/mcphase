@@ -26,7 +26,23 @@ void checkini(testspincf & testspins,qvectors & testqs)
       if(ini.exit_mcphas==1)
         {testspins.save(filemode);  //exit normally
          testqs.save(filemode);
-         exit(0);
+      printf("RESULTS saved in directory ./results/  - files:\n");
+   printf("  mcphas.fum  - total magnetic moment, energy at different T,H\n");
+   printf("  mcphas.sps  - stable configurations at different T,H\n");
+   printf("  mcphas.mf   - mean fields at different T,H\n");
+   printf("  mcphas.hkl  - strong magnetic satellites, neutron diffraction intensity\n");
+   printf("  mcphas*.hkl - strong magnetic satellites, Fourier Comp.of moment in * dir\n");
+   printf("  mcphas*.j*  - JJ correlation functions (for exchange magnetostriction)\n");
+   printf("  mcphas.xyt  - phasediagram (stable conf.nr, angular and multipolar moments)\n");
+   printf("  mcphas.qvc  - ...corresponding table of all qvector generated test configs\n");
+   printf("  mcphas.phs  - ...corresponding table of all test configurations (except qvecs)\n");
+   printf("  _mcphas.*   - parameters read from input parameter files (.tst,.ini,.j)\n");
+   printf("  ...         - and a copy of the single ion parameter files used.\n\n");
+   fprintf(stderr,"**********************************************\n");
+   fprintf(stderr,"          End of Program mcphas\n");
+   fprintf(stderr," reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(stderr,"**********************************************\n");
+          exit(0);
 	}
 
       while(ini.pause_mcphas==1||loaderr==1) // wait until pause button is released and no loaderror occurs
@@ -819,11 +835,11 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
 //printf ("hello end of mf procedure");
 
 // calculate free energy fe and energy u
-fe=0;u=0;
+fe=0;u=0; // initialize fe and u
 for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
 {s=sps.in(i,j,k);
  for(l=1;l<=inputpars.nofatoms;++l)
- {fe-=K_B*T*lnzi[s][l];
+ {fe-=K_B*T*lnzi[s][l];// sum up contributions from each ion
   u+=ui[s][l]; 
 // correction term
   for(m1=1;m1<=inputpars.nofcomponents;++m1)
@@ -834,14 +850,21 @@ for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
   // field)
   if(inputpars.gJ(l)==0)
   {for(m1=1;m1<=6&&m1<=inputpars.nofcomponents;++m1)
-    {if(m1==2||m1==4||m1==6) {meanfield[m1]-=Hex[m1/2]*MU_B;}
-     else                    {meanfield[m1]-=2*Hex[(m1+1)/2]*MU_B;}
-    }
-  }
-  else
-  {
-  for(m1=1;m1<=3&&m1<=inputpars.nofcomponents;++m1){meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
-  }
+    
+                           {if(m1==2||m1==4||m1==6) {meanfield[m1]-=Hex[m1/2]*MU_B;}
+
+                            else                    {meanfield[m1]-=2*Hex[(m1+1)/2]*MU_B;}
+    
+                           }
+  
+                          }
+ else
+  
+                          {
+for(m1=1;m1<=3&&m1<=inputpars.nofcomponents;++m1)
+                           {meanfield[m1]-=Hex[m1]*inputpars.gJ(l)*MU_B;}
+  
+                          }
   
   // add correction term
   fe+=0.5*(meanfield*d1);
@@ -849,7 +872,7 @@ for (i=1;i<=sps.na();++i){for (j=1;j<=sps.nb();++j){for (k=1;k<=sps.nc();++k)
 //  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
  }
 }}}
-fe/=(double)sps.n()*sps.nofatoms; //norm to formula unit
+fe/=(double)sps.n()*sps.nofatoms; //normalise to formula unit
 u/=(double)sps.n()*sps.nofatoms;
 
 if (ini.displayall==1)

@@ -89,8 +89,28 @@ class jjjpar
                                                         // inserting a new exchange parameters addjjj
 							// into field at position number
 
+   Vector Np,Xip,Cp; // radial wave function parameters
+
+   // evaluate radial wave function // r given in Angstroems, returns R(r) in units of 1/A^1.5
+   double radial_wavefunction(double r);
+   void save_radial_wavefunction(const char * filename);
+
+   //functions to calculate radial matrix elements <r^n> from radial wave function
+   int r2_from_radial_wavefunction();
+   int r4_from_radial_wavefunction();
+   int r6_from_radial_wavefunction();
+ 
+   double r2;
+   double r4;  // radial wave function exp values
+   double r6;
+ 
+   // calculation of chargedensity
+   double rocalc (double & teta,double & fi,double & R, Vector & moments);
+
+
    void save (FILE *file); // to save the parameters to a filehandle
    void saveatom (FILE *file); // to save the atom coordinates and properties to a filehandle
+   void save_sipf(char * path); //save single ion parameter file filename to path*
 
 
    jjjpar (FILE * fin); //konstruktor with filehandle of mcphas.j file
@@ -102,10 +122,11 @@ class jjjpar
    
   ~jjjpar ();		//destruktor
   
+  // integer to tell which module is loaded 0 - external, 1 - kramer, 2- cfield, 3 - brillouin
+  int module_type;
+
   private:
 
-  // integer to tell which module is loaded 
-  int intern_mcalc;
 
   // external module functions, intern_mcalc=0
   void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);  
@@ -122,6 +143,10 @@ class jjjpar
 //  HANDLE handle;
   HINSTANCE__* handle;
 #endif
+
+  double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
+   void set_zlm_constants();
+   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
 
   // kramers internal module functions, intern_mcalc=1
   Vector & kramer (double & T,Vector & H, double & Z,double & U);

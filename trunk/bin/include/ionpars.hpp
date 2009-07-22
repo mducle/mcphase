@@ -12,12 +12,10 @@
 
 class ionpars  
 {private: 
-   double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
    // calculates scattering operator 
    void MQM(ComplexMatrix & MQXM,ComplexMatrix & MQYM,ComplexMatrix & MQZM, double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc);
 
-   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
-   void set_zlm_constants();
+   void cfieldJJ(Vector & JJ,double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests);
 
  public:
    char * iontype; // description string
@@ -41,19 +39,6 @@ class ionpars
    Vector Blm; // Cf parameters  
    Vector Llm; // Cf parameters  
 
-   Vector Np,Xip,Cp; // radial wave function parameters
-
-   // evaluate radial wave function // r given in Angstroems, returns R(r) in units of 1/A^1.5
-   double radial_wavefunction(double r);
-   void save_radial_wavefunction(const char * filename);
-
-   //functions to calculate radial matrix elements <r^n> from radial wave function
-   int r2_from_radial_wavefunction();
-   int r4_from_radial_wavefunction();
-   int r6_from_radial_wavefunction();
-
-   // calculation of chargedensity
-   double rocalc (double & teta,double & fi,double & R, Vector & moments);
 
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U, ComplexMatrix & ests);
@@ -70,7 +55,7 @@ class ionpars
 
    void savBlm(FILE * file); // saving Blm to file 
    void savLlm(FILE * file); // saving Blm to file 
- 
+   void save(FILE * file); // save ion parameters to file 
 
 
    ionpars(int dimj);

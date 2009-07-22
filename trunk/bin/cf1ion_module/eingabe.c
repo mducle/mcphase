@@ -80,14 +80,14 @@ extern MATRIX    *calc_Bmag();   /* definiert in CFIELD.C */
 extern MATRIX    *calcBmol();    /* definiert in CFIELD.C */
 extern STEVENS   *calc_Pkq();    /* definiert in STEVENS.C */
  
-/* open a file: similar fopen but with error check */
-FILE * fopen_errchk (const char * filename,const char * mode)
+//open a file: similar fopen but with error check 
+FILE * fopen_errchk(const char * filename,const char * mode)
 { FILE *file;
  
   file = fopen (filename,mode);
   if (file == NULL)
     { 
-      fprintf (stderr, "Error: Couldn't open file %s\n",filename);
+      fprintf (stderr, "Error: Couldn't open file %s - possible reason: directory results does not exist\n",filename);
       exit (EXIT_FAILURE);
      }
   return file;
@@ -2061,7 +2061,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
         } 
       if ((token = strstr (line, "T"))!=NULL)
         {token+=strlen("T");
-         if (strstr (token, "=")!=NULL)
+         if (strstr (token, "=")==token||strstr (token, " =")==token||strstr (token, "  =")==token)
            {while(strstr(token,"=")!=token)++token;
             ++token;
             temperatur = strtod (token, NULL);
@@ -3579,7 +3579,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
         } 
       if ((token = strstr (line, "T"))!=NULL)
         {token+=strlen("T");
-         if (strstr (token, "=")!=NULL)
+         if (strstr (token, "=")==token||strstr (token, " =")==token||strstr (token, "  =")==token)
            {while(strstr(token,"=")!=token)++token;
             ++token;
             temperatur = strtod (token, NULL);
@@ -3611,7 +3611,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     if(dimj==0) /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
-     }    
+              }    
     zwei_j    = dimj - 1 ;
  
     iteration = iter_alloc(dimj,anz_nn);

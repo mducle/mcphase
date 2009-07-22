@@ -10,7 +10,7 @@
 #include <complex>
 #include "spincf.hpp"
 #include "chargedensity.hpp"
-#include "ionpars.hpp"
+#include "jjjpar.hpp"
 
 #define MAXNOFSPINS  200
 #define SMALL 0.03
@@ -730,8 +730,9 @@ void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,fl
                  double spins_show_ellipses,double spins_show_direction_of_static_moment,char ** cffilenames,double show_chargedensity,double show_spindensity)
 { int i,j,k,l,ctr=0,maxm,m;int i1,j1,k1;
  // some checks
- if(nofatoms!=savev_real.nofatoms||nofcomponents!=savev_real.nofcomponents||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
-    nofatoms!=savev_imag.nofatoms||nofcomponents!=savev_imag.nofcomponents||nofa!=savev_imag.na()||nofb!=savev_imag.nb()||nofc!=savev_imag.nc())
+ if(nofatoms!=savev_real.nofatoms||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
+    nofatoms!=savev_imag.nofatoms||nofa!=savev_imag.na()||nofb!=savev_imag.nb()||nofc!=savev_imag.nc()||
+    nofcomponents<savev_real.nofcomponents||savev_real.nofcomponents!=savev_imag.nofcomponents)
     {fprintf(stderr,"Error creating jvx movie files: eigenvector read from .qev file does not match dimension of spins structure read from sps file\n");exit(1);}
 
   Vector max(1,3),min(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
@@ -1066,16 +1067,14 @@ for(l=1;l<=nofatoms;++l)
         }}}
   }
   else
-  {FILE * cffile;cffile =fopen_errchk(cffilenames[l], "r");
-                 ionpars ionpar(cffile);
-   fclose(cffile);
-   chargedensity cd(dtheta,dfi);
-
+  {jjjpar ionpar(x[l],y[l],z[l],cffilenames[l]);
+   chargedensity cd(dtheta,dfi);int ndd;
    for (i=1;i<=1+(nofa-1)*scale_view_1;++i){for(j=1;j<=1+(nofb-1)*scale_view_2;++j){for(k=1;k<=1+(nofc-1)*scale_view_2;++k){
    dd=pos(i,j,k,l, abc, r,x,y,z);
    Vector moments(1,nofcomponents); 
    double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
-   moments=moment(i,j,k,l)+amplitude*(cos(-phase+QR)*savev_real.moment(i,j,k,l)+sin(phase-QR)*savev_imag.moment(i,j,k,l));
+   for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
+   {moments(ndd)=moment(i,j,k,l)(ndd)+amplitude*(cos(-phase+QR)*savev_real.moment(i,j,k,l)(ndd)+sin(phase-QR)*savev_imag.moment(i,j,k,l)(ndd));}
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
@@ -1083,9 +1082,14 @@ for(l=1;l<=nofatoms;++l)
    for(ii=1;ii<=cd.nofpoints();++ii)
      {// here we calculate the chargedensity of ion 
      R=cd.rtf(ii)(1);theta=cd.rtf(ii)(2);fi=cd.rtf(ii)(3);
-     // mind abc||yzx
-     dx=R*sin(theta)*cos(fi)+dd(3);dy=R*sin(theta)*sin(fi)+dd(1);dz=R*cos(theta)+dd(2);
-     fprintf(fout,"<p>%4g %4g %4g</p>\n",dy,dz,dx);
+     if(ionpar.module_type==2){// mind abc||yzx in module cfield
+     dz=R*sin(theta)*cos(fi)+dd(3);dx=R*sin(theta)*sin(fi)+dd(1);dy=R*cos(theta)+dd(2);
+                              }
+     else 
+                              {// mind abc||xyz in other cases ...
+     dz=R*cos(theta)+dd(3);dx=R*sin(theta)*cos(fi)+dd(1);dy=R*sin(theta)*sin(fi)+dd(2);
+                              }
+     fprintf(fout,"<p>%4g %4g %4g</p>\n",dx,dy,dz);
      }
    }}}
   }

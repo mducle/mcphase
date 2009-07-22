@@ -13,9 +13,9 @@ DATA "  program REFORMMH - use it like REFORMMH *.* "
 DATA "             REFORMMH Herbie Muellers *.* files to filman format     "
 DATA " format of output file                                                          "
 DATA ""
-DATA " { header: this is the                                                  "
-DATA "   file header delimited                                                "
-DATA "   by brackets after this header there follow 3 or more data columns }  "
+DATA "#{ header: this is the                                                  "
+DATA "#  file header delimited                                                "
+DATA "#  by brackets after this header there follow 3 or more data columns }  "
 DATA " 11 3.14235 65367                                                       "
 DATA "  .    .     .                                                          "
 DATA "  .    .     .                                                          "
@@ -41,8 +41,8 @@ id$ = ""
 
 ' open output file and write fileheader
 OPEN "o", 2, "REFORMMH.ffo"
-PRINT #2, "{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
-PRINT #2, DATE$; " "; TIME$;
+PRINT #2, "#{"; : FOR iii = 1 TO j: PRINT #2, "#"; text$(iii): NEXT
+PRINT #2, "#"; DATE$; " "; TIME$;
 PRINT #2, " REFORMMHted using program REFORMMH.bas}"
 
 

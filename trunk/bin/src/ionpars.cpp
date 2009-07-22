@@ -29,28 +29,6 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
     }
 }    
 
-void ionpars::set_zlm_constants()
-{// cnst is the Zlm constants - put them into the matrix
- cnst= Matrix(0,6,-6,6);
-
-cnst(2,0) = 0.3153962;
-cnst(2,1)=  1.092548;
-cnst(2,2)=  0.5462823;
-cnst(4,0)=  0.1057871;
-cnst(4,1)=  0.6690465;
-cnst(4,2)=  0.4730943;
-cnst(4,3)=  1.77013;
-cnst(4,4)=  0.625845;
-cnst(6,0)=  0.06357014;
-cnst(6,1)=  1.032669;
-cnst(6,2)=  0.4606094;
-cnst(6,3)=  0.921205;
-cnst(6,4)=  0.5045723;
-cnst(6,5)=  2.366619;
-cnst(6,6)=  0.6831942;
-int l,m;
-for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);} 
-}
 
  ionpars::ionpars (const ionpars & p) //copy constructor
  {J=p.J;
@@ -61,9 +39,7 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
   Llm=p.Llm; // vector of crystal field parameters
-  set_zlm_constants();
  
-  Np=p.Np; Xip=p.Xip;Cp=p.Cp;
   
    int i;
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
@@ -82,8 +58,7 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
 
 }
 ionpars::ionpars (int dimj) // constructor from dimj
- {set_zlm_constants();
-  J=((double)dimj-1)/2;
+ {J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
   Jb=Matrix(1,dimj,1,dimj);
   Jc=Matrix(1,dimj,1,dimj);
@@ -95,9 +70,6 @@ ionpars::ionpars (int dimj) // constructor from dimj
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
-   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
-   Xip=Vector(1,9);Xip=0;
-   Cp=Vector(1,9);Cp=0;
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
@@ -120,7 +92,6 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
   getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
    iontype = new char [strlen(ion)+1];
    strcpy(iontype,ion);
-  set_zlm_constants();
 
   J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
@@ -133,10 +104,6 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
 
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
-
-   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
-   Xip=Vector(1,9);Xip=0;
-   Cp=Vector(1,9);Cp=0;
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
@@ -154,53 +121,51 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
 ionpars::~ionpars(){
  int i;
  delete []iontype;
+
  for (i=1;i<=NOF_OLM_MATRICES;++i)
- {delete Olm[i];delete OOlm[i];}
-  delete []Olm;
-  delete []OOlm;
+  {delete Olm[i];delete OOlm[i];}
+   delete []Olm;
+   delete []OOlm;
+  
  } //destructor
 
 
 ionpars::ionpars(FILE * cf_file) 
 //constructor with commands from file handle (filename of cf parameters etc)
-{ set_zlm_constants();
-  static int pr=1;
+{   static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
   int i,j,l,dj=30; //30 ... maximum number of 2j+1
+  double alphar,betar,gammar,r2r,r4r,r6r,gJr;
+
   char instr[MAXNOFCHARINLINE];
   iontype= new char[MAXNOFCHARINLINE];
   
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
-   Np=Vector(1,9);Np=0; // vectors of radial wave function parameters
-   Xip=Vector(1,9);Xip=0;
-   Cp=Vector(1,9);Cp=0;
-   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
-   
-  // read in lines and get IONTYPE=  and CF parameters Blm
+   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;gJ=0;
+  fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
+  // strip /r (dos line feed) from line if necessary
+  char *token;  
+  while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}  
+   if(!(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)){fprintf(stderr,"ERROR class ionpars - file does not start with #!cfield\n");exit(EXIT_FAILURE);}   
+  
+// read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
         extract(instr,"IONTYPE",iontype,(size_t)MAXNOFCHARINLINE);
-        extract(instr,"N1",Np(1));extract(instr,"XI1",Xip(1));extract(instr,"C1",Cp(1));
-        extract(instr,"N2",Np(2));extract(instr,"XI2",Xip(2));extract(instr,"C2",Cp(2));
-        extract(instr,"N3",Np(3));extract(instr,"XI3",Xip(3));extract(instr,"C3",Cp(3));
-        extract(instr,"N4",Np(4));extract(instr,"XI4",Xip(4));extract(instr,"C4",Cp(4));
-        extract(instr,"N5",Np(5));extract(instr,"XI5",Xip(5));extract(instr,"C5",Cp(5));
-        extract(instr,"N6",Np(6));extract(instr,"XI6",Xip(6));extract(instr,"C6",Cp(6));
-        extract(instr,"N7",Np(7));extract(instr,"XI7",Xip(7));extract(instr,"C7",Cp(7));
-        extract(instr,"N8",Np(8));extract(instr,"XI8",Xip(8));extract(instr,"C8",Cp(8));
-        extract(instr,"N9",Np(9));extract(instr,"XI9",Xip(9));extract(instr,"C9",Cp(9));
 
-        extract(instr,"ALPHA",alpha);
-        extract(instr,"BETA",beta);
-        extract(instr,"GAMMA",gamma);
+        extract(instr,"ALPHA",alphar);
+        extract(instr,"BETA",betar);
+        extract(instr,"GAMMA",gammar);
 
-        extract(instr,"R2",r2);
-        extract(instr,"R4",r4);
-        extract(instr,"R6",r6);
+        extract(instr,"GJ",gJr);
+
+        extract(instr,"R2",r2r);
+        extract(instr,"R4",r4r);
+        extract(instr,"R6",r6r);
 
         extract(instr,"B22S",Blm(1));
         extract(instr,"B21S",Blm(2));
@@ -305,11 +270,9 @@ ionpars::ionpars(FILE * cf_file)
 
 	}}
 
-if(Norm(Np)<SMALL){fprintf (stderr,"Warning: radial wave function parameters not found for ion %s, will use 4f hydrogen radial wave function\n",iontype);}
 
-if(i==1){fprintf(stderr,"Error: no line in single ion property file contains IONTYPE field, e.g. IONTYPE=Nd3+\n");exit(EXIT_FAILURE);}
-// get filename of parameter file out of first uncommented line in FILE * cf_file   
-//  cf_filename=strtok(instr," \t\n");
+  // get filename of parameter file out of first uncommented line in FILE * cf_file   
+  //  cf_filename=strtok(instr," \t\n");
   
   double ** hcfr,**hcfi,**Jxr,**Jxi,**Jyr,**Jyi,**Jzr,**Jzi;
 
@@ -534,7 +497,13 @@ if (pr==1) printf("#using cfield ...\n");
 
   &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6);
 
-
+if(fabs(alphar-alpha)/fabs(alphar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (alpha=%g) different from input file (alpha=%g), using internal value\n",alpha,alphar);}
+if(fabs(betar-beta)/fabs(betar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (beta=%g) different from input file (beta=%g), using internal value\n",beta,betar);}
+if(fabs(gammar-gamma)/fabs(gammar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (gamma=%g) different from input file (gamma=%g), using internal value\n",gamma,gammar);}
+if(fabs(gJr-gJ)/fabs(gJr+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Lande Factor (gJ=%g) different from input file (gJ=%g), using internal value\n",gJ,gJr);}
+if(fabs(r2r-r2)/fabs(r2r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r2>=%g) different from input file (<r2>=%g), using internal value\n",r2,r2r);}
+if(fabs(r4r-r4)/fabs(r4r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r4>=%g) different from input file (<r4>=%g), using internal value\n",r4,r4r);}
+if(fabs(r6r-r6)/fabs(r6r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r6>=%g) different from input file (<r6>=%g), using internal value\n",r6,r6r);}
 
 if (pr==1) printf("#end using cfield\n");
 
@@ -803,38 +772,62 @@ if(i<j){(*Olm[45])(i,j)=(mo66ci[j])[i];}else{(*Olm[45])(i,j)=(mo66cr[i])[j];}
                   }
    }
    
-//ATTENTION FOR NDCU2 the AXES xyz are parallel to cab
-Matrix dummy(1,dimj,1,dimj);
-dummy=Jb;Jb=Jc;Jc=Ja;Ja=dummy;
-ComplexMatrix dummyc(1,dimj,1,dimj);
-dummyc=Jbb;Jbb=Jcc;Jcc=Jaa;Jaa=dummyc;
+ //ATTENTION FOR NDCU2 the AXES xyz are parallel to cab
+ Matrix dummy(1,dimj,1,dimj);
+ dummy=Jb;Jb=Jc;Jc=Ja;Ja=dummy;
+ ComplexMatrix dummyc(1,dimj,1,dimj);
+ dummyc=Jbb;Jbb=Jcc;Jcc=Jaa;Jaa=dummyc;
 
-if (pr==1) {printf("#Axis Convention using cfield as a module:  a||y b||z  c||x\n");
-printf("#xyz .... Coordinate system of the crystal field parameters used in cfield\n");
-printf("#abc .... Crystal axes\n");
-printf("#The interactions are described by the  PKQ Operators defined in cfield\n");
-printf("#O11(s) .... Ja=Jy\n");
-printf("#O10(c) .... Jb=Jz\n");
-printf("#O11(c) .... Jc=Jx\n");
-printf("#O22(s) .... Jd\n");
-printf("#O21(s) .... Je\n");
-printf("#O20(c) .... Jf\n");
-printf("#O21(c) .... Jg\n");
-printf("#O22(c) .... Jh\n");
-printf("#O33(s) .... Ji\n");
-printf("#O32(s) .... Jj\n");
-printf("#O31(s) .... Jk\n");
-printf("#O30(c) .... Jl\n");
-printf("#O31(c) .... Jm\n");
-printf("# etc ... 45 moments up to l<=6\n");
-printf("#\n");
-}
+ if (pr==1) {printf("#Axis Convention using cfield as a module:  a||y b||z  c||x\n");
+ printf("#xyz .... Coordinate system of the crystal field parameters used in cfield\n");
+ printf("#abc .... Crystal axes\n");
+ printf("#The interactions are described by the  PKQ Operators defined in cfield\n");
+ printf("#O11(s) .... Ja=Jy\n");
+ printf("#O10(c) .... Jb=Jz\n");
+ printf("#O11(c) .... Jc=Jx\n");
+ printf("#O22(s) .... Jd\n");
+ printf("#O21(s) .... Je\n");
+ printf("#O20(c) .... Jf\n");
+ printf("#O21(c) .... Jg\n");
+ printf("#O22(c) .... Jh\n");
+ printf("#O33(s) .... Ji\n");
+ printf("#O32(s) .... Jj\n");
+ printf("#O31(s) .... Jk\n");
+ printf("#O30(c) .... Jl\n");
+ printf("#O31(c) .... Jm\n");
+ printf("# etc ... 45 moments up to l<=6\n");
+ printf("#\n");
+             }
 
 pr=0;
 }
 
 
+void ionpars::save(FILE * file) // save ion parameters to file 
+{int i;
+  fprintf(file,"#-----------\nIONTYPE=%s\n#-----------\n\n",iontype);
 
+
+  if(abs(Blm)>1e-10) {fprintf(file,"#--------------------------------------------------------------------------\n");
+                      fprintf(file,"# Crystal Field parameters in Stevens Notation (coordinate system yzx||abc)\n");
+                      fprintf(file,"#--------------------------------------------------------------------------\n");
+                      savBlm(file);fprintf(file,"\n");
+                     }
+  if(abs(Llm)>1e-10) {fprintf(file,"#---------------------------------------------------------------------------\n");
+                      fprintf(file,"# Crystal Field parameters in Wybourne Notation (coordinate system yzx||abc)\n");
+                      fprintf(file,"#---------------------------------------------------------------------------\n");
+                      savLlm(file);fprintf(file,"\n");
+                     }
+   if(alpha*alpha+beta*beta+gamma*gamma>1e-10){fprintf(file,"#----------------\n# Stevens Factors\n#----------------\nALPHA=%g\nBETA=%g\nGAMMA=%g\n\n",alpha,beta,gamma);}
+   if(r2+r4+r6>1e-10){fprintf(file,"#---------------------------------------------------------\n");
+                      fprintf(file,"# Radial Matrix Elements (e.g. Abragam Bleaney 1971 p 399)\n");
+                      fprintf(file,"#---------------------------------------------------------\n");
+   if(r2>1e-10){fprintf(file,"#<r^2> in units of a0^2 a0=0.5292 Angstroem\nR2=%g\n",r2);}
+   if(r4>1e-10){fprintf(file,"#<r^4> in units of a0^4 a0=0.5292 Angstroem\nR4=%g\n",r4);}
+   if(r6>1e-10){fprintf(file,"#<r^6> in units of a0^6 a0=0.5292 Angstroem\nR6=%g\n",r6);}
+                   fprintf(file,"\n");
+                      }
+}
 
 void ionpars::savBlm(FILE * outfile)
 {fprintf(outfile,"units=meV\n");
@@ -943,169 +936,6 @@ void ionpars::savLlm(FILE * outfile)
    if(Llm(45)!=0){fprintf(outfile,"L66=%g\n",Llm(45));}
 
 }
-   // evaluate radial wave function
-   double ionpars::radial_wavefunction(double rr) // rr given in Angstroems, returns R(r) in units of 1/A^1.5
-   {//printf("%g ",rr);
-    double R=0;int p;double a0=0.5292;
-    int ok=0;
-    double r=rr/a0;// r is the distance in units of a0
-    for(p=1;p<=9;++p){if(Np(p)!=0){ok=1;
-                                   R+=exp(-Xip(p)*r)*pow(r,Np(p)-1)*Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
-                                   if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of radial wave function R(r=%g) failed due to Xi%i<=0 - continuing with R(r=%g)=0\n",r,p,r);return 0;}
-                     }            }    
-    // now we have R in units of 1/a0^1.5
-    R/=sqrt(a0*a0*a0);
-    // now we have R in units of 1/A^1.5
-//printf("%g ",R);
-    if (ok==1) return R;
-
-//  we have to find the 4f wavefunction R4f(r) for each single ion and the Zlm, cfield has nothing: so we have
-//     to take this from chrgplt.bas - a little problem: how do we get the correct R4f(r) ? for a first attempt
-//     we could just take the same for all RE.
-double rs;
-//k^2 = 11 / 10 * 11 / 9 * 11 / 8 * 11 / 7 * 11 / 6 * 11 / 5 * 11 / 4 * 11 / 3 * 11 / 2 * 11 / 1 * 11
-rs = rr * exp(-rr);
-R = 280.4 * rs * rs * rs * rs  * exp(-1.5 * rr);
-//printf("R4f(%g)=%g\n ",rr,R);
-return R;
-   }
-
-   //functions to calculate radial matrix elements <r^n> from radial wave function in units of a0=0.5292 A
-   double ionpars::rk_from_radial_wavefunction(int k)
-   {int p,q, pmax=0;
-    Vector coeff(1,9);
-    
-    for(p=1;p<=9;++p){if(Np(p)!=0){pmax=p;
-                                   coeff(p)=Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
-                                   if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of <r^%i> failed due to Xi%i<=0 - continuing with <r^%i>=0\n",k,p,k);return 0;}
-                     }            }
-    if(pmax==0){fprintf (stderr,"Warning: calculation of <r^%i> failed - continuing with <r^%i>=0\n",k);return 0;}
-    double rk=0;
-    for(p=1;p<=pmax;++p){
-    for(q=1;q<=pmax;++q){
-                         rk+=coeff(p)*coeff(q)*factorial((int)Np(p)+(int)Np(q)+k)/pow(Xip(p)+Xip(q),Np(p)+Np(q)+k+1);
-    }}
-   return rk;
-   }
-
-   int ionpars::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);}
-   int ionpars::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);}
-   int ionpars::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);}
-
-void ionpars::save_radial_wavefunction(const char * filename)
-   {double r=0.1;
-    FILE * fout;
-    if (radial_wavefunction(r)==0){fprintf(stderr,"Warning: save_radial_wavefunction not possible\n");return;}
-    fout=fopen_errchk(filename,"w");
-    fprintf(fout,"# radial wave function for %s\n",iontype);
-    fprintf(fout,"# the radial wave function is expanded as \n");
-    fprintf(fout,"# R(r)=sum_p C_p R_Np,XIp(r)\n");
-    fprintf(fout,"# R_Np,XIp(r)=r^(Np-1).exp(-xi r).(2 XIp)^(Np+0.5)/sqrt(2Np!)\n");
-    fprintf(fout,"# radial wave function parameters Np XIp Cp values are\n");
-    fprintf(fout,"# tabulated in clementi & roetti Atomic data and \n");
-    fprintf(fout,"# nuclear data tables 14 (1974) 177-478\n");
-    fprintf(fout,"# the parameters used are: \n");
-    int p;    
-    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"# N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
-    fprintf(fout,"# r[A]  vs R(r)[1/A^1.5]\n");
-    for(r=0.01;r<=10;r*=1.05){fprintf(fout,"%8.8g  %8.8g\n",r,radial_wavefunction(r));}
-    fclose(fout);
-   }
-
-
-// sub for calculation of charge density given a radiu R and polar angles teta, 
-// fi and expansion coeff. alm
-double ionpars::rocalc (double & teta,double & fi,double & R, Vector & moments)
-{double ro,ct,ct2,st,st2,sfi,cfi,rs,rr;
-if (R>3.0||R<0){ro = 1e+10;}else{
-ct = cos(teta);                      //z
-ct2 = ct * ct;
-st = sin(teta);
-st2 = st * st;
-sfi = sin(fi);
-cfi = cos(fi);
- int l,m;
-  Vector tetan(1,6);
-  tetan=0; 
- tetan(2)=alpha;// stevens parameters
- tetan(4)=beta;
- tetan(6)=gamma;
-
-Matrix a(0,6,-6,6);
-  a(0, 0) = 1 / sqrt(4.0 * 3.1415);
-
-a(2,-2)=moments(4);
-a(2,-1)=moments(5);
-a(2,0)=moments(6);
-a(2,1)=moments(7);
-a(2,2)=moments(8);
-
-a(4,-4)=moments(16);
-a(4,-3)=moments(17);
-a(4,-2)=moments(18);
-a(4,-1)=moments(19);
-a(4, 0)=moments(20);
-a(4, 1)=moments(21);
-a(4, 2)=moments(22);
-a(4, 3)=moments(23);
-a(4, 4)=moments(24);
-
-a(6,-6)=moments(36);
-a(6,-5)=moments(37);
-a(6,-4)=moments(38);
-a(6,-3)=moments(39);
-a(6,-2)=moments(40);
-a(6,-1)=moments(41);
-a(6,-0)=moments(42);
-a(6, 1)=moments(43);
-a(6, 2)=moments(44);
-a(6, 3)=moments(45);
-a(6, 4)=moments(46);
-a(6, 5)=moments(47);
-a(6, 6)=moments(48);
-
-for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=tetan(l)*cnst(l,m)*cnst(l,m);}}
-
-// r given in Angstroems, returns R(r) in units of 1/A^1.5
-rr=radial_wavefunction(R);
-rr=rr*rr;// then the chargedensity will be in units of 1/A^3
-
-ro = a(0, 0) / sqrt(4.0 * 3.1415);
-ro = ro + a(2, -2)  * 2 * st2 * sfi * cfi;
-ro = ro + a(2, -1)  * st * sfi * ct;
-ro = ro + a(2, 0)  * (3 * ct2 - 1);
-ro = ro + a(2, 1)  * st * cfi * ct;
-ro = ro + a(2, 2)  * st2 * (cfi * cfi - sfi * sfi);
-
-ro = ro + a(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-ro = ro + a(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-ro = ro + a(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
-ro = ro + a(4, -1) * st * sfi * ct * (7 * ct2 - 3);
-ro = ro + a(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
-ro = ro + a(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
-ro = ro + a(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
-ro = ro + a(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-ro = ro + a(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
-
-ro = ro + a(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
-ro = ro + a(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
-ro = ro + a(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-ro = ro + a(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-ro = ro + a(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
-ro = ro + a(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-ro = ro + a(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
-ro = ro + a(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-ro = ro + a(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
-ro = ro + a(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-ro = ro + a(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
-ro = ro + a(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
-ro = ro + a(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
-ro = ro * rr;
-}
-
-return ro;
-}
-
 
 //------------------------------------------------------------------------------------------------
 // ROUTINE CFIELD mcalc for full crystal field + higher order interactions
@@ -1119,6 +949,31 @@ Vector & ionpars::cfield(double & T, Vector & gjmbH, double & lnZs, double & U, 
     ABC         single ion parameter values (A, B, C corresponding to <+|Ja|->,<-|Jb|->,<+|Jc|->/i
   on output    
     J		single ion momentum vector <J> (if T>0 thermal exp value <J>T 
+                                                if T<0 the program asks for w_n and calculates
+						       exp value <J>=sum_n w_n <n|J|n>
+						       
+    Z		single ion partition function
+    U		single ion magnetic energy
+*/
+// check dimensions of vector
+if(gjmbH.Hi()>48)
+   {fprintf(stderr,"Error internal module cfield: wrong number of dimensions - check number of columns in file mcphas.j\n");
+    exit(EXIT_FAILURE);}
+static Vector JJ(1,gjmbH.Hi());
+cfieldJJ(JJ, T,  gjmbH, lnZs, U, ests);
+return JJ;
+}
+
+
+void ionpars::cfieldJJ(Vector & JJ,double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests)
+{//ABC not used !!!
+    /*on input
+    T		temperature[K]
+    gJmbH	vector of effective field [meV]
+    gJ          Lande factor
+    ABC         single ion parameter values (A, B, C corresponding to <+|Ja|->,<-|Jb|->,<+|Jc|->/i
+  on output    
+    JJ		single ion momentum vector <J> (if T>0 thermal exp value <J>T 
                                                 if T<0 the program asks for w_n and calculates
 						       exp value <J>=sum_n w_n <n|J|n>
 						       
@@ -1143,7 +998,8 @@ if(gjmbH.Hi()>48)
 //  They are checked for conformance !
 // void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
 // 			   int sort, int maxiter)
-static Vector JJ(1,gjmbH.Hi());
+
+
    // setup hamiltonian
    int dj,i,j,k,l;
    double hkl,mukl;
@@ -1158,6 +1014,7 @@ static Vector JJ(1,gjmbH.Hi());
 
    Ham=Hcf-gjmbH(1)*Ja-gjmbH(2)*Jb-gjmbH(3)*Jc;
 
+// here the zeeman term is extended for multipolar fields
    for(j=4;j<=JJ.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);}
 
 /*   int i1,j1; //printout matrix
@@ -1243,6 +1100,7 @@ static Vector JJ(1,gjmbH.Hi());
      JJ[3]+=wn(i)*real(z.Column(i)*zc.Column(i));
     }
      
+// here the expectation values of the multipolar moments are calculated
    for(j=4;j<=JJ.Hi();++j)
    {
     zolm=(*OOlm[j-3])*z;
@@ -1250,7 +1108,6 @@ static Vector JJ(1,gjmbH.Hi());
    };
   
 
-return JJ;
 }
 /**************************************************************************/
 ComplexMatrix & ionpars::cfeigenstates(Vector & gjmbH, double & T)
@@ -1360,9 +1217,9 @@ if(gjmbH.Hi()>48)
 // void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi, 
 // 			   int sort, int maxiter)
 
-static Vector JJ(1,gjmbH.Hi());
+ Vector JJ(1,gjmbH.Hi());
 double lnz,u;
-JJ=cfield(T,gjmbH,lnz,u,ests);  //expectation values <J>
+cfieldJJ(JJ,T,gjmbH,lnz,u,ests);  //expectation values <J>
   int pr;
   pr=1;
   if (tn<0) {pr=0;tn*=-1;}

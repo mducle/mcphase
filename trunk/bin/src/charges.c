@@ -1,13 +1,13 @@
-/***********************************************************************
- *
- * charges.c - program to display charges at given htpoint
- *
- ***********************************************************************/
+/***************************************************
+ * charges - display charges at given htpoint
+ * Author: M. Rotter
+ **************************************************/
 
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
 #define MUB  5.788378E-02 // Bohrmagneton in meV/tesla
 
+#include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
 #include "myev.h"
@@ -34,12 +34,19 @@ int main (int argc, char **argv)
  numbers[0]=13;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
+ char filename[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
 // ComplexMatrix * eigenstates[MAXNOFATOMS];
   Matrix r(1,3,1,3);
   Vector abc(1,3);
-  int ext_nof_components=48;
+  int max_ext_nof_components=51;
+  int ext_nof_components[MAXNOFATOMS];
+printf("#***************************************************\n");
+printf("# * charges - display charges at given htpoint\n");
+printf("# * Reference: M. Rotter PRB 79 (2009) 140405R\n");
+printf("# * %s\n",MCPHASVERSION);
+printf("# **************************************************\n");
 // check command line
   if (argc < 5)
     { printf (" program charges - display charges at HT point\n\
@@ -48,7 +55,7 @@ int main (int argc, char **argv)
                     or: charges T Ha Hb Hc h k l E\n \
                         (reads from results/mcphas.mf and results/mcdisp.qev\n\n \
                 This program outputs a magnetic/charge structure (and magnetic/orbital excitation)\n \
-                graphic/movie in the output files charges*.jvx (javaview)\n\n \
+                graphic/movie in the output files results/charges*.jvx (javaview)\n\n \
                 the graphics output format can be fine tuned in .mf and .qev input files\n\n \
                 jvx files can be viewed by: java javaview results/charges.jvx \n \
                                             java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n\n");
@@ -110,9 +117,10 @@ abc=0;char *token;
                    cffilenames[n]=new char[MAXNOFCHARINLINE];
                    extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
                    extract(instr,"gJ",gJ[n]);
+  ext_nof_components[n]=48;
   if (gJ[n]==0)
-  {ext_nof_components=6;fprintf(stderr,"WARNING program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet, will create only charges.out and no chargeplot charges.jvx\n",n);}
-     
+  {ext_nof_components[n]=51;  // here set for 3+48 components, module ic1ion
+   fprintf(stderr,"WARNING program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet, will create only charges.out and no chargeplot charges.jvx\n",n);}     
 //		   printf("%s\n",cffilenames[n]);
                   }
   }
@@ -153,10 +161,8 @@ abc=0;char *token;
 
   par inputpars("./mcphas.j");
   
-  Vector h(1,ext_nof_components);
-  Vector moments(1,ext_nof_components);
   Vector hh(1,savmf.nofcomponents*savmf.nofatoms);
-  spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,ext_nof_components);
+  spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,max_ext_nof_components);
 
           // the following is for the printout of charges.out ...........................
            fprintf(fout,"#T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",T,ha,hb,hc,savmf.na(),savmf.nb(),savmf.nc(),inputpars.nofatoms*savmf.na()*savmf.nb()*savmf.nc());
@@ -177,8 +183,10 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
  for (i=1;i<=savmf.na();++i){for(j=1;j<=savmf.nb();++j){for(k=1;k<=savmf.nc();++k)
  {
     hh=savmf.m(i,j,k);
+  extendedspincf.m(i,j,k)=0;
   for(ii=1;ii<=inputpars.nofatoms;++ii)
- {
+ {  Vector h(1,ext_nof_components[ii]);
+    Vector moments(1,ext_nof_components[ii]);
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
             moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
@@ -194,10 +202,13 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
 	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
               printf("{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f \n",
 	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
-                     for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}else{fprintf(fout," %4.4f",2*moments(nt)+moments(nt+3));}}
-                     for(nt=1;nt<=ext_nof_components;++nt)                                                               // this else is not yet implemented: gJ=0 means intermediate coupling
-		        {extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1))=moments(nt);
-                         fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+ext_nof_components*(ii-1)));}
+                     for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}
+                                          else         {fprintf(fout," %4.4f",2*moments(2*nt-1)+moments(2*nt));}
+                                         }
+                     for(nt=1;nt<=ext_nof_components[ii];++nt)                                                               // this else is when gJ=0: means intermediate coupling
+		        {extendedspincf.m(i,j,k)(nt+max_ext_nof_components*(ii-1))=moments(nt);
+                         fprintf(fout," %4.4f",extendedspincf.m(i,j,k)(nt+max_ext_nof_components*(ii-1)));
+                        }
                          fprintf(fout,"\n");
                       fprintf(fout,"                  corresponding effective fields gjmbHeff [meV]-->          ");
                       for(nt=1;nt<=savmf.nofcomponents;++nt)  // printout meanfields
@@ -210,7 +221,7 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
   }}}}
 
 fclose(fout);
-if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
+//if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
 
 //print out the long vector of moments 1-48
   printf("%s - spin configuration <Olm>(i)\n",outstr);
@@ -229,6 +240,7 @@ if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge d
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                   1,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0,cffilenames,show_chargedensity,show_spindensity);
     fclose (fout);
+
 
 
 if (argc>=9){// try a spinwave picture
@@ -251,7 +263,7 @@ if (argc>=9){// try a spinwave picture
                extract(instr,"spins_show_direction_of_static_moment",spins_show_direction_of_static_moment);
                extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
               }
-               if(extended_eigenvector_dimension!=48){fprintf(stderr,"Error program charges - extended_eigenvector_dimension in results/mcdisp.qee not equal to 48\n");exit(1);}
+//               if(extended_eigenvector_dimension!=48){fprintf(stderr,"Error program charges - extended_eigenvector_dimension in results/mcdisp.qee not equal to 48\n");exit(1);}
                j=fseek(fin_coq,pos,SEEK_SET); 
                if (j!=0){fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
    
@@ -260,7 +272,8 @@ if (argc>=9){// try a spinwave picture
 		    ;)
 
                { fgets(instr,MAXNOFCHARINLINE,fin_coq); 
-                 spincf ev_real(extendedspincf),ev_imag(extendedspincf);
+                 spincf ev_real(extendedspincf.na(),extendedspincf.nb(),extendedspincf.nc(),extendedspincf.nofatoms,extended_eigenvector_dimension);
+                 spincf ev_imag(extendedspincf.na(),extendedspincf.nb(),extendedspincf.nc(),extendedspincf.nofatoms,extended_eigenvector_dimension);
                  ev_real.load(fin_coq);ev_imag.load(fin_coq);
                  ddT=strtod(argv[1],NULL)-numbers[4];ddT*=ddT;
                  ddHa=strtod(argv[2],NULL)-numbers[1];ddHa*=ddHa;
@@ -293,21 +306,32 @@ if (argc>=9){// try a spinwave picture
               complex <double> im(0,1);
               for(i=0;i<16;++i)
               {phase=2*3.1415*i/15;
-               printf("\n calculating movie sequence %i(16)\n",i+1);
+               printf("\n********************************************\n");
+               printf(" calculating movie sequence %i(16)\n",i+1);
+               printf("********************************************\n");
                
-               sprintf(outstr,"./results/charges.%i.jvx",i+1);
-               fin_coq = fopen_errchk (outstr, "w");
+               sprintf(filename,"./results/charges.%i.jvx",i+1);
+               fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                                   0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,show_chargedensity,show_spindensity);
                fclose (fin_coq);
-               sprintf(outstr,"./results/charges_prim.%i.jvx",i+1);
-               fin_coq = fopen_errchk (outstr, "w");
+               sprintf(filename,"./results/charges_prim.%i.jvx",i+1);
+               fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                                   1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,show_chargedensity,show_spindensity);
                fclose (fin_coq);
               }
+          printf("# %s\n",outstr);
           }
 
+fprintf(stderr,"# ************************************************************************\n");
+fprintf(stderr,"# *             end of program charges\n");
+fprintf(stderr,"# * Reference: M. Rotter PRB 79 (2009) 140405R\n");
+fprintf(stderr,"# * \n");
+fprintf(stderr,"# * view jvx file by:\n");
+fprintf(stderr,"# * javaview results/charges.jvx\n");
+fprintf(stderr,"# * java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
+fprintf(stderr,"# ************************************************************************\n");
 
   for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
 

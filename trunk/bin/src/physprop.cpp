@@ -111,10 +111,15 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
   if (verbose==1) printf("saving mcphas.fum\n");
   if (washere==0)
   {fout = fopen_errchk ("./results/mcphas.fum",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
-   fprintf (fout, "#1mev/ion=96.48J/mol\n");
-   fprintf (fout, "#note: moments and energies are given per ion - not per formula unit !\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas.fum-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
+   fprintf (fout, "#note: - for specific heat calculation use unit conversion 1mev/ion=96.48J/mol\n");
+   fprintf (fout, "#      - moments and energies are given per ion - not per formula unit !\n");
    fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc[mb/ion]}\n");
    fclose(fout);
       }
@@ -146,8 +151,13 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
   if (verbose==1)printf("saving mcphas.xyt\n");
   if (washere==0)
   {fout = fopen_errchk ("./results/mcphas.xyt",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas.xyt-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout, "#x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] phasnumber-j   period-key ");
            for(i1=1;i1<=nofcomponents;++i1)
 	      {fprintf(fout,"<J%c> ",'a'-1+i1);}
@@ -189,8 +199,13 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   sprintf(filename,"./results/mcphas%i.j%i",l,i);
   if (washere==0)  //printout file header
   {  fout = fopen_errchk (filename,filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas*.j*-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout, "# sublattice %i (da=%g a db=%g b dc=%g c)\n",l,(*inputpars.jjj[l]).xyz(1),(*inputpars.jjj[l]).xyz(2),(*inputpars.jjj[l]).xyz(3));
    fprintf (fout, "# correlation fuction <JJ(%g %g %g)>\n",(*inputpars.jjj[l]).dn[i](1),(*inputpars.jjj[l]).dn[i](2),(*inputpars.jjj[l]).dn[i](3));
    fprintf (fout, "#x     y     T[K]  H[T]   Ha[T] Hb[T] Hc[T]  ");
@@ -227,29 +242,49 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   if (washere==0)
   {//neutrons
    fout = fopen_errchk ("./results/mcphas.hkl",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas.hkl-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout, "#Neutron Intensity - Mind: only structure+polarizationfactor+formfactor+debeywallerfactor - no lorentzfactor is  taken into account\n");
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  int       h   k   l   int       h   k   l   int ...}\n");
    fclose(fout);
    //xray a component
    fout = fopen_errchk ("./results/mcphasa.hkl",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphasa.hkl-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - a component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||a       h   k   l   FT||a       h   k   l   FT||a ...}\n");
    fclose(fout);
    //xray b component
    fout = fopen_errchk ("./results/mcphasb.hkl",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphasb.hkl-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - b component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||b       h   k   l   FT||b       h   k   l   FT||b ...}\n");
    fclose(fout);
    //xray a component
    fout = fopen_errchk ("./results/mcphasc.hkl",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphasc.hkl-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - c component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||c       h   k   l   FT||c       h   k   l   FT||c ...}\n");
    fclose(fout);
@@ -297,8 +332,13 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   if (verbose==1)printf("saving mcphas.sps - spinconfiguration\n");
   if (washere==0)
   {  fout = fopen_errchk ("./results/mcphas.sps",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas.sps-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    // printout the lattice and atomic positions
    strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
@@ -330,8 +370,13 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
   if (verbose==1)printf("saving mcphas.mf - mean field configuration\n");
   if (washere==0)
   {  fout = fopen_errchk ("./results/mcphas.mf",filemode);
-   fprintf (fout, "#{%s ",MCPHASVERSION);
-   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);//fprintf(fout,"\n");
+   fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcphas.mf-->\n");
+   fprintf(fout,"#*********************************************************\n");
+   fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
+   fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+   fprintf(fout,"#**********************************************************\n");
    // printout the lattice and atomic positions
    strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);

@@ -122,7 +122,7 @@ INT output( setup,ewproblem,kristallfeld,modus )
     KOMPLEX *mat_Jx(),*mat_Jy(),*mat_Jz();
     DOUBLE magnetm();
  
-    if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
         fp=fopen_errchk(FILENAME(kristallfeld),"w");
 	
         write_titlecom(fp);
@@ -144,7 +144,7 @@ t02="# Temperature of the sample       : %7.2f Kelvin                  |\n";
 t03="#-------------------------------------------------------------- \n";
 t04="#\n";
     temperatur  = TEMPERATUR( iteration );
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
     fprintf(fp,t01);fprintf(fp,t02,temperatur);
     fprintf(fp,t03);fprintf(fp,t04);
 }
@@ -192,7 +192,8 @@ t21="#\n";
     Bx =  B1(iteration);
     By =  B2(iteration);
     Bz =  B3(iteration);
-    Bx += B1MOL(iteration);
+ 
+   Bx += B1MOL(iteration);
     By += B2MOL(iteration);
     Bz += B3MOL(iteration);
     ps_null = is_parametersatz_null(iteration,symmetrienr,macheps);
@@ -202,7 +203,7 @@ t21="#\n";
       {symmetrienr = 9;symname = "azimutal  ";}
  
  
- if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+ if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
     fprintf(fp,t01);fprintf(fp,t02,ionname);
     fprintf(fp,t03);fprintf(fp,t04);
     fprintf(fp,t05,gj);fprintf(fp,t06);
@@ -223,7 +224,7 @@ t21="#\n";
     einheitnr_in = EINHEITNRIN( iteration );
     einheit_in   = EINHEITIMP[ einheitnr_in ].einheit;
     art          = EINGABEPARAMETERART(kristallfeld);
- if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ){
+ if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="# Paramter          :     %2d von %2d                      |\n";
   t03="#-------------------------------------------------------------- \n";
@@ -237,18 +238,18 @@ t21="#\n";
        case XW  :
        case AKQ :
        case BKQ :
+       case LKQ :
                   if( (symmetrienr==8 &&
-                       *(FILENAME(kristallfeld)+8) != *(ORTHO+8)) ||
-                       *(FILENAME(kristallfeld)+8) == *(ORTHO+8)   )
+                       *(FILENAME(kristallfeld)+16) != *(ORTHO+16)) ||
+                       *(FILENAME(kristallfeld)+16) == *(ORTHO+16)   )
                       parametersatz(fp,XW,kristallfeld,ionennr,einheit_in,art);
  
                   parametersatz(fp,AKQ,kristallfeld,ionennr,einheit_in,art);
                   parametersatz(fp,BKQ,kristallfeld,ionennr,einheit_in,art);
  
-                if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ) break;
+                if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ) break;
  
        case DKQ :
-       case LKQ :
        case WKQ :
        case VKQ :
                   if( (modus==VKQ || modus==WKQ || modus== DKQ || modus==LKQ)
@@ -299,17 +300,17 @@ t26="#  Bz_mol  =   %11.2f                                     |\n";
 t27="#                                                              |\n";
 t28="#-------------------------------------------------------------- \n";
 t29="#\n#\n";
-    if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) )  fprintf(fp,t01);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) )  fprintf(fp,t01);
     fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
     fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
     fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
     fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
     fprintf(fp,t17);fprintf(fp,t18);
  
- if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ||
-     (*(FILENAME(kristallfeld)+8) == *(ORTHO+8)&&!IS_MAGFIT(iteration)) ){
+ if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ||
+     (*(FILENAME(kristallfeld)+16) == *(ORTHO+16)&&!IS_MAGFIT(iteration)) ){
  
-     if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ){
+     if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
          B1(iteration) = 0.0;
          B2(iteration) = 0.0;
          B3(iteration) = 0.0;
@@ -320,7 +321,7 @@ t29="#\n#\n";
     fprintf(fp,t21,is_null(B2(iteration),0.001 ));
     fprintf(fp,t22,is_null(B3(iteration),0.001 ));
   }
- if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8)&&IS_MAGFIT(iteration) ){
+ if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16)&&IS_MAGFIT(iteration) ){
  
      richtung( iteration ); /* R1(),... setzen */
 t19="#                                                              |\n";
@@ -334,7 +335,7 @@ t21="# external Field B_ex in direction of  [ %5d, %5d, %5d].   |\n";
     fprintf(fp,t25,is_null(B2MOL(iteration),0.001 ));
     fprintf(fp,t26,is_null(B3MOL(iteration),0.001 ));fprintf(fp,t23);
     fprintf(fp,t27);fprintf(fp,t28);
-    if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ) fprintf(fp,t29);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,t29);
 }
  
 t01="#-------------------------------------------------------------- \n";
@@ -376,7 +377,7 @@ t18="#\n";
     }
     fprintf(fp,t14);fprintf(fp,t15);
     fprintf(fp,t16);fprintf(fp,t17);
-    if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ) fprintf(fp,t18);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,t18);
  
  
  
@@ -431,7 +432,7 @@ t39m="#          -             %7.4f*i   I%4.1f %5.1f>              |\n";
 t43="#                                                              |\n";
 t44="#-------------------------------------------------------------- \n";
  
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
 fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
 fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
 fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
@@ -442,7 +443,7 @@ fprintf(fp,t46);fprintf(fp,t47);fprintf(fp,t48);fprintf(fp,t49);
 fprintf(fp,t28);fprintf(fp,t29);
 }
  
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
     j = (dimj -1)/2.0;
     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile )
        for( spalte=1 ; spalte<= VALUE(gi,zeile) ; ++spalte ){
@@ -495,6 +496,7 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
              }
              fprintf(fp,t43);
        }
+
     ewev=fopen_errchk("results/levels.cef","w"); /* output also  in uncommented format with states to be used in mcdiff.in */
     fprintf(ewev,"#J=value {atom-file}  <Ja>(=<Jy>) <Jb>(=<Jz>) <Jc>(=<Jx>)\n");
     fprintf(ewev,"# Eigenvalues [%s] and eigenvectors [as columns]\n",EINHEITIMP[einheitnr_out].einheit); 
@@ -548,7 +550,7 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
  
  
  
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
  
 fprintf(fp,"#\n");
 fprintf(fp,"#magnetic moment(mb/f.u.): mx=%6.3f my=%6.3f mz=%6.3f\n", 
@@ -630,7 +632,7 @@ fprintf(fp,t16);fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
 fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);fprintf(fp,t25);
 }/* end nicht ortho */
  
-if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
 t01="#-------------------------------------------------------------- \n";
 t02="# Polycrystal transition matrix elements                       |\n";
 t03="#-------------------------------------------------------------- \n";
@@ -638,7 +640,7 @@ fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
 }
     tabelle(fp,anz_niveaus,aJtb2);
  
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
 fprintf(fp,"#\n#\n");
 t01="#-------------------------------------------------------------- \n";
 t02="#               Transition intensities in barn.                |\n";
@@ -728,7 +730,7 @@ t05="#-------------------------------------------------------------- \n";
 fprintf(fp,t01);fprintf(fp,t02,zu_summe);fprintf(fp,t03);
 fprintf(fp,t04,gesamte_intensitaet);fprintf(fp,t05);
  
-if( *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
 t01="#-------------------------------------------------------------- \n";
 t02="# Transition intensities Poly crystal                         |\n";
 t03="#-------------------------------------------------------------- \n";
@@ -773,7 +775,7 @@ fprintf(fp,t01);fprintf(fp,t02,einheit_out);fprintf(fp,t03);
                   VALUE(gi,zeile) );
     }*/
  
-if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
     fclose(fp);
 }/* endif nicht ortho */
  
@@ -793,8 +795,8 @@ if( *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
  if(IS_ORTHO(kristallfeld)==JA){
     fit_ortho(setup,ewproblem,kristallfeld);
  }
- 
- if( IS_MAGNETM(kristallfeld)==JA && IS_KPOLY(kristallfeld)==NEIN&&
+
+  if( IS_MAGNETM(kristallfeld)==JA && IS_KPOLY(kristallfeld)==NEIN&&
      IS_ORTHO(  kristallfeld)==NEIN ){
        anf_feld   = ANFANG_FELD(kristallfeld);
        end_feld   = END_FELD(   kristallfeld);
@@ -1175,7 +1177,6 @@ INT raus_magnetm( setup,ewproblem,kristallfeld,anf_feld,end_feld,
   b2mol     = B2MOL(iteration);
   b3mol     = B3MOL(iteration);
  
-
   b_norm    = sqrt( b1   *b1    + b2   *b2    + b3   *b3 );
   bmol_norm = sqrt( b1mol*b1mol + b2mol*b2mol + b3mol*b3mol );
   if( !null(b_norm,macheps)  ){
@@ -1828,13 +1829,13 @@ parametersatz(fp,modus,kristallfeld,ionennr,einheit,eingabeart)
     iteration = ITERATION(   kristallfeld );
     zwei_j    = DIMJ(iteration) - 1;
  
-if(eingabeart==modus &&  *(FILENAME(kristallfeld)+8) != *(ORTHO+8) ){
+if(eingabeart==modus &&  *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="#                     Parameters                     |\n";
   fprintf(fp,t01);
   fprintf(fp,t02);
 }
-if( modus == XW      &&  *(FILENAME(kristallfeld)+8) == *(ORTHO+8) ){
+if( modus == XW      &&  *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="#                  Next cubic point                   |\n";
   fprintf(fp,t01);

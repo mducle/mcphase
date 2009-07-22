@@ -4,18 +4,19 @@
 
 
 
+use Math::Trig;
+
 unless ($#ARGV >0) 
 
-{print " program exp  used to calculate exp(col) from  a  column \n";
+{print " program acos  used to calculate arccosine of a column\n";
 
- print " usage: exp col   *.*   \n col=column \n *.* .. filenname\n";
+ print " usage: acos col *.*   \n col=column\n *.* .. filenname\n";
 
  exit 0;}
 
  
 
 $column=$ARGV[0];shift @ARGV;
-
 
 
   foreach (@ARGV)
@@ -43,7 +44,7 @@ $column=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]=exp($numbers[$i-1]);}
+		  if ($i==$column) {$numbers[$i-1]=acos($numbers[$i-1]);}
 
 		  print Fout $numbers[$i-1]." ";}     
 

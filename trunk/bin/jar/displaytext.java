@@ -59,6 +59,7 @@ public class displaytext extends JPanel implements FileListener {
 
         textArea = new JTextArea(5, 20);
         textArea.setEditable(false);
+        textArea.setFont(new Font("Courier New",0,12));
         scrollPane = new JScrollPane(textArea);
 
       //Add Components to this panel.
@@ -102,6 +103,7 @@ public class displaytext extends JPanel implements FileListener {
 
         textArea = new JTextArea(rows, columns);
         textArea.setEditable(false);
+        textArea.setFont(new Font("Courier New",0,12));
         scrollPane = new JScrollPane(textArea);
 
       //Add Components to this panel.

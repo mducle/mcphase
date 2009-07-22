@@ -13,9 +13,9 @@ DATA "  program REFORMAT - use it like REFORMAT *.* "
 DATA "                        reformat HMI *.asc files to filman format     "
 DATA " format of output file                                                          "
 DATA ""
-DATA " { header: this is the                                                  "
-DATA "   file header delimited                                                "
-DATA "   by brackets after this header there follow 3 or more data columns }  "
+DATA " #{ header: this is the                                                  "
+DATA " #  file header delimited                                                "
+DATA " #  by brackets after this header there follow 3 or more data columns }  "
 DATA " 11 3.14235 65367                                                       "
 DATA "  .    .     .                                                          "
 DATA "  .    .     .                                                          "
@@ -86,9 +86,9 @@ NEXT jj%
 
 ' open output file and write fileheader
 OPEN "o", 2, "REFORMAT.ffo"
-PRINT #2, "{"; : FOR iii = 1 TO j: PRINT #2, text$(iii): NEXT
-PRINT #2, DATE$; " "; TIME$;
-PRINT #2, " reformatted using program REFORMAT.bas}"
+PRINT #2, "#{"; : FOR iii = 1 TO j: PRINT #2, "#"; text$(iii): NEXT
+PRINT #2, "#"; DATE$; " "; TIME$;
+PRINT #2, "reformatted using program REFORMAT.bas}"
 
 
  REM input data columns
@@ -126,6 +126,8 @@ PRINT "END REFORMAT file "; filename$; "has been REFORMATatted"
 END
 
 333 FOR i = 1 TO 16: READ a$: PRINT a$: NEXT i: END
+
+            
 
 SUB getcol (text$, col$, col%)
 'in: text$(...column header), col$ ... col ID,

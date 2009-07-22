@@ -36,13 +36,17 @@ int maxnofhkls,nofhkls;
 spincf  sps;
 mfcf mf;
    
-    physproperties (int nofspincorrs,int maxnofhkls,int na, int nm);	//konstruktor
-//na number of atoms in basis,nm number of spin components
+   
+ physproperties (int nofspincorrs,int maxnofhkls,int na, int nm);	//konstruktor
+
+//na number of atoms in basis,nm number of spin components
     physproperties (const physproperties & props);	// kopier-konstruktor
 
-   ~physproperties ();		//destruktor
+   
+~physproperties ();		//destruktor
 
-void update_maxnofhkls(int mxnofhkli);
+void update_maxnofhkls(int mxnofhkli)
+;
 double save(int verbose,const char * filemode, int j,par & inputpars);
 
 };

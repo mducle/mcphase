@@ -4,7 +4,6 @@
 // with ld  !! The calculation has been compared to the internal (doublet)
 // routine of mcphas
 #include <cstdio>
-#include <cstdlib>
 #include <cmath>
 #include <complex>
 #include <vector.h>

@@ -15,7 +15,7 @@ int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,V
     qabc(3)=hkl(3)*2*PI/inputpars.c;
 
  float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
- if(do_verbose==1) printf("calculating intensity beyond dipole approximation\n");
+ if(do_verbose==1) printf("#calculating intensity beyond dipole approximation\n");
 // determine unitary transformation Matrix V (q)  Gamma and N for going beyond dip interaction
   Vector Gamma(1,ini.nofcomponents);
   complex<double> imaginary(0,1);
@@ -46,17 +46,19 @@ int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,V
 //      for(ll=1;ll<=ini.nofcomponents;++ll)
 //       {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);} //mf ... mean field vector of atom s
 
-//      fprintf(stdout,"transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
-//      if(nn[6]<SMALL){fprintf(stdout,"-");}else{fprintf(stdout,"+");}
+//      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
+//      if(nn[6]<SMALL){fprintf(stdout,"#-");}else{fprintf(stdout,"#+");}
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=-tn; // try calculation for transition  j
         if(do_verbose==1)(*inputpars.jjj[l]).transitionnumber=tn;
       int nnt;
       nnt=(*inputpars.jjj[l]).dncalc(qabc,ini.T,Nijkl,md.est(i,j,k,l));
+//       myPrintComplexMatrix(stdout,Nijkl); 
+
       (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
       if(nnt==0)
-      {if(do_verbose)printf("warning mcdisp - function dncalc not implemented for single ion module, only doing dipolar intensity\n");
+      {if(do_verbose)printf("#warning mcdisp - function dncalc not implemented for single ion module, only doing dipolar intensity\n");
        fclose(fin);return 0;}
       else
       {
@@ -117,6 +119,7 @@ double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf &
  int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
  double intensity=1.2; 
  double ki,kf;
+ complex <double> sumS;
  complex <double> chileft;
  complex <double> chileftbey;
  float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
@@ -204,7 +207,7 @@ if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
   // bose=1.0;
    S=bose*2*chi;
 if(intensitybey>0)  Sbey=bose*2*chibey;
-   
+
  // polarization factor
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
 // higher components in the polarization factor !!!
@@ -249,23 +252,29 @@ if(intensitybey>0)  Sbey=bose*2*chibey;
       ss=(index_s(i2,j2,k2,l2,t2,md,ini)-1)*md.nofcomponents;
 
     for(i=1;i<=md.nofcomponents;++i){for(j=1;j<=md.nofcomponents;++j){
+
+      //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ==0)
       {S(s+i,ss+j)*=polICIC(i,j); 
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+                                                                    // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
 if(intensitybey>0){Sbey(s+i,ss+j)*=polICIC(i,j);
                    Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ);} //  debey waller factor
        if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+                                                                    // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
 if(intensitybey>0) Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
        if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
       }
+      //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ!=0)
       {S(s+i,ss+j)*=polICn(i,j); 
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); //  debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+                                                                    // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
 if(intensitybey>0){       Sbey(s+i,ss+j)*=polICn(i,j); 
        Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); }//  debey waller factor
        if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
@@ -274,10 +283,12 @@ if(intensitybey>0){       Sbey(s+i,ss+j)*=polICn(i,j);
        S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
 if(intensitybey>0)  Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and debey waller factor
       }
+      //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ==0)
       {S(s+i,ss+j)*=polnIC(i,j); 
        S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // debey waller factor
+       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ);// multiply (2S+L) with factor 1/2 to be conformant 
+                                                                    // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
 if(intensitybey>0){       Sbey(s+i,ss+j)*=polnIC(i,j); 
        Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and  + debey waller factor
        Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// debey waller factor
@@ -285,6 +296,7 @@ if(intensitybey>0){       Sbey(s+i,ss+j)*=polnIC(i,j);
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
       }
+      //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ!=0)
       {S(s+i,ss+j)*=pol(i,j);
        S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
@@ -293,16 +305,27 @@ if(intensitybey>0){       Sbey(s+i,ss+j)*=pol(i,j);
        Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and + debey waller factor
        Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// and  + debey waller factor
       }
+      //--------------------------------------------------------------------------------------------------
     }}   
   }}
   }}}
  }}
  }}}
 
+
+
  // determine dsigma in barns per cryst unit cell !
  //divide by number of crystallographic unit cells  (ini.mf.n()) in magnetic unit cell
-intensity=abs(Sum(S))/ini.mf.n()/PI/2.0*3.65/4.0/PI; 
-if(intensitybey>0){intensitybey=abs(Sum(Sbey))/ini.mf.n()/PI/2.0*3.65/4.0/PI; }
+
+sumS=Sum(S)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();
+intensity=fabs(real(sumS)); if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: dipolar approx intensity %g negative\n",real(sumS));exit(1);}
+                      if (fabs(imag(sumS))>0.1){fprintf(stderr,"ERROR mcdisp: dipolar approx intensity %g %+g iimaginary\n",real(sumS),imag(sumS));exit(1);}
+if(intensitybey>0){sumS=Sum(Sbey)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();
+                   intensitybey=fabs(real(sumS)); if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: intensity in beyond dipolar approx formalism %g negative\n",real(sumS));exit(1);}
+                                                  if (fabs(imag(sumS))>0.1){fprintf(stderr,"ERROR mcdisp: intensity  in beyond dipolar approx formalism %g %+g iimaginary\n",real(sumS),imag(sumS));exit(1);}
+                  }
+
+
 
 // here should be entered factor  k/k' + absolute scale factor
 if (ini.ki==0)

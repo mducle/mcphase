@@ -1,7 +1,9 @@
 /***********************************************************************
  *
- * mcdisp.c - program to calculate the dispersion of magnetic excitations
+ * mcdisp - program to calculate the dispersion of magnetic excitations
  *
+ * reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+ *            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400
  ***********************************************************************/
 
 #define SMALL 1e-6    // deviation from single ion gap delta to take energy into account as not being equal to
@@ -9,7 +11,7 @@
 		      // transitions of single ions less then SMALL have in Mijkl wn/kT instead of wn-wn'
 		      // !!! must match SMALL in jjjpar.cpp !!!!
 #define SMALLINT 1e-4 // small intensity treshhold
-#define SMALLEDIF 1e-3 // small difference in calculation of transition energy
+#define SMALLEDIF 1e-5 // small difference in calculation of transition energy
                        // used to give error if recalculation of mcdisp.trs
 		       // energies gives different results than file
 #define KB 0.0862     // Boltzmanns constant in mev/K
@@ -134,8 +136,14 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
  if (do_readtrs==0)
  {printf("saving ./results/mcdisp.trs\n");
   fout = fopen_errchk ("./results/mcdisp.trs","w");
-  fprintf (fout, "#{%s ",MCDISPVERSION);
+   fprintf(fout, "#{output file of program %s",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcdisp.trs-->\n");
+   fprintf(fout,"#*********************************************************************\n");
+   fprintf(fout,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(fout,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(fout,"#*********************************************************************\n");
           fprintf (fout, "#i j k ionnr transnr energy |gamma_s|\n");
  
   for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
@@ -164,9 +172,9 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
  
  
    jmin=(*inputpars.jjj[l]).transitionnumber;
-  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
-                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
-                    } 
+//  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
+//                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
+//                    } 
      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
      if(minE<d&&d<maxE)
@@ -197,7 +205,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      if(minE<d&&d<maxE)
      { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents));
       ++noftransitions(l);}
-     if(minE<-d&&-d<maxE)
+     if(d>=0&&minE<-d&&-d<maxE)// do not print negative energy transition if d<0 (d<0 means transiton to the same level)
      { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,j1,-d,gamma(ini.nofcomponents));
      ++noftransitions(l);}
      }else
@@ -244,7 +252,7 @@ for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.m
  }}}
 
 // matrix E^s_alpha' used to store the coefficients for extending the eigenvector (see manual)
-ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
+ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
   
  for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   for(l=1;l<=inputpars.nofatoms;++l){
@@ -268,6 +276,7 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
       (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
+//             myPrintComplexMatrix(stdout,Mijkl); 
 
        // here we if required calculate the higher dimension matrix used to do the
        // extension of chi to higher value of (uncoupled) nofcomponents in intcalc_approx ... needed for chargedensityfluctuations, extended eigenvectors ...
@@ -277,7 +286,7 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
 
        j1=md.baseindex(i,j,k,l,jmin); 
       
-       if(fabs(fabs(d)-fabs(nn[6]))>SMALLEDIF)
+       if(fabs((fabs(d)-fabs(nn[6]))/(fabs(nn[6])+1.0))>SMALLEDIF)
         {fprintf(stderr,"ERROR mcdisp: reading mcdisp.trs with transition energy delta %g meV different from internal calculation %g meV\n",nn[6],d);	 
          exit(EXIT_FAILURE);}
        md.delta(i,j,k)(j1)=nn[6]; // set delta
@@ -321,14 +330,14 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);E=0;
         md.U(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Uijkl(m,n);
         md.M(i,j,k)(ini.nofcomponents*(j1-1)+m,ini.nofcomponents*(j1-1)+n)=Mijkl(m,n);
         }}    
-if (do_verbose==1){
-                  fprintf(stdout,"#Matrix M(s=%i %i %i)\n",i,j,k);
-                  myPrintComplexMatrix(stdout,Mijkl); 
-                  fprintf(stdout,"#Eigenvalues:\n");
-                  myPrintVector(stdout,gamma); 
-                  fprintf(stdout,"#Matrix U(s=%i%i%i)\n",i,j,k);
-                  myPrintComplexMatrix(stdout,Uijkl); 
-                 }
+//if (do_verbose==1){
+//                  fprintf(stdout,"#Matrix M(s=%i %i %i)\n",i,j,k);
+//                  myPrintComplexMatrix(stdout,Mijkl); 
+//                  fprintf(stdout,"#Eigenvalues:\n");
+//                  myPrintVector(stdout,gamma); 
+//                  fprintf(stdout,"#Matrix U(s=%i%i%i)\n",i,j,k);
+//                  myPrintComplexMatrix(stdout,Uijkl); 
+//                 }
 
     }}}
     fclose(fin);
@@ -340,42 +349,78 @@ if (do_verbose==1){
 if (do_jqfile==0)
 { printf("#saving mcdisp.qom and mcdisp.qei and mcdisp.qev\n");
   fout = fopen_errchk ("./results/mcdisp.qom",filemode);
-  foutqei = fopen_errchk ("./results/mcdisp.qei",filemode);
-  foutqev = fopen_errchk ("./results/mcdisp.qev",filemode);
-  foutqee = fopen_errchk ("./results/mcdisp.qee",filemode);
-  fprintf (fout, "#{%s ",MCDISPVERSION);
+   fprintf(fout, "#{output file of program %s",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
+   fprintf(fout,"#!<--mcphas.mcdisp.qom-->\n");
+   fprintf(fout,"#*********************************************************************\n");
+   fprintf(fout,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(fout,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(fout,"#*********************************************************************\n");
           fprintf (fout, "#dispersion \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] > intensities [barn/sr/f.u.]   f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
-  fprintf (foutqei, "#{%s ",MCDISPVERSION);
+  foutqei = fopen_errchk ("./results/mcdisp.qei",filemode);
+   fprintf(foutqei, "#{output file of program %s",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqei);
+   fprintf(foutqei,"#!<--mcphas.mcdisp.qei-->\n");
+   fprintf(foutqei,"#*********************************************************************\n");
+   fprintf(foutqei,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(foutqei,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(foutqei,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(foutqei,"#*********************************************************************\n");
           fprintf (foutqei, "#dispersion displayytext=E(meV)\n#displaylines=false \n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
-  fprintf (foutqev, "#{%s ",MCDISPVERSION);
+  foutqev = fopen_errchk ("./results/mcdisp.qev",filemode);
+   fprintf(foutqev, "#{output file of program %s",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqev);
+   fprintf(foutqev,"#!<--mcphas.mcdisp.qev-->\n");
+   fprintf(foutqev,"#*********************************************************************\n");
+   fprintf(foutqev,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(foutqev,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(foutqev,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(foutqev,"#*********************************************************************\n");
           fprintf (foutqev, "#spins_wave_amplitude=1.0\n");
           fprintf (foutqev, "#spins_show_ellipses=1.0\n");
           fprintf (foutqev, "#spins_show_direction_of_static_moment=1.0\n");
           fprintf (foutqev, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
-  fprintf (foutqee, "#{%s ",MCDISPVERSION);
+  foutqee = fopen_errchk ("./results/mcdisp.qee",filemode);
+   fprintf(foutqee, "#{output file of program %s",MCDISPVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutqee);
+   fprintf(foutqee,"#!<--mcphas.mcdisp.qee-->\n");
+   fprintf(foutqee,"#*********************************************************************\n");
+   fprintf(foutqee,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(foutqee,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(foutqee,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(foutqee,"#*********************************************************************\n");
           fprintf (foutqee, "#spins_wave_amplitude=1.0\n");
           fprintf (foutqee, "#spins_show_ellipses=1.0\n");
           fprintf (foutqee, "#spins_show_direction_of_static_moment=1.0\n");
           fprintf (foutqee, "#extended_eigenvector_dimension=%i\n",ini.extended_eigenvector_dimension); 
           fprintf (foutqee, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
-          foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
+  foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
           printf("#saving mcdisp.dsigma.tot\n");
-          fprintf (foutdstot, "#{%s ",MCDISPVERSION);
-          curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutdstot);
+   fprintf(foutdstot, "#{output file of program %s",MCDISPVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutdstot);
+   fprintf(foutdstot,"#!<--mcphas.mcdisp.dsigma.tot-->\n");
+   fprintf(foutdstot,"#*********************************************************************\n");
+   fprintf(foutdstot,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(foutdstot,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(foutdstot,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(foutdstot,"#*********************************************************************\n");
           fprintf (foutdstot, "#Total Scattering Cross Section in energy range [emin;emax]=[%g;%g]\n#Ha[T] Hb[T] Hc[T] T[K] h k l  dsigma/dOmeg [barn/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}",ini.emin,ini.emax);
 
    if (do_Erefine==1){
           errno = 0;
-          foutds = fopen_errchk ("./results/mcdisp.dsigma",filemode);
+  foutds = fopen_errchk ("./results/mcdisp.dsigma",filemode);
           printf("#saving mcdisp.dsigma\n");
-          fprintf (foutds, "#{%s ",MCDISPVERSION);
-          curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds);
+   fprintf(foutds, "#{output file of program %s",MCDISPVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds);
+   fprintf(foutds,"#!<--mcphas.mcdisp.dsigma-->\n");
+   fprintf(foutds,"#*********************************************************************\n");
+   fprintf(foutds,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(foutds,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(foutds,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(foutds,"#*********************************************************************\n");
           fprintf (foutds, "#Scattering Cross Section \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] dsigma/dOmegadE' [barn/mev/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
           fprintf (foutdstot, "for fast algorithm  vs summing dsigma for diff energies");
                      }  
@@ -385,7 +430,16 @@ if (do_jqfile==0)
 // initialize file with jq matrix
 if (do_jqfile==1)
 {  printf("#saving mcdisp.jq\n");
-  jqfile = fopen_errchk ("./results/mcdisp.jq",filemode);
+ jqfile = fopen_errchk ("./results/mcdisp.jq",filemode);
+          printf("#saving mcdisp.jq\n");
+   fprintf(jqfile, "#{output file of program %s",MCDISPVERSION);
+   curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),jqfile);
+   fprintf(jqfile,"#!<--mcphas.mcdisp.dsigma.jq-->\n");
+   fprintf(jqfile,"#*********************************************************************\n");
+   fprintf(jqfile,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
+   fprintf(jqfile,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(jqfile,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(jqfile,"#*********************************************************************\n");
   fprintf (jqfile, "#Fourier Transform of 2 Ion Interaction - sta is calculated by comparing the larges eigenvalue\n# to that of the first q vector of the calculation");
    fputs (asctime(loctime),jqfile);
   if (do_verbose==1){   fprintf (jqfile, "#q=(hkl)\n #spin s() - spin s'()\n #3x3 matrix jss'(q) real im .... [meV]\n");}
@@ -439,8 +493,8 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
     xyz=(*inputpars.jjj[ll]).dn[l];
     d=inputpars.rez*(const Vector&)xyz;// set d to distance for later use to determie phase factor in J(Q) ...
 
-	  if (do_verbose==1) {printf("#adding neighbor %i (%6.3f %6.3f %6.3f) of atom %i (%6.3f %6.3f %6.3f)- it contributes to J(s,s'):\n",l,xyz(1),xyz(2),xyz(3),ll,(*inputpars.jjj[ll]).xyz[1],(*inputpars.jjj[ll]).xyz[2],(*inputpars.jjj[ll]).xyz[3]);
-                              } 
+//	  if (do_verbose==1) {printf("#adding neighbor %i (%6.3f %6.3f %6.3f) of atom %i (%6.3f %6.3f %6.3f)- it contributes to J(s,s'):\n",l,xyz(1),xyz(2),xyz(3),ll,(*inputpars.jjj[ll]).xyz[1],(*inputpars.jjj[ll]).xyz[2],(*inputpars.jjj[ll]).xyz[3]);
+//                              } 
    //2. in order to sum up we must take into account that the magnetic unit cell is
    //   larger than the crystallographic one - the ll-l neighbor interaction contributes
    //   to many different components of Js,ss(q) ... note s,ss runs over all the atoms
@@ -471,7 +525,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 	 j=j-(int)ij(2)+1;
 	 k=k-(int)ij(3)+1;
 	 ss=J.in(i,j,k);
-          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
+//          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
           // sum up 
            ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
            jsss=0;
@@ -516,20 +570,20 @@ if(do_verbose==1){fprintf(stdout,"#Transform J(q) matrix  with U...\n");}
   for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
   ss=ini.mf.in(i2,j2,k2);
   Jl.mati(s,ss)=md.sqrt_gamma(i1,j1,k1)*md.U(i1,j1,k1).Conjugate().Transpose()*J.mati(s,ss)*md.U(i2,j2,k2)*md.sqrt_gamma(i2,j2,k2).Conjugate();
-if (do_verbose==1){
-                  fprintf(stdout,"#J(s=%i%i%i,s''=%i%i%i)=\n",i1,j1,k1,i2,j2,k2);
-                  myPrintComplexMatrix(stdout,J.mati(s,ss)); 
-                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i1,j1,k1);
-                  myPrintComplexMatrix(stdout,md.sqrt_gamma(i1,j1,k1));
-                  fprintf(stdout,"#U(s=%i%i%i)=\n",i1,j1,k1);
-                  myPrintComplexMatrix(stdout,md.U(i1,j1,k1));
-                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i2,j2,k2);
-                  myPrintComplexMatrix(stdout,md.sqrt_gamma(i2,j2,k2));
-                  fprintf(stdout,"#U(s=%i%i%i)=\n",i2,j2,k2);
-                  myPrintComplexMatrix(stdout,md.U(i2,j2,k2));
-                  fprintf(stdout,"#sqr(gamma_s) U(s)T* J(s=%i%i%i,s''=%i%i%i) U(s'') sqr(gamma_s'')*=\n",i1,j1,k1,i2,j2,k2);
-                  myPrintComplexMatrix(stdout,Jl.mati(s,ss)); 
-                 }
+//if (do_verbose==1){
+//                  fprintf(stdout,"#J(s=%i%i%i,s''=%i%i%i)=\n",i1,j1,k1,i2,j2,k2);
+//                  myPrintComplexMatrix(stdout,J.mati(s,ss)); 
+//                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i1,j1,k1);
+//                  myPrintComplexMatrix(stdout,md.sqrt_gamma(i1,j1,k1));
+//                  fprintf(stdout,"#U(s=%i%i%i)=\n",i1,j1,k1);
+//                  myPrintComplexMatrix(stdout,md.U(i1,j1,k1));
+//                  fprintf(stdout,"#sqr(gamma_s=%i%i%i)=\n",i2,j2,k2);
+//                  myPrintComplexMatrix(stdout,md.sqrt_gamma(i2,j2,k2));
+//                  fprintf(stdout,"#U(s=%i%i%i)=\n",i2,j2,k2);
+//                  myPrintComplexMatrix(stdout,md.U(i2,j2,k2));
+//                  fprintf(stdout,"#sqr(gamma_s) U(s)T* J(s=%i%i%i,s''=%i%i%i) U(s'') sqr(gamma_s'')*=\n",i1,j1,k1,i2,j2,k2);
+//                  myPrintComplexMatrix(stdout,Jl.mati(s,ss)); 
+//                 }
   }}}
  }}}
 
@@ -554,9 +608,9 @@ if(do_verbose==1){fprintf(stdout,"#calculating matrix A\n");}
       b=md.baseindex(i1,j1,k1,l1,t1);
       if(md.delta(i1,j1,k1)(b)<0){Lambda(s,s)=-1;}else{Lambda(s,s)=+1;}
       Ac(s,s)=md.delta(i1,j1,k1)(b)*Lambda(s,s);
-      if(do_verbose==1){fprintf(stdout,"#i=%i j=%i k=%i atomnr=%i trans=%i ... s=%i ",i1,j1,k1,l1,t1,s);
-                        fprintf(stdout,"#lambda(%i,%i)xdelta(%i)=%g + i %g\n",s,s,s,real(Ac(s,s)),imag(Ac(s,s)));
-                       }
+//      if(do_verbose==1){fprintf(stdout,"#i=%i j=%i k=%i atomnr=%i trans=%i ... s=%i ",i1,j1,k1,l1,t1,s);
+//                        fprintf(stdout,"#lambda(%i,%i)xdelta(%i)=%g + i %g\n",s,s,s,real(Ac(s,s)),imag(Ac(s,s)));
+//                       }
       }}
 
    for(i2=1;i2<=ini.mf.na();++i2){for(j2=1;j2<=ini.mf.nb();++j2){for(k2=1;k2<=ini.mf.nc();++k2){
@@ -618,7 +672,7 @@ if (do_jqfile==1){
  else
  {// no jqfile but excitations to be calculated
  if(do_verbose==1){fprintf(stdout,"#diagonalizing %ix%i matrix A...\n",dimA,dimA);
-                           myPrintComplexMatrix(stdout,Ac); 
+              //             myPrintComplexMatrix(stdout,Ac); 
                    }
    // diagonalize Ac to get energies  and eigenvectors !!!
    Vector En(1,dimA);
@@ -636,8 +690,8 @@ if (do_jqfile==1){
 	// that the eigensystemhgermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
- if(do_verbose==1){ fprintf(stdout,"#eigenvectors (matrix Tau):\n");
-                    myPrintComplexMatrix(stdout,Tau); 
+ if(do_verbose==1){// fprintf(stdout,"#eigenvectors (matrix Tau):\n");
+                   // myPrintComplexMatrix(stdout,Tau); 
                     fprintf(stdout,"#saving the following eigenvalues (meV) to mcdisp.qom:\n");}
    int dim=3;
    if (ini.hkllist==1){dim=(int)ini.hkls[counter][0]-3;}
@@ -706,7 +760,7 @@ diffint=0;diffintbey=0;
             curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout1);
             fprintf (fout1, "#displayytext=I(barns/meV/sr/f.u.)\n");
             fprintf (fout1, "#displayxtext=E(meV)\n");
-            fprintf (fout1, "#displaytitle=(%4.4f %4.4f %4.4f)\n",hkl(1),hkl(2),hkl(3));
+            fprintf (fout1, "#displaytitle=(%4.4f %4.4f %4.4f) blue: DMD_Dipapprox red: DMD_exact green: Minv_Dipapprox\n",hkl(1),hkl(2),hkl(3));
             fprintf (fout1,"#Ha[T] Hb[T] Hc[T] T[K] h k l  energies[meV] intensities(dip approx for FF) [barn/meV/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 		     if (do_Erefine==0) epsilon=(Max(En)-Min(En))/100;
 		     if (epsilon<=0) epsilon=0.1;
@@ -803,6 +857,15 @@ int main (int argc, char **argv)
  const char * filemode="w";
  double epsilon; //imaginary part of omega to avoid divergence
  double minE=-100000.0,maxE=+100000.0;
+ fprintf(stderr,"***********************************************************************\n");
+ fprintf(stderr,"*\n");
+ fprintf(stderr,"* mcdisp - program to calculate the dispersion of magnetic excitations\n");
+ fprintf(stderr,"*\n");
+ fprintf(stderr,"* reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+ fprintf(stderr,"*            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+ fprintf(stderr,"***********************************************************************\n\n");
+
+
 // check command line and initialize parameters ini
 for (i=1;i<=argc-1;++i){
    if(strcmp(argv[i],"-r")==0) {do_Erefine=1; if(i==argc-1){fprintf(stderr,"Error in command: mcdisp -r needs argument epsilon\n");exit(EXIT_FAILURE);}
@@ -843,10 +906,32 @@ if (argc > 10) {ini.errexit();}
   par inputpars("./mcphas.j");
   if(ini.nofcomponents!=inputpars.nofcomponents){fprintf(stderr,"Error mcdisp: number of components read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofcomponents,inputpars.nofcomponents);exit(1);}
   if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
+  inputpars.save("./results/_mcdisp.j");
+  inputpars.save_sipfs("./results/_"); 
 
-  //calculate dispersion and save on file
-  dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,maxlevels,minE,maxE,epsilon,filemode);
-  exit(0);
+
+//calculate dispersion and save to files
+dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,maxlevels,minE,maxE,epsilon,filemode);
+  
+ printf("RESULTS saved in directory ./results/  - files:\n");
+   printf("  mcdisp.qei  - T,H,qvector vs energies and neutron intensities\n");
+   printf("  mcdisp.qom  - T,H,qvector vs all mode energies in one line (and neutron intensities)\n");
+   printf("  mcdisp.qev  - T,H,qvector,E vs eigenvectors\n");
+   printf("  mcdisp.qee  - T,H,qvector,E vs extended eigenvectors (more components to plot chrgedens.)\n");
+   printf("  mcdisp.dsigma.tot  - T,H,qvector vs total intensity (sum of all modes)\n");
+   printf("  mcdisp.dsigma      - (option -r) T,H,qvector,E vs intensity obtained from dyn susz\n");
+   printf("  mcdisp.trs  - single ion transitions used\n");
+   printf("  _mcdisp.ini - input parameters read from mcdisp.ini\n");
+   printf("  _mcdisp.mf  - input parameters read from mcdisp.mf\n");
+   printf("  _mcdisp.j   - input parameters read from mcphas.j\n");
+   printf("  ...         - and a copy of the single ion parameter files used.\n\n");
+   fprintf(stderr,"************************************************************\n");
+   fprintf(stderr,"                    End of Program mcdisp\n");
+   fprintf(stderr," reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+   fprintf(stderr,"            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
+   fprintf(stderr,"************************************************************\n");
+
+ exit(0);
  
 }
 

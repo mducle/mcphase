@@ -136,7 +136,9 @@ ComplexMatrix & mdcf::est(int i, int j, int k, int l)
 
 
 void mdcf::est_ini(int i, int j, int k, int l,ComplexMatrix & M) // initialize est
-{eigenstates[ind(i,j,k,l)]=new ComplexMatrix(M);}
+{eigenstates[ind(i,j,k,l)]=new ComplexMatrix(M.Rlo(),M.Rhi(),M.Clo(),M.Chi());
+ (*eigenstates[ind(i,j,k,l)])=M;
+}
 
 // has to be called before mdcf object can be used for calculation
 void mdcf::set_noftransitions(int i, int j, int k, IntVector & notr)

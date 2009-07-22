@@ -11,7 +11,6 @@ void qvectors::save(const char * filemode)
  int k;
  spincf sps(1,1,1,nofatoms,3);
     
- printf("saving %s\n",savfilename); 
  fout=fopen_errchk (savfilename,filemode);
  fprintf (fout, "#{(h k l) of test-Qvectors (nr1 nr2 nr3) unitcellsize (no) structure number / momentum arrangement <J(i)>}\n");
  for (k=1;k<=nofqs();++k)
@@ -25,6 +24,7 @@ void qvectors::save(const char * filemode)
 		}  
  }      
  fclose(fout);
+ printf("file %s saved\n",savfilename);
 }
 
 // subs to calculate 3dim indices of qvector component

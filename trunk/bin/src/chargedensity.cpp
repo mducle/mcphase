@@ -21,7 +21,7 @@
  return (*rtetafi[p]);
 }
 
-void chargedensity::calc_cd_surface(Vector & moments,ionpars & ionpar,  double ccc)
+void chargedensity::calc_cd_surface(Vector & moments,jjjpar & ionpar,  double ccc)
 { // double ccc = surface value of chargedensity
 // here the set of points for this ion should be created corresponding to its
 // charge density: 

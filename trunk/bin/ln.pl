@@ -6,9 +6,9 @@
 
 unless ($#ARGV >0) 
 
-{print " program exp  used to calculate exp(col) from  a  column \n";
+{print " program ln used to calculate natural logarithm ln(col) from  a  column \n";
 
- print " usage: exp col   *.*   \n col=column \n *.* .. filenname\n";
+ print " usage: ln col   *.*   \n col=column \n *.* .. filenname\n";
 
  exit 0;}
 
@@ -43,7 +43,7 @@ $column=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]=exp($numbers[$i-1]);}
+		  if ($i==$column) {$numbers[$i-1]=log($numbers[$i-1]);}
 
 		  print Fout $numbers[$i-1]." ";}     
 

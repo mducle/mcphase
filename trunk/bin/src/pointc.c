@@ -1,15 +1,16 @@
-/***********************************************************************
+/*********************=*************************************************
  *
- * point.c   - new program substituting basic program to calculate pointcharge
- *             model
- *
+ * pointc - calculates crystal field parameters by the pointcharge model
+ * Reference: Martin Rotter and Ernst Bauer - Crystal field effects 
+ * in Rare Earth Compounds, in print
  ***********************************************************************/
 
 #define MU_B  5.788378E-02 // Bohrmagneton in meV/tesla
 #define PI   3.141592654
 #define MAXNOFCHARINLINE 1000
 
-#include "ionpars.hpp"
+#include "jjjpar.hpp"
+#include "../../version"
 #include "martin.h"
 #include<cstdio>
 #include<cerrno>
@@ -22,6 +23,8 @@
 // main program
 int main (int argc, char **argv)
 {// check command line
+
+
   if (argc < 3)
     { printf ("\nProgram to calculate Crystal field Parameters from Point Charges \n\n\
             Usage: pointc Ce3+ 0.2 4 1 5.3\n\n\
@@ -86,9 +89,11 @@ float invalues[100];invalues[0]=99;
 // routine getpar in cfieldrout.c, thus takes the single ion parameters from
 // the same source as the cfield program ...
  ionpars * iops;
+ jjjpar * jjjps;
  char *token;
  if(sipf_file=fopen(argv[1],"r")) //read ion parameters from file
  { iops=new ionpars(2);
+   jjjps=new jjjpar(1,1,1);
    while(feof(sipf_file)==false)
   {if(fgets(instr, MAXNOFCHARINLINE, sipf_file)){// strip /r (dos line feed) from line if necessary
                                       while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
@@ -98,36 +103,45 @@ float invalues[100];invalues[0]=99;
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
         extract(instr,"IONTYPE",(*iops).iontype,(size_t)MAXNOFCHARINLINE);
         
-        extract(instr,"N1",(*iops).Np(1));extract(instr,"XI1",(*iops).Xip(1));extract(instr,"C1",(*iops).Cp(1));
-        extract(instr,"N2",(*iops).Np(2));extract(instr,"XI2",(*iops).Xip(2));extract(instr,"C2",(*iops).Cp(2));
-        extract(instr,"N3",(*iops).Np(3));extract(instr,"XI3",(*iops).Xip(3));extract(instr,"C3",(*iops).Cp(3));
-        extract(instr,"N4",(*iops).Np(4));extract(instr,"XI4",(*iops).Xip(4));extract(instr,"C4",(*iops).Cp(4));
-        extract(instr,"N5",(*iops).Np(5));extract(instr,"XI5",(*iops).Xip(5));extract(instr,"C5",(*iops).Cp(5));
-        extract(instr,"N6",(*iops).Np(6));extract(instr,"XI6",(*iops).Xip(6));extract(instr,"C6",(*iops).Cp(6));
-        extract(instr,"N7",(*iops).Np(7));extract(instr,"XI7",(*iops).Xip(7));extract(instr,"C7",(*iops).Cp(7));
-        extract(instr,"N8",(*iops).Np(8));extract(instr,"XI8",(*iops).Xip(8));extract(instr,"C8",(*iops).Cp(8));
-        extract(instr,"N9",(*iops).Np(9));extract(instr,"XI9",(*iops).Xip(9));extract(instr,"C9",(*iops).Cp(9));
+        extract(instr,"N1",(*jjjps).Np(1));extract(instr,"XI1",(*jjjps).Xip(1));extract(instr,"C1",(*jjjps).Cp(1));
+        extract(instr,"N2",(*jjjps).Np(2));extract(instr,"XI2",(*jjjps).Xip(2));extract(instr,"C2",(*jjjps).Cp(2));
+        extract(instr,"N3",(*jjjps).Np(3));extract(instr,"XI3",(*jjjps).Xip(3));extract(instr,"C3",(*jjjps).Cp(3));
+        extract(instr,"N4",(*jjjps).Np(4));extract(instr,"XI4",(*jjjps).Xip(4));extract(instr,"C4",(*jjjps).Cp(4));
+        extract(instr,"N5",(*jjjps).Np(5));extract(instr,"XI5",(*jjjps).Xip(5));extract(instr,"C5",(*jjjps).Cp(5));
+        extract(instr,"N6",(*jjjps).Np(6));extract(instr,"XI6",(*jjjps).Xip(6));extract(instr,"C6",(*jjjps).Cp(6));
+        extract(instr,"N7",(*jjjps).Np(7));extract(instr,"XI7",(*jjjps).Xip(7));extract(instr,"C7",(*jjjps).Cp(7));
+        extract(instr,"N8",(*jjjps).Np(8));extract(instr,"XI8",(*jjjps).Xip(8));extract(instr,"C8",(*jjjps).Cp(8));
+        extract(instr,"N9",(*jjjps).Np(9));extract(instr,"XI9",(*jjjps).Xip(9));extract(instr,"C9",(*jjjps).Cp(9));
 
         extract(instr,"ALPHA",(*iops).alpha);
         extract(instr,"BETA",(*iops).beta);
         extract(instr,"GAMMA",(*iops).gamma);
 
-        extract(instr,"R2",  (*iops).r2);
-        extract(instr,"R4",  (*iops).r4);
-        extract(instr,"R6",  (*iops).r6);
+        extract(instr,"R2",  (*jjjps).r2);
+        extract(instr,"R4",  (*jjjps).r4);
+        extract(instr,"R6",  (*jjjps).r6);
         }
   }
-      if((*iops).r2==0){(*iops).r2_from_radial_wavefunction();printf("#<r^2> in units of a0^2 a0=0.5292 Angstroem\nR2=%g\n",(*iops).r2);}
-      if((*iops).r4==0){(*iops).r4_from_radial_wavefunction();printf("#<r^4> in units of a0^4 a0=0.5292 Angstroem\nR4=%g\n",(*iops).r4);}
-      if((*iops).r6==0){(*iops).r6_from_radial_wavefunction();printf("#<r^6> in units of a0^6 a0=0.5292 Angstroem\nR6=%g\n",(*iops).r6);}
-      if((*iops).Np(1)!=0)
+      if((*jjjps).r2==0){(*jjjps).r2_from_radial_wavefunction();printf("#<r^2> in units of a0^2 a0=0.5292 Angstroem\nR2=%g\n",(*jjjps).r2);}
+      if((*jjjps).r4==0){(*jjjps).r4_from_radial_wavefunction();printf("#<r^4> in units of a0^4 a0=0.5292 Angstroem\nR4=%g\n",(*jjjps).r4);}
+      if((*jjjps).r6==0){(*jjjps).r6_from_radial_wavefunction();printf("#<r^6> in units of a0^6 a0=0.5292 Angstroem\nR6=%g\n",(*jjjps).r6);}
+      if((*jjjps).Np(1)!=0)
       {// save radial wavefunction
-      (*iops).save_radial_wavefunction("radwavfun.dat");
+      (*jjjps).save_radial_wavefunction("radwavfun.dat");
       }
+      (*iops).r2=(*jjjps).r2;
+      (*iops).r4=(*jjjps).r4;
+      (*iops).r6=(*jjjps).r6;
   fclose(sipf_file);
  }
  else
  {printf ("#!cfield\n#<!--mcphase.sipf-->\n");
+  printf("#*********************=*************************************************\n");
+  printf("# program pointc - crystal field parameters by the pointcharge model\n");
+  printf("# Martin Rotter, %s\n",MCPHASVERSION);
+  printf("# Reference: Ernst Bauer and Martin Rotter - Crystal field effects \n");
+  printf("#            in Rare Earth Compounds, in print\n");
+  printf("#***********************************************************************\n");
   iops=new ionpars(argv[1]);  // read ion parameters from internal table  
   printf ("IONTYPE=%s\n",(*iops).iontype);
 // printout the information used in pointc to output 
@@ -321,6 +335,11 @@ if (argc<5){fclose(table_file);}
 
 (*iops).savBlm(stdout);
 (*iops).savLlm(stdout);
+  fprintf(stderr,"#*********************=*************************************************\n");
+  fprintf(stderr,"#                         end of program pointc\n");
+  fprintf(stderr,"# Reference: Ernst Bauer and Martin Rotter - Crystal field effects \n");
+  fprintf(stderr,"#            in Rare Earth Compounds, in print\n");
+  fprintf(stderr,"#***********************************************************************\n");
 
 }
 

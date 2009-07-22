@@ -28,18 +28,19 @@ unless ($#ARGV >0)
 #.
 format STDOUT =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf("%s [%e,%e,%e,%e,%e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
+sprintf("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i],$parerr[$i],$parstp[$i])
 .
 format Fout =
 @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-sprintf ("%s [%e,%e,%e,%e,%e]",$parnam[$ii],$par[$ii],$parmin[$ii],$parmax[$ii],$parerr[$ii],$parstp[$ii])
+sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$ii],$par[$ii],$parmin[$ii],$parmax[$ii],$parerr[$ii],$parstp[$ii])
 .
 
  @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parav=();
   $searchlevel=$ARGV[0]; shift @ARGV;
  open(Fout,">results/searchspace.status");
  foreach (@ARGV)
- {$file=$_; system ("copy ".$file." ".$file.".par"); open (Fin, $file);
+ {$file=$_; system ("copy ".$file." ".$file.".par");    unless (open (Fin, $file)){die "\n error:unable to open $file\n";}   
+ 
    while($line=<Fin>)
  {while ($line=~/^.*par\w+\s*\Q[\E/) {++$#par;#load another parameter
 				 ($parnam[$#par])=($line=~m|(par\w+)\s*\Q[\E|);
@@ -81,7 +82,7 @@ if ($searchlevel==0)
           $par[$i]+=$dpar;
           ($sta)=sta();
           open(Fin,"results/searchspace.status");$line=<Fin>;
-          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          if ($line=~/exiting searchspace/){$sta=0;close Fin;}
           else
      {open(Fout,">results/searchspace.status");$ii=0;
      foreach(@par){write Fout;++$ii;}
@@ -99,7 +100,7 @@ if ($searchlevel==0)
           $par[$i]-=2*$dpar;
           ($sta)=sta();
           open(Fin,"results/searchspace.status");$line=<Fin>;
-          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          if ($line=~/exiting searchspace/){$sta=0;close Fin;}
           else
      {open(Fout,">results/searchspace.status");$ii=0;
      foreach(@par){write Fout;++$ii;}
@@ -149,7 +150,7 @@ else
           $par[$i]+=$dpar;
           ($sta)=sta();
           open(Fin,"results/searchspace.status");$line=<Fin>;
-          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          if ($line=~/exiting searchspace/){$sta=0;close Fin;}
           last if ($sta==0);
           if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; system ("copy ".$file." ".$file.".min.".$searchlevel);
@@ -162,7 +163,7 @@ else
           $par[$i]-=2*$dpar;
           ($sta)=sta();
           open(Fin,"results/searchspace.status");$line=<Fin>;
-          if ($line=~/exit searchspace/){$sta=0;close Fin;}
+          if ($line=~/exiting searchspace/){$sta=0;close Fin;}
           else
      {open(Fout,">results/searchspace.status");$ii=0;
      foreach(@par){write Fout;++$ii;}
@@ -245,12 +246,12 @@ sub sta {local $SIG{INT}='IGNORE';
 #				  }
 
                              while ($line=~/^.*?function\s*\Q[\E(.*?)\Q]\E/) 
-			          {$expression=$1;
+			          {$expression=" ".$1." ";
 				   #substitute into the expression the paramter values
 				   my $i=0;#insert a function parameter
 				   foreach (@parnam)
 				    {$pnam=$_;
-				     while ($expression=~/.*$pnam/)
+				     while ($expression=~/.*\W$pnam\W/)
                                         {$expression=~s|$pnam|$par[$i]|;
 					}
 				     ++$i;
@@ -259,10 +260,10 @@ sub sta {local $SIG{INT}='IGNORE';
 				    open (Foutcc, ">results/ccccccc.ccc");
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
-				    system "perl results/ccccccc.ccc > results/cccccc1.ccc";
+				    if(system "perl results\\ccccccc.ccc > results\\cccccc1.ccc"){die "error evalutaing expression in results\\ccccc*";}
 				    open (Fincc,"results/cccccc1.ccc");
 				    $data=<Fincc>; close Fincc;
-				    system "del results/ccccccc.ccc results/cccccc1.ccc";
+				    system "del results\\ccccccc.ccc results\\cccccc1.ccc";
 				    # $data contains now the result of the mathematical expression
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
@@ -275,13 +276,13 @@ sub sta {local $SIG{INT}='IGNORE';
      {die "\n error:perhaps (perl rename cannot cross filesystems) \n";}
  }
 # print "#call routine calcsta to calculate standard deviation\n";
- system ("calcsta > results/searchspace.sta");
+if(system ("calcsta.bat > results\\searchspace.sta")){die "\n error executing calcsta.bat\n";}
  open (Fin,"results/searchspace.sta"); 
  while($line=<Fin>){
            if($line=~/^.*sta\s*=/) {($sta)=($line=~m|sta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);} 
                    }
  close Fin;
- system ("del results/searchspace.sta");
+ system ("del results\\searchspace.sta");
  return $sta;
 }  
 

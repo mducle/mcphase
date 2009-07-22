@@ -1,3 +1,4 @@
+{\footnotesize
 \begin{verbatim}
 
 For dos/windows operating systems the following programs can be used
@@ -31,7 +32,8 @@ VIEW *.* 13         - means view columns 1 vs.3, add option /c if you
                       the programs PRINTF,GRAPH and PLOT described below)
                       points can be deleted - then the program view
                       creates a file delpoint.del, which contains the
-                      new data set.
+                      new data set
+.
 		      
 GRAPH {xaxis=axistext] {yaxis=axistext]
                       - makes the scales and the axis TITLES (axistext ...)
@@ -220,3 +222,4 @@ FOURIER *.* 12 xmax=3.47 deltax=0.1
                         written into files FOURIER.re and FOURIER.im
                         format: {]..{]..xcolumn{1/{x]]..{]...
 \end{verbatim}
+}

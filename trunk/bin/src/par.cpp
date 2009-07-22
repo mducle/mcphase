@@ -1,4 +1,5 @@
 #include "par.hpp"
+#include "../../version"
 #include <martin.h>
 #include <cstring>
 
@@ -22,17 +23,17 @@ par::par (const char *filejjj)
   fin_coq = fopen_errchk (filejjj, "rb");
 
  // input file header ------------------------------------------------------------------
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);instr[0]='#';
+  fgets (instr, MAXNOFCHARINLINE, fin_coq);
+  extract(instr,"a",a);extract(instr,"b",b); extract(instr,"c",c); 
+                 extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
+  instr[0]='#';
    // inserted 12.11.07 in order to format output correctly (characterstring 13 spoiled output string)
    for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
    rems[1]=new char[strlen(instr)+2];strcpy(rems[1],instr);
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);instr[0]='#';
-   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;}
-   rems[2]=new char[strlen(instr)+2];strcpy(rems[2],instr);
-//for(i=1;i<=strlen(instr);++i)fprintf (stdout,"%i ",instr[i]);fprintf (stdout,"\n");
-
+   rems[2]=new char[40];strcpy(rems[2],"#!<--mcphas.mcphas.j-->");
+  nofatoms=0;
   instr[0]='#';a=0;b=0;c=0;
- while (strstr(instr,"*******")==NULL&&instr[strspn(instr," \t")]=='#') 
+ while (nofatoms==0||(strstr(instr,"*******")==NULL&&instr[strspn(instr," \t")]=='#')) 
   {fgets(instr,MAXNOFCHARINLINE,fin_coq);
    if(a==0&&b==0&&c==0){extract(instr,"a",a);extract(instr,"b",b); extract(instr,"c",c); 
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
@@ -43,14 +44,14 @@ par::par (const char *filejjj)
    extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
    extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
    extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
-   extract(instr,"nofatoms",nofatoms); 
+   extract(instr,"nofatoms",nofatoms);extract(instr,"nofcomponents",nofcomponents); 
 		  if(feof(fin_coq)!=0)
                     {fprintf(stderr,"ERROR reading header of file mcphas.j: no line ****** found\n");exit(EXIT_FAILURE);}
   }
   if (alpha!=90||beta!=90||gamma!=90)
   {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
   if(nofatoms>MAX_NOF_ATOMS_IN_PRIMITIVE_CRYST_UNITCELL)
-  {fprintf(stderr,"ERROR par.cpp: maximum number of atoms in unit cell exceeded - enlarge it in par.hpp and recompile\n");exit(EXIT_FAILURE);}
+  {fprintf(stderr,"ERROR reading mcphas.j: maximum number of atoms in unit cell exceeded - enlarge it in par.hpp and recompile\n");exit(EXIT_FAILURE);}
   
   
   rez=r.Inverse();
@@ -62,9 +63,11 @@ par::par (const char *filejjj)
   for(i=1;i<=nofatoms;++i)  
   {jjj[i]=new jjjpar(fin_coq);  
    gJ(i)=(*jjj[i]).gJ;
-  fgets (instr, MAXNOFCHARINLINE, fin_coq);rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);}
-
-  nofcomponents=(*jjj[1]).nofcomponents;
+   fgets (instr, MAXNOFCHARINLINE, fin_coq);
+   rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);
+   if(nofcomponents!=(*jjj[i]).nofcomponents)
+   {fprintf(stderr,"ERROR reading mcphas.j: nofcomponents (%i) not consistent for atom %i (%i read in fileheader)\n",(*jjj[i]).nofcomponents,i,nofcomponents);exit(EXIT_FAILURE);}
+  }
   //determine sublattices
   for(i=1;i<=nofatoms;++i)
   {for(n=1;n<=(*jjj[i]).paranz;++n)
@@ -188,6 +191,17 @@ void par::increase_nofcomponents (int n)
 void par::save (const char * filename)
 { FILE * fout;
   fout = fopen_errchk (filename, "w");
+  fprintf(fout,"%s",rems[1]);
+  fprintf(fout,"#<!--mcphase.mcphas.j-->\n");
+  fprintf(fout,"#***************************************************************\n");
+  fprintf(fout,"# Lattice and Exchange Parameter file for\n");
+  fprintf(fout,"# %s\n",MCPHASVERSION);
+  fprintf(fout,"# - program to calculate static magnetic properties\n");
+  fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+  fprintf(fout,"# %s\n",MCDISPVERSION);
+  fprintf(fout,"# - program to calculate the dispersion of magnetic excitations\n");
+  fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+  fprintf(fout,"#***************************************************************\n");
   save (fout);
   fclose(fout);
 }
@@ -207,8 +221,7 @@ void par::save (FILE * file)
 void par::savelattice (FILE *file)
 { 
   errno = 0;
-  fprintf(file,"%s",rems[1]);
-  fprintf(file,"%s",rems[2]);
+  fprintf(file,"#\n# Lattice Constants (A)\n");
   fprintf(file,"# a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
   fprintf(file,"# r1a=%4.6g r2a=%4.6g r3a=%4.6g\n",r[1][1],r[1][2],r[1][3]);
   fprintf(file,"# r1b=%4.6g r2b=%4.6g r3b=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);
@@ -221,4 +234,12 @@ void par::saveatoms (FILE * file)
 { int i;errno = 0;
   for (i=1;i<=nofatoms;++i)
     {(*jjj[i]).saveatom(file);}
+}
+
+void par::save_sipfs(char *path)   //save single ion parameter files filename to path*
+{int i;
+ for(i=1;i<=nofatoms;++i)
+ {
+    (*jjj[i]).save_sipf(path);
+ }
 }
