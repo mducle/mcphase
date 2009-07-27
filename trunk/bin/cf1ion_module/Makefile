@@ -8,8 +8,6 @@ else
  WINDOWS = windows
 endif
 
-
-
 vpath %.h  ../include
 vpath %.hpp ../include
 vpath %.o  ../src/vector

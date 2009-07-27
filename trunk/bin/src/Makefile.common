@@ -25,12 +25,20 @@
 # Intel Pentium PC, use -m486 for 486 CPU or -mpentium for Pentium Systems
 ###########################################################################
 
+# Checks whether we support the -march=native target
+ifdef fast
+ifneq ($(shell gcc --version|head -n1|grep " 3."),)
+ARCHFLAG=-O2
+else
+ifneq ($(shell gcc --version|head -n1|grep " 4."),)
+ARCHFLAG=-O2 -march=native
+endif
+endif
+endif
+
 # Checks for operating system types and architecture
 ifeq ($(shell uname),Linux)
 LINOPTS =-fPIC
-ifdef fast
-ARCHFLAG=-O2 -march=native
-endif
 ifeq ($(shell uname -m),x86_64)
 ifdef OMP
 ARCHFLAG+=-fopenmp
@@ -57,6 +65,18 @@ CCC= g++ $(ARCHFLAG)
 #CCC=$(CC)
 #CCC= g++ 
 
+# Check for cygwin
+ifneq (,$(findstring CYGWIN,$(shell uname)))
+#ARCHFLAG+=-mno-cygwin
+# To fix an error in spincf where min and max is used as variable names
+#   and conflicts with definitions in <w32api/windef.h>
+ARCHFLAG+=-DNOMINMAX
+# Checks to see if we want to use the 64bit crosscompiler in Cygwin
+ifdef cross64
+CC=x86_64-w64-mingw32-gcc -pipe $(ARCHFLAG)
+CCC=x86_64-w64-mingw32-g++ -pipe $(ARCHFLAG)
+endif
+endif
 
 #debug flag
 #DEBUG=debug

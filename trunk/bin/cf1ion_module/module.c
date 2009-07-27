@@ -6,7 +6,8 @@
 #include <cstdio>
 #include <cmath>
 #include <complex>
-#include <vector.h>
+#include "vector.h"
+#include <stdlib.h>
 
 #define MU_B 0.05788
 #define K_B  0.0862
@@ -442,7 +443,7 @@ if(tn<0) {tn=-tn;pr=0;}
    EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
    // calculate Z and wn (occupation probability)
      Vector wn(1,dj);double Z;
-     double x,y;int i,j,k,l,m;
+     double x,y;int i,j=0,k,l,m;
      x=Min(En);
      for (i=1;i<=dj;++i)
      {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 

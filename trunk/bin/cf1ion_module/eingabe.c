@@ -80,7 +80,7 @@ extern MATRIX    *calc_Bmag();   /* definiert in CFIELD.C */
 extern MATRIX    *calcBmol();    /* definiert in CFIELD.C */
 extern STEVENS   *calc_Pkq();    /* definiert in STEVENS.C */
  
-//open a file: similar fopen but with error check 
+/* open a file: similar fopen but with error check */
 FILE * fopen_errchk(const char * filename,const char * mode)
 { FILE *file;
  

@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cmath>
 #include <martin.h>
-#include <vector.h>
+#include "vector.h"
 #include <complex>
 #include "spincf.hpp"
 #include "chargedensity.hpp"

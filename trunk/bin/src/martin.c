@@ -294,6 +294,8 @@ float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
 //}
 
 
+// If gcc version 4.5.0 or greater, conflicts with declaration in <cmath>
+#if GCC_VERSION > 40500
 //copysign function
 double copysign(double a,double b)
 {//if fabs(a)
@@ -304,6 +306,7 @@ double copysign(double a,double b)
  return _copysign(a,b);
 #endif
 }
+#endif
 // */
 //sleep function
 int sleep(int a)
