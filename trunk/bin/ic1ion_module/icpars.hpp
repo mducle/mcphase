@@ -9,6 +9,9 @@
  * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
  */
 
+#ifndef ICPARS_H
+#define ICPARS_H
+
 #define PHYSPROP_MAGBIT 1                  // Defined bit values for the flags.calcphys bit mask
 #define PHYSPROP_SUSBIT 2
 #define PHYSPROP_INVBIT 4
@@ -182,3 +185,5 @@ class icmfmat
       void Mab(sMat<double>&M, sMat<double>&iM,    // Calculates the matrix M_ab = <i|Ja|j><j|Jb|i>
         iceig&V,double T,int i,int j,int p,float&d); // * {exp(-beta_i*T)-exp(-beta_j*T)}
 };
+
+#endif

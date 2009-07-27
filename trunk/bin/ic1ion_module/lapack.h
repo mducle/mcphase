@@ -22,6 +22,8 @@
 //      (C) 1992-1996 All Rights Reserved.
 */
 
+#ifndef LAPACK_H
+#define LAPACK_H
 
 /*  Linkage names between C, C++, and Fortran (platform dependent) */
 
@@ -156,3 +158,5 @@ extern "C"
 #endif // ARCOMP_H
 
 }
+
+#endif

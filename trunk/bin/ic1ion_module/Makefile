@@ -64,19 +64,11 @@ ifdef distrib
 CFLAGS += -mtune=pentium3 -march=i686
 STATIC = -static
 endif
-#------------------------------   LAPACK   --------------------------------------#
-# Use lapack routines in maths.cpp by default
-ifdef nomathslapack
-MATHSCFLAGS = $(CFLAGS)
-else
-MATHSCFLAGS = $(CFLAGS) -DUSE_LAPACK
-endif
 ##################################################################################
 
 # List of object files to be created and their headers
-OBJECT =       states               mmio njsyms cfp coulomb so_cf lovesey#maths_irbl
+OBJECT = maths states ic1ion icpars ic_hmltn ic_diag mmio njsyms cfp coulomb so_cf lovesey
 HEADER = maths states ic1ion icpars
-MATHOB = maths               icpars                                       ic_diag
 
 .PHONY: default all clean
 
@@ -93,34 +85,11 @@ VECOBJ = ../src/vector/cheigen.o ../src/vector/chgeigen.o ../src/vector/cludcomp
 libs/libarpack.a:
 	cd libs && make
 
-ic1ion: libs/libarpack.a maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o ic1ion_module.o
+ic1ion: libs/libarpack.a $(OBJ)
 ifdef integral
-	$(LINKER) -o ic1ion maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
+	$(LINKER) -o ic1ion $(OBJ) $(LDFLAGS) $(VECOBJ) $(STATIC)
 else
-	$(LINKER) -o ic1ion maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o $(LDFLAGS) $(STATIC)
-endif
-
-ic1ion.o: ic1ion.cpp maths.hpp states.hpp ic1ion.hpp
-ifdef integral
-	$(CC) $(MATHSCFLAGS) -D_INTEGRAL -c $<
-else
-	$(CC) $(MATHSCFLAGS) -c $<
-endif
-
-ic_hmltn.o: ic_hmltn.cpp
-ifdef arpackpp
-	$(CC) $(CFLAGS) -DUSE_ARPACKPP -Ilibs/arpack++/include -c $<
-else
-ifdef arpack
-	$(CC) $(CFLAGS) -DUSE_ARPACK -c $<
-else
-ifndef nomathslapack
-	$(CC) $(CFLAGS) -DUSE_LAPACK -c $<
-else
-	@echo "Warning: Compiling without Lapack. Many routines will be slow and may not work!"
-	$(CC) $(CFLAGS) -c $<
-endif
-endif
+	$(LINKER) -o ic1ion $(OBJ) $(LDFLAGS) $(STATIC)
 endif
 
 ic1ion_module.o: ic1ion_module.cpp
@@ -134,11 +103,11 @@ else
 endif
 endif
 
-ic1ion.so: libs/libarpack.a maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o ic1ion_module.o
+ic1ion.so: libs/libarpack.a $(OBJ)
 ifdef MSYS
-	$(LINKER) -o ic1ion.dll maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o ic1ion_module.o $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
+	$(LINKER) -o ic1ion.dll $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
 else
-	$(LINKER) -o ic1ion.so maths.o $(OBJ) ic_hmltn.o ic1ion.o ic_diag.o icpars.o ic1ion_module.o $(VECOBJ) -shared $(LDFLAGS)
+	$(LINKER) -o ic1ion.so $(OBJ) $(VECOBJ) -shared $(LDFLAGS)
 endif
 
 # Patern rules
@@ -149,9 +118,6 @@ endif
 
 $(OBJ): %.o: %.cpp $(HPP)
 	$(CC) $(CFLAGS) -c $<
-
-$(MOB): %.o: %.cpp $(HPP)
-	$(CC) $(MATHSCFLAGS) -c $<
 
 # Implicit rules (suffix rules)
 # NB. $@ = current target, $< = implied source, $* = filename without suffix.

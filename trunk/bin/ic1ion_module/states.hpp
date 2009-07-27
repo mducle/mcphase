@@ -9,6 +9,9 @@
  * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
  */
 
+#ifndef STATES_H
+#define STATES_H
+
 #include<vector>
 #include<iostream>
 #include<sstream>
@@ -177,3 +180,5 @@ class fconf
       fconf(int n, bool mJflag, orbital l=F);                   // Construct matrix in |aLSJ> or |aLSmJ> basis
 
 };
+
+#endif

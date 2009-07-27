@@ -22,13 +22,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#ifdef USE_ARPACKPP
-#include "arssym.h"
-#endif
-#if defined USE_LAPACK
-#elif defined USE_ARPACK
-#include "lapack.h"
-#endif
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Routine to convert a matrix from one basis to another, e.g from |vUSL> to |vUSLJmJ>
@@ -323,19 +316,13 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic, sMat<double> &
    sMat<double> V,Mt,iV,iMt;
    complexdouble *zt=0,zme;
 
-#ifdef USE_LAPACK
    double *fJmat=0; complexdouble *zJmat=0;
    if(iJmat.isempty() && iHic.isempty()) fJmat = Jmat.f_array(); else zJmat = zmat2f(Jmat,iJmat);
-#endif
 
    // Physical constants. Taken from NIST Reference on Constants, Units, and Uncertainty,
    //     http://physics.nist.gov/cuu/Constants/
- //const double mu_BJ = 927.400949e-26;   // J/Tesla - Bohr magneton
- //const double mu_Be = 5.78838263e-2;    // meV/T - Bohr magneton
    const double mu_B  = 0.46686437;       // cm^{-1} / Tesla - Bohr magneton
    const double k_B   = 1.3806505e-23;    // J/K - Boltzmann constant
- //const double Q_e   = 1.60217653e-19;   // C - Charge of electron
- //const double N_A   = 6.0221415e23;     // Avogadro's number
    const double h     = 6.62606896e-34;   // Js - Planck's constant
    const double c     = 299792458;        // m/s - speed of light in vacuum
 
@@ -347,56 +334,12 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic, sMat<double> &
    // Calculates the total Hamiltonian as a function of field (last index)
    sMat<double> Hmltn = Hic + Jmat*(-H_mag*mu_B);                     // Hmltn = Hic + (-H(ind_H)*mu_B).*Jmat;
    sMat<double> iHmltn = iHic + iJmat*(-H_mag*mu_B);
- //sMat<double> Hmltn = Hic, iHmltn = iHic;
 
    // Calculates the eigenvectors V and eigenvalues (enegies) E
    // Where:            ---
    //        | V  >  =  >    a  |j, j    >
    //           i       ---i  i      z,i
    //
-#if defined USE_ARPACKPP
-   // NB. ARPACK++ is about 1-2% slower than using ARPACK directly, and about 250% slower than DSYEVR() in LAPACK
-   //     because of the slowness of the MultMv() routine...
-   char whichp[] = "LM"; //int nev = J2_gs+8; 
-   ARSymStdEig<double, sMat<double> > dprob(Hsz, nev, &Hmltn, &sMat<double>::MultMv, whichp);
-   dprob.FindEigenvectors();                                          // [V, E] = eig(Hmltn);
-   E.reserve(nev); ind.reserve(nev); dt = dprob.Eigenvalue(0);
-   for(i=0; i<nev; i++) 
-      if(dprob.Eigenvalue(i)<0) 
-      {
-         ind.push_back(i);
-         E.push_back(dprob.Eigenvalue(i));
-         if(dprob.Eigenvalue(i)<dt) dt = dprob.Eigenvalue(i);
-      }
-   Esz = E.size(); V.zero(Hsz,Esz);
-   for(i=0; i<Esz; i++)
-      for(j=0; j<Hsz; j++)
-         V(j,i) = dprob.Eigenvector(ind[i],j);
-#elif defined USE_ARPACK
-   // Doesn't work at present - needs debugging!
-   int ido=0,ncv=(2*nev>Hsz?Hsz:2*nev),iparam[]={1,0,100,1,5,0,1,0,0,0,0},*ipntr=(int*)malloc(11*sizeof(int));
-   //         IPARAM={ISHIFT,,MAXITER,NB,NCONV,,MODE,NP,NUMOP,NUMOPB,NUMREO
-   int lworkl=ncv*ncv+12*ncv,info=0;
-   char bmat='I', whichp[]="LM";
-   double tol=1e-5,*resid=(double*)malloc(Hsz*sizeof(double)),*v=(double*)malloc(Hsz*ncv*sizeof(double));
-   double *workd=(double*)malloc(3*Hsz*sizeof(double)),*workl=(double*)malloc(lworkl*sizeof(double));
-   while(ido!=99)
-   {
-      F77NAME(dsaupd)(&ido, &bmat, &Hsz, whichp, &nev, &tol, resid, &ncv, v, &Hsz, iparam, ipntr, workd, workl, &lworkl, &info);
-      if(ido==1 || ido==-1) Hmltn.MultMv(&workd[ipntr[0]],&workd[ipntr[1]]);
-   }
-   int rvec=1,*select=(int*)malloc(ncv*sizeof(int)); char howmny='A';
-   double *d=(double*)malloc(nev*sizeof(double)),*z=(double*)malloc(Hsz*nev*sizeof(double)); 
-   F77NAME(dseupd)(&rvec, &howmny, select, d, z, &Hsz, &tol, &bmat, &Hsz, whichp, &nev, &tol, resid, &ncv, v, &Hsz, iparam, ipntr, workd, workl, &lworkl, &info);
-   Esz = nev; dt = d[0]; E.assign(nev,0.); V.zero(Hsz,Esz);
-   for(i=0; i<nev; i++)
-   {
-      E[i] = d[i]; if(E[i]<dt) dt = E[i];
-      for(j=0; j<Hsz; j++)
-         V(j,i) = z[j*Hsz+i];
-   }
-   free(ipntr); free(resid); free(v); free(workd); free(workl); free(select); free(d); free(z);
-#elif defined USE_LAPACK
    int lda = Hmltn.nc(), n = Hmltn.nr(), info = 0;
    char jobz = 'V', uplo = 'U';
    int lwork = 4*n, incx = 1;
@@ -444,23 +387,6 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic, sMat<double> &
       if(eigval[i]<dt) dt = eigval[i];
    }
    Esz = E.size(); free(eigval); 
-#else
-   // Warning - this doesn't work! Use the LAPACK or ARPACK versions instead!
-   eigVE<double> dg = eig(Hic); E = dg.E;
-   double elem; int ii; ind.reserve(Hsz); for(i=0;i<Hsz;i++) ind.push_back(i); i=1; j=2; 
-   while(i<Hsz)
-   {
-      if(E[i-1]<=E[i]) { i=j; j++; }
-      else { elem = E[i-1]; E[i-1] = E[i]; E[i] = elem; ii = ind[i-1]; ind[i-1] = ind[i]; ind[i] = ii; i--; if(i==0) i=1; }
-   } 
-   dt = E[0];
-   for(i=0; i<nev; i++) 
-      if(E[i]<dt) dt = E[i];
-   Esz = nev; V.zero(Hsz,Esz);
-   for(i=0; i<Esz; i++)
-      for(j=0; j<Hsz; j++)
-         V(j,i) = dg.V(j,ind[i]);
-#endif
 
    // Sets energy levels relative to lowest level.
    for(i=0; i<Esz; i++) E[i] -= dt;                                   // E = E - min(E);
@@ -472,97 +398,28 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic, sMat<double> &
    {  // Calculates the matrix elements <Vi|J.H|Vi>
       if(iHmltn.isempty())
       {
-#ifdef USE_LAPACK
          vt = (double*)malloc(Hsz*sizeof(double)); 
          F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, &m[ind[ind_j]*Hsz], &incx, &beta, vt, &incx);
          me = F77NAME(ddot)(&Hsz, &m[ind[ind_j]*Hsz], &incx, vt, &incx);
-#else
-         Mt = Jmat * V.setp(-1,-1,ind_j+1,ind_j+1);
-         me = 0.; for(i=0; i<Hsz; i++) me += V(i,ind_j)*Mt(i,0);      //   me = V(:,ind_j)' * Jmat * V(:,ind_j);
-#endif
       }
       else
       {
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
-#ifdef USE_LAPACK
          F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, &z[ind[ind_j]*Hsz], &incx, &zbeta, zt, &incx);
          zme = F77NAME(zdotc)(&Hsz, &z[ind[ind_j]*Hsz], &incx, zt, &incx);
-#else
-         for(i=0; i<Hsz; i++) 
-         {
-            zt[i].r = 0.; zt[i].i = 0.;
-            for(j=0; j<Hsz; j++) 
-            { 
-               zt[i].r += Jmat(i,j)*V(j,ind_j) - iJmat(i,j)*iV(j,ind_j);
-               zt[i].i += Jmat(i,j)*iV(j,ind_j) + iJmat(i,j)*V(j,ind_j);
-            } 
-         }
-         zme.r = 0.; zme.i = 0.; 
-         for(i=0; i<Hsz; i++) 
-         { 
-            zme.r += V(i,ind_j)*zt[i].r+iV(i,ind_j)*zt[i].i;
-            zme.i += V(i,ind_j)*zt[i].i-iV(i,ind_j)*zt[i].r; 
-         }  
-#endif
          me = zme.r;                                                  //   me = V(:,ind_j)' * Jmat * V(:,ind_j);
       }
 
-#if 0
-      // Calculates the nondegenerate second order terms
-      i_ndegen.clear();
-      for(i=0; i<Esz; i++)
-         if(fabs(E[i]-E[ind_j])>=small) i_ndegen.push_back(i);        //   i_ndegen = find( (abs(E-E(ind_j))>=small) );
-      me_ndegen.assign(i_ndegen.size(),0.);                           //   me_ndegen = zeros(1,length(i_ndegen));
-      for(id_j=0; id_j<(int)i_ndegen.size(); id_j++)                  //   for id_j = 1:length(i_ndegen)
-      {
-         ind_i = i_ndegen[id_j];                                      //     ind_i = i_ndegen(id_j);
-         if(iHic.isempty() && iJmat.isempty())
-         {
-#ifdef USE_LAPACK
-            dt = F77NAME(ddot)(&Hsz, &m[ind_i*Hsz], &incx, vt, &incx);//     me_ndegen(id_j) = V(:,ind_i)' * Jmat * V(:,ind_j); 
-#else
-            dt = 0.; for(i=0; i<Hsz; i++) dt += V(i,ind_i)*Mt(i,0);
-#endif                                                                //     me_ndegen(id_j) = ( mu_BJ*H(ind_H) ... 
-            dt = (mu_BJ*H_mag*dt*dt) / (E[ind_i]-E[ind_j]);           //            * conj(me_ndegen(id_j))*me_ndegen(id_j) ) ... 
-            me_ndegen[id_j] = dt;                                     //            / ( E(ind_i) - E(ind_j) ); 
-         }
-         else
-         {
-#ifdef USE_LAPACK
-            zme = F77NAME(zdotc)(&Hsz, &z[ind_i*Hsz], &incx, zt, &incx);
-#else
-            zme.r = 0.; zme.i = 0.; 
-            for(i=0; i<Hsz; i++) 
-            { 
-               zme.r += V(i,ind_i)*zt[i].r+iV(i,ind_i)*zt[i].i;
-               zme.i += V(i,ind_i)*zt[i].i-iV(i,ind_i)*zt[i].r;       //     me_ndegen(id_j) = V(:,ind_i)' * Jmat * V(:,ind_j); 
-            }
-#endif
-            me_ndegen[id_j] = (mu_BJ*H_mag*(zme.r*zme.r+zme.i*zme.i)) / (E[ind_i]-E[ind_j]);
-         }
-      }                                                               //   end
-#endif   // #if 0
-#ifdef USE_LAPACK
       if(iHic.isempty() && iJmat.isempty()) free(vt); else free(zt);
-#endif
-#ifdef USE_ARPACK
-      if(iHic.isempty() && iJmat.isempty()) free(vt); else free(zt);
-#endif
 
       // Calculates the elements of the expectation of J.H: <i|J.H|i> exp(-Ei(H)/kT) and the partition function: exp(-Ei(H)/kT)
-    //dt = me - vsum(me_ndegen);
       for(i=0; i<(int)T.size(); i++)                                  //   JH(:,ind_j) = (me - sum(me_ndegen)) .* exp(-beta .* E(ind_j));
       {                                                               //   Z(:,ind_j) = exp(-beta .* E(ind_j));
          dt2 = exp(-E[ind_j]/(k_B*T[i])); mag[i]+=me*dt2; Z[i]+=dt2;
       }
    }                                                                  // end
 
-#ifdef USE_LAPACK
    if(iHic.isempty() && iJmat.isempty()) { free(m); free(fJmat); } else { free(z); free(zJmat); }
-#endif
-#ifdef USE_ARPACK
-   if(iHic.isempty() && iJmat.isempty()) free(m); else free(z);
-#endif
 
    // Calculates the expectation <<J.H>> = sum(<i|J.H|i>exp(-Ei/kT)) / sum(exp(-Ei/kT))
    for(i=0; i<(int)T.size(); i++) mag[i] /= Z[i];

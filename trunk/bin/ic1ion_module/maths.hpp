@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef MATHS_H
+#define MATHS_H
+
 #include<cstdlib>
 #include<cmath>
 #include<vector>
@@ -22,15 +25,7 @@
 #include<string>
 #include<map>
 #include<cfloat>       // For definition of EPSILON etc.
-
-// --------------------------------------------------------------------------------------------------------------- //
-// Complex structure
-// --------------------------------------------------------------------------------------------------------------- //
-#ifndef USE_LAPACK
-typedef struct { double r,i; } complexdouble;
-#else
 #include "lapack.h"
-#endif
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Template Class to hold a sparse matrix of any type - and also declares standard matrix algebra methods.
@@ -634,22 +629,6 @@ template <class T> sMat<T> sMat<T>::operator *= (const sMat<T> & m)     // Matri
 
    if(_c != m._r)
       std::cerr << "Error: sMat<T>::operator *= (const sMat<T>): Matrix sizes are incommensurate!\n";
-/* else if(_c==_r && m._c==_c && m._r==_r)  // Two NxN square matrices
-   {
-      int n;
-      // Using Strassen's algorithm for fast matrix multiplication.
-      // Reference: V. Strassen, Numer. Math. 13, 354-356 (1969)
-
-      // Makes the matrices into 2^n x 2^n
-      n = ceil( log(_c)/0.69314718 );   // log(2)==0.69314718
-      tmp = m; tmp._r = n; tmp._c = n;
-
-      // C(1,1) = M1 + M4 - M5 + M7 | M1 = [A(1,1)+A(2,2)][B(1,1)+B(2,2)] | M4 = [A(1,1)+A(1,2)]B(2,2)
-      // C(1,2) = M3 + M5           | M2 = [A(2,1)+A(2,2)]B(1,1)          | M5 = [A(2,1)-A(1,1)][B(1,1)+B(1,2)]
-      // C(2,1) = M2 + M4           | M3 = A(1,1)[B(1,2)-B(2,2)]          | M6 = [A(1,2)-A(2,2)][B(2,1)+B(2,2)]
-      // C(2,2) = M1 - M2 + M3 + M6 | M4 = A(2,2)[B(2,1)-B(1,1)]          |
-
-   } */
    else
    {
       int r,c;
@@ -1157,8 +1136,6 @@ enum normp { inf = 3, fro = 4 };
 // Declarations for functions in maths.cpp
 // --------------------------------------------------------------------------------------------------------------- //
 eigVE<double> eig(const sMat<double>  & M);                               // Diagonalises M by tri-diag and QL fact.
-eigVE<double> eigT(const sMat<double>  & M);                              // Diagonalises tri-diagonal M by QL fact.
-eigVE<double> jacobi(const sMat<double> & M);                             // Diagonalises M by jacobi rotations
 std::vector<double> svd(const sMat<double> &M);                           // Calculates the single value decomposition
 std::vector<double> svd(const sMat<double> &M, sMat<double> &V);          // Calculates svd and the left matrix too
 std::vector<double> svd(const sMat<double> &M, sMat<double> &U,sMat<double> &V); // Calculates svd and both U/V 
@@ -1177,30 +1154,4 @@ std::vector<double> f2vec(double *v, int n);                              // Con
 sMat<double> f2mat(double *M, int m, int n);                              // Converts a 2D C-array into an sMat
 complexdouble* zmat2f(sMat<double> &r, sMat<double> &i);                  // Converts two sMat to complex C-array
 
-// --------------------------------------------------------------------------------------------------------------- //
-// Declarations for functions in maths_irbl.cpp
-// --------------------------------------------------------------------------------------------------------------- //
-sMat<double> qrsingblk(sMat<double> & F, sMat<double> & V,                // Calculates the QR decomposition of a 
-   sMat<double> & eigvec, sMat<int> I, int blsz, double sqrteps);         //   singular block matrix
-bool blanz(sMat<double> & A, int K, sMat<double> & V, int & blsz,
-   sMat<double> & eigvec, int & mprod, int n, int nbls, std::vector<int>  // Calculates the block Lanczos decomposition
-   &singblk, double sqrteps, double tol, sMat<double>&F, sMat<double>&T);
-void convtests(bool computvec,int &conv, bool &deflate,                   // Tests for convergence of Ritz values
-   std::vector<double> &eigval, sMat<double> &eigvec, std::vector<double> //    and Ritz vectors
-   &eigresdisp, int iter, int K, std::vector<double> &pritz, 
-   std::vector<double> residuals, eigVE<double> &ritz, bool &ritzconv, 
-   std::vector<int> &singblk, double sqrteps, double tol, int Tsz, 
-   sMat<double> V, double &Rmax);
-void fastleja(std::vector<double> &fLejapts, int numshfts,                // Calculates the fast Leja points on the 
-   std::vector<double> &rcandpts, sMat<double> &rindex,                   //    interval [-2,2].
-   std::vector<double> &rprd);
-void applyshifts(int blsz, sMat<double> &F, std::vector<double> &fLejapts,// This function determines the endpoints 
-   int iter, int K, std::vector<double> lcandpts, double &leftendpt,      //    of the dampening intervals, zeros 
-   double &leftintendpt, std::vector<double> &lprd, double &leftLejapt,   //    (weighted Leja points or mapped Leja 
-   double &lindex, int &maxdpol, int &nbls, double &norlpol,              //    points or mapped Leja points) and
-   std::vector<double> &rcandpts, double &rightendpt, double &rightintendpt, // applies the zeros as shifts.
-   eigVE<double> &ritz, std::vector<double> &rprd, double &rightLejapt, 
-   sMat<double> &rindex, std::vector<int> &singblk, int sizint, int Tsz, 
-   sMat<double> &T, sMat<double> &V, int &flcount);
-eigVE<double> irbleigs(sMat<double> & M, int K);                          // Diagonalise M by the block-Lanczos method
-
+#endif

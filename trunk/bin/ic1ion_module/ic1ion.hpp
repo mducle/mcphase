@@ -9,6 +9,9 @@
  * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
  */
 
+#ifndef IC1ION_H
+#define IC1ION_H
+
 #include "states.hpp"
 #include "maths.hpp"
 #include "icpars.hpp"
@@ -37,8 +40,6 @@ void mm_gout(sMat<double> M, const char*filename, const char*comments="");// Out
 sMat<double> mm_gin(const char *filename);                                // Reads in a MatrixMarket sparse matrix
 void mm_sout(sMat<double> M, const char*filename, const char*comments="");// Output to file a sparse symmetrix matrix
 sMat<double> mm_sin(const char *filename);                                // Reads in a sparse symmetrix matrix
-void mm_gout(complexdouble *M, int nr, int nc, const char *filename, const char *comments="");
-void mm_gin(complexdouble *M, int &nr, int &nc, const char *filename);
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in coulomb.cpp
@@ -154,3 +155,5 @@ void ic_printheader(const char *filename, icpars &pars);                  // Pri
 void ic_showoutput(const char *filename, icpars &pars);                   // Prints calculated spectra to file
 void ic_showoutput(const char*file, eigVE<double>&d, fconf&f, icpars&p);  // As above but with sMat<> format
 void ic_cmag(const char *filename, icpars &pars);                         // Calcs. magnetisation using icmfmat::
+
+#endif
