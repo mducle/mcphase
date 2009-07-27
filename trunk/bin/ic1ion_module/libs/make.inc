@@ -41,13 +41,33 @@ ifneq ($(shell gcc --version|head -n1|grep " 4."),)
 endif
 endif
 
+ifneq (,$(findstring CYGWIN,$(shell uname)))
+#ARCHFLAG+=-mno-cygwin
+ifdef cross64
+FORTRAN  = x86_64-w64-mingw32-gfortran --std=legacy
+ARCH     = x86_64-w64-mingw32-ar
+ARCHFLAGS= cr
+RANLIB   = x86_64-w64-mingw32-ranlib
+endif
+ifdef cross32
+FORTRAN  = i686-w64-mingw32-gfortran --std=legacy
+ARCH     = i686-w64-mingw32-ar
+ARCHFLAGS= cr
+RANLIB   = i686-w64-mingw32-ranlib
+endif
+endif
+
 ifdef MSYS
 FLAGS    = -pipe -g
 else
 FLAGS    = -pipe -g -fPIC
 endif
 ifdef fast
+ifneq ($(shell gcc --version|head -n1|grep " 3."),)
+FLAGS   += -O2 -fomit-frame-pointer
+else
 FLAGS   += -O2 -fomit-frame-pointer -march=native 
+endif
 endif
 ifdef distrib
 FLAGS   += -mtune=pentium3 -march=i686
@@ -81,9 +101,11 @@ TIMER    = INT_ETIME
 #  The archiver and the flag(s) to use when building archive (library)
 #  If you system has no ranlib, set RANLIB = echo.
 #
+ifndef ARCH
 ARCH     = ar
 ARCHFLAGS= cr
 RANLIB   = ranlib
+endif
 #
 #  The location of the libraries to which you will link.  (The 
 #  machine-specific, optimized BLAS library should be used whenever
