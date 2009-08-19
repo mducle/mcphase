@@ -1135,6 +1135,8 @@ enum normp { inf = 3, fro = 4 };
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in maths.cpp
 // --------------------------------------------------------------------------------------------------------------- //
+float sign(float val);                                                    // Determines the sign of a float 
+double sign(double val);                                                  // Determines the sign of a double
 eigVE<double> eig(const sMat<double>  & M);                               // Diagonalises M by tri-diag and QL fact.
 std::vector<double> svd(const sMat<double> &M);                           // Calculates the single value decomposition
 std::vector<double> svd(const sMat<double> &M, sMat<double> &V);          // Calculates svd and the left matrix too

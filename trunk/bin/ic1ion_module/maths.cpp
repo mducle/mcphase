@@ -20,6 +20,28 @@
 #include<cstdlib>                      // For rand()
 
 // --------------------------------------------------------------------------------------------------------------- //
+// Uses bit manipulation to determine sign of a floating point number
+// --------------------------------------------------------------------------------------------------------------- //
+float sign(float val)
+{
+/* // Clears all bits except sign bit
+   *((int*)&val) &= 0x80000000;
+   // Sets mantissa to 1. and exponent to 0;
+   *((int*)&val) |= 0x3f800000;
+   return val; */
+   return val<0?-1.:1.;
+}
+double sign(double val)
+{
+/* // Clears all bits except sign bit
+   *((long int*)&val) &= 0x8000000000000000;
+   // Sets mantissa to 1. and exponent to 0;
+   *((long int*)&val) |= 0x3ff0000000000000;
+   return val; */        // Without optimisation, takes about 11.6s for 1e9 iterations. Fails with optimisation!
+   return val<0?-1.:1.;  // Without optimisation, takes about 9.2s for 1e9 iterations! 5.5s with optimisation...
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
 // Calculates the eigenvalues and eigenvectors of a symmetric matrix using the LAPACK routine dsyev
 // --------------------------------------------------------------------------------------------------------------- //
 eigVE<double> eig(const sMat<double> & M)

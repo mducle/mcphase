@@ -440,7 +440,7 @@ void ic_printheader(const char *outfile, icpars &pars)
    if(!pars.ionname.empty()) FILEOUT << "# Ion name: " << pars.ionname << "\n";
    FILEOUT << "# Free ion configuration: " << Lstr << "^" << pars.n << "\n";
    FILEOUT << "# Free ion parameters (" << pars.e_units << "): F^2=" << pars.F[1] << " F^4=" << pars.F[2];
-   if(pars.l==F) FILEOUT << " F^6="; FILEOUT << pars.F[3] << " xi=" << pars.xi << " alpha=" << pars.alpha[0] << " beta=" << pars.alpha[1]; 
+   if(pars.l==F) FILEOUT << " F^6=" << pars.F[3]; FILEOUT << " xi=" << pars.xi << " alpha=" << pars.alpha[0] << " beta=" << pars.alpha[1]; 
    if(pars.l==D) FILEOUT << "\n"; else FILEOUT << " gamma=" << pars.alpha[2] << "\n";
    FILEOUT << "# Crystal Field parameters normalisation: " << pars.B.norm() << "\n";
    FILEOUT << "# Crystal Field parameters (" << pars.B.units() << "): " << pars.B.cfparsout(", ") << "\n";
@@ -467,6 +467,7 @@ void ic_showoutput(const char *filename,                        // Output file n
 
    ic_printheader(filename,pars);
    std::fstream FILEOUT; FILEOUT.open(filename, std::fstream::out | std::fstream::app); // Opens file for appending
+   FILEOUT << "# Energy offset, E0=" << VE.E(0)*conv << pars.e_units << "\n";
    if(!VE.iscomplex()) FILEOUT << "# Energy(" << pars.e_units << ")\tWavefunctions(^{2S+1}L_J,mJ) }\n"; else
    FILEOUT << "# Energy(" << pars.e_units << ")\tAmplitude\t|Amplitude|^2\tWavefunctions(^{2S+1}L_J,mJ) }\n";
 

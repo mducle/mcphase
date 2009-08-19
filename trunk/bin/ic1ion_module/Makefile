@@ -4,7 +4,7 @@ LINKER = g++
 # Figures operating system
 ifeq (${OSTYPE},msys)
 MSYS=1
-endif
+else
 ifeq ($(shell uname),Linux)
  LINUX = LINUX
  LIBFORTRAN=-lgfortran
@@ -14,7 +14,7 @@ ifneq (,$(findstring CYGWIN,$(shell uname)))
 #ARCHFLAG+=-mno-cygwin
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
-ARCHFLAG+=-DNOMINMAX
+#ARCHFLAG+=-DNOMINMAX
 # Checks to see if we want to use the 64bit crosscompiler in Cygwin
 ifdef cross64
 CC=x86_64-w64-mingw32-g++ -m64 -pipe $(ARCHFLAG)
@@ -24,16 +24,19 @@ ifdef cross32
 CC=i686-w64-mingw32-g++ -m32 -pipe $(ARCHFLAG)
 LINKER=i686-w64-mingw32-g++ -m32
 endif
-endif
+endif                # if CYGWIN
  MSYS=1
  LIBFORTRAN=-lg2c
-endif
+endif                # if LINUX
+endif                # if MSYS
 
 ifneq ($(shell $(CC) --version|head -n1|grep " 3."),)
  LIBFORTRAN=-lg2c
 else
 ifneq ($(shell $(CC) --version|head -n1|grep " 4."),)
  LIBFORTRAN=-lgfortran
+else                 # Assumes gcc3 or below
+ LIBFORTRAN=-lg2c
 endif
 endif
 
@@ -119,19 +122,19 @@ endif
 
 ic1ion.o: ic1ion.cpp maths.hpp states.hpp ic1ion.hpp
 ifdef integral
-	$(CC) $(MATHSCFLAGS) -D_INTEGRAL -c $<
+	$(CC) $(CFLAGS) -D_INTEGRAL -c $<
 else
-	$(CC) $(MATHSCFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $<
 endif
 
 ic1ion_module.o: ic1ion_module.cpp
 ifdef integral
-	$(CC) $(MATHSCFLAGS) -D_INTEGRAL -I../include -c $<
+	$(CC) $(CFLAGS) -D_INTEGRAL -I../include -c $<
 else
 ifdef MSYS
-	$(CC) $(MATHSCFLAGS) -I../include -DBUILD_DLL -c $<
+	$(CC) $(CFLAGS) -I../include -DBUILD_DLL -c $<
 else
-	$(CC) $(MATHSCFLAGS) -I../include -c $<
+	$(CC) $(CFLAGS) -I../include -c $<
 endif
 endif
 

@@ -78,7 +78,7 @@ sMat<double> racah_so(int n, double xi, orbital e_l)  // Defaults to f-electrons
             so(i,j) = -n*xi * racahW(conf.states[i].J2,abs(conf.states[i].L)*2,conf.states[j].S2,2,conf.states[i].S2,abs(conf.states[j].L)*2)
                       * sqrt( 126.*(2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.)*(conf.states[i].S2+1.)*(conf.states[j].S2+1.) )
                       * sumcfp;
-         // if(n>7) so(i,j) = -so(i,j);   // Phase factor difference for >half-filled shell. See Nielson/Koster or Racah III
+            if(n>(2*e_l+1)) so(i,j) = -so(i,j);   // Phase factor difference for >half-filled shell. See Nielson/Koster or Racah III
             if(i!=j) so(j,i) = so(i,j);
          }
       }
@@ -125,13 +125,14 @@ sMat<double> racah_Umat(int n, int k, orbital e_l)
                                * cfpsi[ii].cfp * cfpsj[jj].cfp * pow(-1.,(double)abs(confp.states[cfpsi[ii].ind].L)+k) * noncfpprod;
             if(fabs(sumcfp)!=0.) 
             {
+               if(n>(2*e_l+1)) sumcfp = -sumcfp; // Phase difference: [4l+2-n] = -(-1)^K [n] 
                U(i,j) = n * sumcfp;
-            // if(n>7) U(i,j) = -n* sumcfp; else U(i,j) = n * sumcfp; // Phase difference: [4l+2-n] = -(-1)^K [n] 
                if(i!=j) U(j,i) = pow(-1.,abs(conf.states[i].L)-conf.states[i].S2/2.-abs(conf.states[j].L)+conf.states[j].S2/2.) * n * sumcfp;
             }
          }
       }
    }
+   char rmat[255]; strcpy(rmat,"results/ic1ion.umat"); rmzeros(U); mm_gout(U,rmat);
    return U;
 }
 
@@ -142,7 +143,7 @@ sMat<double> racah_ukq(int n, int k, int q, orbital e_l)
 {
    fconf conf(n,e_l);
    int num_states = (int)conf.states.size();
-   int nn = n; if(nn>(2*e_l+1)) n = 4*e_l+2-n; 
+ //int nn = n; if(nn>(2*e_l+1)) n = 4*e_l+2-n; 
    sMat<double> redmat = racah_Umat(n,k,e_l);
    int i,j,m,ns=0;
    int j2min,j2max;
@@ -174,7 +175,7 @@ sMat<double> racah_ukq(int n, int k, int q, orbital e_l)
          if(S2[i]==S2[j])
          {
             rm = pow(-1.,(S2[i]-L2[i]-J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) * racahW(L2[i],J2[i],L2[j],J2[j],S2[i],2*k) * redmat(irm[i],irm[j]);
-            if(nn>(2*e_l+1)) rm = -rm;
+          //if(nn>(2*e_l+1)) rm = -rm;
             Ukq(i,j) = pow(-1.,(J2[i]+Jz2[i])/2.+k+q) * rm * wigner(J2[i],J2[j],0-Jz2[i],Jz2[j],2*k,-2*q) / sqrt(2.*k+1.);
          // if(i!=j) Ukq(j,i) = Ukq(i,j) * pow(-1.,(L2[i]-S2[i]-L2[j]+S2[j])/2.);
          }
@@ -189,7 +190,7 @@ sMat<double> racah_uJ(int n, int k, orbital e_l)
 {
    fconf conf(n,e_l);
    int num_states = (int)conf.states.size();
-   int nn = n; if(nn>(2*e_l+1)) n = 4*e_l+2-n; 
+// int nn = n; if(nn>(2*e_l+1)) n = 4*e_l+2-n; 
    sMat<double> redmat = racah_Umat(n,k,e_l);
    int i,j,ns=0;
    int j2min,j2max;
@@ -216,7 +217,7 @@ sMat<double> racah_uJ(int n, int k, orbital e_l)
          if(S2[i]==S2[j])
          {
             Ukq(i,j) = pow(-1.,(S2[i]+L2[i]+J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) * sixj(L2[i],J2[i],S2[i],J2[j],L2[j],2*k) * redmat(irm[i],irm[j]);
-            if(nn>(2*e_l+1)) Ukq(i,j) = -Ukq(i,j);
+         // if(nn>(2*e_l+1)) Ukq(i,j) = -Ukq(i,j);
          }
 
    return Ukq;

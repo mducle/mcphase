@@ -809,7 +809,7 @@ double racah_cfp(int n, qG2 U, int v, int S2, orbital L, qG2 Up, int vp, int S2p
 {
    double cfp = 0;
    int nn = n,it; qG2 Ut; orbital Lt;
-   if(n>7) { n=14-n+1; n++; it=v;v=vp;vp=it; it=S2;S2=S2p;S2p=it; Lt=L;L=Lp;Lp=Lt; Ut=U;U=Up;Up=Ut; }
+   if(n>7) { n=14-n; n++; it=v;v=vp;vp=it; it=S2;S2=S2p;S2p=it; Lt=L;L=Lp;Lp=Lt; Ut=U;U=Up;Up=Ut; }
    if(n<0) { std::cerr << "racah_cfp: n<0 or n>14 not allowed for f-electrons.\n"; return cfp; }
    qR7 W = racah_vtow(S2,v);
    qR7 Wp = racah_vtow(S2p,vp);
@@ -857,7 +857,7 @@ double racah_cfp(int n, qG2 U, int v, int S2, orbital L, qG2 Up, int vp, int S2p
       //
       // Ref: A.F. Starace, Phys. Rev. A v27, p572 (1983)
       cfp *= ( pow(-1.,(S2+S2p)/2.+abs(L)+abs(Lp)-3.-.5) * sqrt((14.-nn+1.)*(S2+1.)*(2.*abs(L)+1.)/nn/(S2p+1.)/(2.*abs(Lp)+1.)) );
-      if(nn==8) cfp *= pow(-1.,(vp-1.)/2.); 
+      if(nn==8) cfp *= pow(-1.,(v-1.)/2.); 
    }
 
    return cfp;
@@ -908,14 +908,14 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
          {
             if(L==P && S2p==2) { if(Lp==P) cfp = -sqrt(8./15); else if(Lp==F) cfp = -sqrt(7./15); }
                                  // 4P  3P  -1   3 -1 -1            // 4P  3F  -1  0 -1 -1 1
-            if(L==F && S2p==2) { if(Lp==P) cfp = -sqrt(1./5);  else if(Lp==F) cfp = sqrt(1./5); }
+            if(L==F && S2p==2) { if(Lp==P) cfp = -sqrt(1./5);  else if(Lp==F) cfp = sqrt(4./5); }
                                  // 4F  3P  -1   0 0 -1             // 4F  3F   1  2 0 -1
          }
          else if(S2==1)
          {
             if(L==P) { if(S2p==2) { if(Lp==P) cfp = sqrt(7./30); else if(Lp==F) cfp = -sqrt(4./15); }
                                  // 2P  3P   1   -1 -1 -1 1         // 2P  3F  -1  2 -1 -1
-                       else if(S2p==0 && Lp==D) cfp = sqrt(1./2); }  // 2P 1D   1  -1
+                       else if(S2p==0 && Lp==D) cfp = sqrt(1./2); } // 2P  1D   1  -1
        else if(L==D) { if(v==1) {
 	               if(S2p==2) { if(Lp==P) cfp = -sqrt(3./20); else if(Lp==F) cfp = -sqrt(7./20); }
                                  // 2D1 3P  -1   -2 1 -1            // 2D1 3F  -1  -2 0 -1 1
@@ -933,7 +933,7 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
                                  // 2F  1D  -1   0 0 0 -1           // 2F  1G  -1  -1 0 1 -1
        else if(L==G) { if(S2p==0) { if(Lp==D) cfp = -sqrt(5./21); else if(Lp==G) cfp = sqrt(11./42); }
                                  // 2G  1D  -1   0 -1 1 -1          // 2G  1G   1  -1 -1 0 -1 1
-                       else if(S2p==2 && Lp==F) cfp = sqrt(1./2); }  // 2G  3F   1  -1
+                       else if(S2p==2 && Lp==F) cfp = sqrt(1./2); } // 2G  3F   1  -1
        else if(L==H) { if(S2p==2 && Lp==F) cfp = -sqrt(1./2); else if(S2p==0 && Lp==G) cfp = sqrt(1./2); }
                                  // 2H  3F  -1   -1                 // 2H  1G   1  -1
          }
@@ -950,25 +950,25 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
                                         0,  -1./3.,       0,       0,    5./42.,   3./16.,  99./560., 11./60., // 3G
                                         0,   1./3.,       0,       0,        0,    1./12.,  -3./20.,  13./30.};// 3H
             if(S2p==3) { if(Lp==P) id = 0; else if(Lp==F) id = 1; }
-       else if(S2p==2) { if(Lp==D) { if(vp==1) id=3; else if(vp==3) id=4; } else { switch(Lp) { CD(P,2); CD(F,5); CD(G,6); CD(H,7); default: return cfp; } } }
+       else if(S2p==1) { if(Lp==D) { if(vp==1) id=3; else if(vp==3) id=4; } else { switch(Lp) { CD(P,2); CD(F,5); CD(G,6); CD(H,7); default: return cfp; } } }
 	    if(id!=-1) { if(L==P) { if(v==2) cfp = t[id];    else if(v==4) cfp = t[id+8]; } 
 	            else if(L==F) { if(v==2) cfp = t[id+24]; else if(v==4) cfp = t[id+32]; } 
 	            else { switch(L) { case D: cfp = t[id+16]; break; case G: cfp = t[id+40]; break; case H: cfp = t[id+48]; break; default: return cfp; } }
-               cfp = sqrt(fabs(cfp))*(cfp/fabs(cfp)); }
+               cfp = sqrt(fabs(cfp))*sign(cfp); }
          }                       //     2P      2D1      2D2       2F        2G        2H
-    else if(S2==0) { double t[] = {     0,     1.,       0,        0,        0,        0,    // 1S1
-                                        0,      0,      1.,        0,        0,        0,    // 1S2
-                                   -3./20.,  3./8.,   9./56.,   1./10., -3./14.,       0,    // 1D1
-                                    3./10.,     0,    1./7.,    9./20.,  3./28.,       0,    // 1D2
-                                    3./14.,     0,    5./14.,  -3./16., -3./560., -33./140., // 1F
-                                        0,   3./8., -25./504.,  5./36., 11./84., -11./36.,   // 1G1
-                                        0,      0,   11./126., 55./144,-169./336, -1./36.,   // 1G2
-                                        0,      0,        0,       0,    3./10.,   7./10.};  // 1I
-            if(S2p==2) { if(Lp==D) { if(vp==1) id=1; else if(vp==3) id=2; } else { switch(Lp) { CD(P,0); CD(F,3); CD(G,4); CD(H,5); default: return cfp; } } }
+    else if(S2==0) { double t[] = {     0,     1.,       0,        0,        0,         0,    // 1S1
+                                        0,      0,      1.,        0,        0,         0,    // 1S2
+                                   -3./20.,  3./8.,   9./56.,   1./10.,   -3./14.,      0,    // 1D1
+                                    3./10.,     0,    1./7.,    9./20.,    3./28.,      0,    // 1D2
+                                    3./14.,     0,    5./14.,  -3./16.,   -3./560.,-33./140., // 1F
+                                        0,   3./8., -25./504.,  5./36.,   11./84., -11./36.,  // 1G1
+                                        0,      0,   11./126., 55./144.,-169./336., -1./36.,  // 1G2
+                                        0,      0,        0,       0,      3./10.,   7./10.}; // 1I
+            if(S2p==1) { if(Lp==D) { if(vp==1) id=1; else if(vp==3) id=2; } else { switch(Lp) { CD(P,0); CD(F,3); CD(G,4); CD(H,5); default: return cfp; } } }
 	    if(id!=-1) { if(L==S)  { if(v==0) cfp = t[id];    else if(v==4) cfp = t[id+6]; } 
 	            else if(L==D)  { if(v==2) cfp = t[id+12]; else if(v==4) cfp = t[id+18]; } else if(L==F)  cfp = t[id+24];
-	            else if(L==G)  { if(v==2) cfp = t[id+30]; else if(v==4) cfp = t[id+36]; } else if(L==F)  cfp = t[id+42];
-               cfp = sqrt(fabs(cfp))*(cfp/fabs(cfp)); }
+	            else if(L==G)  { if(v==2) cfp = t[id+30]; else if(v==4) cfp = t[id+36]; } else if(L==I)  cfp = t[id+42];
+               cfp = sqrt(fabs(cfp))*sign(cfp); }
          }
          break;
       case 5:
@@ -976,13 +976,13 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
                                  //     5D      3P1      3P2       3D       3F1       3F2       3G       3H
     else if(S2==3) { double t[] = {-1./4., -16./75.,  7./150.,  7./60.,-14./75.,  14./75.,      0,        0,  // 4P
                                    -1./4.,       0,   9./50., -27./140.,     0,   -3./25.,   9./35.,      0,  // 4D
-                                   -1./4.,  -2./25., -4./175., -3./140., 8./25.,   1./50.,   9./70., 11./70., // 4F
+                                   -1./4.,  -2./25., -4./175., -3./140., 8./25.,   1./50.,  -9./70.,-11./70., // 4F
                                    -1./4.,       0,        0,   5./84.,      0,   -1./6.,  -11./70., 11./30}; // 4G
             switch(L) { CD(P,0); CD(D,1); CD(F,2); CD(G,3); default: return cfp; }
 	    if(S2p==4) cfp = t[id]; else if(S2p==2) {
 	       if(Lp==P) { if(vp==2) cfp = t[id*8+1]; else if(vp==4) cfp = t[id*8+2]; } else if(Lp==D) cfp = t[id*8+3];
 	  else if(Lp==F) { if(vp==2) cfp = t[id*8+4]; else if(vp==4) cfp = t[id*8+5]; } else if(Lp==G) cfp = t[id*8+6]; else if(Lp==H) cfp = t[id*8+7];
-               cfp = sqrt(fabs(cfp))*(cfp/fabs(cfp)); }
+               cfp = sqrt(fabs(cfp))*sign(cfp); }
          }                       //    3P1      3P2       3D      3F1       3F2        3G       3H    1S1     1S2      1D1      1D2       1F      1G1      1G2       1I
     else if(S2==1) { double t[] = {     0,       0,   3./5.,       0,        0,        0,       0,      0,      0,       0,  -2./5.,       0,       0,       0,       0,   // 2S
                                     7./75.,  1./6.,   1./15.,  -8./75., -1./6.,        0,       0,      0,      0,   1./5.,   1./10., -1./10.,      0,       0,       0,   // 2P
@@ -992,7 +992,7 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
                                     4./25., -1./14.,  3./70.,   1./25., -1./16., -81./560., 11./140.,   0,      0,  -2./35.,  9./140., 3./80., -1./7.,   11./112.,    0,   // 2F1
                                         0,   9./70.,  3./14.,      0,   -9./80.,  -9./2800,-99./700.,   0,      0,       0,  -1./28., -3./16.,      0,   99./560.,    0,   // 2F2
                                         0,       0,   1./14.,   1./5.,   9./80., 297./2800, 11./100.,   0,      0,  -2./21., -1./84., -1./1200,11./105.,169./1680,-13./150,// 2G1
-                                        0,       0,  11./210.,     0,   11./48.,-169./560., -1./60.,    0,      0,       0,  11./140, 11./80.,      0,  -81./1232, 13./110,// 2G2
+                                        0,       0,  11./210.,     0,   11./48.,-169./560., -1./60.,    0,      0,       0,  11./140,-11./80.,      0,  -81./1232,-13./110,// 2G2
                                         0,       0,        0,  -1./5.,   1./20.,  -9./100., 13./50.,    0,      0,       0,       0,   3./100., 1./5.,   -1./220., 91./550,// 2H
                                         0,       0,        0,      0,        0,    9./50.,  21./50.,    0,      0,       0,       0,       0,       0,   -9./110, -7./22}; // 2I
             switch(L) { CD(S,0); CD(P,1); CD(H,9); CD(I,10); default: if(L==D) { if(v==1) id=2; else if(v==3) id=3; else if(v==5) id=4; }
@@ -1004,7 +1004,7 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
                if(Lp==S) { if(vp==0) cfp = t[id*15+7]; else if(vp==4) cfp = t[id*15+8]; } 
           else if(Lp==D) { if(vp==2) cfp = t[id*15+9]; else if(vp==4) cfp = t[id*15+10];} else if(Lp==F) cfp = t[id*15+11];
           else if(Lp==G) { if(vp==2) cfp = t[id*15+12];else if(vp==4) cfp = t[id*15+13];} else if(Lp==I) cfp = t[id*15+14]; }
-               if(cfp!=0) cfp = sqrt(fabs(cfp))*(cfp/fabs(cfp)); }
+               cfp = sqrt(fabs(cfp))*sign(cfp); }
          }
          break;
       default:
@@ -1014,9 +1014,9 @@ double racah_cfp(int n, int v, int S2, orbital L, int vp, int S2p, orbital Lp)
    if(nn>5)
    {
       // Formula for cfp of more than half filled subshell in terms of less than half filled subshells is:
-      //
-      //   4l+1-n         4l+2-n               S+S'+L+L'-l-1/2 {   (n+1)(2S+1)(2L+1)    }   n            n+1
-      // (l       aSL |} l       a'S'L') = (-1)                { ---------------------- } (l  a'S'L' |} l    aSL)
+      //                                                                                 1/2
+      //   4l+1-n         4l+2-n               S+S'+L+L'-l-1/2 {   (n+1)(2S+1)(2L+1)    }      n            n+1
+      // (l       aSL |} l       a'S'L') = (-1)                { ---------------------- }    (l  a'S'L' |} l    aSL)
       //                                                       { (4l+2-n)(2S'+1)(2L'+1) }
       //
       // Ref: A.F. Starace, Phys. Rev. A v27, p572 (1983)
@@ -1075,7 +1075,7 @@ std::vector<cfpls> racah_parents(int n, int v, int S2, orbital L)       // For d
 {
    std::vector<cfpls> cfps;
    cfpls entry;
-   int np=n-1; //if(n>7) np = n+1; else np = n-1;
+   int np=n-1; //if(n>5) np = n+1; else np = n-1;
    fconf conf_par(np,D);
    int num_states = (int)conf_par.states.size();
    int i,vp,S2p;

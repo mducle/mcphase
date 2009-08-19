@@ -178,7 +178,7 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
    double p = 1./( pow(-1.,(double)abs(pars.l))*(2.*pars.l+1.) );
    double icfact[] = {0,0,p/threej(2*pars.l,4,2*pars.l,0,0,0),0,p/threej(2*pars.l,8,2*pars.l,0,0,0),0,p/threej(2*pars.l,12,2*pars.l,0,0,0)};
    int n = pars.n; orbital e_l = pars.l;
-   int nn = n; if(n>(2*e_l+1)) n = 4*e_l+2-n; 
+   int nn = n; //if(n>(2*e_l+1)) n = 4*e_l+2-n; 
 
    switch(e_l)
    {
