@@ -44,6 +44,18 @@ int getdim(int n, orbital l)                                    // Number of sta
    ns=1; for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i; 
    j=1; for(i=n; i>1; i--) j*=i; ns/=j;
    return ns;
+   // here k is the number of electrons
+   int n=4*abs(l)+2;
+   if (k > n)
+      return 0;
+   if (k > n/2)
+      k = n-k; // Take advantage of symmetry
+
+   long double accum = 1;
+   for (int i = 1; i <= k; i++)
+      accum *= ( (n-k+i) / i );
+
+   return (int) (accum + 0.5); // avoid rounding error
 }
 
 // --------------------------------------------------------------------------------------------------------------- //

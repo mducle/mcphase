@@ -132,20 +132,14 @@ while($line1=<Fin1>)
      }
 
 
+$ii1=0;
 
-
-
-unless ($file3)
-
-{$min=1e100;
+$min=1e100;
 
 $max=-1e100;
 
-
-
-# determine range and step of x column for output [min,max] with step delta
-
       unless (open (Fin1, $file1)){die "\n error:unable to open $file1\n";}   
+
 
 while($line1=<Fin1>)
 
@@ -155,9 +149,18 @@ while($line1=<Fin1>)
 
        else{$line1=~s/D/E/g;@numbers1=split(" ",$line1);
 
+
 	if($numbers1[$c1-1]<$min) {$min=$numbers1[$c1-1];}
 
 	if($numbers1[$c1-1]>$max) {$max=$numbers1[$c1-1];}
+
+	#store  values
+
+	$xvalues[$ii1]=$numbers1[$c1-1];
+
+	$yvalues[$ii1]=$numbers1[$c2-1];	
+
+	++$ii1;
 
 	}
 
@@ -166,16 +169,18 @@ while($line1=<Fin1>)
    close Fin1;     
 
 
+unless ($file3)
+
+{
+
+
+
+# determine range and step of x column for output [min,max] with step delta
 
 $min+=$minr;
 
 $max+=$maxr;
 
-   close Fin1;
-
-
-
-   
 
 # convolute each x point separately and output   
 
@@ -183,33 +188,42 @@ for($x=$min;$x<$max;$x+=$delta)
 
     { $y=0;
 
-     open (Fin1, $file1);
 
+# convolute each x point separately and output   
 
+     $y=0;
 
-   while($line1=<Fin1>)
+#     open (Fin1, $file1);
+
+   $i1=0;
+
+   foreach(@xvalues)
 
      {
 
-       if ($line1=~/^\s*#/) {;}
+#       if ($line1=~/^\s*#/) {;}
 
-       else{ $line1=~s/D/E/g;
+#       else{# take one point of data file one
 
-             @numbers1=split(" ",$line1);
+#             $line1=~s/D/E/g;@numbers1=split(" ",$line1);
 
-	     $xi=$numbers1[$c1-1];
+#	     $xi=$numbers1[$c1-1];
 
-	     $yi=$numbers1[$c2-1];
+#	     $yi=$numbers1[$c2-1];
 
              # calculate c(x-xi)
 
-	     $dd=$x-$xi;
+	     $dd=$x-$xvalues[$i1];
+
+
 
 	     if (($dd<$maxr)&&($dd>$minr))
 
 	      {$imax=$ii;
 
 	       $imin=1;
+
+               $yi=$yvalues[$i1];
 
 	       # intervallschachtelung
 
@@ -231,11 +245,12 @@ for($x=$min;$x<$max;$x+=$delta)
 
 	      } 
 
-	   }
+             ++$i1;
+	   
 
      }
 
-     close Fin1;
+#     close Fin1;
 
         	     
 
@@ -257,9 +272,7 @@ else
 
  {
 
-  if ($line3=~/^\s*#/) {print $line3;}
-
-  else
+  unless ($line3=~/^\s*#/)
 
   {# get x-values from file 3 
 
@@ -277,79 +290,33 @@ else
 
      $y=0;
 
-     open (Fin1, $file1);
+#     open (Fin1, $file1);
 
+   $i1=0;
 
-
-   while($line1=<Fin1>)
+   foreach(@xvalues)
 
      {
 
-       if ($line1=~/^\s*#/) {;}
+#       if ($line1=~/^\s*#/) {;}
 
-       else{# take one point of data file one
+#       else{# take one point of data file one
 
-             $line1=~s/D/E/g;@numbers1=split(" ",$line1);
+#             $line1=~s/D/E/g;@numbers1=split(" ",$line1);
 
-	     $xi=$numbers1[$c1-1];
+#	     $xi=$numbers1[$c1-1];
 
-	     $yi=$numbers1[$c2-1];
+#	     $yi=$numbers1[$c2-1];
 
              # calculate c(x-xi)
 
-	     $dd=$x-$xi;
+	     $dd=$x-$xvalues[$i1];
 
 	     if (($dd<$maxr*$stretch)&&($dd>$minr*$stretch))
 
 	      {
 
-#	      
-
-#	       open (Fin2, $file2);
-
-#               while(($line2=<Fin2>)=~/^\s*#/){;}
-
-#               @numbers2=split(" ",$line2);
-
-#	       $chx=$numbers2[$cx-1];
-
-#	       $chy=$numbers2[$cy-1];
-
-#	       $clx=$chx;
-
-#	       $cly=$chy;
-
-#
-
-#               while(($chx<=$dd)&&($line2=<Fin2>))
-
-#                 {       if ($line2=~/^\s*#/) {;}
-
-#                         else{
-
-#                 		  @numbers2=split(" ",$line2);
-
-#	                          $clx=$chx;
-
-#	                           $cly=$chy;
-
-#	                          $chx=$numbers2[$cx-1];
-
-#	                          $chy=$numbers2[$cy-1];
-
-#			      }
-
-#                 }
-
-#		 print "$chx $clx $dd $maxr\n";
-
-	       
-
-
-
-#               $y+=$yi*($cly+($dd-$clx)*($chy-$cly)/($chx-$clx)); 
-
-#	       close Fin2;
+               $yi=$yvalues[$i1];
 
 	       $imax=$ii;
 
@@ -359,29 +326,27 @@ else
 
 	       while($imax-$imin>1)
 
-	       {
+  	        {
 
-	       if($dd<$cxvalues[$i]*$stretch)
+	        if($dd<$cxvalues[$i]*$stretch)
 
 	         {$imax=$i;$i=int($imin+($i-$imin)/2);}else
 
 		 {$imin=$i;$i=int($i+($imax-$i)/2);}
 
-	       }
+  	        }
 
 #	       print $imin." ".$i." ".$imax." ".$ii."\n";
 
                $y+=$yi*($cyvalues[$imin]/$stretch+($dd-$cxvalues[$imin]*$stretch)*($cyvalues[$imin+1]/$stretch-$cyvalues[$imin]/$stretch)/($cxvalues[$imin+1]*$stretch-$cxvalues[$imin]*$stretch)); 
 
 	       
+	       }
 
-	      } 
-
-	   }
-
+             ++$i1;
      }
 
-     close Fin1;
+#     close Fin1;
 
 
 

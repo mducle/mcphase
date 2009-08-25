@@ -446,11 +446,11 @@ void spincf::calc_prim_mag_unitcell(Matrix & p,Vector & abc, Matrix & r)
  // pc=p.Column(3);
 }
 
-void spincf::calc_minmax(Vector & min,Vector & max,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc)
-{calc_minmax_scale(min,max,ijkmin,ijkmax,p,abc,1.0,1.0,1.0);
+void spincf::calc_minmax(Vector & minv,Vector & maxv,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc)
+{calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,abc,1.0,1.0,1.0);
 }
 
-void spincf::calc_minmax_scale(Vector & min,Vector & max,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc,double scale_view_1,double scale_view_2,double scale_view_3)
+void spincf::calc_minmax_scale(Vector & minv,Vector & maxv,Vector & ijkmin,Vector & ijkmax,Matrix & p,Vector & abc,double scale_view_1,double scale_view_2,double scale_view_3)
 {// determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector ddd(1,8),dd0(1,3),dd(1,3);
   int i;
@@ -464,50 +464,50 @@ void spincf::calc_minmax_scale(Vector & min,Vector & max,Vector & ijkmin,Vector 
    ddd(6)=p.Column(2)(i)+p.Column(3)(i);
    ddd(7)=0;
    ddd(8)=p.Column(1)(i)+p.Column(2)(i)+p.Column(3)(i);
-   min(i)=Min(ddd);max(i)=Max(ddd);
-   t=min(i)/abc(i);if(abs(t-int(t))>0.0001){min(i)=(int(t)-1.0)*abc(i);}
-   t=max(i)/abc(i);if(abs(t-int(t))>0.0001){max(i)=(int(t)+1.0)*abc(i);}
+   minv(i)=Min(ddd);maxv(i)=Max(ddd);
+   t=minv(i)/abc(i);if(abs(t-int(t))>0.0001){minv(i)=(int(t)-1.0)*abc(i);}
+   t=maxv(i)/abc(i);if(abs(t-int(t))>0.0001){maxv(i)=(int(t)+1.0)*abc(i);}
   }
-  max(1)=min(1)+(max(1)-min(1))*scale_view_1;
-  max(2)=min(2)+(max(2)-min(2))*scale_view_2;
-  max(3)=min(3)+(max(3)-min(3))*scale_view_3;
+  maxv(1)=minv(1)+(maxv(1)-minv(1))*scale_view_1;
+  maxv(2)=minv(2)+(maxv(2)-minv(2))*scale_view_2;
+  maxv(3)=minv(3)+(maxv(3)-minv(3))*scale_view_3;
   // determine ijkmin ijkmax by calculating the 8 corners of the  quader
   // in terms of primitive lattice 
   // i*p.Column(1)+j*p.Column(2)+k*p.Column(3)=cornerpointvector ... i,j,k =?
   // ijk=p^-1*corerpointvector
   for (i=1;i<=3;++i)
-  {dd0=min;              dd=p.Inverse()*dd0;ddd(1)=dd(i);
-   dd0=min;dd0(1)=max(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
-   dd0=min;dd0(2)=max(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
-   dd0=min;dd0(3)=max(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
-   dd0=max;              dd=p.Inverse()*dd0;ddd(5)=dd(i);
-   dd0=max;dd0(1)=min(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
-   dd0=max;dd0(2)=min(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
-   dd0=max;dd0(3)=min(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
+  {dd0=minv;               dd=p.Inverse()*dd0;ddd(1)=dd(i);
+   dd0=minv;dd0(1)=maxv(1);dd=p.Inverse()*dd0;ddd(2)=dd(i);
+   dd0=minv;dd0(2)=maxv(2);dd=p.Inverse()*dd0;ddd(3)=dd(i);
+   dd0=minv;dd0(3)=maxv(3);dd=p.Inverse()*dd0;ddd(4)=dd(i);
+   dd0=maxv;               dd=p.Inverse()*dd0;ddd(5)=dd(i);
+   dd0=maxv;dd0(1)=minv(1);dd=p.Inverse()*dd0;ddd(6)=dd(i);
+   dd0=maxv;dd0(2)=minv(2);dd=p.Inverse()*dd0;ddd(7)=dd(i);
+   dd0=maxv;dd0(3)=minv(3);dd=p.Inverse()*dd0;ddd(8)=dd(i);
    ijkmin(i)=Min(ddd);ijkmax(i)=Max(ddd);
   }  
 }
 
-Vector spincf::xy(Vector xyz,int orientation,Vector min,Vector max,float bbwidth,float bbheight)
+Vector spincf::xy(Vector xyz,int orientation,Vector minv,Vector maxv,float bbwidth,float bbheight)
  {Vector p(1,2);
   switch(orientation)
-  {case 1: p(1)=(xyz(1)-min(1))/(max(1)-min(1))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(2)-min(2))/(max(2)-min(2))*bbheight*0.8+bbheight*0.15;
+  {case 1: p(1)=(xyz(1)-minv(1))/(maxv(1)-minv(1))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(2)-minv(2))/(maxv(2)-minv(2))*bbheight*0.8+bbheight*0.15;
    break;
-   case 2: p(1)=(xyz(1)-min(1))/(max(1)-min(1))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(3)-min(3))/(max(3)-min(3))*bbheight*0.8+bbheight*0.15;
+   case 2: p(1)=(xyz(1)-minv(1))/(maxv(1)-minv(1))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(3)-minv(3))/(maxv(3)-minv(3))*bbheight*0.8+bbheight*0.15;
     break;
-   case 3: p(1)=(xyz(2)-min(2))/(max(2)-min(2))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(3)-min(3))/(max(3)-min(3))*bbheight*0.8+bbheight*0.15;
+   case 3: p(1)=(xyz(2)-minv(2))/(maxv(2)-minv(2))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(3)-minv(3))/(maxv(3)-minv(3))*bbheight*0.8+bbheight*0.15;
     break;
-   case 4: p(1)=(xyz(1)+(xyz(3)-min(3))*0.1-min(1))/(max(1)+(max(3)-min(3))*0.1-min(1))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(2)+(xyz(3)-min(3))*0.15-min(2))/(max(2)+(max(3)-min(3))*0.15-min(2))*bbheight*0.8+bbheight*0.15;
+   case 4: p(1)=(xyz(1)+(xyz(3)-minv(3))*0.1-minv(1))/(maxv(1)+(maxv(3)-minv(3))*0.1-minv(1))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(2)+(xyz(3)-minv(3))*0.15-minv(2))/(maxv(2)+(maxv(3)-minv(3))*0.15-minv(2))*bbheight*0.8+bbheight*0.15;
     break;
-   case 5: p(1)=(xyz(1)+(xyz(2)-min(2))*0.1-min(1))/(max(1)+(max(2)-min(2))*0.1-min(1))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(3)+(xyz(2)-min(2))*0.15-min(3))/(max(3)+(max(2)-min(2))*0.15-min(3))*bbheight*0.8+bbheight*0.15;
+   case 5: p(1)=(xyz(1)+(xyz(2)-minv(2))*0.1-minv(1))/(maxv(1)+(maxv(2)-minv(2))*0.1-minv(1))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(3)+(xyz(2)-minv(2))*0.15-minv(3))/(maxv(3)+(maxv(2)-minv(2))*0.15-minv(3))*bbheight*0.8+bbheight*0.15;
     break;
-   case 6: p(1)=(xyz(2)+(xyz(1)-min(1))*0.1-min(2))/(max(2)+(max(1)-min(1))*0.1-min(2))*bbwidth*0.8+bbwidth*0.15;
-           p(2)=(xyz(3)+(xyz(1)-min(1))*0.15-min(3))/(max(3)+(max(1)-min(1))*0.15-min(3))*bbheight*0.8+bbheight*0.15;
+   case 6: p(1)=(xyz(2)+(xyz(1)-minv(1))*0.1-minv(2))/(maxv(2)+(maxv(1)-minv(1))*0.1-minv(2))*bbwidth*0.8+bbwidth*0.15;
+           p(2)=(xyz(3)+(xyz(1)-minv(1))*0.15-minv(3))/(maxv(3)+(maxv(1)-minv(1))*0.15-minv(3))*bbheight*0.8+bbheight*0.15;
     break;
    default: p=0;
   }
@@ -551,13 +551,13 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
  
 
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
-  Vector max(1,3),min(1,3),dd(1,3),max_min(1,3);
+  Vector maxv(1,3),minv(1,3),dd(1,3),max_min(1,3);
   Vector ddd(1,8),xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
 
   Matrix p(1,3,1,3);
   calc_prim_mag_unitcell(p,abc,r);
-  calc_minmax(min,max,ijkmin,ijkmax,p,abc);
-  max_min=max-min;    
+  calc_minmax(minv,maxv,ijkmin,ijkmax,p,abc);
+  max_min=maxv-minv;    
 
  //determine bounding box for  specific view
   bbwidth=700;
@@ -609,47 +609,47 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
 
   // draw frame around min vs max   (quader)
   fprintf(fout,"0.3 setlinewidth\n");
-   a=xy(min,orientation, min, max,bbwidth,bbheight);
-   dd=min;dd(1)=max(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=min;dd(2)=max(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=min;dd(3)=max(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(max,orientation, min, max,bbwidth,bbheight);
-   dd=max;dd(1)=min(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=max;dd(2)=min(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=max;dd(3)=min(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=min;dd(2)=max(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=min;dd(1)=max(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=max;dd(2)=min(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=min;dd(3)=max(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=max;dd(1)=min(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=min;dd(2)=max(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(minv,orientation, minv, maxv,bbwidth,bbheight);
+   dd=minv;dd(1)=maxv(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=minv;dd(2)=maxv(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=minv;dd(3)=maxv(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(maxv,orientation, minv, maxv,bbwidth,bbheight);
+   dd=maxv;dd(1)=minv(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=maxv;dd(2)=minv(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=maxv;dd(3)=minv(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=minv;dd(2)=maxv(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=minv;dd(1)=maxv(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=maxv;dd(2)=minv(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=minv;dd(3)=maxv(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=maxv;dd(1)=minv(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=minv;dd(2)=maxv(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
  
    
   // draw frame around primitive unit cell
   fprintf(fout,"1 setlinewidth\n");
    dd=0;
-   a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   b=xy(p.Column(1),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   b=xy(p.Column(2),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   b=xy(p.Column(3),orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(1)+p.Column(2)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=p.Column(1)+p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(1)+p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(2)+p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(1)+p.Column(2);a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=p.Column(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(1)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=p.Column(1);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(2)+p.Column(3);a=xy(dd,orientation, min, max,bbwidth,bbheight);
-   dd=p.Column(2);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
-   dd=p.Column(3);b=xy(dd,orientation, min, max,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   b=xy(p.Column(1),orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   b=xy(p.Column(2),orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   b=xy(p.Column(3),orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(2)+p.Column(3);a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=p.Column(1)+p.Column(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2)+p.Column(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(2);a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=p.Column(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(1)+p.Column(3);a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=p.Column(1);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(2)+p.Column(3);a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
+   dd=p.Column(2);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
+   dd=p.Column(3);b=xy(dd,orientation, minv, maxv,bbwidth,bbheight);fprintf(fout,"%g %g moveto\n",a(1),a(2));fprintf(fout,"%g %g lineto\n stroke \n",b(1),b(2));
   
   
   // plot atoms and moments in region xmin to xmax (quader)
@@ -671,18 +671,18 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd+=dd0;
-	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
+	    if(dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)
             {c=magmom(i,j,k,l,gJ);
               xyz(1)=dd(1)+scale*c(1);
               xyz(2)=dd(2)+scale*c(2);
               xyz(3)=dd(3)+scale*c(3);
-	      a=xy(xyz,orientation, min, max,bbwidth,bbheight);
+	      a=xy(xyz,orientation, minv, maxv,bbwidth,bbheight);
               xyz(1)=dd(1)-scale*c(1);
               xyz(2)=dd(2)-scale*c(2);
               xyz(3)=dd(3)-scale*c(3);
-              b=xy(xyz,orientation, min, max,bbwidth,bbheight);
+              b=xy(xyz,orientation, minv, maxv,bbwidth,bbheight);
               epsarrow(fout,a,b);   
 	     }
 	  }
@@ -735,12 +735,12 @@ void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,fl
     nofcomponents<savev_real.nofcomponents||savev_real.nofcomponents!=savev_imag.nofcomponents)
     {fprintf(stderr,"Error creating jvx movie files: eigenvector read from .qev file does not match dimension of spins structure read from sps file\n");exit(1);}
 
-  Vector max(1,3),min(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
+  Vector maxv(1,3),minv(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
   Matrix p(1,3,1,3);
   calc_prim_mag_unitcell(p,abc,r);
-  calc_minmax_scale(min,max,ijkmin,ijkmax,p,abc,scale_view_1,scale_view_2,scale_view_3);
+  calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,abc,scale_view_1,scale_view_2,scale_view_3);
    if(showprim==1){ijkmin(1)=1;ijkmin(2)=1;ijkmin(3)=1;ijkmax(1)=-2+(int)(scale_view_1);ijkmax(2)=-2+(int)(scale_view_2);ijkmax(3)=-2+(int)(scale_view_3);} // show only primitive magnetic unit cell
-  max_min=max-min;    
+  max_min=maxv-minv;    
   double scale=0,d,mindist=1e10;
 
 fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n"); 
@@ -876,9 +876,9 @@ fprintf(fout,"        <points>\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd+=dd0;
-	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
             {// determine scale factor of moments
                c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));                                                                                                                              
@@ -896,9 +896,9 @@ fprintf(fout,"        <colors type=\"rgb\">\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
             {// determine scale factor of moments
                c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
 fprintf(fout,"          <c>  %i       %i       %i </c>\n",(int)(255*show_atoms),(int)(show_atoms*((l*97)%256)),0);
@@ -929,9 +929,9 @@ fprintf(fout,"        <points>\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
             {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
              xyz=magmom(i,j,k,l,gJ)+amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,gJ)+sin(phase-QR)*savev_imag.magmom(i,j,k,l,gJ));
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
@@ -974,9 +974,9 @@ fprintf(fout,"        <points>\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
             {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
              xyz=magmom(i,j,k,l,gJ);
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
@@ -1013,9 +1013,9 @@ fprintf(fout,"        <points>\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if((dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
+	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
             {double QR; QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);QR*=2*PI;
              int phi; 
              for(phi=0;phi<=16;phi++)
@@ -1142,13 +1142,13 @@ void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float
 {int i,j,k,l,ctr=1;
 
 int maxm,m;  
-  Vector max(1,3),min(1,3),dd(1,3),max_min(1,3);
+  Vector maxv(1,3),minv(1,3),dd(1,3),max_min(1,3);
   Vector xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
   Matrix p(1,3,1,3);
   calc_prim_mag_unitcell(p,abc,r);
-  calc_minmax(min,max,ijkmin,ijkmax,p,abc);
+  calc_minmax(minv,maxv,ijkmin,ijkmax,p,abc);
 
-  max_min=max-min;    
+  max_min=maxv-minv;    
 
 
 fprintf(fout,"!   FILE for FullProf Studio: generated automatically by McPhase\n"); 
@@ -1169,9 +1169,9 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
+	    if(dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)
             {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
 
 fprintf(fout,"ATOM DY%i    RE       %g       %g       %g        \n",ctr,dd(1),dd(2),dd(3)); 
@@ -1201,13 +1201,13 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
           dd+=dd0;
-	    if(dd(1)<=max(1)+0.0001&&dd(1)>=min(1)-0.0001&&   //if atom is in big unit cell
-            dd(2)<=max(2)+0.0001&&dd(2)>=min(2)-0.0001&&
-            dd(3)<=max(3)+0.0001&&dd(3)>=min(3)-0.0001)
+	    if(dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
+            dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
+            dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)
             {dd(1)/=max_min(1);dd(2)/=max_min(2);dd(3)/=max_min(3);
 //             i1true=1;j1true=1;k1true=1;       
 
-//	    a=xy(dd,orientation, min, max,bbwidth,bbheight);
+//	    a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
             xyz=magmom(i,j,k,l,gJ);
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd(1),dd(2),dd(3));
 fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz(1),xyz(2),xyz(3));
