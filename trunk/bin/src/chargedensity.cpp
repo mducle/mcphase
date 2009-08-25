@@ -3,7 +3,6 @@
 
 #include"chargedensity.hpp"
 #include<cstdio>
-#include<cstdlib>
 #include<cstring>
 #include<cerrno>
 #include<martin.h>
@@ -59,13 +58,13 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
    }//next rin
    if(nt==0) {rp(1)=0.05;rp(2)=0.06;}
    if(nt==1) {rp(2)=rp(1)+0.0001;}
-   // select most outsinde value of rp
+   // select most outsinde value of rp and set rrttff accordingly
    R=0;
    for(iv=1;iv<=imax;++iv){if(rp(iv)>R)R=rp(iv);}
 	++anzahl;
 	rrttff(1)=R;rrttff(2)=theta;rrttff(3)=fi;
    rtf(anzahl)=rrttff;
-   if(tt==0){ff=(int)(2*3.1415/dfi+1);}
+   if(tt==0){ff=(int)(2*3.1415/dfi+1);}// this is to avoid more than one point for tt=0
   }}
 
         

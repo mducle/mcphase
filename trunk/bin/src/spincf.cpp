@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cmath>
 #include <martin.h>
-#include "vector.h"
+#include <vector.h>
 #include <complex>
 #include "spincf.hpp"
 #include "chargedensity.hpp"
@@ -1054,14 +1054,14 @@ for(l=1;l<=nofatoms;++l)
   fprintf(fout,"<points >\n");
   double radius=0;double dx,dy,dz,R,fi,theta;
   extract(cffilenames[l],"radius",radius);  
-  if(radius!=0)
+  if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
   {     double rp=0.5*cbrt(abs(radius));
         for (i=1;i<=(1+(nofa-1)*scale_view_1);++i){for(j=1;j<=(1+(nofb-1)*scale_view_2);++j){for(k=1;k<=(1+(nofc-1)*scale_view_3);++k){
         dd=pos(i,j,k,l, abc, r,x,y,z);
         for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
              theta=(double)tt*dtheta;fi=(double)ff*dfi;
-             dx=rp*sin(theta)*cos(fi)+dd(3);dy=rp*sin(theta)*sin(fi)+dd(1);dz=rp*cos(theta)+dd(2);
-             fprintf(fout,"<p>%4g %4g %4g</p>\n",dy,dz,dx);
+             dx=rp*sin(theta)*cos(fi)+dd(1);dy=rp*sin(theta)*sin(fi)+dd(2);dz=rp*cos(theta)+dd(3);
+             fprintf(fout,"<p>%4g %4g %4g</p>\n",dx,dy,dz);
              if(tt==0){ff=(int)(2*3.1415/dfi+1);}
              }}
         }}}
@@ -1083,11 +1083,11 @@ for(l=1;l<=nofatoms;++l)
      {// here we calculate the chargedensity of ion 
      R=cd.rtf(ii)(1);theta=cd.rtf(ii)(2);fi=cd.rtf(ii)(3);
      if(ionpar.module_type==2){// mind abc||yzx in module cfield
-     dz=R*sin(theta)*cos(fi)+dd(3);dx=R*sin(theta)*sin(fi)+dd(1);dy=R*cos(theta)+dd(2);
+     dx=R*sin(theta)*sin(fi)+dd(1);dy=R*cos(theta)+dd(2);dz=R*sin(theta)*cos(fi)+dd(3);
                               }
      else 
                               {// mind abc||xyz in other cases ...
-     dz=R*cos(theta)+dd(3);dx=R*sin(theta)*cos(fi)+dd(1);dy=R*sin(theta)*sin(fi)+dd(2);
+     dx=R*sin(theta)*cos(fi)+dd(1);dy=R*sin(theta)*sin(fi)+dd(2);dz=R*cos(theta)+dd(3);
                               }
      fprintf(fout,"<p>%4g %4g %4g</p>\n",dx,dy,dz);
      }
@@ -1121,7 +1121,7 @@ for(l=1;l<=nofatoms;++l)
  else if (radius<0)
  {fprintf(fout,"<color type=\"rgb\">0  0 255</color>\n");}
  else
- {fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",(int)(255*show_chargedensity),(int)(show_chargedensity*((l*97)%256)),0);
+ {fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",0,(int)(show_chargedensity*((l*97)%256)),(int)(255*show_chargedensity));
  }
  fprintf(fout,"<colorTag type=\"rgb\">255 0 255</colorTag>\n");
  fprintf(fout,"</faces></faceSet>\n");

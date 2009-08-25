@@ -84,13 +84,19 @@ printf("***********************************************************\n");
   //int dj=(int)(2.0*(*iops).J+1);
  // ComplexMatrix ests(0,dj,1,dj);
   jjjps.eigenstates(h,T);
+  printf("calculating expectation values ....\n");
   moments=jjjps.mcalc(T,h,lnz,u,jjjps.est);
 //  cfield  has to be used to calculate all the <Olm>.
 //  printf("Stevens factors: alpha beta gamma = %4g %4g %4g \n",(*iops).alpha,(*iops).beta,(*iops).gamma);
 //  printf("Lande Factor: gJ = %4g\n",(*iops).gJ);
 
+int pchere;int i,nofpc=0;
+   for(i=1;i<=dim;++i)printf(" <J%c> = %g ",'a'-1+i,moments(i));
+printf("\n");
+
  char text[1000];
- sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT in javaview xyz=cab</title>\n", T, ha, hb, hc);
+ if(jjjps.module_type==0){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
+ if(jjjps.module_type==2){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=cab</title>\n", T, ha, hb, hc);}
 
 
  char * cffilenames[MAXNOFATOMS];
@@ -103,23 +109,30 @@ printf("***********************************************************\n");
 // read pointcharge-parameters 
  cf_file = fopen_errchk (argv[5], "rb");
  float par[100];par[0]=99;
-int pchere;int i,nofpc=0;
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){;}
 while(pchere>0)
-{printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=cab\n",par[1],par[2],par[3],par[4]);
+{if(jjjps.module_type==0){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=abc\n",par[1],par[2],par[3],par[4]);}
+ if(jjjps.module_type==2){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=cab\n",par[1],par[2],par[3],par[4]);}
  ++nofpc;if(nofpc>MAXNOFATOMS){fprintf(stderr,"Error chrgplt - too many pointcharges");exit(1);}
   cffilenames[1+nofpc]=new char[MAXNOFCHARINLINE];
   sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",par[1]);
-  x[nofpc+1]=par[2]/5.0;
-  y[nofpc+1]=par[3]/5.0;
-  z[nofpc+1]=par[4]/5.0;
+  if(jjjps.module_type==0){
+  x[nofpc+1]=par[2];// these are the positions in Angstroem (we set a=b=c=1A below)
+  y[nofpc+1]=par[3];// however in order to be in line with the cfield xyz=cab
+  z[nofpc+1]=par[4];// and ic1ion xyz=abc we have to set these parameters
+                          }
+  if(jjjps.module_type==2){
+  x[nofpc+1]=par[3];// these are the positions in Angstroem (we set a=b=c=1A below)
+  y[nofpc+1]=par[4];// however in order to be in line with the cfield xyz=cab
+  z[nofpc+1]=par[2];// and ic1ion xyz=abc we have to set these parameters
+                          }
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){}
 }
 fclose(cf_file);
 
   spincf s(1,1,1,nofpc+1,dim);
   
-  Vector abc(1,3);abc(1)=5.0;abc(2)=5.0;abc(3)=5.0;
+  Vector abc(1,3);abc(1)=1.0;abc(2)=1.0;abc(3)=1.0;
   
   Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
   Vector gJJ(1,nofpc+1);gJJ=0;gJJ(1)=jjjps.gJ;

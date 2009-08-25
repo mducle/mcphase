@@ -606,7 +606,7 @@ icmfmat::icmfmat(int n, orbital l, int num_op)
 {
    _n = n; _l = l; _num_op = num_op;
    sMat<double> t; J.assign(6,t); 
-   iflag.assign(6,0); iflag[2]=1; iflag[3]=1;
+   iflag.assign(num_op>6?num_op:6,0); iflag[2]=1; iflag[3]=1;
    // Determines the filename strings for where the moment operator matrices are stored if previously calculated
    int nn = n; if(n>(2*l+1)) nn = (4*l+2)-n;
    char nstr[6], Lfilestr[255], Sfilestr[255], basename[255];
@@ -650,7 +650,8 @@ icmfmat::icmfmat(int n, orbital l, int num_op)
 // --------------------------------------------------------------------------------------------------------------- //
 void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gjmbH)
 {
-   int i; Jmat.zero(J[0].nr(),J[0].nc()); iJmat.zero(J[0].nr(),J[0].nc()); _num_op = (int)gjmbH.size();
+   int i; Jmat.zero(J[0].nr(),J[0].nc()); iJmat.zero(J[0].nr(),J[0].nc()); 
+   if(_num_op<(int)gjmbH.size()) iflag.resize(_num_op,0); _num_op = (int)gjmbH.size();
    for(i=0; i<(_num_op>6?_num_op:6); i++)
       if(fabs(gjmbH[i])>DBL_EPSILON*100) { if(iflag[i]==1) iJmat += J[i]*gjmbH[i]; else Jmat += J[i]*gjmbH[i]; }
    // Higher order than dipole operators needed
@@ -665,7 +666,8 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
       // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
       int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
       int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
-      sMat<double> Upq,Umq; double redmat; int n = _n; if(n>(2*_l+1)) n = 4*_l+2-n; 
+    //int im[]= {0,0,1,1,0,0, 1, 1,0,0,0, 1, 1, 1,0,0,0,0, 1, 1, 1, 1,0,0,0,0,0, 1, 1, 1, 1, 1,0,0,0,0,0,0, 1, 1, 1, 1, 1, 1,0,0,0,0,0,0,0};
+      sMat<double> Upq,Umq; double redmat; int n = _n; //if(n>(2*_l+1)) n = 4*_l+2-n; 
 
       for(i=6; i<_num_op; i++)
       {
@@ -675,10 +677,13 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
          Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[i],abs(q[i]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
          MSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[i],-abs(q[i]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
-         if(q[i]<0) {
-            if((q[i]%2)==0) iJmat += (Upq - Umq) * (gjmbH[i]*redmat); else iJmat += (Upq + Umq) * (gjmbH[i]*redmat); iflag.push_back(1); }
-         else {
-            if((q[i]%2)==0)  Jmat += (Upq + Umq) * (gjmbH[i]*redmat); else  Jmat += (Upq - Umq) * (gjmbH[i]*redmat); iflag.push_back(0); }
+         if (fabs(gjmbH[i])>DBL_EPSILON) 
+         {
+            if(q[i]<0) { 
+               if((q[i]%2)==0) iJmat += (Upq - Umq) * (gjmbH[i]*redmat); else iJmat += (Upq + Umq) * (gjmbH[i]*redmat); iflag[i]=1; }
+            else {
+               if((q[i]%2)==0)  Jmat += (Upq + Umq) * (gjmbH[i]*redmat); else  Jmat += (Upq - Umq) * (gjmbH[i]*redmat); iflag[i]=0; } 
+         }
       }
    }
 }
@@ -733,7 +738,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
-   sMat<double> Upq,Umq; double redmat; int n = _n; if(n>(2*_l+1)) n = 4*_l+2-n; 
+   sMat<double> Upq,Umq; double redmat; int n = _n; //if(n>(2*_l+1)) n = 4*_l+2-n; 
 
    // Rest of the runs only calculate the new matrix elements
    for(iJ=1; iJ<(_num_op>6?_num_op:6); iJ++)
@@ -794,6 +799,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
          }
          free(zJmat); free(zt); matel.push_back(me); ex[iJ]/=Z;
       }
+      if(fabs(ex[iJ]<DBL_EPSILON)) ex[iJ]=0.; 
    }
    ex[iJ] = log(Z)-VE.E(0)/(KB*T); ex[iJ+1] = U;
    return ex;

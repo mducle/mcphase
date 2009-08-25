@@ -70,7 +70,7 @@ ifneq (,$(findstring CYGWIN,$(shell uname)))
 #ARCHFLAG+=-mno-cygwin
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
-ARCHFLAG+=-DNOMINMAX
+#ARCHFLAG+=-DNOMINMAX
 # Checks to see if we want to use the 64bit crosscompiler in Cygwin
 ifdef cross64
 CC=x86_64-w64-mingw32-gcc -pipe $(ARCHFLAG)

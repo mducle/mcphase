@@ -323,13 +323,13 @@ cfi = cos(fi);
  int offset=0; // for cfield module
  if(module_type==0){offset=3;} // for external modules this is to treat ic1ion correctly
  if(module_type==2){
-  tetan(2)=(*iops).alpha;// Stevens factors
-  tetan(4)=(*iops).beta;
-  tetan(6)=(*iops).gamma;
-}
+                    tetan(2)=(*iops).alpha;// Stevens factors
+                    tetan(4)=(*iops).beta;
+                    tetan(6)=(*iops).gamma;
+                   }
 
 Matrix a(0,6,-6,6);
-  a(0, 0) = 1 / sqrt(4.0 * 3.1415);
+a(0, 0) = 1 / sqrt(4.0 * 3.1415);
 
 a(2,-2)=moments(offset+4);
 a(2,-1)=moments(offset+5);
@@ -373,6 +373,7 @@ else     {for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=cnst(l,m)*cnst(l,m);}}
            // of module ic1ion we just take the prefactors of the Zlm 
 
 ro = a(0, 0) / sqrt(4.0 * 3.1415);
+
 ro = ro + a(2, -2)  * 2 * st2 * sfi * cfi;
 ro = ro + a(2, -1)  * st * sfi * ct;
 ro = ro + a(2, 0)  * (3 * ct2 - 1);
