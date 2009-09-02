@@ -293,13 +293,13 @@ void jjjpar::save_radial_wavefunction(const char * filename)
     fprintf(fout,"# radial wave function for %s\n",cffilename);
     fprintf(fout,"# the radial wave function is expanded as \n");
     fprintf(fout,"# R(r)=sum_p C_p R_Np,XIp(r)\n");
-    fprintf(fout,"# R_Np,XIp(r)=r^(Np-1).exp(-xi r).(2 XIp)^(Np+0.5)/sqrt(2Np!)\n");
+    fprintf(fout,"# R_Np,XIp(r)=r^(Np-1).exp(-XIp * r).(2 * XIp)^(Np+0.5)/sqrt(2Np!)\n");
     fprintf(fout,"# radial wave function parameters Np XIp Cp values are\n");
     fprintf(fout,"# tabulated in clementi & roetti Atomic data and \n");
     fprintf(fout,"# nuclear data tables 14 (1974) 177-478\n");
     fprintf(fout,"# the parameters used are: \n");
     int p;    
-    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"# N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
+    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"#! N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
     fprintf(fout,"# r[A]  vs R(r)[1/A^1.5]\n");
     for(r=0.01;r<=10;r*=1.05){fprintf(fout,"%8.8g  %8.8g\n",r,radial_wavefunction(r));}
     fclose(fout);
@@ -576,7 +576,7 @@ void jjjpar::addpars (int number, jjjpar & addjjj)
 void jjjpar::save(FILE * file) 
 { int i,i1,j1;
   saveatom(file);
-  fprintf(file,"# x[a]    y[b]      z[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
+  fprintf(file,"#da[a]   db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
 // save the exchange parameters to file (exactly paranz parameters!)
   for  (i=1;i<=paranz;++i)
   {fprintf(file,"%-+8.6g %-+8.6g %-+8.6g  ",dn[i](1),dn[i](2),dn[i](3));
@@ -599,7 +599,7 @@ void jjjpar::save(FILE * file)
 }
 
 void jjjpar::saveatom(FILE * file) 
-{   fprintf(file,"# da=%4.6g [a] db=%4.6g [b] dc=%4.6g [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=%s\n",xyz(1),xyz(2),xyz(3),paranz,diagonalexchange,gJ,cffilename);
+{   fprintf(file,"#! da=%4.6g [a] db=%4.6g [b] dc=%4.6g [c] nofneighbours=%i diagonalexchange=%i gJ=%4.6g cffilename=%s\n",xyz(1),xyz(2),xyz(3),paranz,diagonalexchange,gJ,cffilename);
 }
 
 //save single ion parameter file filename to path*
@@ -614,7 +614,7 @@ void jjjpar::save_sipf(char * path)
  fout = fopen_errchk (savfilename, "w");
 
  switch (module_type)
-  {case 1: fprintf(fout,"#!kramer\n#<!--mcphase.sipf-->\n");
+  {case 1: fprintf(fout,"#!MODULE=kramer\n#<!--mcphase.sipf-->\n");
            fprintf(fout,"#***************************************************************\n");
            fprintf(fout,"# Single Ion Parameter File for Module Kramer for  \n");
            fprintf(fout,"# %s\n",MCPHASVERSION);
@@ -633,7 +633,7 @@ void jjjpar::save_sipf(char * path)
            fprintf(fout,"params    = %10f    %10f    %10f\n\n",ABC(1),ABC(2),ABC(3));
             
           break;
-   case 2: fprintf(fout,"#!cfield\n#<!--mcphase.sipf-->\n");
+   case 2: fprintf(fout,"#!MODULE=cfield\n#<!--mcphase.sipf-->\n");
            fprintf(fout,"#***************************************************************\n");
            fprintf(fout,"# Single Ion Parameter File for Module Cfield for  \n");
            fprintf(fout,"# %s\n",MCPHASVERSION);
@@ -649,7 +649,7 @@ void jjjpar::save_sipf(char * path)
            fprintf(fout,"#\n# crystal field paramerized in Stevens formalism\n#\n");
            (*iops).save(fout);
           break;
-   case 3: fprintf(fout,"#!brillouin\n#<!--mcphase.sipf-->\n");
+   case 3: fprintf(fout,"#!MODULE=brillouin\n#<!--mcphase.sipf-->\n");
            fprintf(fout,"#***************************************************************\n");
            fprintf(fout,"# Single Ion Parameter File for Module Brillouin for\n");
            fprintf(fout,"# %s\n",MCPHASVERSION);
@@ -758,17 +758,15 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
  char instr[MAXNOFCHARINLINE];
   cf_file = fopen_errchk (cffilename, "rb");
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
-  // strip /r (dos line feed) from line if necessary
-  char *token;  
-  while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}  
-  // determine the file type
-  if(strncmp(instr,"#!",2)!=0)
-    {fprintf(stderr,"Error: single ion property file %s does not start with '#!'\n",cffilename);
+  if(extract(instr,"MODULE=",modulefilename,(size_t)MAXNOFCHARINLINE))
+   {if(extract(instr,"#!",modulefilename,(size_t)MAXNOFCHARINLINE))
+    {fprintf(stderr,"Error: single ion property file %s does not start with '#!' or 'MODULE='\n",cffilename);
      exit(EXIT_FAILURE);}
+   }
 
-  fprintf (stderr,"#parsing single ion property file: %s - loading module %s",cffilename,instr+2);
+  fprintf (stderr,"#parsing single ion property file: %s - loading module %s\n",cffilename,modulefilename);
 
-  if(strncmp(instr,"#!kramer ",9)==0||strncmp(instr,"#!kramer\n",9)==0)
+  if(strcmp(modulefilename,"kramer")==0)
     {module_type=1;fprintf (stderr,"[internal]\n");
       // input all  lines starting with comments
       while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
@@ -780,7 +778,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
       est=ComplexMatrix(0,2,1,2); // not used, just initialize to prevent errors
     }
   else
-    {if(strncmp(instr,"#!brillouin ",12)==0||strncmp(instr,"#!brillouin\n",12)==0)
+    {if(strcmp(modulefilename,"brillouin")==0)
      {module_type=3;fprintf (stderr,"[internal]\n");
       // input all  lines starting with comments
       while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
@@ -793,7 +791,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
       est=0;
      }
      else 
-     {if(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)
+     {if(strcmp(modulefilename,"cfield")==0)
      {module_type=2;fprintf (stderr,"#[internal]\n");
       fclose(cf_file);cf_file = fopen_errchk (cffilename, "rb"); // reopen file
       iops=new ionpars(cf_file);  
@@ -803,10 +801,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
      
      }
      else
-     {   
-  instr[1]='=';
-  extract(instr,"#",modulefilename,(size_t)MAXNOFCHARINLINE);
-  fprintf (stderr,"#[external]\n");
+     {fprintf (stderr,"#[external]\n");
   
        // input all  lines starting with comments
     while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);

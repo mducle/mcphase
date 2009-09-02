@@ -342,11 +342,11 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    // printout the lattice and atomic positions
    strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
-   fprintf (fout, "#show_abc_unitcell=1.0\n");
-   fprintf (fout, "#show_primitive_crystal_unitcell=1.0\n");
-   fprintf (fout, "#show_magnetic_unitcell=1.0\n");
-   fprintf (fout, "#show_atoms=1.0\n");
-   fprintf (fout, "#scale_view_1=1.0 scale_view_2=1.0 scale_view_3=1.0\n");
+   fprintf (fout, "#!show_abc_unitcell=1.0\n");
+   fprintf (fout, "#!show_primitive_crystal_unitcell=1.0\n");
+   fprintf (fout, "#!show_magnetic_unitcell=1.0\n");
+   fprintf (fout, "#!show_atoms=1.0\n");
+   fprintf (fout, "#!scale_view_1=1.0 scale_view_2=1.0 scale_view_3=1.0\n");
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmomentum-components\n");
    fprintf (fout, "    #<Ja(1)> <Ja(2)> .... selfconsistent Spinconfiguration  \n");
    fprintf (fout, "    #<Jb(1)> <Jb(2)> .... UNITS:  multiply by gJ to get moment [muB]\n");
@@ -380,13 +380,13 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    // printout the lattice and atomic positions
    strcpy(inputpars.rems[2],"#\n");
    inputpars.savelattice(fout);inputpars.saveatoms(fout);
-   fprintf (fout, "#show_abc_unitcell=1.0\n");
-   fprintf (fout, "#show_primitive_crystal_unitcell=1.0\n");
-   fprintf (fout, "#show_magnetic_unitcell=1.0\n");
-   fprintf (fout, "#show_atoms=1.0\n");
-   fprintf (fout, "#show_chargedensity=1.0\n");
-   fprintf (fout, "#show_spindensity=1.0\n");
-   fprintf (fout, "#scale_view_1=1.0 scale_view_2=1.0 scale_view_3=1.0\n");
+   fprintf (fout, "#!show_abc_unitcell=1.0\n");
+   fprintf (fout, "#!show_primitive_crystal_unitcell=1.0\n");
+   fprintf (fout, "#!show_magnetic_unitcell=1.0\n");
+   fprintf (fout, "#!show_atoms=1.0\n");
+   fprintf (fout, "#!show_chargedensity=1.0\n");
+   fprintf (fout, "#!show_spindensity=1.0\n");
+   fprintf (fout, "#!scale_view_1=1.0 scale_view_2=1.0 scale_view_3=1.0\n");
    fprintf (fout, "#x y T[K] |H| H[T] Ha[T] Hb[T] Hc[T] nofspins nofatoms(in primitive basis) nofmeanfield-components\n");
    fprintf (fout, "    #mfa(1) mfa(2) .... selfconsistent Mean field configuration \n"); 
    fprintf (fout, "    #mfb(1) mfb(2) .... UNITS: mf(i)=gJ*mu_B*heff(i)[meV] \n"); 

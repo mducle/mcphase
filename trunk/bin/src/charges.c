@@ -165,7 +165,7 @@ abc=0;char *token;
   spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,max_ext_nof_components);
 
           // the following is for the printout of charges.out ...........................
-           fprintf(fout,"#T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",T,ha,hb,hc,savmf.na(),savmf.nb(),savmf.nc(),inputpars.nofatoms*savmf.na()*savmf.nb()*savmf.nc());
+           fprintf(fout,"#!T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",T,ha,hb,hc,savmf.na(),savmf.nb(),savmf.nc(),inputpars.nofatoms*savmf.na()*savmf.nb()*savmf.nc());
             fprintf(fout,"#J=value {atom-file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3] <Ma> <Mb> <Mc> [mb] <Ja> <Jb> <Jc> ...\n");
           fprintf(fout,"#{corresponding effective fields gjmbHeff [meV]- if passed to mcdiff only these are used for caculation (not the magnetic moments)}\n");
 

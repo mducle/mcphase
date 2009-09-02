@@ -1309,7 +1309,7 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
   calc_prim_mag_unitcell(p,abc,r);
   
 
- fprintf(fout,"#nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",nofa,nofb,nofc,nofatoms*nofa*nofb*nofc);
+ fprintf(fout,"#!nr1=%i nr2=%i nr3=%i nat=%i atoms in primitive magnetic unit cell:\n",nofa,nofb,nofc,nofatoms*nofa*nofb*nofc);
  fprintf(fout,"#{atom file} da[a] db[b] dc[c] dr1[r1] dr2[r2] dr3[r3]  <Ma> <Mb> <Mc> [mb] <Ja> <Jb> <Jc> <Jd> <Je> ...\n");
  
    // output atoms and moments in primitive unit cell

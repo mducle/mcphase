@@ -18,15 +18,22 @@
 // returns 1 on error and 0 if successful
   int extract(char * instr,const char * parameter,double & var)
 { //const char delimiters[] = " =:\n";
-  char *token;
+  char *token,*td,*te;
   
-// check if line is comment line -> if yes return 0
-//  if (instr[0]=='#') return 1; //removed 26.5.02 in order to be able to place parameters in comment lines
+// check if line is comment line -> if yes return 1
+if (instr[strspn(instr," \t")]=='#'&&instr[strspn(instr," \t#")]!='!') return 1; //removed 26.5.02 in order to be able to place parameters in comment lines
+                                 // inserted again 27.8.09 to be able to have real comment lines ignored
+                                 // by mcphase - however "#!" will be treated as comment with variable to be read
  
-// strip /r (dos line feed) from line if necessary
-  while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
 
+  // strip /r (dos line feed) from line if necessary
+ // while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
+ 
   if ((token = strstr (instr, parameter))==NULL) return 1; // parameter string not found
+ td=instr;while ((te=strstr(td,"#!"))!=NULL){td=te+1;} // skip all "#!" signs and
+ if ((td=strchr(td,'#'))!=NULL){if(td<token) return 1;} // check if comment sign "#" appears before parameter - if yes return 1
+ 
+  //extract parameter  
   token+=strlen(parameter);
   if (strstr (token, "=")==NULL) return 1;  // no '=' found after parameter string
   while(strstr(token," ")==token||strstr(token,"\t")==token)++token;
@@ -35,27 +42,36 @@
   var = strtod (token, NULL);
   return 0;
 }
+
 // same for in and double 
 // extract a variable named [parmeter] into var out of a string [instr]
   int extract(char * instr,const char * parameter,int & var)
       {double dd;if(0==extract(instr,parameter,dd)){var=(int)dd;return 0;}else{return 1;}}
   int extract(char * instr,const char * parameter,float & var)
       {double dd;if(0==extract(instr,parameter,dd)){var=(float)dd;return 0;}else{return 1;}}
+
 //the same for a string ... maximal n characters are copied
   int extract(char * instr,const char * parameter,char * var,size_t n)
 { const char delimiters[] = " \n";
-  char *token;
+  char *token,*td,*te;
   
 // check if line is comment line -> if yes return 1
-//  if (instr[0]=='#') return 1; //removed 26.5.02 in order to be able to place parameters in comment lines
+if (instr[strspn(instr," \t")]=='#'&&instr[strspn(instr," \t#")]!='!') return 1; //removed 26.5.02 in order to be able to place parameters in comment lines
+                                 // inserted again 27.8.09 to be able to have real comment lines ignored
+                                 // by mcphase - however "#!" will be treated as comment with variable to be read
  
 // strip /r (dos line feed) from line if necessary
   while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
 
-  if ((token = strstr (instr, parameter))==NULL) return 1;
+  if ((token = strstr (instr, parameter))==NULL) return 1; // check if parameter is found - if not return 1
+
+ td=instr;while ((te=strstr(td,"#!"))!=NULL){td=te+1;} // skip all "#!" signs and
+ if ((td=strchr(td,'#'))!=NULL){if(td<token) return 1;} // check if comment sign "#" appears before parameter - if yes return 1
+
+  //extract parameter  
   token+=strlen(parameter);
-  token = strstr (token, "=")+1;
-  while (*token==' '){++token;} // remove starting spaces
+  token+=strspn(token, " \t=");// look for '=' but continue if not present
+                                // remove starting spaces
   strncpy (var,token, n);
   //remove from string var all characters after delimiters
   strtok(var,delimiters);

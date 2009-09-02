@@ -377,10 +377,10 @@ if (do_jqfile==0)
    fprintf(foutqev,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
    fprintf(foutqev,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(foutqev,"#*********************************************************************\n");
-          fprintf (foutqev, "#spins_wave_amplitude=1.0\n");
-          fprintf (foutqev, "#spins_show_ellipses=1.0\n");
-          fprintf (foutqev, "#spins_show_direction_of_static_moment=1.0\n");
-          fprintf (foutqev, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutqev, "#!spins_wave_amplitude=1.0\n");
+          fprintf (foutqev, "#!spins_show_ellipses=1.0\n");
+          fprintf (foutqev, "#!spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqev, "#!dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
   foutqee = fopen_errchk ("./results/mcdisp.qee",filemode);
    fprintf(foutqee, "#{output file of program %s",MCDISPVERSION);
@@ -391,11 +391,11 @@ if (do_jqfile==0)
    fprintf(foutqee,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
    fprintf(foutqee,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(foutqee,"#*********************************************************************\n");
-          fprintf (foutqee, "#spins_wave_amplitude=1.0\n");
-          fprintf (foutqee, "#spins_show_ellipses=1.0\n");
-          fprintf (foutqee, "#spins_show_direction_of_static_moment=1.0\n");
-          fprintf (foutqee, "#extended_eigenvector_dimension=%i\n",ini.extended_eigenvector_dimension); 
-          fprintf (foutqee, "#dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+          fprintf (foutqee, "#!spins_wave_amplitude=1.0\n");
+          fprintf (foutqee, "#!spins_show_ellipses=1.0\n");
+          fprintf (foutqee, "#!spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqee, "#!extended_eigenvector_dimension=%i\n",ini.extended_eigenvector_dimension); 
+          fprintf (foutqee, "#!dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
   foutdstot = fopen_errchk ("./results/mcdisp.dsigma.tot",filemode);
           printf("#saving mcdisp.dsigma.tot\n");
@@ -407,7 +407,7 @@ if (do_jqfile==0)
    fprintf(foutdstot,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
    fprintf(foutdstot,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(foutdstot,"#*********************************************************************\n");
-          fprintf (foutdstot, "#Total Scattering Cross Section in energy range [emin;emax]=[%g;%g]\n#Ha[T] Hb[T] Hc[T] T[K] h k l  dsigma/dOmeg [barn/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}",ini.emin,ini.emax);
+          fprintf (foutdstot, "#!Total Scattering Cross Section in energy range [emin=%g ; emax=%g]\n#Ha[T] Hb[T] Hc[T] T[K] h k l  dsigma/dOmeg [barn/sr/f.u.] f.u.=crystallogrpaphic unit cell (r1xr2xr3)}",ini.emin,ini.emax);
 
    if (do_Erefine==1){
           errno = 0;

@@ -222,12 +222,13 @@ void par::savelattice (FILE *file)
 { 
   errno = 0;
   fprintf(file,"#\n# Lattice Constants (A)\n");
-  fprintf(file,"# a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
-  fprintf(file,"# r1a=%4.6g r2a=%4.6g r3a=%4.6g\n",r[1][1],r[1][2],r[1][3]);
-  fprintf(file,"# r1b=%4.6g r2b=%4.6g r3b=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);
-  fprintf(file,"# r1c=%4.6g r2c=%4.6g r3c=%4.6g\n",r[3][1],r[3][2],r[3][3]);
-  fprintf(file,"# nofatoms=%i  nofcomponents=%i  number of atoms in primitive unit cell/number of components of each spin\n",nofatoms,nofcomponents);
-  fprintf(file,"%s",rems[3]);
+  fprintf(file,"#! a=%4.6g b=%4.6g c=%4.6g alpha=%4.6g beta=%4.6g gamma=%4.6g\n",a,b,c,alpha,beta,gamma);
+  fprintf(file,"#! r1a=%4.6g r2a=%4.6g r3a=%4.6g\n",r[1][1],r[1][2],r[1][3]);
+  fprintf(file,"#! r1b=%4.6g r2b=%4.6g r3b=%4.6g   primitive lattice vectors [a][b][c]\n",r[2][1],r[2][2],r[2][3]);
+  fprintf(file,"#! r1c=%4.6g r2c=%4.6g r3c=%4.6g\n",r[3][1],r[3][2],r[3][3]);
+  fprintf(file,"#! nofatoms=%i  nofcomponents=%i  number of atoms in primitive unit cell/number of components of each spin\n",nofatoms,nofcomponents);
+//  fprintf(file,"%s",rems[3]);// changed 8.09 - I believe here should be only line with stars
+  fprintf(file,"#*********************************************************************\n");
 }
 
 void par::saveatoms (FILE * file)

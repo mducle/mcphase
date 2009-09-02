@@ -127,7 +127,7 @@ float invalues[100];invalues[0]=99;
       if((*jjjps).r6==0){(*jjjps).r6_from_radial_wavefunction();printf("#<r^6> in units of a0^6 a0=0.5292 Angstroem\nR6=%g\n",(*jjjps).r6);}
       if((*jjjps).Np(1)!=0)
       {// save radial wavefunction
-      (*jjjps).save_radial_wavefunction("radwavfun.dat");
+      (*jjjps).save_radial_wavefunction("results/radwavfun.dat");
       }
       (*iops).r2=(*jjjps).r2;
       (*iops).r4=(*jjjps).r4;
@@ -152,6 +152,9 @@ float invalues[100];invalues[0]=99;
   printf("R2=%4g\nR4=%4g\nR6=%4g\n\n",(*iops).r2,(*iops).r4,(*iops).r6);
  }
 
+// zero parameters in case initialisation put some values to the parameters ...
+(*iops).Blm=0;
+(*iops).Llm=0;
 
 if (argc<5) // read pointcharges from file
 {table_file=fopen_errchk(argv[2],"r");
@@ -168,161 +171,161 @@ if (argc<5) // read pointcharges from file
   z=strtod(argv[5],NULL);
 }
 
-// print information about pointcharges to file and calculate Blms and Llms
-  printf ("#pointcharges charge[|e|]  x[A] y[A] z[A]\n",q,x,y,z);
+ // print information about pointcharges to file and calculate Blms and Llms
+  printf ("#pointcharges charge[|e|]  x[A] y[A] z[A]\n");
 while(n>0)
 {
 
   printf ("pointcharge= %4g         %4g %4g %4g\n",q,x,y,z);
   Vector B(1,45); B=0;
-  Vector gamma(1,45); gamma=0;
+  Vector gamma(1,45); gamma=0; 
 
-// calculate Blm's and Llm's
-double r,ct,ct2,st,st2,sfi,cfi;
-r = sqrt(x * x + y * y + z * z);
-ct = z/r;                 //z
-ct2 = ct * ct;      
-st = sqrt(x*x+y*y)/r;
-st2 = st * st;
-if((x*x+y*y)==0){sfi=0;cfi=1;}
-else
-{sfi =  y/sqrt(x*x+y*y);
-cfi =  x/sqrt(x*x+y*y);}
+ // calculate Blm's and Llm's
+ double r,ct,ct2,st,st2,sfi,cfi;
+ r = sqrt(x * x + y * y + z * z);
+ ct = z/r;                 //z
+ ct2 = ct * ct;      
+ st = sqrt(x*x+y*y)/r;
+ st2 = st * st;
+ if((x*x+y*y)==0){sfi=0;cfi=1;}
+ else
+ {sfi =  y/sqrt(x*x+y*y);
+ cfi =  x/sqrt(x*x+y*y);} 
 
- int l,m;   
-// cnst is the Zlm constants - put them into the matrix
-Matrix cnst(0,6,-6,6);
+  int l,m;   
+ // cnst is the Zlm constants - put them into the matrix
+ Matrix cnst(0,6,-6,6); 
 
-cnst(2,0) = 0.3153962;
-cnst(2,1)=  1.092548;
-cnst(2,2)=  0.5462823;
-cnst(4,0)=  0.1057871;
-cnst(4,1)=  0.6690465;
-cnst(4,2)=  0.4730943;
-cnst(4,3)=  1.77013;
-cnst(4,4)=  0.625845;
-cnst(6,0)=  0.06357014;
-cnst(6,1)=  0.582621;
-cnst(6,2)=  0.4606094;
-cnst(6,3)=  0.921205;
-cnst(6,4)=  0.5045723;
-cnst(6,5)=  2.366619;
-cnst(6,6)=  0.6831942;
-for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
+ cnst(2,0) = 0.3153962;
+ cnst(2,1)=  1.092548;
+ cnst(2,2)=  0.5462823;
+ cnst(4,0)=  0.1057871;
+ cnst(4,1)=  0.6690465;
+ cnst(4,2)=  0.4730943;
+ cnst(4,3)=  1.77013;
+ cnst(4,4)=  0.625845;
+ cnst(6,0)=  0.06357014;
+ cnst(6,1)=  0.582621;
+ cnst(6,2)=  0.4606094;
+ cnst(6,3)=  0.921205;
+ cnst(6,4)=  0.5045723;
+ cnst(6,5)=  2.366619;
+ cnst(6,6)=  0.6831942;
+ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
 
-// evaluate the Zlm in order to get gamma_lm
-gamma(1)= cnst(2, -2)  * 2 * st2 * sfi * cfi;
-gamma(2)= cnst(2, -1)  * st * sfi * ct;
-gamma(3)= cnst(2, 0)  * (3 * ct2 - 1);
-gamma(4)= cnst(2, 1)  * st * cfi * ct;
-gamma(5)= cnst(2, 2)  * st2 * (cfi * cfi - sfi * sfi);
+ // evaluate the Zlm in order to get gamma_lm
+ gamma(1)= cnst(2, -2)  * 2 * st2 * sfi * cfi;
+ gamma(2)= cnst(2, -1)  * st * sfi * ct;
+ gamma(3)= cnst(2, 0)  * (3 * ct2 - 1);
+ gamma(4)= cnst(2, 1)  * st * cfi * ct;
+ gamma(5)= cnst(2, 2)  * st2 * (cfi * cfi - sfi * sfi); 
 
-gamma(13)= cnst(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-gamma(14)= cnst(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-gamma(15)= cnst(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
-gamma(16)= cnst(4, -1) * st * sfi * ct * (7 * ct2 - 3);
-gamma(17)= cnst(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
-gamma(18)= cnst(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
-gamma(19)= cnst(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
-gamma(20)= cnst(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-gamma(21)= cnst(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+ gamma(13)= cnst(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ gamma(14)= cnst(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ gamma(15)= cnst(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
+ gamma(16)= cnst(4, -1) * st * sfi * ct * (7 * ct2 - 3);
+ gamma(17)= cnst(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
+ gamma(18)= cnst(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
+ gamma(19)= cnst(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
+ gamma(20)= cnst(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ gamma(21)= cnst(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi); 
 
-gamma(33)= cnst(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
-gamma(34)= cnst(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
-gamma(35)= cnst(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-gamma(36)= cnst(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-gamma(37)= cnst(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
-gamma(38)= cnst(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-gamma(39)= cnst(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
-gamma(40)= cnst(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-gamma(41)= cnst(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
-gamma(42)= cnst(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-gamma(43)= cnst(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
-gamma(44)= cnst(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
-gamma(45)= cnst(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
-
-
-// this is squaring of the coefficients of Zlm, a technical trick in
-// order to save a multiplication later (good for the Blm)
-for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m)cnst(l,m)*=cnst(l,m);}
-
-//ro = a(0, 0) / sqrt(4.0 * 3.1415);
-
-//evaluate th Zlm in order to get Blm
-B(1)= cnst(2, -2)  * 2 * st2 * sfi * cfi;
-B(2)= cnst(2, -1)  * st * sfi * ct;
-B(3)= cnst(2, 0)  * (3 * ct2 - 1);
-B(4)= cnst(2, 1)  * st * cfi * ct;
-B(5)= cnst(2, 2)  * st2 * (cfi * cfi - sfi * sfi);
-
-B(13)= cnst(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-B(14)= cnst(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-B(15)= cnst(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
-B(16)= cnst(4, -1) * st * sfi * ct * (7 * ct2 - 3);
-B(17)= cnst(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
-B(18)= cnst(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
-B(19)= cnst(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
-B(20)= cnst(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-B(21)= cnst(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
-
-B(33)= cnst(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
-B(34)= cnst(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
-B(35)= cnst(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
-B(36)= cnst(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
-B(37)= cnst(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
-B(38)= cnst(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-B(39)= cnst(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
-B(40)= cnst(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
-B(41)= cnst(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
-B(42)= cnst(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
-B(43)= cnst(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
-B(44)= cnst(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
-B(45)= cnst(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
+ gamma(33)= cnst(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
+ gamma(34)= cnst(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
+ gamma(35)= cnst(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ gamma(36)= cnst(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ gamma(37)= cnst(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
+ gamma(38)= cnst(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ gamma(39)= cnst(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
+ gamma(40)= cnst(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ gamma(41)= cnst(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
+ gamma(42)= cnst(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ gamma(43)= cnst(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+ gamma(44)= cnst(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
+ gamma(45)= cnst(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
 
 
-// now calculation of the coefficients gammaLM  in cgs
-int i;
-double eps0=8.854187817e-12; //units C^2/Nm^2
-double echarge=1.60217646e-19;  // units C
-//gamma2M   
-for (i=1;i<=5;++i){B(i)*=q/r/r/r*4*PI/5; gamma(i)*=q*echarge*1e30/r/r/r/5/eps0;}
-//gamma4M
-for (i=13;i<=21;++i){B(i)*=q/r/r/r/r/r*4*PI/9; gamma(i)*=q*echarge*1e50/r/r/r/r/r/9/eps0;}
-//gamma6M
-for (i=33;i<=45;++i){B(i)*=q/r/r/r/r/r/r/r*4*PI/13; gamma(i)*=q*echarge*1e70/r/r/r/r/r/r/r/13/eps0; }
+ // this is squaring of the coefficients of Zlm, a technical trick in
+ // order to save a multiplication later (good for the Blm)
+ for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m)cnst(l,m)*=cnst(l,m);}
 
-// ... gammas are calculated in SI units [N m^(2-2L-1) /C]
+ //ro = a(0, 0) / sqrt(4.0 * 3.1415);
 
-double e,a0,umr,ehv2,ehv4,ehv6;
+ //evaluate th Zlm in order to get Blm
+ B(1)= cnst(2, -2)  * 2 * st2 * sfi * cfi;
+ B(2)= cnst(2, -1)  * st * sfi * ct;
+ B(3)= cnst(2, 0)  * (3 * ct2 - 1);
+ B(4)= cnst(2, 1)  * st * cfi * ct;
+ B(5)= cnst(2, 2)  * st2 * (cfi * cfi - sfi * sfi);
+
+ B(13)= cnst(4, -4) * st2 * st2 * 4 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ B(14)= cnst(4, -3) * ct * st * st2 * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ B(15)= cnst(4, -2) * (7 * ct2 - 1) * 2 * st2 * cfi * sfi;
+ B(16)= cnst(4, -1) * st * sfi * ct * (7 * ct2 - 3);
+ B(17)= cnst(4, 0) * (35 * ct2 * ct2 - 30 * ct2 + 3);
+ B(18)= cnst(4, 1)  * st * cfi * ct * (7 * ct2 - 3);
+ B(19)= cnst(4, 2)  * (7 * ct2 - 1) * st2 * (cfi * cfi - sfi * sfi);
+ B(20)= cnst(4, 3)  * ct * st * st2 * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ B(21)= cnst(4, 4)  * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+
+ B(33)= cnst(6, -6) * st2 * st2 * st2 * (6 * cfi * cfi * cfi * cfi * cfi * sfi - 20 * cfi * cfi * cfi * sfi * sfi * sfi + 6 * cfi * sfi * sfi * sfi * sfi * sfi);
+ B(34)= cnst(6, -5) * ct * st * st2 * st2 * (5 * cfi * cfi * cfi * cfi * sfi - 10 * cfi * cfi * sfi * sfi * sfi + sfi * sfi * sfi * sfi * sfi);
+ B(35)= cnst(6, -4) * (11 * ct2 - 1) * 4 * st2 * st2 * (cfi * cfi * cfi * sfi - cfi * sfi * sfi * sfi);
+ B(36)= cnst(6, -3) * (11 * ct * ct2 - 3 * ct) * st2 * st * (3 * cfi * cfi * sfi - sfi * sfi * sfi);
+ B(37)= cnst(6, -2) * 2 * st2 * sfi * cfi * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2);
+ B(38)= cnst(6, -1) * ct * st * sfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ B(39)= cnst(6, 0)  * (231 * ct2 * ct2 * ct2 - 315 * ct2 * ct2 + 105 * ct2 - 5);
+ B(40)= cnst(6, 1)  * ct * st * cfi * (33 * ct2 * ct2 - 30 * ct2 + 5);
+ B(41)= cnst(6, 2)  * (16 * ct2 * ct2 - 16 * ct2 * st2 + st2 * st2) * st2 * (cfi * cfi - sfi * sfi);
+ B(42)= cnst(6, 3)  * (11 * ct * ct2 - 3 * ct) * st2 * st * (cfi * cfi * cfi - 3 * cfi * sfi * sfi);
+ B(43)= cnst(6, 4)  * (11 * ct2 - 1) * st2 * st2 * (cfi * cfi * cfi * cfi - 6 * cfi * cfi * sfi * sfi + sfi * sfi * sfi * sfi);
+ B(44)= cnst(6, 5)  * ct * st * st2 * st2 * (cfi * cfi * cfi * cfi * cfi - 10 * cfi * cfi * cfi * sfi * sfi + 5 * cfi * sfi * sfi * sfi * sfi);
+ B(45)= cnst(6, 6) * st2 * st2 * st2 * (cfi * cfi * cfi * cfi * cfi * cfi - 15 * cfi * cfi * cfi * cfi * sfi * sfi + 15 * cfi * cfi * sfi * sfi * sfi * sfi - sfi * sfi * sfi * sfi * sfi * sfi);
+
+
+ // now calculation of the coefficients gammaLM  in cgs
+ int i;
+ double eps0=8.854187817e-12; //units C^2/Nm^2
+ double echarge=1.60217646e-19;  // units C
+ //gamma2M   
+ for (i=1;i<=5;++i){B(i)*=q/r/r/r*4*PI/5; gamma(i)*=q*echarge*1e30/r/r/r/5/eps0;}
+ //gamma4M
+ for (i=13;i<=21;++i){B(i)*=q/r/r/r/r/r*4*PI/9; gamma(i)*=q*echarge*1e50/r/r/r/r/r/9/eps0;}
+ //gamma6M
+ for (i=33;i<=45;++i){B(i)*=q/r/r/r/r/r/r/r*4*PI/13; gamma(i)*=q*echarge*1e70/r/r/r/r/r/r/r/13/eps0; }
+
+ // ... gammas are calculated in SI units [N m^(2-2L-1) /C]
+
+ double e,a0,umr,ehv2,ehv4,ehv6;
      e = 4.80325E-10; // elementarladung
-// einheit von r in <r^n> ist Bohrradius^n = a0^n in angstroem^n
-     a0 = .5292;//(Angstroem)
-//   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in mJ = 10^4
-//   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in THz =1.509166084e22
-//   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in meV =0.624146e23
-//   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in K =0.72429024e24
+ // einheit von r in <r^n> ist Bohrradius^n = a0^n in angstroem^n
+      a0 = .5292;//(Angstroem)
+ //   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in mJ = 10^4
+ //   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in THz =1.509166084e22
+ //   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in meV =0.624146e23
+ //   REM umr von (esu)^2*a0^n/Angstroem^(n+1) in K =0.72429024e24
      umr = 6.24146E+22;
      ehv2 = a0*a0 * umr;
      ehv4 = a0*a0*a0*a0 * umr;
      ehv6 = a0*a0*a0*a0*a0*a0 * umr;
 
-double J2meV=1/1.60217646e-22; // 1 millielectron volt = 1.60217646 × 10-22 joules
+ double J2meV=1/1.60217646e-22; // 1 millielectron volt = 1.60217646 × 10-22 joules
 
-// now calculation of the B_LM  and L_LM in meV
-for (i=1;i<=5;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r2*(*iops).alpha*ehv2; 
+ // now calculation of the B_LM  and L_LM in meV
+ for (i=1;i<=5;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r2*(*iops).alpha*ehv2; // printf("B(%i)=%g sum(B)=%g\n",i,B(i),(*iops).Blm(i));
                    if(i!=3){(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/8/PI)*J2meV;}  //m<>0
                    else    {(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/4/PI)*J2meV;}  //m=0
                   }
-for (i=13;i<=21;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r4*(*iops).beta*ehv4; 
+ for (i=13;i<=21;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r4*(*iops).beta*ehv4; 
                    if(i!=17){(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/8/PI)*J2meV;}  //m<>0
                    else     {(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/4/PI)*J2meV;}  //m=0
                     }
-for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r6*(*iops).gamma*ehv6;
+ for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r6*(*iops).gamma*ehv6;
                    if(i!=39){(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/8/PI)*J2meV;}  //m<>0
                    else     {(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/4/PI)*J2meV;}  //m=0
                     }
-n=0;
-if (argc<5)
+ n=0;
+ if (argc<5)
  { while(n==0&feof(table_file)==false)n=inputline(table_file, invalues);
   q=invalues[1];
   x=invalues[2];
@@ -333,9 +336,12 @@ if (argc<5)
 
 if (argc<5){fclose(table_file);}
 
+printf ("# 1 meV = 8.066 cm-1\n# 1 cm-1 = 0.124 meV\n");
+printf ("# 1 meV = 11.6 K\n# 1 K = 0.0862 meV\n");
+
 (*iops).savBlm(stdout);
 (*iops).savLlm(stdout);
-  fprintf(stderr,"#*********************=*************************************************\n");
+  fprintf(stderr,"#***********************************************************************\n");
   fprintf(stderr,"#                         end of program pointc\n");
   fprintf(stderr,"# Reference: Ernst Bauer and Martin Rotter - Crystal field effects \n");
   fprintf(stderr,"#            in Rare Earth Compounds, in print\n");

@@ -431,9 +431,9 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  fprintf(fout,"#                   / %6.3f A \\     / %6.3f A \\     / %6.3f A \\ \n", r1(1), r2(1), r3(1));
  fprintf(fout,"#                r1=| %6.3f A |  r2=| %6.3f A |  r3=| %6.3f A |\n", r1(2), r2(2), r3(2));
  fprintf(fout,"#                   \\ %6.3f A /     \\ %6.3f A /     \\ %6.3f A /\n", r1(3), r2(3), r3(3));
- fprintf(fout, "# Wavelength=%g A   number of atoms: %i\n",lambda, n);
- fprintf(fout, "# T= %g K Ha= %g T Hb= %g T Hc= %g T\n",T,Ha,Hb,Hc);
- fprintf(fout, "# Overall temperature factor B=%g A^2: Intensity is proportional to exp(-2*B*(sin(theta)/lambda)^2)\n",ovalltemp);
+ fprintf(fout, "#! Wavelength=%g A   number of atoms: %i\n",lambda, n);
+ fprintf(fout, "#! T= %g K Ha= %g T Hb= %g T Hc= %g T\n",T,Ha,Hb,Hc);
+ fprintf(fout, "#! Overall temperature factor B=%g A^2: Intensity is proportional to exp(-2*B*(sin(theta)/lambda)^2)\n",ovalltemp);
 
  if(lorenz == 0){sprintf(l,"100 no lorentz factor calculated");}
  if(lorenz == 1){sprintf(l,"1 / sin^2(2theta)   neutron powder flat sample");}
@@ -761,16 +761,16 @@ printf("                 ovalltemp=%g A^2 lorentz-type=%i\n",ovalltemp,lorenz);
 
 fprintf(fout,"# %%SECTION 1%%  OVERALL PARAMETERS\n");
 fprintf(fout,"#\n");
-fprintf(fout,"# lambda   = %g  wavelength (A)\n",lambda);
+fprintf(fout,"#! lambda   = %g  wavelength (A)\n",lambda);
 fprintf(fout,"#\n");
-fprintf(fout,"# thetamax = %g   maximum bragg angle (deg)\n",thetamax);
+fprintf(fout,"#! thetamax = %g   maximum bragg angle (deg)\n",thetamax);
 fprintf(fout,"#\n");
-fprintf(fout,"# ovalltemp= %g  overall temperature factor (A^2) \n",ovalltemp);
+fprintf(fout,"#! ovalltemp= %g  overall temperature factor (A^2) \n",ovalltemp);
 fprintf(fout,"#           ...I ~ EXP(-2 * ovalltemp * sintheta^2 / lambda^2) \n");
 fprintf(fout,"#                  relation to other notations:\n");
 fprintf(fout,"#                  ovalltemp = Biso = 8 pi^2 Uiso^2\n");
 fprintf(fout,"#\n");
-fprintf(fout,"# lorentz=%i  type of lorentzfactor to be used\n",lorenz);
+fprintf(fout,"#! lorentz=%i  type of lorentzfactor to be used\n",lorenz);
 fprintf(fout,"#            0.....no lorentzfactor \n");
 fprintf(fout,"#            1.....neutron powder flat sample\n");
 fprintf(fout,"#            2.....neutron powder cylindrical sample\n");
@@ -805,7 +805,7 @@ fprintf(fout,"#\n");
 fprintf(fout,"# %%SECTION 2%% LIST OF NONMAGNETIC ATOMS IN CRYSTALLOGRAPHIC UNIT CELL\n");
 fprintf(fout,"#\n");
 fprintf(fout,"#\n");
-fprintf(fout,"# nat=%i      number of nonmagnetic atoms in primitive crystalographic unit cell\n",nat);
+fprintf(fout,"#! nat=%i      number of nonmagnetic atoms in primitive crystalographic unit cell\n",nat);
 fprintf(fout,"#\n");
 fprintf(fout,"# it follows a list of nat lines with nonmagnetic atoms\n");
 fprintf(fout,"# ... notes: - if an occupancy other than 1.0 is needed, just reduce \n");
@@ -899,12 +899,12 @@ fprintf(fout,"#       (file spins.out) or charges (file charges.out)\n");
 fprintf(fout,"# -----------------------------------------------------------------------------\n");
 fprintf(fout,"#\n");
 fprintf(fout,"# lattice constants (A) and angles \n");
-fprintf(fout,"# a=%g b=%g c=%g alpha=  %g beta=  %g gamma=  %g\n",a,b,c,alpha,beta,gamma);
+fprintf(fout,"#! a=%g b=%g c=%g alpha=  %g beta=  %g gamma=  %g\n",a,b,c,alpha,beta,gamma);
 fprintf(fout,"#\n");
 fprintf(fout,"# primitive lattice vectors \n");
-fprintf(fout,"# r1a= %7f r2a= %7f r3a= %7f\n",r1(1),r2(1),r3(1));
-fprintf(fout,"# r1b= %7f r2b= %7f r3b= %7f   primitive lattice vectors (a)(b)(c)\n",r1(2),r2(2),r3(2));
-fprintf(fout,"# r1c= %7f r2c= %7f r3c= %7f\n",r1(3),r2(3),r3(3));
+fprintf(fout,"#! r1a= %7f r2a= %7f r3a= %7f\n",r1(1),r2(1),r3(1));
+fprintf(fout,"#! r1b= %7f r2b= %7f r3b= %7f   primitive lattice vectors (a)(b)(c)\n",r1(2),r2(2),r3(2));
+fprintf(fout,"#! r1c= %7f r2c= %7f r3c= %7f\n",r1(3),r2(3),r3(3));
 fprintf(fout,"#\n");
 fprintf(fout,"#\n");
 fprintf(fout,"#\n");
@@ -974,7 +974,7 @@ fprintf(fout,"#                        respectively to get magnetic unit cell\n"
 fprintf(fout,"# 'nat' denotes the number of magnetic atoms in magnetic unit cell\n");
 fprintf(fout,"#\n");
 fprintf(fout,"# Temperature,    Magnetic Field: Magnetic Unit Cell\n");
-fprintf(fout,"# T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i \n",T,Ha,Hb,Hc,nr1,nr2,nr3,natmagnetic);
+fprintf(fout,"#! T=%g K Ha=%g T Hb= %g T Hc= %g T: nr1=%i nr2=%i nr3=%i nat=%i \n",T,Ha,Hb,Hc,nr1,nr2,nr3,natmagnetic);
 fprintf(fout,"#\n");
 fprintf(fout,"#\n");
 fprintf(fout,"# It follows a list of nat lines with to describe the magnetic moment configuration\n");

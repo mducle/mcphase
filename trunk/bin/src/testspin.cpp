@@ -42,8 +42,8 @@ void testspincf::save (const char*filename, const char * filemode)
  fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
  fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
  fprintf(fout,"#**********************************************************\n"); 
- fprintf(fout,"# nofatoms=%i\n",nofatoms);
- fprintf(fout,"#nofcomponents=%i\n",nofcomponents);
+ fprintf(fout,"#! nofatoms=%i\n",nofatoms);
+ fprintf(fout,"#! nofcomponents=%i\n",nofcomponents);
  fprintf(fout,"# File Format: blocks of 3xnofatoms lines consisting of\n");
  fprintf(fout,"# ma[1] ma[2] ma[3] .... ma[n]\n");
  fprintf(fout,"# mb[1] mb[2] mb[3] .... mb[n]\n");
