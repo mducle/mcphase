@@ -439,7 +439,7 @@ void rmzeros(sMat<double> & M)
    int i,sz;
    nz = M.find(); sz = (int)nz.size();
    for (i=0; i<sz; i++)
-      if(fabs(M(nz[i][0],nz[i][1]))<DBL_EPSILON*10) M.del(nz[i][0],nz[i][1]);
+      if(fabs(M(nz[i][0],nz[i][1]))<DBL_EPSILON*1000) M.del(nz[i][0],nz[i][1]);
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -462,7 +462,7 @@ sMat<double> f2mat(double *M, int m, int n)
    sMat<double> retval(m,n);
    for(j=0; j<n; j++)
       for(i=0; i<m; i++)
-         if(fabs(M[m*j+i])>DBL_EPSILON) retval(i,j) = M[m*j+i];
+         if(fabs(M[m*j+i])>DBL_EPSILON*1000) retval(i,j) = M[m*j+i];
    return retval;
 }
 

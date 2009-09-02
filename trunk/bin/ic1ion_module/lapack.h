@@ -82,7 +82,6 @@ extern "C"
                       double *beta, double *y, int *incy);
   void F77NAME(dgemm)(char *transa, char *transb, int *m, int *n, int *k, double *alpha, double *A,
                       int *lda, double *B, int *ldb, double *beta, double *c, int *ldc);
-  double F77NAME(ddot)(int *n, double *x, int *incx, double *y, int *incy);
   void F77NAME(dcopy)(int *n, double *x, int *incx, double *y, int *incy);
   void F77NAME(zgemv)(char *trans, int *n, int *m, complexdouble *alpha, complexdouble *a,
                       int *lda, complexdouble *x, int *incx, complexdouble *beta,
@@ -95,10 +94,17 @@ extern "C"
                       complexdouble *C, int *ldc); 
   void F77NAME(daxpy)(int *n, double *da, double *dx, int *incx, double *dy, int *incy);
   void F77NAME(zaxpy)(int *n, complexdouble *za, complexdouble *zx, int *incx, complexdouble *zy, int *incy);
+#ifdef _G77 
+  void F77NAME(zdotc)(complexdouble *retval, int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
+  void F77NAME(zdotu)(complexdouble *retval, int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
+  void F77NAME(ddot)(double retval, int *n, double *x, int *incx, double *y, int *incy);
+#else
+  double F77NAME(ddot)(int *n, double *x, int *incx, double *y, int *incy);
   complexdouble F77NAME(zdotc)(int *n, complexdouble *zx, int *incx, 
                       complexdouble *zy, int* incy);
   complexdouble F77NAME(zdotu)(int *n, complexdouble *zx, int *incx, 
                       complexdouble *zy, int* incy);
+#endif
   int F77NAME(izamax)(int *n, complexdouble *zx, int *incx);
 
   // LAPACK Utilities

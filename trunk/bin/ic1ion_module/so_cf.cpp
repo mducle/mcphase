@@ -92,6 +92,7 @@ sMat<double> racah_so(int n, double xi, orbital e_l)  // Defaults to f-electrons
 sMat<double> racah_Umat(int n, int k, orbital e_l)
 {
    if(n==1) { sMat<double> U(1,1); U(0,0) = 1.; return U; }      // See Judd 1963, Eqn 5-13. with U^k=V^k/sqrt(2k+1)
+   if(n==(4*e_l+1)) { sMat<double> U(1,1); U(0,0) = -1.; return U; }
    bool df;
    if(e_l==D) df = true;
    else if(e_l==F) df = false;
@@ -125,14 +126,14 @@ sMat<double> racah_Umat(int n, int k, orbital e_l)
                                * cfpsi[ii].cfp * cfpsj[jj].cfp * pow(-1.,(double)abs(confp.states[cfpsi[ii].ind].L)+k) * noncfpprod;
             if(fabs(sumcfp)!=0.) 
             {
-               if(n>(2*e_l+1)) sumcfp = -sumcfp; // Phase difference: [4l+2-n] = -(-1)^K [n] 
+             //if(n>(2*e_l+1)) sumcfp = -sumcfp; // Phase difference: [4l+2-n] = -(-1)^K [n] 
                U(i,j) = n * sumcfp;
                if(i!=j) U(j,i) = pow(-1.,abs(conf.states[i].L)-conf.states[i].S2/2.-abs(conf.states[j].L)+conf.states[j].S2/2.) * n * sumcfp;
             }
          }
       }
    }
-   char rmat[255]; strcpy(rmat,"results/ic1ion.umat"); rmzeros(U); mm_gout(U,rmat);
+ //char rmat[255]; strcpy(rmat,"results/ic1ion.umat"); rmzeros(U); mm_gout(U,rmat);
    return U;
 }
 

@@ -42,7 +42,7 @@ endif
 endif
 
 ifneq (,$(findstring CYGWIN,$(shell uname)))
-#ARCHFLAG+=-mno-cygwin
+FLAGS+=-mno-cygwin
 ifdef cross64
 FORTRAN  = x86_64-w64-mingw32-gfortran --std=legacy
 ARCH     = x86_64-w64-mingw32-ar
@@ -58,9 +58,9 @@ endif
 endif
 
 ifdef MSYS
-FLAGS    = -pipe -g
+FLAGS   += -pipe -g
 else
-FLAGS    = -pipe -g -fPIC
+FLAGS   += -pipe -g -fPIC
 endif
 ifdef fast
 ifneq ($(shell gcc --version|head -n1|grep " 3."),)

@@ -191,7 +191,7 @@ int ic_arpackeig(int n, complexdouble *zm, complexdouble *z, double *eigval, int
    complexdouble *d=(complexdouble*)malloc(nev*sizeof(complexdouble)), *workev=(complexdouble*)malloc(2*ncv*sizeof(complexdouble));
    F77NAME(zneupd)(&rvec, &howmny, select, d, z, &n, &zalpha, workev, &bmat, &n, whichp, &nev, &tol, resid, &ncv, v, &n, iparam, 
                    ipntr, workd, workl, &lworkl, rwork, &info);
-   int i=1,j=2,ii; double elem; std::vector<int> ind(nev,0.);
+   int i=1,j=2,ii; double elem; std::vector<int> ind(nev,0);
    for(ii=0; ii<nev; ii++) { eigval[ii] = d[ii].r; ind[ii] = ii; }
    while(i<nev)
    {

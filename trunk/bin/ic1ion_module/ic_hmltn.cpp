@@ -261,7 +261,7 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
                 //   Upq = fast_ukq(n,k,0);
                   rmzeros(Upq); mm_gout(Upq,filename);
                }
-               if(nn>(2*e_l+1)) H_cf -= Upq * (pars.B(k,q)/icfact[k]); else H_cf += Upq * (pars.B(k,q)/icfact[k]);
+             /*if(nn>(2*e_l+1)) H_cf -= Upq * (pars.B(k,q)/icfact[k]); else*/ H_cf += Upq * (pars.B(k,q)/icfact[k]);
             }
             else
             {
@@ -284,11 +284,11 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
                   rmzeros(Umq); mm_gout(Umq,filename);
                }
                if(q<0)
-                  if(nn>(2*e_l+1)) H_cfi-= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
-                  else H_cfi+= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]);
+                /*if(nn>(2*e_l+1)) H_cfi-= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
+                  else*/ H_cfi+= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]);
                else
-                  if(nn>(2*e_l+1)) H_cf -= (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
-                  else H_cf += (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
+                /*if(nn>(2*e_l+1)) H_cf -= (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
+                  else*/ H_cf += (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
             }
          }
       }
@@ -400,13 +400,21 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic, sMat<double> &
       {
          vt = (double*)malloc(Hsz*sizeof(double)); 
          F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, &m[ind[ind_j]*Hsz], &incx, &beta, vt, &incx);
+#ifdef _G77 
+         F77NAME(ddot)(me, &Hsz, &m[ind[ind_j]*Hsz], &incx, vt, &incx);
+#else	 
          me = F77NAME(ddot)(&Hsz, &m[ind[ind_j]*Hsz], &incx, vt, &incx);
+#endif
       }
       else
       {
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
          F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, &z[ind[ind_j]*Hsz], &incx, &zbeta, zt, &incx);
+#ifdef _G77 
+         F77NAME(zdotc)(&zme, &Hsz, &z[ind[ind_j]*Hsz], &incx, zt, &incx);
+#else	 
          zme = F77NAME(zdotc)(&Hsz, &z[ind[ind_j]*Hsz], &incx, zt, &incx);
+#endif
          me = zme.r;                                                  //   me = V(:,ind_j)' * Jmat * V(:,ind_j);
       }
 

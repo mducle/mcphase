@@ -245,9 +245,9 @@ fconf::fconf(int n, orbital l)
    switch(l) {
    case D:
 
-   if (n<1 || n>10)	// Checks to see if number of d-electrons valid
+   if (n<1 || n>9)	// Checks to see if number of d-electrons valid
    {
-      std::cerr << "fconf::fconf() - Invalid value of n = number of d-electrons (must be 1<= n <=10)\n";
+      std::cerr << "fconf::fconf() - Invalid value of n = number of d-electrons (must be 1<= n <=9)\n";
    }
    else {
       if (n>5) n=10-n;	// Checks to see if we are in the second half of the series
@@ -320,9 +320,9 @@ fconf::fconf(int n, orbital l)
    
    case F:
 
-   if (n<1 || n>14)	// Checks to see if number of f-electrons valid
+   if (n<1 || n>13)	// Checks to see if number of f-electrons valid
    {
-      std::cerr << "fconf::fconf(int n) - Invalid value of n = number of f-electrons (must be 1<= n <=14)\n";
+      std::cerr << "fconf::fconf(int n) - Invalid value of n = number of f-electrons (must be 1<= n <=13)\n";
    }
    else {
 

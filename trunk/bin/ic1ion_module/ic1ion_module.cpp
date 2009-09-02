@@ -102,7 +102,6 @@ __declspec(dllexport)
    else Hicnotcalc = true;
    if(Hicnotcalc)
    {
-      for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
       if(pars.spectrelevels==-1)
       {
          sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM; H = zmat2f(Hic,iHic);
@@ -111,11 +110,15 @@ __declspec(dllexport)
          {
             std::cerr << "ERROR module ic1ion - mcalc: Hsz recalculation does not agree with eigenstates matrix dimension\n"; exit(EXIT_FAILURE);
          }
-         est[0][0] = complex<double> (-0.1,-0.1);
          if ((int)(parval.size()/2)>Hsz)
          {
-            std::cerr << "ERROR module ic1ion - mcalc: storing Hamiltonian in est matrix not possible - parval size too big\n"; exit(EXIT_FAILURE);
+//          std::cerr << "ERROR module ic1ion - mcalc: storing Hamiltonian in est matrix not possible - parval size too big\n"; exit(EXIT_FAILURE);
          } 
+         else
+         {
+            est[0][0] = complex<double> (-0.1,-0.1);
+            for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
+         }
          for(i=1; i<=Hsz; i++) memcpy(&est[i][1],&H[(i-1)*Hsz],Hsz*sizeof(complexdouble));
          free(H);
       }
@@ -202,7 +205,7 @@ __declspec(dllexport)
          F77NAME(zgemm)(&transpose,&notranspose,&Hcso_sz,&cb,&Hcso_sz,&zalpha,Srm,&Hcso_sz,Vcso,&Hcso_sz,&zbeta,zmt,&Hcso_sz);
          F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hcso_sz,&zalpha,Vcso,&Hcso_sz,zmt,&Hcso_sz,&zbeta,Srj,&cb); delete[]Srm; delete[]zmt;
 
-         double sqrt2 = sqrt(2);
+         double sqrt2 = sqrt(2.);
          char fSx[] = "results/ic1ion.m1"; std::fstream FSx; FSx.open(fSx, std::fstream::out); FSx.precision(24);
          char fLx[] = "results/ic1ion.m2"; std::fstream FLx; FLx.open(fLx, std::fstream::out); FLx.precision(24);
          char fSy[] = "results/ic1ion.m3"; std::fstream FSy; FSy.open(fSy, std::fstream::out); FSy.precision(24);
@@ -265,7 +268,11 @@ __declspec(dllexport)
          for(i=0; i<Esz; i++)
          {
             F77NAME(zhemv)(&uplo, &icv, &zalpha, LS[iq-1], &icv, VE.zV(i), &incx, &zbeta, zt, &incx); 
+#ifdef _G77
+            F77NAME(zdotc)(&zme, &icv, VE.zV(i), &incx, zt, &incx);
+#else
             zme = F77NAME(zdotc)(&icv, VE.zV(i), &incx, zt, &incx);
+#endif
             J[iq]+=zme.r*eb[i]; if(iq==J.Lo()) { Z+=eb[i]; *U+=(E[i]+VE.E(0))*eb[i]; }
          } 
          J[iq]/=Z;
@@ -450,9 +457,9 @@ __declspec(dllexport)
       lovesey_Qq(Qm,-1,n,l,Jvec); lovesey_Qq(Qp,1,n,l,Jvec);
       for(i=0; i<6; i++)  
       {
-         Qmat[0].push_back( (Qp[i]-Qm[i]) * (-1/sqrt(2)) );                  // Qx = -1/sqrt(2) * (Q_{+1} - Q_{-1})
-         if(i%2==0) Qmat[1].push_back( (Qp[i+1]+Qm[i+1]) * (-1/sqrt(2)) );   // real(Qy) = i^2/sqrt(2) * imag(Q_{+1}+Q_{-1})
-         else       Qmat[1].push_back( (Qp[i-1]+Qm[i-1]) *  (1/sqrt(2)) );   // imag(Qy) = i/sqrt(2) * real(Q_{+1}+Q_{-1})
+         Qmat[0].push_back( (Qp[i]-Qm[i]) * (-1/sqrt(2.)) );                 // Qx = -1/sqrt(2) * (Q_{+1} - Q_{-1})
+         if(i%2==0) Qmat[1].push_back( (Qp[i+1]+Qm[i+1]) * (-1/sqrt(2.)) );  // real(Qy) = i^2/sqrt(2) * imag(Q_{+1}+Q_{-1})
+         else       Qmat[1].push_back( (Qp[i-1]+Qm[i-1]) *  (1/sqrt(2.)) );  // imag(Qy) = i/sqrt(2) * real(Q_{+1}+Q_{-1})
       }
       save_Qq(Qmat[0],0,n,l,Jvec); save_Qq(Qmat[1],1,n,l,Jvec); 
    }
@@ -471,7 +478,11 @@ __declspec(dllexport)
       for(i=1; i<=Hsz; i++)
       {
          F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[i][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+         F77NAME(zdotc)(&zme, &Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx);
+#else
          zme = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx);
+#endif
 //         printf ("%i zme=%g %+g i  Ei=%6.3f ni=%6.3f \n",i,zme.r,zme.i,est[0][i].real(),est[0][i].imag());
          zMqr += (-2.)*zme.r*est[0][i].imag(); zMqi += (-2.)*zme.i*est[0][i].imag(); if(q==0) Z += est[0][i].imag();
       }
@@ -563,10 +574,18 @@ __declspec(dllexport)
    {  zQmat = zmat2f(Qq[q][2],Qq[q][3]);     // Spin part
       zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
       F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[j][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+      F77NAME(zdotc)(&zij[2*q+1], &Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx) ;
+#else
       zij[2*q+1] = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx) ;
+#endif
 //         int k;for(k=0;k<Hsz;++k)printf("%6.3f %+6.3f i  ",real(est(j,1+k)),imag(est(j,1+k)));
       F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[i][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+      F77NAME(zdotc)(&zji[2*q+1], &Hsz, (complexdouble*)&est[j][1], &incx, zt, &incx) ;
+#else
       zji[2*q+1] = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[j][1], &incx, zt, &incx) ;
+#endif
 
       if(i==j)                               //subtract thermal expectation value from zij=zii
       {
@@ -575,7 +594,11 @@ __declspec(dllexport)
          {
             therm = exp(-(est[0][iJ].real()-est[0][1].real())/(KB*T)); if(therm<DBL_EPSILON) break; 
             F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[iJ][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+            F77NAME(zdotc)(&expQ, &Hsz, (complexdouble*)&est[iJ][1], &incx, zt, &incx);
+#else
             expQ = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[iJ][1], &incx, zt, &incx);
+#endif
             thexp += expQ.r * therm / Z;
          }
          zij[2*q+1].r-=thexp;zji[2*q+1].r-=thexp;
@@ -585,9 +608,15 @@ __declspec(dllexport)
       zQmat = zmat2f(Qq[q][4],Qq[q][5]);     // orbital part
       zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
       F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[j][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+      F77NAME(zdotc)(&zij[2*q+2], &Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx);
+      F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[i][1], &incx, &zbeta, zt, &incx);
+      F77NAME(zdotc)(&zji[2*q+2], &Hsz, (complexdouble*)&est[j][1], &incx, zt, &incx);
+#else
       zij[2*q+2] = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[i][1], &incx, zt, &incx);
       F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[i][1], &incx, &zbeta, zt, &incx);
       zji[2*q+2] = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[j][1], &incx, zt, &incx);
+#endif
       if(i==j)                               //subtract thermal expectation value from zij=zii
       {
          complexdouble expQ;double thexp=0;
@@ -595,7 +624,11 @@ __declspec(dllexport)
          {
             therm = exp(-(est[0][iJ].real()-est[0][1].real())/(KB*T)); if(therm<DBL_EPSILON) break; 
             F77NAME(zhemv)(&trans, &Hsz, &zalpha, zQmat, &Hsz, (complexdouble*)&est[iJ][1], &incx, &zbeta, zt, &incx);
+#ifdef _G77
+            F77NAME(zdotc)(&expQ, &Hsz, (complexdouble*)&est[iJ][1], &incx, zt, &incx);
+#else
             expQ = F77NAME(zdotc)(&Hsz, (complexdouble*)&est[iJ][1], &incx, zt, &incx);
+#endif
             thexp += expQ.r * therm / Z;
          }
          zij[2*q+2].r-=thexp;zji[2*q+2].r-=thexp;

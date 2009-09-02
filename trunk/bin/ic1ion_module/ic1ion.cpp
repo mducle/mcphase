@@ -40,22 +40,23 @@ extern "C" int dncalc(int &tn, double &th, double &ph, double &J0, double &J2, d
 // --------------------------------------------------------------------------------------------------------------- //
 int getdim(int n, orbital l)                                    // Number of states = ^{4l+2}C_{n}
 {
-   int i,j,ns,nn=(n>(4*abs(l)+2))?(4*abs(l)+2-n):n; 
-   ns=1; for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i; 
-   j=1; for(i=n; i>1; i--) j*=i; ns/=j;
+   //      4l+2       N        N!          (N-k+1).(N-k+2)...N
+   // ns =     C   ==  C  = ---------  =  ---------------------   with N=4l+2, k=n
+   //           n       k    k!(N-k)!         1.2.3...k
+   //
+   int i,j=1,nn=(n>(2*abs(l)+1))?(4*abs(l)+2-n):n;              // Use n<2l+1 equivalents only to avoid overflow
+   long int ns=1;
+   for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i;        // Computes (4l+2-n+1).(4l+2-n+1)...(4l+2)
+   for(i=nn; i>1; i--) j*=i; ns/=j;                             // Computes n.(n-1)...1
    return ns;
-   // here k is the number of electrons
-   int n=4*abs(l)+2;
-   if (k > n)
-      return 0;
-   if (k > n/2)
-      k = n-k; // Take advantage of symmetry
-
+/* // Wikipedia Algorithm
+   int k=4*abs(l)+2;
+   if (n > k)   return 0;
+   if (n > k/2) n = k-n;                                        // Take advantage of symmetry
    long double accum = 1;
-   for (int i = 1; i <= k; i++)
-      accum *= ( (n-k+i) / i );
-
-   return (int) (accum + 0.5); // avoid rounding error
+   for (int i = 1; i <= n; i++)
+      accum *= ( (k-n+i) / i );
+   return (int) (accum + 0.5);                                  // avoid rounding error */
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -285,7 +286,7 @@ void ic_parseinput(const char *filename, icpars &pars)
       else if(varname.find("unit")!=std::string::npos)
          conv_e_units(pars,varval);
       else if(varname.find("conf")!=std::string::npos)
-      {  tmpstr = varval.substr(0,1); pars.l = Lin(tmpstr); tmpstr = varval.substr(1,1); pars.n = atoi(tmpstr.c_str()); }
+      {  tmpstr = varval.substr(0,1); pars.l = Lin(tmpstr); tmpstr = varval.substr(1,2); pars.n = atoi(tmpstr.c_str()); }
       else if(varname.compare("n")==0)
       {  iss >> pars.n; pars.B.calc_stevfact(pars.n,pars.l); }
       else if(varname.compare("l")==0)
@@ -553,7 +554,7 @@ void ic_cmag(const char *filename, icpars &pars)
    else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\n";
    else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\n";
    int i,j,k; double Hm=0.,dt,Z;
-   int nT = ceil((Tmax-Tmin)/Tstep), nH = ceil((Hmax-Hmin)/Hstep) + 1;
+   int nT = (int)ceil((Tmax-Tmin)/Tstep), nH = (int)ceil((Hmax-Hmin)/Hstep) + 1;
    std::vector<double> T(nT,0.); for(i=0; i<nT; i++) T[i] = Tmin+i*Tstep;
    std::vector<double> mag(nT,0.);
 

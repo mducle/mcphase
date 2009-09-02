@@ -91,7 +91,13 @@ printf("***********************************************************\n");
 //  printf("Lande Factor: gJ = %4g\n",(*iops).gJ);
 
 int pchere;int i,nofpc=0;
-   for(i=1;i<=dim;++i)printf(" <J%c> = %g ",'a'-1+i,moments(i));
+const char lm[]="Jy  Jz  Jx  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
+const char lme[]="Sx  Lx  Sy  Ly  Sz  Lz  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
+char lm4[5];lm4[4]='\0';
+   
+   for(i=1;i<=dim;++i){if (dim==48) strncpy(lm4,lm+(i-1)*4,4);
+                       if (dim==51) strncpy(lm4,lme+(i-1)*4,4);
+                       printf(" <J%c> = <%s> =%g\n",'a'-1+i,lm4,moments(i));}
 printf("\n");
 
  char text[1000];

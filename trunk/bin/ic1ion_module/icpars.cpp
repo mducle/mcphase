@@ -671,19 +671,22 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
 
       for(i=6; i<_num_op; i++)
       {
-         redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[i],2*_l,0,0,0);
-         if(k[i]%2==1) continue;   // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
-         NSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[i],abs(q[i]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
-         MSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[i],-abs(q[i]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
+         if(q[i]<0) iflag[i]=1; 
          if (fabs(gjmbH[i])>DBL_EPSILON) 
          {
+            redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[i],2*_l,0,0,0);
+            if(k[i]%2==1) continue;   // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
+            if(k[i]>4 && _l==D) continue;
+            NSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+            Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[i],abs(q[i]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
+            if(q[i]==0) { Jmat += Upq * (gjmbH[i]*redmat); continue; }
+            MSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+            Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[i],-abs(q[i]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
             if(q[i]<0) { 
-               if((q[i]%2)==0) iJmat += (Upq - Umq) * (gjmbH[i]*redmat); else iJmat += (Upq + Umq) * (gjmbH[i]*redmat); iflag[i]=1; }
+               if((q[i]%2)==0) iJmat += (Upq - Umq) * (gjmbH[i]*redmat); else iJmat += (Upq + Umq) * (gjmbH[i]*redmat); }
             else {
-               if((q[i]%2)==0)  Jmat += (Upq + Umq) * (gjmbH[i]*redmat); else  Jmat += (Upq - Umq) * (gjmbH[i]*redmat); iflag[i]=0; } 
-         }
+               if((q[i]%2)==0)  Jmat += (Upq + Umq) * (gjmbH[i]*redmat); else  Jmat += (Upq - Umq) * (gjmbH[i]*redmat); } 
+         } 
       }
    }
 }
@@ -711,7 +714,11 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       for(ind_j=0; ind_j<Esz; ind_j++)
       {  // Calculates the matrix elements <Vi|J.H|Vi>
          F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, VE.V(ind_j), &incx, &beta, vt, &incx);
+#ifdef _G77 
+         F77NAME(ddot)(me[ind_j],&Hsz, VE.V(ind_j), &incx, vt, &incx);
+#else
          me[ind_j] = F77NAME(ddot)(&Hsz, VE.V(ind_j), &incx, vt, &incx);
+#endif
          eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=E[ind_j]*eb[ind_j];
       }
       free(fJmat); free(vt); matel.push_back(me); ex[0]/=Z; U/=Z;
@@ -724,7 +731,11 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       for(ind_j=0; ind_j<Esz; ind_j++)
       {  // Calculates the matrix elements <Vi|J.H|Vi>
          F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, VE.zV(ind_j), &incx, &zbeta, zt, &incx);
+#ifdef _G77 
+         F77NAME(zdotc)(&zme, &Hsz, VE.zV(ind_j), &incx, zt, &incx);
+#else
          zme = F77NAME(zdotc)(&Hsz, VE.zV(ind_j), &incx, zt, &incx);
+#endif
          me[ind_j] = zme.r;
          eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
       }
@@ -743,11 +754,11 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    // Rest of the runs only calculate the new matrix elements
    for(iJ=1; iJ<(_num_op>6?_num_op:6); iJ++)
    {
-//    if(k[iJ]%2==1) continue;   // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
       me.assign(Esz,0.);
+      // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
+      if((iJ>6 && k[iJ]%2==1) || (k[iJ]>4 && _l==D)) { matel.push_back(me); continue; }
       if(!VE.iscomplex())
       {
-
          if(iflag[iJ]==0) {
             double *fJmat; vt = (double*)malloc(Hsz*sizeof(double)); 
             if(iJ<6) 
@@ -759,13 +770,17 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
                MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
                Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
                redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
-               if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
+               if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
                Upq *= redmat; fJmat = Upq.f_array();
             }
             for(ind_j=0; ind_j<Esz; ind_j++)
             {  // Calculates the matrix elements <Vi|J.H|Vi>
                F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, VE.V(ind_j), &incx, &beta, vt, &incx);
+#ifdef _G77 
+               F77NAME(ddot)(me[ind_j],&Hsz, VE.V(ind_j), &incx, vt, &incx);
+#else
                me[ind_j] = F77NAME(ddot)(&Hsz, VE.V(ind_j), &incx, vt, &incx);
+#endif
                ex[iJ]+=me[ind_j]*eb[ind_j];
             }
             free(fJmat); free(vt); matel.push_back(me); ex[iJ]/=Z; 
@@ -786,20 +801,24 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
             Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
             redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
-            if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
+            if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
             Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq);
          }
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
          for(ind_j=0; ind_j<Esz; ind_j++)
          {  // Calculates the matrix elements <Vi|J.H|Vi>
             F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, VE.zV(ind_j), &incx, &zbeta, zt, &incx);
+#ifdef _G77 
+            F77NAME(zdotc)(&zme, &Hsz, VE.zV(ind_j), &incx, zt, &incx);
+#else
             zme = F77NAME(zdotc)(&Hsz, VE.zV(ind_j), &incx, zt, &incx);
+#endif
             me[ind_j] = zme.r;
             ex[iJ]+=me[ind_j]*eb[ind_j];
          }
          free(zJmat); free(zt); matel.push_back(me); ex[iJ]/=Z;
       }
-      if(fabs(ex[iJ]<DBL_EPSILON)) ex[iJ]=0.; 
+      if(fabs(ex[iJ])<DBL_EPSILON) ex[iJ]=0.; 
    }
    ex[iJ] = log(Z)-VE.E(0)/(KB*T); ex[iJ+1] = U;
    return ex;
@@ -841,7 +860,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
          MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
          redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
-         if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
+         if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
          Upq *= redmat;
       }
 
@@ -850,7 +869,11 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
          vt = (double*)malloc(Hsz*sizeof(double)); 
          double *fJmat; if(iJ>6) fJmat=Upq.f_array(); else fJmat=J[iJ].f_array();
          F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, VE.V(j), &incx, &beta, vt, &incx);
+#ifdef _G77 
+         F77NAME(ddot)(mij[iJ], &Hsz, VE.V(i), &incx, vt, &incx); zij[iJ].r = mij[iJ];
+#else
          mij[iJ] = F77NAME(ddot)(&Hsz, VE.V(i), &incx, vt, &incx); zij[iJ].r = mij[iJ];
+#endif
          free(fJmat); free(vt);
       } 
       else
@@ -860,7 +883,11 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
          else     { if(iflag[iJ]==0) zJmat=zmat2f(J[iJ],zeroes); else zJmat = zmat2f(zeroes,J[iJ]); }
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
          F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, VE.zV(j), &incx, &zbeta, zt, &incx);
+#ifdef _G77 
+         F77NAME(zdotc)(&zij[iJ], &Hsz, VE.zV(i), &incx, zt, &incx);
+#else
          zij[iJ] = F77NAME(zdotc)(&Hsz, VE.zV(i), &incx, zt, &incx);
+#endif
 //       int k;for(k=0;k<Hsz;++k)printf("%6.3f %+6.3f i  ",VE.zV(j)[k].r,VE.zV(j)[k].i);
          free(zJmat); free(zt);
       }

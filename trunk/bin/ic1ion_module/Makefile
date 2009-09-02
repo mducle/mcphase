@@ -11,10 +11,11 @@ ifeq ($(shell uname),Linux)
 else
 # Check for cygwin
 ifneq (,$(findstring CYGWIN,$(shell uname)))
-#ARCHFLAG+=-mno-cygwin
+ARCHFLAG+=-mno-cygwin
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
-#ARCHFLAG+=-DNOMINMAX
+ARCHFLAG+=-DNOMINMAX
+LINKER+=-mno-cygwin
 # Checks to see if we want to use the 64bit crosscompiler in Cygwin
 ifdef cross64
 CC=x86_64-w64-mingw32-g++ -m64 -pipe $(ARCHFLAG)
@@ -32,11 +33,13 @@ endif                # if MSYS
 
 ifneq ($(shell $(CC) --version|head -n1|grep " 3."),)
  LIBFORTRAN=-lg2c
+ CFLAGS+=-D_G77
 else
 ifneq ($(shell $(CC) --version|head -n1|grep " 4."),)
  LIBFORTRAN=-lgfortran
 else                 # Assumes gcc3 or below
  LIBFORTRAN=-lg2c
+ CFLAGS+=-D_G77
 endif
 endif
 
@@ -52,9 +55,9 @@ endif
 ##################################################################################
 #------------------------------    MSYS    --------------------------------------#
 ifdef MSYS
-CFLAGS = -g -Wall --pedantic -D_WINDOWS
+CFLAGS+= -g -Wall --pedantic -D_WINDOWS
 else
-CFLAGS = -g -ansi -Wall --pedantic -fPIC
+CFLAGS+= -g -ansi -Wall --pedantic -fPIC
 endif
 #------------------------------    FAST    --------------------------------------#
 ifdef fast
