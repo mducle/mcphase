@@ -223,7 +223,7 @@ sMat<double> qr(const sMat<double> & M, sMat<double> & Q)
    work = (double*)malloc( 4*n * sizeof(double) );      // Initial value only. We use the workspace query to find optimum
    // Calculates optimum workspace size
    F77NAME(dgeqrf)(&m, &n, a, &lda, tau, work, &lwork, &info);
-   if(info==0) lwork = work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
+   if(info==0) lwork = (int)work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
    work = (double*)realloc( work, lwork*sizeof(double) );
    if(work==NULL) { std::cerr << "qr(): error reallocating workspace memory\n"; return retval; }
 
@@ -256,7 +256,7 @@ sMat<double> qr(const sMat<double> & M, sMat<double> & Q, int zero)
    work = (double*)malloc( 4*n * sizeof(double) );      // Initial value only. We use the workspace query to find optimum
    // Calculates optimum workspace size
    F77NAME(dgeqrf)(&m, &n, a, &lda, tau, work, &lwork, &info);
-   if(info==0) lwork = work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
+   if(info==0) lwork = (int)work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
    work = (double*)realloc( work, lwork*sizeof(double) );
    if(work==NULL) { std::cerr << "qr(): error reallocating workspace memory\n"; return retval; }
 
@@ -288,7 +288,7 @@ sMat<double> qr(sMat<double> & M, int zero)
    work = (double*)malloc( 4*n * sizeof(double) );      // Initial value only. We use the workspace query to find optimum
    // Calculates optimum workspace size
    F77NAME(dgeqrf)(&m, &n, a, &lda, tau, work, &lwork, &info);
-   if(info==0) lwork = work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
+   if(info==0) lwork = (int)work[0]; else { std::cerr << "qr(): DGEQRF could not determine optimum workspace size\n"; return retval; }
    work = (double*)realloc( work, lwork*sizeof(double) );
    if(work==NULL) { std::cerr << "qr(): error reallocating workspace memory\n"; return retval; }
 

@@ -1,21 +1,38 @@
 CC = g++
 LINKER = g++
 
+# Determines if we have a gcc4.x.x compiler
+ifeq ($(findstring false,$(shell ./checkgcc.sh -4 $(CC))),false)
+GCC4=1
+endif
+
 # Figures operating system
 ifeq (${OSTYPE},msys)
 MSYS=1
+WINDOWS=1
 else
 ifeq ($(shell uname),Linux)
- LINUX = LINUX
- LIBFORTRAN=-lgfortran
+LINUX = LINUX
+LIBFORTRAN=-lgfortran
 else
-# Check for cygwin
 ifneq (,$(findstring CYGWIN,$(shell uname)))
-ARCHFLAG+=-mno-cygwin
+CYGWIN=1
+WINDOWS=1
+else
+MSYS=1
+LIBFORTRAN=-lg2c
+endif                # if CYGWIN
+endif                # if LINUX
+endif                # if MSYS
+
+ifdef CYGWIN
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
-ARCHFLAG+=-DNOMINMAX
+CFlAGS+=-DNOMINMAX
+ifndef GCC4
+CFLAGS+=-mno-cygwin
 LINKER+=-mno-cygwin
+endif
 # Checks to see if we want to use the 64bit crosscompiler in Cygwin
 ifdef cross64
 CC=x86_64-w64-mingw32-g++ -m64 -pipe $(ARCHFLAG)
@@ -25,22 +42,13 @@ ifdef cross32
 CC=i686-w64-mingw32-g++ -m32 -pipe $(ARCHFLAG)
 LINKER=i686-w64-mingw32-g++ -m32
 endif
-endif                # if CYGWIN
- MSYS=1
- LIBFORTRAN=-lg2c
-endif                # if LINUX
-endif                # if MSYS
-
-ifneq ($(shell $(CC) --version|head -n1|grep " 3."),)
- LIBFORTRAN=-lg2c
- CFLAGS+=-D_G77
-else
-ifneq ($(shell $(CC) --version|head -n1|grep " 4."),)
- LIBFORTRAN=-lgfortran
-else                 # Assumes gcc3 or below
- LIBFORTRAN=-lg2c
- CFLAGS+=-D_G77
 endif
+
+ifdef GCC4
+ LIBFORTRAN=-lgfortran
+else
+ LIBFORTRAN=-lg2c
+ CFLAGS+=-D_G77
 endif
 
 # Determines if we have GOTOBLAS
@@ -54,17 +62,17 @@ endif
 #                              Declarations                                      #
 ##################################################################################
 #------------------------------    MSYS    --------------------------------------#
-ifdef MSYS
+ifdef WINDOWS
 CFLAGS+= -g -Wall --pedantic -D_WINDOWS
 else
 CFLAGS+= -g -ansi -Wall --pedantic -fPIC
 endif
 #------------------------------    FAST    --------------------------------------#
 ifdef fast
-ifneq ($(shell $(CC) --version|head -n1|grep " 3."),)
-CFLAGS+= -O2 -pipe -fomit-frame-pointer
-else
+ifdef GCC4
 CFLAGS+= -O2 -march=native -pipe -fomit-frame-pointer
+else
+CFLAGS+= -O2 -pipe -fomit-frame-pointer
 endif
 endif
 #------------------------------   LINKER   --------------------------------------#
@@ -112,14 +120,20 @@ HPP := $(foreach head,$(HEADER),$(head).hpp)
 
 VECOBJ = ../src/vector/cheigen.o ../src/vector/chgeigen.o ../src/vector/cludcomp.o ../src/vector/cmatmul.o ../src/vector/cmatrix.o ../src/vector/cvector.o ../src/vector/dludcomp.o ../src/vector/dmatmul.o ../src/vector/dmatrix.o ../src/vector/dortho.o ../src/vector/dsvdcomp.o ../src/vector/dvector.o ../src/vector/imatrix.o ../src/vector/imtql.o ../src/vector/imtql2.o ../src/vector/ivector.o ../src/vector/magicsquare.o ../src/vector/matexph.o ../src/vector/matlapl.o ../src/vector/matpack.o ../src/vector/matsqth.o ../src/vector/moment.o ../src/vector/rseigen.o ../src/vector/sort2dbl.o ../src/vector/sort3dbl.o ../src/vector/sortdbl.o ../src/vector/tred.o
 
+#ifeq ($(findstring $(shell ./checkgcc.sh -4 $(CC)),"false"),)
+FORCE:
+
+checkgcc: FORCE
+	./checkgcc.sh 3.2 $(CC) -warn
+
 libs/libarpack.a:
 	cd libs && make
 
 ifdef integral
-ic1ion: libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
+ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
 	$(LINKER) -o ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
 else
-ic1ion: libs/libarpack.a $(OBJ) ic1ion.o
+ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o
 	$(LINKER) -o ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)
 endif
 
@@ -141,7 +155,7 @@ else
 endif
 endif
 
-ic1ion.so: libs/libarpack.a $(OBJ) ic1ion_module.o ic1ion.o
+ic1ion.so: checkgcc libs/libarpack.a $(OBJ) ic1ion_module.o ic1ion.o
 ifdef MSYS
 	$(LINKER) -o ic1ion.dll ic1ion_module.o ic1ion.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
 else
@@ -179,7 +193,7 @@ $(OBJ): %.o: %.cpp $(HPP)
 clean:
 	rm -vf *.o
 	rm -vf *~
-	rm -vf ic_hmltn
+	rm -vf checkgcc checkgcc.exe
 
 cleanall: clean
 	cd libs && make clean
