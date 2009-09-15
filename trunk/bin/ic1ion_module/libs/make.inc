@@ -31,18 +31,20 @@ else
  LIBFORTRAN=-lg2c
 endif
 
-ifneq ($(shell gcc --version|head -n1|grep " 3."),)
+ifneq ($(shell gcc --version|grep " 3."),)
  FORTRAN=g77
  LIBFORTRAN=-lg2c
 else
-ifneq ($(shell gcc --version|head -n1|grep " 4."),)
+ifneq ($(shell gcc --version|grep " 4."),)
  FORTRAN=gfortran --std=legacy
  LIBFORTRAN=-lgfortran
 endif
 endif
 
 ifneq (,$(findstring CYGWIN,$(shell uname)))
+ifneq ($(shell gcc --version|grep " 3."),)
 FLAGS+=-mno-cygwin
+endif
 ifdef cross64
 FORTRAN  = x86_64-w64-mingw32-gfortran --std=legacy
 ARCH     = x86_64-w64-mingw32-ar

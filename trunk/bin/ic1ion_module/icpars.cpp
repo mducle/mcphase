@@ -29,6 +29,18 @@
 		     // transition, energy the matrix Mijkl contains wn-wn' or wn/kT
 
 // --------------------------------------------------------------------------------------------------------------- //
+// Looks up conversion factor for Wybourne to Stevens...
+// --------------------------------------------------------------------------------------------------------------- //
+//double wy2stev(int i)
+//{
+//   double lll[] = {0,0,0,0,0,0,sqrt(6.)/2., -sqrt(6.), 1./2., -sqrt(6.), sqrt(6.)/2., 0,0,0,0,0,0,0, /*k=4*/ sqrt(70.)/8., -sqrt(35.)/2., 
+//                 sqrt(10.)/4., -sqrt(5.)/2., 1./8., -sqrt(5.)/2., sqrt(10.)/4., -sqrt(35.)/2., sqrt(70.)/8., 0,0,0,0,0,0,0,0,0,0,0,
+//         /*k=6*/ sqrt(231.)/16., -3*sqrt(77.)/8., 3*sqrt(14.)/16., -sqrt(105.)/8., sqrt(105.)/16., -sqrt(42.)/8., 
+//                 1./16., -sqrt(42.)/8., sqrt(105.)/16., -sqrt(105.)/8., 3*sqrt(14.)/16., -3*sqrt(77.)/8., sqrt(231.)/16.};
+//   return lll[i];
+//}
+
+// --------------------------------------------------------------------------------------------------------------- //
 // Converts a C++ string to lower case
 // --------------------------------------------------------------------------------------------------------------- //
 void strtolower(std::string &instring)
@@ -503,28 +515,32 @@ void iceig::calc(int Hsz, complexdouble *H)
 void iceig::lcalc(icpars &pars, sMat<double>&H)
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
-   _Hsz = H.nc(); _E = new double[_Hsz]; _V = new double[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   _Hsz = H.nc(); _E = new double[_Hsz]; _V = new double[_Hsz*_Hsz]; 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_V,0,_Hsz*_Hsz*sizeof(double));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
       vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
       nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm
    }
+   if(nev>_Hsz) nev=_Hsz;
    int info = ic_leig(H,_V,_E,nev); 
    if(info!=0) { std::cerr << "iceig(H) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_V; _V=0; }
 }
 void iceig::lcalc(icpars &pars, sMat<double>&H, sMat<double>&iH)
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
-   _Hsz = H.nc(); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   _Hsz = H.nc(); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz]; 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_zV,0,_Hsz*_Hsz*sizeof(complexdouble));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
       vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
       nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm 
    }
+   if(nev>_Hsz) nev=_Hsz;
    int info = ic_leig(H,iH,_zV,_E,nev); 
    if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
 }
@@ -532,13 +548,15 @@ void iceig::lcalc(icpars &pars, complexdouble *H)
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
    _Hsz = getdim(pars.n,pars.l); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_zV,0,_Hsz*_Hsz*sizeof(complexdouble));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
       vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
       nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm 
    }
+   if(nev>_Hsz) nev=_Hsz;
    int info = ic_leig(_Hsz,H,_zV,_E,nev); 
    if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
 }
@@ -546,7 +564,8 @@ void iceig::pcalc(icpars &pars, complexdouble *zV, sMat<double> &J, sMat<double>
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
    _Hsz = getdim(pars.n,pars.l); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_zV,0,_Hsz*_Hsz*sizeof(complexdouble));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
@@ -559,30 +578,48 @@ void iceig::pcalc(icpars &pars, complexdouble *zV, sMat<double> &J, sMat<double>
 void iceig::acalc(icpars &pars, sMat<double>&H, sMat<double>&iH)
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
-   _Hsz = H.nc(); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   _Hsz = H.nc(); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz]; 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_zV,0,_Hsz*_Hsz*sizeof(complexdouble));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
       vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
       nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm
    }
-   complexdouble *zH = zmat2f(H,iH); int info = ic_arpackeig(_Hsz,zH,_zV,_E,nev); free(zH);
-   if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
+   if(nev>=_Hsz)   // We want all eigenvalues - better not to use the Arnoldi method
+   {
+      int info = ic_diag(H,iH,_zV,_E); 
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
+   }
+   else
+   {
+      complexdouble *zH = zmat2f(H,iH); int info = ic_arpackeig(_Hsz,zH,_zV,_E,nev); free(zH);
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
+   }
 }
 void iceig::acalc(icpars &pars, complexdouble *H)
 {
    if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
-   _Hsz = getdim(pars.n,pars.l); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz];
-   sMat<double> Hcso = ic_Hcso(pars); eigVE<double> VEcso = eig(Hcso); 
+   _Hsz = getdim(pars.n,pars.l); _E = new double[_Hsz]; _zV = new complexdouble[_Hsz*_Hsz]; 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_zV,0,_Hsz*_Hsz*sizeof(complexdouble));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
    fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
    for(i=0; i<Hcso.nr(); i++) 
    { 
       vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
       nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm 
    }
-   int info = ic_arpackeig(_Hsz,H,_zV,_E,nev); 
-   if(info!=0) { std::cerr << "iceig::acalc() - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; }
+   if(nev>=_Hsz)   // We want all eigenvalues - better not to use the Arnoldi method
+   {
+      int info = ic_diag(_Hsz,H,_zV,_E); 
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(-1); }
+   }
+   else
+   {
+      int info = ic_arpackeig(_Hsz,H,_zV,_E,nev); 
+      if(info!=0) { std::cerr << "iceig::acalc() - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(-1); }
+   }
 }
 std::string iceig::strout() 
 {
@@ -674,7 +711,7 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
          if(q[i]<0) iflag[i]=1; 
          if (fabs(gjmbH[i])>DBL_EPSILON) 
          {
-            redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[i],2*_l,0,0,0);
+            redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[i],2*_l,0,0,0);// * wy2stev(i);
             if(k[i]%2==1) continue;   // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
             if(k[i]>4 && _l==D) continue;
             NSTR(k[i],abs(q[i])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
@@ -702,9 +739,35 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    sMat<double> zeroes; zeroes.zero(J[0].nr(),J[0].nc());
    double alpha = 1, beta = 0; complexdouble zalpha; zalpha.r=1; zalpha.i=0; complexdouble zbeta; zbeta.r=0; zbeta.i=0;
    char uplo = 'U';
+   // Checks that the eigenvalues are orthonormal
+   char transa='C', transb='N'; double summm=0.;
+   if(VE.iscomplex())
+   {
+      complexdouble *zmm = (complexdouble*)malloc(Hsz*Hsz*sizeof(complexdouble)); 
+      complexdouble *vet = (complexdouble*)malloc(Hsz*Hsz*sizeof(complexdouble)); memcpy(vet,VE.zV(0),Hsz*Hsz*sizeof(complexdouble));
+      F77NAME(zgemm)(&transa, &transb, &Hsz, &Hsz, &Hsz, &zalpha, vet, &Hsz, VE.zV(0), &Hsz, &zbeta, zmm, &Hsz);
+      for(int ii=0; ii<Hsz; ii++) { zmm[ii*Hsz+ii].r-=1.; summm += F77NAME(dzasum)(&Hsz, &zmm[ii*Hsz], &incx); if(VE.E(ii+1)==0) break; }
+      std::cout << "#ic1ion: Sum(V^TV-I) = " << summm << "\n";
+      free(zmm); free(vet);
+   }
+   else
+   {
+      double *dmm = (double*)malloc(Hsz*Hsz*sizeof(double)); 
+      double *vet = (double*)malloc(Hsz*Hsz*sizeof(double)); memcpy(vet,VE.V(0),Hsz*Hsz*sizeof(double));
+      F77NAME(dgemm)(&transa, &transb, &Hsz, &Hsz, &Hsz, &alpha, vet, &Hsz, VE.V(0), &Hsz, &beta, dmm, &Hsz);
+      for(int ii=0; ii<Hsz; ii++) { dmm[ii*Hsz+ii]-=1.; summm += F77NAME(dasum)(&Hsz, &dmm[ii*Hsz], &incx); if(VE.E(ii+1)==0) break; }
+      std::cout << "#ic1ion: Sum(V^TV-I) = " << summm << "\n";
+      free(dmm); free(vet);
+   }
 
    // Sets energy levels relative to lowest level, and determines the maximum energy level needed.
    for(Esz=0; Esz<J[0].nr(); Esz++) { E.push_back(VE.E(Esz)-VE.E(0)); if(exp(-E[Esz]/(KB*T))<DBL_EPSILON || VE.E(Esz+1)==0) break; }
+
+   for(int ii=0; ii<Hsz; ii++) for(int jj=0; jj<Hsz; jj++) 
+      if(fabs(VE.zV(ii,jj).r*VE.zV(ii,jj).r+VE.zV(ii,jj).i*VE.zV(ii,jj).i)<DBL_EPSILON*100000) 
+      {
+         VE.zV(ii,jj).r=0.; VE.zV(ii,jj).i=0.;  
+      }  
 
    // For first run calculate also the partition function and internal energy
    me.assign(Esz,0.); eb.assign(Esz,0.); Z=0.;
@@ -769,7 +832,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
                Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[iJ],abs(q[iJ]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
                MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
                Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
-               redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
+               redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
                if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
                Upq *= redmat; fJmat = Upq.f_array();
             }
@@ -800,7 +863,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[iJ],abs(q[iJ]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
             MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
             Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
-            redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
+            redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
             if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
             Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq);
          }

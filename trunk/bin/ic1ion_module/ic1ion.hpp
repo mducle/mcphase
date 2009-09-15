@@ -152,8 +152,7 @@ void getfromionname(std::string &ion, icpars &flags);                     // Get
 void ic_parsecfpars(std::string &n, std::string &v, icpars &p, int l=1);  // Parses CF parameter for k and q
 void ic_parseinput(const char *file, icpars &flags);                      // Parses file for 1-ion pars & phys prop.
 void ic_printheader(const char *filename, icpars &pars);                  // Prints header to file
-void ic_showoutput(const char *filename, icpars &pars);                   // Prints calculated spectra to file
-void ic_showoutput(const char*file, eigVE<double>&d, fconf&f, icpars&p);  // As above but with sMat<> format
+void ic_showoutput(const char *file, icpars&pars, iceig&VE, int iconf=1); // Prints calculated spectra to file
 void ic_cmag(const char *filename, icpars &pars);                         // Calcs. magnetisation using icmfmat::
 
 #endif

@@ -7,7 +7,7 @@ GCC4=1
 endif
 
 # Figures operating system
-ifeq (${OSTYPE},msys)
+ifneq (,$(findstring MINGW,$(shell uname)))
 MSYS=1
 WINDOWS=1
 else
@@ -18,9 +18,6 @@ else
 ifneq (,$(findstring CYGWIN,$(shell uname)))
 CYGWIN=1
 WINDOWS=1
-else
-MSYS=1
-LIBFORTRAN=-lg2c
 endif                # if CYGWIN
 endif                # if LINUX
 endif                # if MSYS
@@ -144,22 +141,25 @@ else
 	$(CC) $(CFLAGS) -c $<
 endif
 
+spectre.o: spectre.cpp
+	$(CC) $(CFLAGS) -I../include -c $<
+
 ic1ion_module.o: ic1ion_module.cpp
 ifdef integral
 	$(CC) $(CFLAGS) -D_INTEGRAL -I../include -c $<
 else
-ifdef MSYS
+ifdef WINDOWS
 	$(CC) $(CFLAGS) -I../include -DBUILD_DLL -c $<
 else
 	$(CC) $(CFLAGS) -I../include -c $<
 endif
 endif
 
-ic1ion.so: checkgcc libs/libarpack.a $(OBJ) ic1ion_module.o ic1ion.o
-ifdef MSYS
-	$(LINKER) -o ic1ion.dll ic1ion_module.o ic1ion.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
+ic1ion.so: checkgcc libs/libarpack.a $(OBJ) ic1ion.o spectre.o ic1ion_module.o
+ifdef WINDOWS
+	$(LINKER) -o ic1ion.dll ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
 else
-	$(LINKER) -o ic1ion.so  ic1ion_module.o ic1ion.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS)
+	$(LINKER) -o ic1ion.so  ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS)
 endif
 
 # Patern rules

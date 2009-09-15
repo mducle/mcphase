@@ -95,16 +95,16 @@ extern "C"
   void F77NAME(daxpy)(int *n, double *da, double *dx, int *incx, double *dy, int *incy);
   void F77NAME(zaxpy)(int *n, complexdouble *za, complexdouble *zx, int *incx, complexdouble *zy, int *incy);
 #ifdef _G77 
+  void F77NAME(ddot)(double retval, int *n, double *x, int *incx, double *y, int *incy);
   void F77NAME(zdotc)(complexdouble *retval, int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
   void F77NAME(zdotu)(complexdouble *retval, int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
-  void F77NAME(ddot)(double retval, int *n, double *x, int *incx, double *y, int *incy);
 #else
   double F77NAME(ddot)(int *n, double *x, int *incx, double *y, int *incy);
-  complexdouble F77NAME(zdotc)(int *n, complexdouble *zx, int *incx, 
-                      complexdouble *zy, int* incy);
-  complexdouble F77NAME(zdotu)(int *n, complexdouble *zx, int *incx, 
-                      complexdouble *zy, int* incy);
+  complexdouble F77NAME(zdotc)(int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
+  complexdouble F77NAME(zdotu)(int *n, complexdouble *zx, int *incx, complexdouble *zy, int* incy);
 #endif
+  double F77NAME(dasum)(int *n, double *zx, int *incx);
+  double F77NAME(dzasum)(int *n, complexdouble *zx, int *incx);
   int F77NAME(izamax)(int *n, complexdouble *zx, int *incx);
 
   // LAPACK Utilities

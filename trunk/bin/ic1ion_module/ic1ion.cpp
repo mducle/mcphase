@@ -466,7 +466,7 @@ void ic_printheader(const char *outfile, icpars &pars)
 void ic_showoutput(const char *filename,                        // Output file name - default "results/mcphas.icr"
                    icpars &pars,                                // Input parameters
                    iceig &VE,                                   // Eigenstates class
-		   int iconf=1)
+                   int iconf)
 {
    fconf conf(pars.n,iconf,pars.l);
 
