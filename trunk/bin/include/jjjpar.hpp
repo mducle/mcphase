@@ -124,6 +124,7 @@ class jjjpar
   
   // integer to tell which module is loaded 0 - external, 1 - kramer, 2- cfield, 3 - brillouin
   int module_type;
+   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
 
   private:
 
@@ -146,7 +147,6 @@ class jjjpar
 
   double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
    void set_zlm_constants();
-   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
 
   // kramers internal module functions, intern_mcalc=1
   Vector & kramer (double & T,Vector & H, double & Z,double & U);

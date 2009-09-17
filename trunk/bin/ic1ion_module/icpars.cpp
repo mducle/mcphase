@@ -39,6 +39,21 @@
 //                 1./16., -sqrt(42.)/8., sqrt(105.)/16., -sqrt(105.)/8., 3*sqrt(14.)/16., -3*sqrt(77.)/8., sqrt(231.)/16.};
 //   return lll[i];
 //}
+//
+//double clm(int i)
+//{
+//   double clm[]={sqrt(3./4./PI),sqrt(3./4./PI),sqrt(3./4./PI),sqrt(3./4./PI),sqrt(3./4./PI),sqrt(3./4./PI),
+//                 sqrt(15./PI)/4.,sqrt(15./PI)/2.,sqrt(5./PI)/4.,sqrt(15./PI)/2.,sqrt(15./PI)/4.,
+//                 sqrt(35./32./PI),sqrt(105./16./PI),sqrt(21./32./PI),sqrt(7./16./PI),sqrt(21./32./PI),sqrt(105./16./PI),sqrt(35./32./PI),
+//                 (3./16)*sqrt(35./PI),(3./8)*sqrt(70./PI),(3./8)*sqrt(5./PI),(3./4)*sqrt(5./2./PI),(3./16)*sqrt(1./PI),(3./4)*sqrt(5./2./PI),(3./8)*sqrt(5./PI),
+//                    (3./8)*sqrt(70./PI),(3./16)*sqrt(35./PI),
+//                 sqrt(693./512./PI), sqrt(3465./256./PI), sqrt(385./512./PI), sqrt(1155./64./PI), sqrt(165./256./PI), sqrt(11./256./PI),
+//                 sqrt(165./256./PI), sqrt(1155./64./PI), sqrt(385./512./PI), sqrt(3465./256./PI), sqrt(693./512./PI),
+//                 (231./64.)*sqrt(26./231./PI), sqrt(9009./512./PI), (21./32.)*sqrt(13./7./PI), (1./32.)*sqrt(2730./PI), (1./64.)*sqrt(2730./PI), (1./8.)*sqrt(273./4./PI),
+//                 (1./32)*sqrt(13./PI),
+//                 (1./8.)*sqrt(273./4./PI), (1./64.)*sqrt(2730./PI), (1./32.)*sqrt(2730./PI), (21./32.)*sqrt(13./7./PI), sqrt(9009./512./PI), (231./64.)*sqrt(26./231./PI)};
+//   return clm[i];
+//}                
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Converts a C++ string to lower case
@@ -768,6 +783,11 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       {
          VE.zV(ii,jj).r=0.; VE.zV(ii,jj).i=0.;  
       }  
+// if(T<0) { for(Esz=0; Esz<J[0].nr(); Esz++) if(fabs(E[Esz])>DBL_EPSILON*100) break; T=fabs(T);}
+// fconf conf(_n,1,_l); int imax = F77NAME(izamax)(&Hsz,VE.zV(0),&incx); Esz = conf.states[imax-1].J2+1;
+// for(int ii=0; ii<Esz; ii++) { E.push_back(VE.E(ii)-VE.E(0)); };
+// icpars pars; pars.n=_n; pars.l=_l; ic_showoutput("results/myout",pars,VE);
+// std::cout << "Esz=" << Esz << "\n";
 
    // For first run calculate also the partition function and internal energy
    me.assign(Esz,0.); eb.assign(Esz,0.); Z=0.;
@@ -833,6 +853,9 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
                MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
                Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
                redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
+//redmat *= clm(iJ);
+//redmat=1.;
+//redmat=sqrt(factorial(2*_l+k[iJ]+1)/factorial(2*_l-k[iJ]))/pow(2.,k[iJ]);
                if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
                Upq *= redmat; fJmat = Upq.f_array();
             }
@@ -864,6 +887,9 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
             Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
             redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
+//redmat *= clm(iJ);
+//redmat=1.;
+//redmat=sqrt(factorial(2*_l+k[iJ]+1)/factorial(2*_l-k[iJ]))/pow(2.,k[iJ]);
             if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
             Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq);
          }
@@ -880,6 +906,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             ex[iJ]+=me[ind_j]*eb[ind_j];
          }
          free(zJmat); free(zt); matel.push_back(me); ex[iJ]/=Z;
+//ex[iJ]*=clm(iJ);
       }
       if(fabs(ex[iJ])<DBL_EPSILON) ex[iJ]=0.; 
    }
@@ -910,6 +937,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
+                 
    sMat<double> Upq,Umq; double redmat; int n = _n; if(n>(2*_l+1)) n = 4*_l+2-n; 
 
    // Calculates the matrix elements: <i|Ja|j> and <j|Ja|i> for each of the six Ja's

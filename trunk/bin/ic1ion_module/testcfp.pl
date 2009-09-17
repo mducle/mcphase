@@ -24,8 +24,6 @@ while(<CFP>)
 }
 close(CFP);
 
-#print "Lines read: $#cfprefblock\n";
-
 $nchild = $headerline[2]; $nparent = $headerline[3]; @cfpref = (); @mycfpref = ();
 for $i (1..$nchild) { for $j (1..$nparent) { $cfpref[$i][$j] = 0; $mycfpref[$i][$j] = 0; } }
 $nparlines=int($nparent/20)+1; if($n<10) { $endcol=12; } else { $endcol=11; }
@@ -49,13 +47,9 @@ for(@cfprefblock)
       {
          $n2=abs($Line[1])-abs(int($Line[1]/1000)*1000); $Line[1]=int($Line[1]/1000); splice(@Line,2,0,$n2);
       }
-#     if($Line[4]>$nparent || ($Line[4]<1 && $Line[4]!=0) || $Line[6]>$nparent || ($Line[6]<1 && $Line[6]!=0) || $Line[8]>$nparent || ($Line[8]<1 && $Line[8]!=0)) 
-#     { print "@Line\n"; $sflag=1; } else { $sflag=0; }
       if($Line[4]>$nparent || ($Line[4]<1 && $Line[4]!=0)) { $n2=int($Line[3]*1e10)/1e10; $n1=int(abs((abs($n2)-abs($Line[3]))*1e13)+0.5); splice(@Line,3,1,$n2,$n1); }
       if($Line[6]>$nparent || ($Line[6]<1 && $Line[6]!=0)) { $n2=int($Line[5]*1e10)/1e10; $n1=int(abs((abs($n2)-abs($Line[5]))*1e13)+0.5); splice(@Line,5,1,$n2,$n1); }
       if($Line[8]>$nparent || ($Line[8]<1 && $Line[8]!=0)) { $n2=int($Line[7]*1e10)/1e10; $n1=int(abs((abs($n2)-abs($Line[7]))*1e13)+0.5); splice(@Line,7,1,$n2,$n1); }
-#     if($sflag==1) { print " @Line\n"; }
-#     print join("\t",@Line),"\n";
       if(abs($Line[1])==1) 
       { 
          if($Line[0] eq "2F0") { $Line[0]="2F10"; } 
@@ -82,9 +76,6 @@ for(@mycfp)
       {
          if($Line[$jL] eq $parentstates[$iL]) { push @myparind, $jL; last; }
       } }
-#     print join(":",@parentstates),"\n";
-#     print join(":",@myparentstates),"\n";
-#     for(@myparind) { print "$myparentstates[$_]:"; } print "\n";
    }
    else
    {
@@ -92,10 +83,6 @@ for(@mycfp)
       { 
          for $iL (0..$#childstates) { if($Line[0] eq $childstates[$iL]) { $mychildstates[$iL] = $Line[0]; $ci=$iL; last; } }
       }
-#     if($Line[2]!=0) { $mycfpref[$ci][$myparind[$Line[2]-1]] = $Line[3]; }
-#     if($Line[4]!=0) { $mycfpref[$ci][$myparind[$Line[4]-1]] = $Line[5]; }
-#     if($Line[6]!=0) { $mycfpref[$ci][$myparind[$Line[6]-1]] = $Line[7]; }
-#     if($Line[8]!=0) { $mycfpref[$ci][$myparind[$Line[8]-1]] = $Line[9]; }
       if($Line[2]!=0) { $mycfpref[$ci][$Line[2]-1] = $Line[3]; }
       if($Line[4]!=0) { $mycfpref[$ci][$Line[4]-1] = $Line[5]; }
       if($Line[6]!=0) { $mycfpref[$ci][$Line[6]-1] = $Line[7]; }
@@ -103,36 +90,6 @@ for(@mycfp)
    }
    $count++
 }
-
-#print join(":",@childstates),"\n";
-#print join(":",@mychildstates),"\n";
-#
-#print "    ["; for (0..$nparent-1) { print "$parentstates[$_]  \t\t"; } print "]\n";
-#for $i (0..$nchild-1)
-#{
-#   if(length($childstates[$i])==3) { print "$childstates[$i] " } else { print "$childstates[$i]  "; }
-#   print "[";
-#   for $j (0..$nparent-1)
-#   {
-#      if($cfpref[$i][$j]==0) { print "0  \t\t"; } else { print $cfpref[$i][$j],"\t"; }
-##     if($mycfpref[$i][$j]==0) { print "0\t\t"; } else { print $mycfpref[$i][$j],"\t"; }
-#   }
-#   print "]\n";
-#}
-#print "\n";
-#print "    ["; for (0..$nparent-1) { print "$myparentstates[$_]  \t\t"; } print "]\n";
-#for $i (0..$nchild-1)
-#{
-#   if(length($mychildstates[$i])==3) { print "$mychildstates[$i] " } else { print "$mychildstates[$i]  "; }
-#   print "[";
-#   for $j (0..$nparent-1)
-#   {
-##     if($cfpref[$i][$j]==0) { print "0\t\t"; } else { print $cfpref[$i][$j],"\t"; }
-##     if($mycfpref[$i][$j]==0) { print "0  \t\t"; } else { print $mycfpref[$i][$j],"\t"; }
-#      if($mycfpref[$i][$myparind[$j]]==0) { print "0  \t\t"; } else { print $mycfpref[$i][$myparind[$j]],"\t"; }
-#   }
-#   print "]\n";
-#}
 
 print "\t\t\tChecking cfp's for configuration f$n\n";
 print "--------------------------------------------------------------------------------------------------------\n";
@@ -152,12 +109,3 @@ for $i (0..$nchild-1) { for $j (0..$nparent-1)
 print "--------------------------------------------------------------------------------------------------------\n";
 print "Sum of Abs(Difference) = $sum\n";
 print "--------------------------------------------------------------------------------------------------------\n";
-
-#$np=$n+1;
-#$linestart = `grep -n '  F   $n' ING11.CFP`;  chomp($linestart);
-#$linestop  = `grep -n '  F   $np' ING11.CFP`; chomp($linestop);
-#@tmp = split(/:/,$linestart); $start = $tmp[0];
-#@tmp = split(/:/,$linestop);  $stop  = $tmp[0];
-#open(CFP,"ING11.CFP"); @cfpref = <CFP>; close(CFP);
-#@cfpref = 
-#@mycfp = `./testcfp.exe $n`;

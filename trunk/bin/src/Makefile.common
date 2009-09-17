@@ -27,10 +27,10 @@
 
 # Checks whether we support the -march=native target
 ifdef fast
-ifneq ($(shell gcc --version|head -n1|grep " 3."),)
+ifneq ($(shell gcc --version|grep " 3."),)
 ARCHFLAG=-O2
 else
-ifneq ($(shell gcc --version|head -n1|grep " 4."),)
+ifneq ($(shell gcc --version|grep " 4."),)
 ARCHFLAG=-O2 -march=native
 endif
 endif
@@ -67,7 +67,9 @@ CCC= g++ $(ARCHFLAG)
 
 # Check for cygwin
 ifneq (,$(findstring CYGWIN,$(shell uname)))
+ifneq ($(shell gcc --version|grep " 3."),)
 ARCHFLAG+=-mno-cygwin
+endif
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
 ARCHFLAG+=-DNOMINMAX

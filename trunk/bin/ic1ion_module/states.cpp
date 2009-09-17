@@ -520,7 +520,7 @@ fconf::fconf(int n, orbital l)
             U.set(2,1); states.push_back(fstates_t(2,D,6,U,"3D4"));       //       3D4	6 221 21
             U.set(3,1); states.push_back(fstates_t(2,D,6,U,"3D5"));       //       3D5	6 221 31
             U.set(1,0); states.push_back(fstates_t(2,F,2,U,"3F1"));       //       3F1	2 110 10
-            U.set(1,0); states.push_back(fstates_t(2,F,4,U,"3F1"));       //       3F1	4 211 10
+            U.set(1,0); states.push_back(fstates_t(2,F,4,U,"3F2"));       //       3F1	4 211 10
             U.set(2,1); states.push_back(fstates_t(2,F,4,U,"3F3"));       //       3F3	4 211 21
             U.set(3,0); states.push_back(fstates_t(2,F,4,U,"3F4"));       //       3F4	4 211 30
             U.set(1,0); states.push_back(fstates_t(2,F,6,U,"3F5"));       //       3F5	6 221 10

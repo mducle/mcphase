@@ -796,10 +796,8 @@ t=[0   1    0    0   0    0    0    0    0     0     0     0     0     0    0   
       else if(Up.isequal("30")) { wupf = t[id*5+3]; }
       else if(Up.isequal("40")) { wupf = t[id*5+4]; }
    }
-   if(wupf==0) { return wupf; }
-   else { 
-   //std::cout << sqrt(fabs(wupf))*(wupf/fabs(wupf)) << "\t"; 
-   return sqrt(fabs(wupf))*(wupf/fabs(wupf)); }
+   if(wupf!=0) wupf = sqrt(fabs(wupf))*(wupf/fabs(wupf)); 
+   return wupf;
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -864,8 +862,8 @@ double racah_cfp(int n, qG2 U, int v, int S2, orbital L, qG2 Up, int vp, int S2p
 }
 double racah_cfp(int n, std::string child, std::string parent)
 {
-   fconf conf_chl(n);
-   fconf conf_par(n-1);
+   fconf conf_chl(n,(orbital)3);
+   fconf conf_par(n-1,(orbital)3);
    int num_states_chl = (int)conf_chl.states.size();
    int num_states_par = (int)conf_par.states.size();
    int i;
@@ -1101,6 +1099,7 @@ std::vector<cfpls> racah_parents(int n, int v, int S2, orbital L)       // For d
 // For testing the rest of the code! - Uncomment and compile: g++ cfp.cpp states.cpp; ./a.out
 // --------------------------------------------------------------------------------------------------------------- //
 /*
+double sign(double val) { return val<0?-1.:1.; }
 // --------------------------------------------------------------------------------------------------------------- //
 // Tests the calculations of the coefficient of fractional parentage by orthonormality and Cowan's relation
 // --------------------------------------------------------------------------------------------------------------- //
@@ -1113,7 +1112,7 @@ sMat<double> cfp_orthog_test(int n, const char* LS)
    double entry;
 
    for(i=0; i<num_states; i++)
-      if(strncmp(conf.states[i].id,LS,2)==0)
+      if(strncmp(conf.states[i].id.c_str(),LS,2)==0)
       {
          cfps.push_back(racah_parents(n,conf.states[i].v,conf.states[i].U,conf.states[i].S2,conf.states[i].L));
       }
@@ -1166,7 +1165,7 @@ sMat<double> cfp_cowan_test(int n, const char* LSp)
 #define CSC conf_chl.states
 #define CSP conf_par.states
    for(i=0; i<num_states_par; i++)
-      if(strncmp(conf_par.states[i].id,LSp,2)==0)
+      if(strncmp(conf_par.states[i].id.c_str(),LSp,2)==0)
       {
          Lp.push_back(CSP[i].L); S2p.push_back(CSP[i].S2);
 	 for(j=0; j<num_states_chl; j++)
@@ -1253,7 +1252,7 @@ int main(int argc, char *argv[])
          elem += fabs(cfptest(j,j)-1.);
       //std::cout << "\t\t" << elem << "\n";
       //std::cout << LS[i] << ":" << elem << "\t";
-      if(abs(elem)>1e-5) std::cout << elem << "\t"; else std::cout << "0\t";
+      if(fabs(elem)>1e-5) std::cout << elem << "\t"; else std::cout << "0\t";
    }
    std::cout << "\n";
    
@@ -1284,7 +1283,7 @@ int main(int argc, char *argv[])
          elem += fabs(cfptest(j,j)-1.);
       //std::cout << LS[i] << "\t" << elem << "\n";
       //std::cout << elem << "\t";
-      if(abs(elem)>1e-5) std::cout << elem << "\t"; else std::cout << "0\t";
+      if(fabs(elem)>1e-5) std::cout << elem << "\t"; else std::cout << "0\t";
    }
    std::cout << "\n";
 

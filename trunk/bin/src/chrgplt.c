@@ -8,6 +8,7 @@
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
 #define MU_B  5.788378E-02 // Bohrmagneton in meV/tesla
+#define PI 3.1415926535
 
 #include "../../version"
 #include "chargedensity.hpp"
@@ -91,13 +92,24 @@ printf("***********************************************************\n");
 //  printf("Lande Factor: gJ = %4g\n",(*iops).gJ);
 
 int pchere;int i,nofpc=0;
-const char lm[]="Jy  Jz  Jx  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
+const char lm[]=             "Jy  Jz  Jx  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
 const char lme[]="Sx  Lx  Sy  Ly  Sz  Lz  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
 char lm4[5];lm4[4]='\0';
-   
-   for(i=1;i<=dim;++i){if (dim==48) strncpy(lm4,lm+(i-1)*4,4);
+printf("#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f(r)|^2 sum_lm clm Zlm(Omega)\n#\n");
+   for(i=1;i<=dim;++i){int l,m;double factor;
+                       if (dim==48) strncpy(lm4,lm+(i-1)*4,4);
                        if (dim==51) strncpy(lm4,lme+(i-1)*4,4);
-                       printf(" <J%c> = <%s> =%g\n",'a'-1+i,lm4,moments(i));}
+                       factor=0;
+                       if(jjjps.module_type==2){if(i>3){l=lm4[1]-48;m=lm4[2]-48;
+                                                        factor=jjjps.tetan()(l)*jjjps.cnst(l,m);
+                                                        }
+                                               } // these are prefactors in case of module cfield (stevens parameters tetan and zlm prefactors)
+                                      else     {if(i>6){l=lm4[1]-48;m=lm4[2]-48;
+                                                       if(m!=0){factor=sqrt((2.0*l+1)/8/PI);}
+                                                           else{factor=sqrt((2.0*l+1)/4/PI);}
+                                                       }
+                                               } 
+                       printf(" <J%c> = <%s> =%12.6f   clm=%12.6f\n",'a'-1+i,lm4,moments(i),moments(i)*factor);}
 printf("\n");
 
  char text[1000];
@@ -145,7 +157,7 @@ fclose(cf_file);
   Vector hkl(1,3);hkl=0;s=s*0;
   spincf ev_real(s),ev_imag(s);
 
-  for(i=1;i<=48;++i)s.m(1,1,1)(i)=moments(i);
+  for(i=1;i<=dim;++i)s.m(1,1,1)(i)=moments(i);
   double show_atoms=1;
   double show_spindensity=1;
   fout = fopen_errchk ("results/chrgplt.jvx", "w");

@@ -272,7 +272,7 @@ return R;
                                    coeff(p)=Cp(p)*pow(2.0*Xip(p),Np(p)+0.5)/sqrt((double)factorial(2*(int)Np(p)));
                                    if(Xip(p)<=0){fprintf (stderr,"Warning: calculation of <r^%i> failed due to Xi%i<=0 - continuing with <r^%i>=0\n",k,p,k);return 0;}
                      }            }
-    if(pmax==0){fprintf (stderr,"Warning: calculation of <r^%i> failed - continuing with <r^%i>=0\n",k);return 0;}
+    if(pmax==0){fprintf (stderr,"Warning: calculation of <r^%i> failed - continuing with <r^%i>=0\n",k,k);return 0;}
     double rk=0;
     for(p=1;p<=pmax;++p){
     for(q=1;q<=pmax;++q){
@@ -368,9 +368,9 @@ rr=rr*rr;// then the chargedensity will be in units of 1/A^3
 
 if(module_type==2){for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=tetan(l)*cnst(l,m)*cnst(l,m);}}
          } // these are prefactors in case of module cfield (stevens parameters tetan and zlm prefactors)
-else     {for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=cnst(l,m)*cnst(l,m);}}
+else     {for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){if(m!=0){a(l,m)*=cnst(l,m)*sqrt((2.0*l+1)/8/PI);}else{a(l,m)*=cnst(l,m)*sqrt((2.0*l+1)/4/PI);}}}
          } // in case
-           // of module ic1ion we just take the prefactors of the Zlm 
+           // of module ic1ion we just take the prefactors of the Zlm ... ??? what should we take here ???
 
 ro = a(0, 0) / sqrt(4.0 * 3.1415);
 
@@ -629,8 +629,8 @@ void jjjpar::save_sipf(char * path)
            fprintf(fout,"#***************************************************************\n#\n");
            fprintf(fout,"#\n# this is a crystal field ground state doublet\n");
            fprintf(fout,"# module, parameters are the following 3 matrix\n# elements\n#\n");
-           fprintf(fout,"paramnames=|<+-|Ja|-+>| |<+-|Jb|-+>| |<+-|Jc|+->|\n");
-           fprintf(fout,"params    = %10f    %10f    %10f\n\n",ABC(1),ABC(2),ABC(3));
+           fprintf(fout,"# A=|<+-|Ja|-+>| B=|<+-|Jb|-+>| C=|<+-|Jc|+->|\n");
+           fprintf(fout,"A=%10f \n B=%10f \n C=%10f\n\n",ABC(1),ABC(2),ABC(3));
             
           break;
    case 2: fprintf(fout,"#!MODULE=cfield\n#<!--mcphase.sipf-->\n");
@@ -664,8 +664,7 @@ void jjjpar::save_sipf(char * path)
            fprintf(fout,"#****************************************************************\n#\n");
            fprintf(fout,"#\n# single ion parameterized by Brillouin function\n");
            fprintf(fout,"# BJ(x) with angular momentum number J=S,\n# no crystal field\n#\n");
-           fprintf(fout,"paramnames= J\n");
-           fprintf(fout,"params    = %g\n\n",ABC(1));
+           fprintf(fout,"J = %g\n\n",ABC(1));
 
           break;
    default: // in case of external single ion module just save a copy of the input file 
@@ -701,12 +700,12 @@ void jjjpar::save_sipf(char * path)
     fprintf(fout,"#   d = 2*pi/Q      \n");
     fprintf(fout,"#   s = 1/2/d = Q/4/pi   \n");   
     fprintf(fout,"#   sin(theta) = lambda * s\n");
-    fprintf(fout,"#   r= s*s = Q*Q/16/pi/pi\n");
+    fprintf(fout,"#    s2= s*s = Q*Q/16/pi/pi\n");
     fprintf(fout,"#\n");
-    fprintf(fout,"#   <j0(Qr)>=   FFj0A*EXP(-FFj0a*r) + FFj0B*EXP(-FFj0b*r) + FFj0C*EXP(-FFj0c*r) + FFj0D\n");
-    fprintf(fout,"#   <j2(Qr)>=r*(FFj2A*EXP(-FFj2a*r) + FFj2B*EXP(-FFj2b*r) + FFj2C*EXP(-FFj2c*r) + FFj2D\n");
-    fprintf(fout,"#   <j4(Qr)>=r*(FFj4A*EXP(-FFj4a*r) + FFj4B*EXP(-FFj4b*r) + FFj4C*EXP(-FFj4c*r) + FFj4D\n");
-    fprintf(fout,"#   <j6(Qr)>=r*(FFj6A*EXP(-FFj6a*r) + FFj6B*EXP(-FFj6b*r) + FFj6C*EXP(-FFj6c*r) + FFj6D\n");
+    fprintf(fout,"#   <j0(Q)>=   FFj0A*EXP(-FFj0a*s2) + FFj0B*EXP(-FFj0b*s2) + FFj0C*EXP(-FFj0c*s2) + FFj0D\n");
+    fprintf(fout,"#   <j2(Q)>=s2*(FFj2A*EXP(-FFj2a*s2) + FFj2B*EXP(-FFj2b*s2) + FFj2C*EXP(-FFj2c*s2) + FFj2D\n");
+    fprintf(fout,"#   <j4(Q)>=s2*(FFj4A*EXP(-FFj4a*s2) + FFj4B*EXP(-FFj4b*s2) + FFj4C*EXP(-FFj4c*s2) + FFj4D\n");
+    fprintf(fout,"#   <j6(Q)>=s2*(FFj6A*EXP(-FFj6a*s2) + FFj6B*EXP(-FFj6b*s2) + FFj6C*EXP(-FFj6c*s2) + FFj6D\n");
     fprintf(fout,"#\n");
     fprintf(fout,"#   Dipole Approximation for Neutron Magnetic Formfactor:\n");
     fprintf(fout,"#        -Spin Form Factor       FS(Q)=<j0(Q)>\n");
@@ -722,7 +721,7 @@ void jjjpar::save_sipf(char * path)
   if(abs(Zc)>1e-10){
     fprintf(fout,"#----------------------------------------------------------------------\n");
     fprintf(fout,"# coefficients of Z(K') according to Lovesey (Neutron Scattering) vol.2\n");
-    fprintf(fout,"# chapter 11.6.1 page 233\n");
+    fprintf(fout,"# chapter 11.6.1 page 233: Z(K)= ZKcK-1 * <jK-1(Q)> + ZKcK+1 * <jK+1(Q)>\n");
     fprintf(fout,"#  ... these coefficients are needed to go beyond dipolar approx.\n");
     fprintf(fout,"#      for the neutron magnetic formfactor in rare earth ions\n");
     fprintf(fout,"#----------------------------------------------------------------------\n");
@@ -733,9 +732,9 @@ void jjjpar::save_sipf(char * path)
                     }
 
   if(abs(Np)>1e-10){fprintf(fout,"#---------------------------------------------------------------------------------------------------\n");
-                    fprintf(fout,"# radial wave function parameters R_Np,XIp(r)= r^(Np-1) . exp(-xi r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)\n");
-                    fprintf(fout,"# values tabulated in clementi & roetti Atomic data and nuclear data tables 14 (1974) 177-478\n");
-                    fprintf(fout,"# the 3D radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)\n");
+                    fprintf(fout,"# radial wave function parameters, for transition metal ions the the values are tabulated in\n");
+                    fprintf(fout,"# Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave\n");
+                    fprintf(fout,"# function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)\n");
                     fprintf(fout,"#---------------------------------------------------------------------------------------------------\n");
                     for(i=Np.Lo();i<=Np.Hi();++i){if(Np(i)!=0){fprintf(fout,"N%i=%i XI%i=%g C%i=%g\n",i,Np(i),i,Xip(i),i,Cp(i));}
                                                  }
@@ -768,24 +767,35 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 
   if(strcmp(modulefilename,"kramer")==0)
     {module_type=1;fprintf (stderr,"[internal]\n");
+      ABC=Vector(1,3);i=3;
+      while(feof(cf_file)==false)
+      {fgets(instr, MAXNOFCHARINLINE, cf_file);
+       if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+                                           i+=extract(instr,"A",ABC(1))-1; 
+                                           i+=extract(instr,"B",ABC(2))-1; 
+                                           i+=extract(instr,"C",ABC(3))-1;   
+                                          }
+      }
       // input all  lines starting with comments
-      while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
-      if(i!=3){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n");
-              fprintf(stderr,"\n#!kramer\n#comment lines ..\n#matrix elements\nparamnames= |<+-|Ja|-+>| |<+-|Jb|-+>| |<+-|Jc|+->|\nparams=2 3 1\n\n",cffilename);exit(EXIT_FAILURE);}
+      if(i!=0){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n",cffilename);
+              fprintf(stderr,"\nMODULE=kramer\n#comment lines ..\n#matrix elements A=|<+-|Ja|-+>| B=|<+-|Jb|-+>| C=|<+-|Jc|+->|\nA=2 \nB=3 \nC=1\n\n");exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
-      ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];}
       fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n",ABC(1),ABC(2),ABC(3));
       est=ComplexMatrix(0,2,1,2); // not used, just initialize to prevent errors
     }
   else
     {if(strcmp(modulefilename,"brillouin")==0)
      {module_type=3;fprintf (stderr,"[internal]\n");
-      // input all  lines starting with comments
-      while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
-      if(i!=1){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n");
-              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n#matrix elements\nparamnames= J\nparams=3.5\n\n",cffilename);exit(EXIT_FAILURE);}
+      ABC=Vector(1,1);i=1;
+      while(feof(cf_file)==false)
+      {fgets(instr, MAXNOFCHARINLINE, cf_file);
+       if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+                                           i+=extract(instr,"J",ABC(1))-1; 
+                                          }
+      }// input all  lines starting with comments
+      if(i!=0){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n");
+              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n",cffilename);exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
-      ABC=Vector(1,i);for(j=1;j<=i;++j){ABC(j)=nn[j];}
       fprintf(stderr," ... Brillouin function with J=S=%g\n",ABC(1));
       est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
       est=0;
@@ -802,9 +812,23 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
      }
      else
      {fprintf (stderr,"#[external]\n");
-  
+      i=0;
+      while(feof(cf_file)==false)
+      {fgets(instr, MAXNOFCHARINLINE, cf_file);
+       if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+                                           i-=extract(instr,"MODPAR1",nn[1])-1; 
+                                           i-=extract(instr,"MODPAR2",nn[2])-1; 
+                                           i-=extract(instr,"MODPAR3",nn[3])-1; 
+                                           i-=extract(instr,"MODPAR4",nn[4])-1; 
+                                           i-=extract(instr,"MODPAR5",nn[5])-1; 
+                                           i-=extract(instr,"MODPAR6",nn[6])-1; 
+                                           i-=extract(instr,"MODPAR7",nn[7])-1; 
+                                           i-=extract(instr,"MODPAR8",nn[8])-1; 
+                                           i-=extract(instr,"MODPAR9",nn[9])-1; 
+                                          }
+      }
        // input all  lines starting with comments
-    while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
+    //while((i=inputparline ("params",cf_file, nn))==0&&feof(cf_file)==false);
     // now we have the numbers corresponding to vector ABC() in nn[] - these are the module parameters !
     fprintf(stderr,"#parameters: ");
     if(i>0){
