@@ -16,10 +16,13 @@ double sign(double val) { return val<0?-1.:1.; }
 
 int main(int argc, char *argv[])
 {
-   int n,i,j,k,sz,szp,sc;
+   int n,l,i,j,k,sz,szp,sc;
+   bool df=false;
    if(argc>1) { n = atoi(argv[1]); } else { n = 2; }
-   fconf conf(n,(orbital)3);
-   fconf confp(n-1,(orbital)3);
+   if(argc>2) { l = atoi(argv[2]); } else { l = 3; }
+   if(l==3) df=true;
+   fconf conf(n,(orbital)l);
+   fconf confp(n-1,(orbital)l);
    double cfp; int count, nlines;
    std::vector<double> cfps; std::vector<int> jj;
 
@@ -30,7 +33,9 @@ int main(int argc, char *argv[])
       cfps.clear(); jj.clear();
       for(j=0; j<szp; j++)
       {
+         if(df)
          cfp = racah_cfp(n,conf.states[i].U,conf.states[i].v,conf.states[i].S2,conf.states[i].L,confp.states[j].U,confp.states[j].v,confp.states[j].S2,confp.states[j].L);
+	 else cfp = racah_cfp(n,conf.states[i].v,conf.states[i].S2,conf.states[i].L,confp.states[j].v,confp.states[j].S2,confp.states[j].L);
          if(fabs(cfp)>DBL_EPSILON) {
             cfps.push_back(cfp); jj.push_back(j); }
       }
@@ -58,7 +63,7 @@ int main(int argc, char *argv[])
                }
             }
          }
-         std::cout << "F  " << n << "  " << i+1 << "\n";
+         if(df) std::cout << "F  "; else std::cout << "D  "; std::cout << n << "  " << i+1 << "\n";
       }
    }
 

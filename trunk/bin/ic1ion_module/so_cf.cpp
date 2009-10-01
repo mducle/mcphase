@@ -76,8 +76,8 @@ sMat<double> racah_so(int n, double xi, orbital e_l)  // Defaults to f-electrons
                                * racahW(abs(confp.states[cfpsi[k].ind].L)*2,abs(conf.states[i].L)*2,2*e_l,2,2*e_l,abs(conf.states[j].L)*2)
                                * cfpsi[k].cfp * cfpsj[l].cfp;
             so(i,j) = -n*xi * racahW(conf.states[i].J2,abs(conf.states[i].L)*2,conf.states[j].S2,2,conf.states[i].S2,abs(conf.states[j].L)*2)
-                      * sqrt( 126.*(2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.)*(conf.states[i].S2+1.)*(conf.states[j].S2+1.) )
-                      * sumcfp;
+                      * sqrt( (2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.)*(conf.states[i].S2+1.)*(conf.states[j].S2+1.) )
+                      * sqrt( (9./6)*e_l*(e_l+1)*(2*e_l+1) ) * sumcfp;
             if(n>(2*e_l+1)) so(i,j) = -so(i,j);   // Phase factor difference for >half-filled shell. See Nielson/Koster or Racah III
             if(i!=j) so(j,i) = so(i,j);
          }

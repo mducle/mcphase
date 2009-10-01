@@ -755,7 +755,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    double alpha = 1, beta = 0; complexdouble zalpha; zalpha.r=1; zalpha.i=0; complexdouble zbeta; zbeta.r=0; zbeta.i=0;
    char uplo = 'U';
    // Checks that the eigenvalues are orthonormal
-   char transa='C', transb='N'; double summm=0.;
+/* char transa='C', transb='N'; double summm=0.;
    if(VE.iscomplex())
    {
       complexdouble *zmm = (complexdouble*)malloc(Hsz*Hsz*sizeof(complexdouble)); 
@@ -773,7 +773,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       for(int ii=0; ii<Hsz; ii++) { dmm[ii*Hsz+ii]-=1.; summm += F77NAME(dasum)(&Hsz, &dmm[ii*Hsz], &incx); if(VE.E(ii+1)==0) break; }
       std::cout << "#ic1ion: Sum(V^TV-I) = " << summm << "\n";
       free(dmm); free(vet);
-   }
+   }*/
 
    // Sets energy levels relative to lowest level, and determines the maximum energy level needed.
    for(Esz=0; Esz<J[0].nr(); Esz++) { E.push_back(VE.E(Esz)-VE.E(0)); if(exp(-E[Esz]/(KB*T))<DBL_EPSILON || VE.E(Esz+1)==0) break; }

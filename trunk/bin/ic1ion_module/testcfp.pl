@@ -5,16 +5,29 @@ unless (-e "testcfp.exe") { system('g++ cfpout.cpp cfp.cpp states.cpp -o testcfp
 
 # Gets the block of cfps for the current number of f-electrons
 if ($#ARGV<0) { $n=2 } else { $n=$ARGV[0]; } 
+if ($#ARGV>0) { $l=2 } else { $l=3; }
 
 open(CFP,"ING11.CFP"); $startflag=0; $stopflag=0;
 while(<CFP>)
 {
    chomp;
-   if($_=~/^\s*F/)
+   if($l==3)
    {
-      @Line = split;
-      if($n==$Line[1]) { $startflag=1; @headerline=@Line; }
-      if($n==$Line[1]-1) { $stopflag=1; }
+      if($_=~/^\s*F/)
+      {
+         @Line = split;
+         if($n==$Line[1]) { $startflag=1; @headerline=@Line; }
+         if($n==$Line[1]-1) { $stopflag=1; }
+      }
+   }
+   else
+   {
+      if($_=~/^\s*D/)
+      {
+         @Line = split;
+         if($n==$Line[1]) { $startflag=1; @headerline=@Line; }
+         if($n==$Line[1]-1) { $stopflag=1; }
+      }
    }
    if($startflag==1 && $stopflag==0)
    {
@@ -35,7 +48,7 @@ for(@cfprefblock)
    if($count>1 && $count<=($nparlines+1))
    {
       push @parentstates, @Line; 
-      if($n==8) { for $j (1..$#parentstates) 
+      if($n==8 && $l==3) { for $j (1..$#parentstates) 
       { 
          if($parentstates[$j] eq "2F0") { $parentstates[$j]="2F10"; } 
          if($parentstates[$j] eq "2G0") { $parentstates[$j]="2G10"; last; } 
@@ -65,7 +78,8 @@ for(@cfprefblock)
 }
 
 # Determines the cfps calculated by ic1ion
-@mycfp = `./testcfp.exe $n`; $count=1; $ci=0;
+@mycfp = `./testcfp.exe $n $l`; $count=1; $ci=0;
+
 for(@mycfp)
 {
    chomp; @Line = split;
@@ -91,7 +105,7 @@ for(@mycfp)
    $count++
 }
 
-print "\t\t\tChecking cfp's for configuration f$n\n";
+print "\t\t\tChecking cfp's for configuration "; if($l==2) { print "d"; } else { print "f"; } print "$n\n";
 print "--------------------------------------------------------------------------------------------------------\n";
 $sum=0; print "Child-Parent\tRCG_Index\tic1ion_Index\tRCG_Value\tic1ion_Value\tAbs(Difference)\n";
 print "--------------------------------------------------------------------------------------------------------\n";
