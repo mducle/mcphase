@@ -703,8 +703,8 @@ icmfmat::icmfmat(int n, orbital l, int num_op)
 void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gjmbH)
 {
    int i; Jmat.zero(J[0].nr(),J[0].nc()); iJmat.zero(J[0].nr(),J[0].nc()); 
-   if(_num_op<(int)gjmbH.size()) iflag.resize(_num_op,0); _num_op = (int)gjmbH.size();
-   for(i=0; i<(_num_op>6?_num_op:6); i++)
+   if(_num_op<(int)gjmbH.size()) { iflag.resize(_num_op,0); _num_op = (int)gjmbH.size(); }
+   for(i=0; i<(_num_op>6?6:_num_op); i++)
       if(fabs(gjmbH[i])>DBL_EPSILON*100) { if(iflag[i]==1) iJmat += J[i]*gjmbH[i]; else Jmat += J[i]*gjmbH[i]; }
    // Higher order than dipole operators needed
    if(_num_op>6)
@@ -970,8 +970,8 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
       else
       {
          zeroes.zero(J[0].nr(),J[0].nc());
-         if(iJ>6) { if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes);   else zJmat = zmat2f(zeroes,Upq); }
-         else     { if(iflag[iJ]==0) zJmat=zmat2f(J[iJ],zeroes); else zJmat = zmat2f(zeroes,J[iJ]); }
+         if(iJ>=6) { if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes);   else zJmat = zmat2f(zeroes,Upq); }
+         else      { if(iflag[iJ]==0) zJmat=zmat2f(J[iJ],zeroes); else zJmat = zmat2f(zeroes,J[iJ]); }
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
          F77NAME(zhemv)(&uplo, &Hsz, &zalpha, zJmat, &Hsz, VE.zV(j), &incx, &zbeta, zt, &incx);
 #ifdef _G77 

@@ -37,8 +37,8 @@
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in spectre.cpp
 // --------------------------------------------------------------------------------------------------------------- //
-void spectre_hmltn(icpars pars, ComplexMatrix &est, int parvalsize);
-std::vector<double> spectre_expJ(icpars pars, ComplexMatrix &est, int parvalsize, Vector &gjmbH, int Jhi, int Jlo, double T);
+void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize);
+std::vector<double> spectre_expJ(icpars &pars, ComplexMatrix &est, int parvalsize, Vector &gjmbH, int Jhi, int Jlo, double T);
 
 
 void myPrintMatrix(FILE * file,sMat<double> & M,int d)
@@ -137,7 +137,29 @@ __declspec(dllexport)
       }
       else  // Calculates using the Spectre method...                                       // lvl = 10;     % Number of |LSJ> levels to keep
       {
+         if(pars.spectrelevels==-2)
+         {
+            std::cerr << "Trying to determine optimal number of levels for spectre... ";
+            sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
+            std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); int cbbest=1;
+            Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.lcalc(pars,Jm); double Unew,Ubest,Uref,dbest=DBL_MAX,dnew=DBL_MAX;
+            std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel); Uref=vJ[J.Hi()-J.Lo()+2];
+            for(int cb=1; cb<=Hic.nr(); cb++)
+            {
+               pars.spectrelevels=cb; spectre_hmltn(pars,est,parval.size());
+               std::vector<double> vJt = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
+               if(cb==1) { Ubest = vJt[J.Hi()+2]; dbest = fabs(Ubest-Uref); if(dbest<DBL_EPSILON) break; else continue; }
+               else
+               { 
+                  Unew = vJt[J.Hi()+2]; if(fabs(Unew-Uref)>dnew) break; dnew = fabs(Unew-Uref);
+                  if(dnew<dbest) { Ubest=Unew; dbest=dnew; cbbest=cb; }
+               } 
+            }
+            pars.spectrelevels=cbbest; std::cerr << cbbest << " levels seems optimal\n";
+         }
          spectre_hmltn(pars,est,parval.size());
+         for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
       }
    }
    if(pars.spectrelevels==-1)
@@ -155,7 +177,7 @@ __declspec(dllexport)
       // Calculates the expectation values sum_n{ <n|Ja|n> exp(-En/kT) }
       std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel);
       for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i-J.Lo()]; 
-      *lnZ = vJ[i-1]; *U = vJ[i];
+      *lnZ = vJ[J.Hi()-J.Lo()+1]; *U = vJ[J.Hi()-J.Lo()+2];
    }
    else
    {
@@ -240,7 +262,8 @@ __declspec(dllexport)
  
    // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
    int num_op = gjmbheff.Hi()-gjmbheff.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6));
-   int i,j; std::vector<double> vgjmbH(6,0.); for(i=0; i<6; i++) vgjmbH[i] = gjmbheff[i+1];
+   int i,j,gLo=gjmbheff.Lo(),gHi=gjmbheff.Hi(); std::vector<double> vgjmbH(gHi-gLo+1,0.);
+   for(i=gLo; i<=gHi; i++) vgjmbH[i] = -gjmbheff[i+1];
    sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); 
 
    // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)

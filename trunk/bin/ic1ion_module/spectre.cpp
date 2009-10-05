@@ -1,3 +1,19 @@
+/* spectre.cpp
+ *
+ * Routines to calculate the IC Hamiltonian using the method in the Spectra/XTAL programs of Hannah Crosswhite.
+ * References: https://chmwls.chm.anl.gov/downloads/spectra/about/matrix.html
+ *             Carnall, Crosswhite, Crosswhite, Conway, J. Chem. Phys., v64, p3582, 1976
+ *
+ * Functions:
+ * void spectre_hmltn(pars, est, parvalsize)                         // Calculates the IC Hamiltonian
+ * vector<double> spectre_expJ(pars,est,parvalsize,gjmbH,Jhi,Jlo,T)  // Calculates the expectation values
+ *
+ * This file is part of the ic1ionmodule of the McPhase package, calculating the single-ion properties of a rare
+ * earth or actinide ion in intermediate coupling.
+ *
+ * (c) 2009 Duc Le - duc.le@ucl.ac.uk
+ * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
+ */
 
 #include "ic1ion.hpp"
 #include "vector.h"          // MatPack vector class
@@ -6,7 +22,7 @@
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the IC Hamiltonian so that's basis states are diagonal in the free-ion part (Hc+Hso)
 // --------------------------------------------------------------------------------------------------------------- //
-void spectre_hmltn(icpars pars, ComplexMatrix &est, int parvalsize)
+void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize)
 {
    int i,Hsz=getdim(pars.n,pars.l);
 
@@ -100,8 +116,8 @@ void spectre_hmltn(icpars pars, ComplexMatrix &est, int parvalsize)
          }
       }
    }
-   est[0][0] = complex<double> (-0.1,-0.1); est[0][parvalsize/2] = complex<double> (icv,0.);
-   for(i=1; i<=icv; i++) memcpy(&est[i][1],&Hrmj[(i-1)*icv],icv*sizeof(complexdouble)); delete[]Ecso; delete[]UJr; //delete[]Hrmj;
+   est[0][0] = complex<double> (-0.1,-0.1); est[0][parvalsize/2+1] = complex<double> (icv,0.);
+   for(i=1; i<=icv; i++) memcpy(&est[i][1],&Hrmj[(i-1)*icv],icv*sizeof(complexdouble)); delete[]Ecso; delete[]UJr; delete[]Hrmj;
    // Calculates the matrix elements of the magnetic operators L and S
    complexdouble *Lrm,*Srm,*Lrj,*Srj; Lrm = new complexdouble[Hcso_sz*Hcso_sz]; Srm = new complexdouble[Hcso_sz*Hcso_sz]; int S2,L2,S2p,L2p,J2,J2p;
    for(i=0; i<Hcso_sz; i++) for(j=0; j<Hcso_sz; j++)
@@ -140,15 +156,16 @@ void spectre_hmltn(icpars pars, ComplexMatrix &est, int parvalsize)
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the expectation values of the multipolar operators for the spectre-like rotated Hamiltonian
 // --------------------------------------------------------------------------------------------------------------- //
-std::vector<double> spectre_expJ(icpars pars, ComplexMatrix &est, int parvalsize, Vector &gjmbH, int Jhi, int Jlo, double T)
+std::vector<double> spectre_expJ(icpars &pars, ComplexMatrix &est, int parvalsize, Vector &gjmbH, int Jlo, int Jhi, double T)
 {
-   std::vector<double> J(Jhi+1,0.);
+   std::vector<double> J(Jhi+2,0.);
    // Reloads the magnetic operator matrix in the rotated basis
-   int i,icv = (int)real(est[0][parvalsize/2]); char fn[] = "results/ic1ion.mq"; complexdouble *Jm = new complexdouble[icv*icv]; double elem;
+   int i,icv = (int)real(est[0][parvalsize/2+1]); char fn[] = "results/ic1ion.mq"; complexdouble *Jm = new complexdouble[icv*icv]; double elem;
  /*int Jhi = (J.Hi()>6) ? 6 : J.Hi();*/ memset(Jm,0,icv*icv*sizeof(complexdouble)); std::fstream FILEIN; 
    int k[] = {0,1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
-   complexdouble *LS[6]; int iq,j; for(iq=0; iq<6; iq++) { LS[iq] = new complexdouble[icv*icv]; memset(LS[iq],0,icv*icv*sizeof(complexdouble)); }
+   complexdouble **LS = new complexdouble*[6]; 
+   int iq,j; for(iq=0; iq<6; iq++) { LS[iq] = new complexdouble[icv*icv]; memset(LS[iq],0,icv*icv*sizeof(complexdouble)); }
    for(iq=Jlo; iq<=Jhi; iq++)
    {
       if(iq<=6)
@@ -217,7 +234,8 @@ std::vector<double> spectre_expJ(icpars pars, ComplexMatrix &est, int parvalsize
       }
       J[iq]/=Z; if(fabs(J[iq])<DBL_EPSILON) J[iq]=0.;
    }
-   for(i=0; i<6; i++) delete[]LS[i]; delete[]zt; delete[]Jm; 
+   for(i=0; i<6; i++) delete[]LS[i]; delete[]LS;
+   delete[]zt; delete[]Jm; 
    J[iq] = log(Z)-VE.E(0)/(KB*T); J[iq+1] = U/Z;
    return J;
 }
