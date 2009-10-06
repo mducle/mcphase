@@ -103,7 +103,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
   int do_gobeyond=1;
   double E;
-  double sta=0;
+  double sta=0,sta_int=0;
   double jqsta=-1.0;
   double jq0=0;
   Vector hkl(1,3),q(1,3);
@@ -166,7 +166,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      ++(*inputpars.jjj[l]).transitionnumber;
      fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
-     if((*inputpars.jjj[l]).transitionnumber>i1){fprintf(stderr,"ERROR mcdisp.ini: no transition found within energy in range [minE,maxE]=[%g,%g] found\n (within first crystallographic unit of magnetic unit cell)\n please increase energy range in option -maxE and -minE\n",minE,maxE);
+     if((*inputpars.jjj[l]).transitionnumber>i1){fprintf(stderr,"ERROR mcdisp.par: no transition found within energy in range [minE,maxE]=[%g,%g] found\n (within first crystallographic unit of magnetic unit cell)\n please increase energy range in option -maxE and -minE\n",minE,maxE);
                             exit(EXIT_FAILURE);}
      }
  
@@ -695,25 +695,12 @@ if (do_jqfile==1){
                     fprintf(stdout,"#saving the following eigenvalues (meV) to mcdisp.qom:\n");}
    int dim=3;
    if (ini.hkllist==1){dim=(int)ini.hkls[counter][0]-3;}
-         Vector dd(1,dim);  dd+=100000.0;
    fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
+
    for (i=1;i<=dimA;++i){
-//    i2=1;//check if eigenvalue is equal to some delta(s)
-//    for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-//    if(abs(En(i)-md.delta(i1,j1,k1))<SMALL)i2=0;
-//    }}} //-if not: print it out and sum up standard deviation
-//    if (i2==1){
 	       fprintf (fout, " %4.4g ",En(i));
-                if(do_verbose==1){fprintf(stdout, " %4.4g",En(i));}
-	       if (En(i)<ini.emin) sta*=1.1-En(i)+ini.emin;
-               if (ini.hkllist==1)
-	       {double test; // add to sta distance to nearest measured peak squared
-	        for (j1=1;j1<=ini.hkls[counter][0]-3;++j1)
-	        {if ((test=fabs(En(i)-ini.hkls[counter][j1+3]))<dd(j1))dd(j1)=test;}
-	       }
-             // }
-    }
-   sta+=dd*dd;
+               if(do_verbose==1){fprintf(stdout, " %4.4g",En(i));}
+                         }
 
 
    // calculate and printout intensities [the energies have already
@@ -727,9 +714,18 @@ if (do_jqfile==1){
                   fprintf (fout, " > ");
 diffint=0;diffintbey=0;
                   if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
+         Vector dd(1,dim),dd_int(1,dim);  dd+=100000.0;dd_int+=100000.0;
                   for (i=1;i<=dimA;++i)
 		  {  if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
                      ints(i)=intcalc_approx(intsbey(i),ev_real,ev_imag,eev_real,eev_imag,Ec,dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+                     if (ini.hkllist==1)
+	             {double test; // add to sta distance to nearest measured peak squared
+	              for (j1=1;j1<=ini.hkls[counter][0]-3;++j1)
+	              {if ((test=fabs(En(i)-ini.hkls[counter][j1+3]))<dd(j1))dd(j1)=test;
+                       if ((test=fabs(En(i)-ini.hkls[counter][j1+3]))<dd_int(j1)&&ints(i)>1e-4)dd_int(j1)=test;
+                      }
+	             }
+
                      if(intsbey(i)<0)intsbey(i)=-1;
                      //printout rectangular function to .mdcisp.qom
 	             fprintf (fout, " %4.4g %4.4g",ints(i),intsbey(i));
@@ -752,6 +748,7 @@ diffint=0;diffintbey=0;
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
+    sta+=dd*dd;sta_int+=dd_int*dd_int;
 
               //initialize output file for display
             errno = 0;
@@ -833,12 +830,30 @@ diffint=0;diffintbey=0;
    if (ini.hkllist==1){hkl(1)=(double)counter;}
 }}}
     if (do_jqfile==1) 
-     {fprintf(jqfile,"sta=%g\n",jqsta);fclose(jqfile);}
+     {fprintf(jqfile,"#it follows the standard deviation sta defined as:\n");
+      fprintf(jqfile,"#the sum of squared differences between the highest eigenvalue\n");
+      fprintf(jqfile,"#of a q vector and that of the first q-vector in the list in mcdisp.par.\n");
+      fprintf(jqfile,"#only those eigenvalues are taken into account in the sum, which are larger\n");
+      fprintf(jqfile,"#than that of the first q-vector in the list in mcdisp.par - this is usefule\n");
+      fprintf(jqfile,"#for obtaining an exchange interaction with maximum at the first q-vector\n");
+      fprintf(jqfile,"#in the list in mcdisp.par\n");
+      fprintf(jqfile,"!sta=%g\n",jqsta);fclose(jqfile);}
     else
      {
-    fprintf (fout, "#sta= %8.6g \n",sta);
-    fprintf (foutqei, "#sta= %8.6g \n",sta);
-    fprintf (stdout, "#sta= %8.6g \n",sta);
+    fprintf(fout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
+    fprintf(fout,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
+    fprintf (fout, "#!sta= %8.6g \n",sta);
+    fprintf (fout, "#!sta_int= %8.6g \n",sta_int);
+
+    fprintf(foutqei,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
+    fprintf(foutqei,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
+    fprintf (foutqei, "#!sta= %8.6g \n",sta);
+    fprintf (foutqei, "#!sta_int= %8.6g \n",sta_int);
+
+    fprintf(stdout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
+    fprintf(stdout,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
+    fprintf(stdout, "#!sta= %8.6g \n",sta);
+    fprintf(stdout, "#!sta_int= %8.6g \n",sta_int);
    
     fclose(foutqei);
     fclose(foutqev);
@@ -899,13 +914,13 @@ for (i=1;i<=argc-1;++i){
 	    }
            }	
     }
-inimcdis ini("mcdisp.ini",spinfile);
+inimcdis ini("mcdisp.par",spinfile);
 
 if (argc > 10) {ini.errexit();}
   // as class load  parameters from file
   par inputpars("./mcphas.j");
-  if(ini.nofcomponents!=inputpars.nofcomponents){fprintf(stderr,"Error mcdisp: number of components read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofcomponents,inputpars.nofcomponents);exit(1);}
-  if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.ini (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
+  if(ini.nofcomponents!=inputpars.nofcomponents){fprintf(stderr,"Error mcdisp: number of components read from mcdisp.par (%i) and mcphas.j (%i) not equal\n",ini.nofcomponents,inputpars.nofcomponents);exit(1);}
+  if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.par (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
   inputpars.save("./results/_mcdisp.j");
   inputpars.save_sipfs("./results/_"); 
 
@@ -921,7 +936,7 @@ dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,m
    printf("  mcdisp.dsigma.tot  - T,H,qvector vs total intensity (sum of all modes)\n");
    printf("  mcdisp.dsigma      - (option -r) T,H,qvector,E vs intensity obtained from dyn susz\n");
    printf("  mcdisp.trs  - single ion transitions used\n");
-   printf("  _mcdisp.ini - input parameters read from mcdisp.ini\n");
+   printf("  _mcdisp.par - input parameters read from mcdisp.par\n");
    printf("  _mcdisp.mf  - input parameters read from mcdisp.mf\n");
    printf("  _mcdisp.j   - input parameters read from mcphas.j\n");
    printf("  ...         - and a copy of the single ion parameter files used.\n\n");

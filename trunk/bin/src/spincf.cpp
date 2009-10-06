@@ -14,7 +14,7 @@
 
 #define MAXNOFSPINS  200
 #define SMALL 0.03
-#define PI  3.1415
+#define PI  3.14159265
 int spincf::spequal(Vector a,Vector b)
 {// in this function we look if two spins are equal or not (used in order to compare or reduce
  // spinconfigurations
@@ -1055,7 +1055,7 @@ for(l=1;l<=nofatoms;++l)
   double radius=0;double dx,dy,dz,R,fi,theta;
   extract(cffilenames[l],"radius",radius);  
   if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
-  {     double rp=0.5*cbrt(abs(radius));
+  {     double rp=abs(radius);
         for (i=1;i<=(1+(nofa-1)*scale_view_1);++i){for(j=1;j<=(1+(nofb-1)*scale_view_2);++j){for(k=1;k<=(1+(nofc-1)*scale_view_3);++k){
         dd=pos(i,j,k,l, abc, r,x,y,z);
         for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){

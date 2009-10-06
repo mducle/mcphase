@@ -5,6 +5,8 @@
 
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
+#define PI  3.14159265
+
 #include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
@@ -35,32 +37,42 @@ printf("#*****************************************************\n");
     }
 
   par inputpars("./mcphas.j");
-  
  
-  int i,n1,n2,n3;
+  int i,j,n1,n2,n3;
   double lnz,u;
   float d;
   double T;
   Vector h(1,inputpars.nofcomponents);
-  Vector nettom(1,inputpars.nofcomponents);
+  Vector moment(1,inputpars.nofcomponents);
   Vector qvector (1,3);
-  Vector phi(1,inputpars.nofcomponents);
+  Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms);
+  Vector phi(1,inputpars.nofcomponents*inputpars.nofatoms);
   phi=0;
-  Vector momentq0(1,inputpars.nofcomponents);
+  Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms);
   momentq0=0;
-     
-   T=1;
-   h=0;for(i=1;i<=inputpars.nofcomponents;++i)h(i)=0.1;
-  for(i=1;i<=inputpars.nofatoms;++i)
-  {nettom=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T)); }
-
   n1=strtol(argv[1],NULL,10);  
   n2=strtol(argv[2],NULL,10);  
   n3=strtol(argv[3],NULL,10);
   qvector(1)=strtod(argv[4],NULL);
   qvector(2)=strtod(argv[5],NULL);
   qvector(3)=strtod(argv[6],NULL);
-   
+     
+   T=1;
+   h=0;for(i=1;i<=inputpars.nofcomponents;++i)h(i)=0.1;
+  for(i=1;i<=inputpars.nofatoms;++i)
+  {moment=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T)); 
+   for(j=1;j<=inputpars.nofcomponents;++j){nettom(j+(i-1)*inputpars.nofcomponents)=moment(j);
+                                          // set phases according to atomic position phi=2*pi*q*r
+                                           phi(j+(i-1)*inputpars.nofcomponents)=qvector*(*inputpars.jjj[i]).xyz*2.0*PI;                                        
+                                          }
+  }
+
+  // transform hkl to primitive reciprocal lattice
+  qvector=qvector*inputpars.rez.Inverse();
+  printf("# Miller indices of q vector with respect to primitive reciprocal lattice: (%6.4f %6.4f %6.4f)\n",qvector(1),qvector(2),qvector(3));
+  
+  
+ 
   spincf savspin (n1,n2,n3,inputpars.nofcomponents,inputpars.nofatoms);
   spincf savspin1 (n1,n2,n3,inputpars.nofcomponents,inputpars.nofatoms);
   spincf savspin2 (n1,n2,n3,inputpars.nofcomponents,inputpars.nofatoms);
@@ -88,6 +100,9 @@ printf("#*****************************************************\n");
    printf("double q structure:\n");   
   }
  
+  inputpars.savelattice(stdout);
+  inputpars.saveatoms(stdout);
+  printf("0 0 0 0 0 0 0 %i %i %i\n",n1*n2*n3*inputpars.nofatoms,inputpars.nofatoms,inputpars.nofcomponents);
   savspin.print(stdout);
   return 0;
 }

@@ -33,7 +33,8 @@ void testspincf::save (const char * filemode)
 
 // print out table of all configurations
 void testspincf::save (const char*filename, const char * filemode)
-{int i;
+{if(n>0)
+ { int i;
  FILE * fout;
 // we should print to a file all used configurations
  fout = fopen_errchk (filename,filemode);
@@ -56,6 +57,7 @@ void testspincf::save (const char*filename, const char * filemode)
     }
   fclose(fout);
   printf("file %s saved\n",filename);
+ }
 }
 
 //constructor - read maximum of nofconf spinconfigurations from file file and 
@@ -75,8 +77,15 @@ testspincf::testspincf (int nofconf, const char * file,const char * savfile,int 
 //  nofatoms=na;
 //  nofcomponents=nm;
 
+  fin_coq = fopen(file, "rb");
+  if (fin_coq == NULL)
+    {
+      fprintf (stderr, "Couldn't open file %s: %s - no test spinconfigurations read\n",file, strerror (errno));
+      n=0;nofatoms=na;nofcomponents=nm;
+     }
+  else
+    {
   printf("reading file %s\n",file);
-  fin_coq = fopen_errchk (file, "rb");
    // input file header ------------------------------------------------------------------
   instr[0]='#';
    while (instr[strspn(instr," \t")]=='#') // pointer to 'ltrimstring' 
@@ -112,6 +121,7 @@ if (nofatoms!=na||nofcomponents!=nm)
       }
  fclose (fin_coq);
  n=i-1;
+   }
 }
 
 //kopier-konstruktor

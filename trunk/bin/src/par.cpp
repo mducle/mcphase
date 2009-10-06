@@ -63,8 +63,9 @@ par::par (const char *filejjj)
   for(i=1;i<=nofatoms;++i)  
   {jjj[i]=new jjjpar(fin_coq);  
    gJ(i)=(*jjj[i]).gJ;
-   fgets (instr, MAXNOFCHARINLINE, fin_coq);
+  // fgets (instr, MAXNOFCHARINLINE, fin_coq);
    rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);
+   
    if(nofcomponents!=(*jjj[i]).nofcomponents)
    {fprintf(stderr,"ERROR reading mcphas.j: nofcomponents (%i) not consistent for atom %i (%i read in fileheader)\n",(*jjj[i]).nofcomponents,i,nofcomponents);exit(EXIT_FAILURE);}
   }
@@ -119,7 +120,7 @@ par::par(const par & p)
 //destruktor
 par::~par ()
 {  int i;
-  for(i=1;i<=3+nofatoms;++i)
+  for(i=1;i<=3;++i)
   {delete []rems[i];}
   for(i=1;i<=nofatoms;++i)  
   {delete jjj[i];}
@@ -137,8 +138,8 @@ int par::newatom(jjjpar * p) //creates new atom from an existing and returns its
                   nnn[nofatoms]=new jjjpar((*p));// use copy constructor to create new atom parameter set    
 //                   nnn[nofatoms]=new jjjpar(1,0,nofcomponents);
 //		  (*nnn[nofatoms])=(*p1.jjj[nofatoms]); // add the new atom
-                  rems[3+nofatoms]=new char[strlen(rems[2+nofatoms])+2];
-		  strcpy(rems[3+nofatoms],rems[2+nofatoms]);
+//                  rems[3+nofatoms]=new char[strlen(rems[2+nofatoms])+2];
+//		  strcpy(rems[3+nofatoms],rems[2+nofatoms]);
 		  delete []jjj;
 		  jjj=nnn;                        
 return nofatoms;                 

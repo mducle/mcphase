@@ -170,7 +170,7 @@ if (tn==2) // transition to finite energy
  { delta=-SMALL; // tn=1 ... transition within the same level
    if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/K_BT/(2*JJ+1);}
    else {if(X>1e50)
-         {jjkt=-JJ*JJ*K_BT;}
+         {jjkt=JJ*JJ*K_BT;}
          else 
          {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
          jjkt+=JJ*JJ/X/XJ;

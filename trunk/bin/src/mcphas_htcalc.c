@@ -100,7 +100,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	      }
  if (verbose==1)
  { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
-   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=red:log(sta) green:stepratio\n#time(s) log(iteration) log(sta) spinchange stepratio\n");
+   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(\%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
    fclose(fin_coq);	      
    printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
  }
@@ -636,7 +636,9 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  float smallstep;
  int slowct=10;
  float stepratio=1.0;
-
+ static int successrate=0;
+ static int nofcalls=0;
+ ++nofcalls;
  float spinchange=0; // initial value of spinchange
  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
  Vector  * lnzi; lnzi=new Vector [sdim+2];for(i=0;i<=sdim+1;++i){lnzi[i]=Vector(1,inputpars.nofatoms);} // partition sum for every atom
@@ -786,7 +788,7 @@ for (r=1;sta>ini.maxstamf;++r)
   }}}
   mfold=mf;      
   sta=sqrt(sta/sps.n()/inputpars.nofatoms);
-  
+  //printf("sta=%g\n",sta);
   bigstep=fmodf(ini.bigstep-0.0001,1.0);
   if (ini.bigstep>1.0){smallstep=bigstep/(ini.bigstep-bigstep);}else{smallstep=bigstep/5;}
   if (r==1) {stepratio=smallstep;} //in first loop initialize stepratio to smallstep
@@ -825,7 +827,7 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
  {if (time(0)-time_of_last_output>2)
   {time_of_last_output=time(0);
    fin_coq= fopen_errchk ("./results/.fe_status.dat","a");
-   fprintf(fin_coq,"%i %g %g %g %g\n",time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio);
+   fprintf(fin_coq,"%i %g %g %g %g %g\n",time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio,100*(double)successrate/nofcalls);
    fclose(fin_coq);
   }
  }
@@ -890,7 +892,7 @@ if (ini.displayall==1)
      {for (l=1;l<=inputpars.nofatoms;++l){
  delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
      }}}} delete []ests;
-
+++successrate;
 return fe;     
 }
 

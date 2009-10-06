@@ -135,7 +135,7 @@ ionpars::ionpars(FILE * cf_file)
 {   static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
-  int i,j,l,dj=30; //30 ... maximum number of 2j+1
+  int i,j,l,m,dj=30; //30 ... maximum number of 2j+1
   double alphar,betar,gammar,r2r,r4r,r6r,gJr;
 
   char instr[MAXNOFCHARINLINE];
@@ -149,7 +149,8 @@ ionpars::ionpars(FILE * cf_file)
   // strip /r (dos line feed) from line if necessary
   char *token;  
   while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}  
-   if(!(strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)){fprintf(stderr,"ERROR class ionpars - file does not start with #!cfield\n");exit(EXIT_FAILURE);}   
+   if(!(strncmp(instr,"#!MODULE=cfield ",9)==0||strncmp(instr,"#!MODULE=cfield\n",9)==0||
+        strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)){fprintf(stderr,"ERROR class ionpars - file does not start with #!cfield\n");exit(EXIT_FAILURE);}   
   
 // read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
@@ -271,8 +272,6 @@ ionpars::ionpars(FILE * cf_file)
 	}}
 
 
-  // get filename of parameter file out of first uncommented line in FILE * cf_file   
-  //  cf_filename=strtok(instr," \t\n");
   
   double ** hcfr,**hcfi,**Jxr,**Jxi,**Jyr,**Jyi,**Jzr,**Jzi;
 
@@ -759,16 +758,58 @@ if(i<j){(*Olm[45])(i,j)=(mo66ci[j])[i];}else{(*Olm[45])(i,j)=(mo66cr[i])[j];}
    delete []mo65cr;delete []mo65ci;
    delete []mo66cr;delete []mo66ci;
    
+// here transform the Llm (if present) to Blm ...
+Vector thetaJ(0,6);thetaJ(2)=alpha;thetaJ(4)=beta;thetaJ(6)=gamma;
+
+// cnst is the Zlm constants - put them into the matrix ... (same code is reused in jjjpar.cpp, pointc.c)
+Matrix cnst(0,6,-6,6);
+ 
+cnst(2,0) = 0.3153962;
+cnst(2,1)=  1.092548;
+cnst(2,2)=  0.5462823;
+cnst(4,0)=  0.1057871;
+cnst(4,1)=  0.6690465;
+cnst(4,2)=  0.4730943;
+cnst(4,3)=  1.77013;
+cnst(4,4)=  0.625845;
+cnst(6,0)=  0.06357014;
+cnst(6,1)=  0.582621;
+cnst(6,2)=  0.4606094;
+cnst(6,3)=  0.921205;
+cnst(6,4)=  0.5045723;
+cnst(6,5)=  2.366619;
+cnst(6,6)=  0.6831942;
+for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);} 
+
+   fprintf(stderr,"crystal field parameters:\n");  
+   const char lm[]="B22SB21SB20 B21 B22 B33SB32SB31SB30 B31 B32 B33 B44SB43SB42SB41SB40 B41 B42 B43 B44 B55SB54SB53SB52SB51SB50 B51 B52 B53 B54 B55 B66SB65SB64SB63SB62SB61SB60 B61 B62 B63 B64 B65 B66 ";
+   char lm4[5];lm4[4]='\0';
+   for(i=1;i<=45;++i){strncpy(lm4,lm+(i-1)*4,4);l=lm4[1]-48;m=lm4[2]-48;if(lm4[3]=='S'){m=-m;}
+                     if(Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module cfield: wybourne parameter %s is not implemented\n",lm4);
+                                                  exit(EXIT_FAILURE);}
+                                  double Blmcalc=Llm(i)*cnst(l,m)*sqrt(4.0*PI/(2*l+1))*thetaJ(l);if(m!=0){Blmcalc*=sqrt(2.0);}
+                                  if(Blm(i)!=0&fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001){fprintf(stderr,"Warning internal module cfield - reading %s=%12.6g meV is ignored, because Wybourne Parameter is different: \n",lm4,Blm(i));}
+                                  Blm(i)=Blmcalc;// here set the Blm as calculated from the Llm
+                                  }
+                     if(Blm(i)!=0){fprintf(stderr," %s=%12.6g meV ",lm4,Blm(i));
+                                   if(l!=3&l!=5){Llm(i)=Blm(i)/thetaJ(l)/cnst(l,m)/sqrt(4.0*PI/(2*l+1));if(m!=0){Llm(i)/=sqrt(2.0);}
+                                                 lm4[0]='L';fprintf(stderr,"<-> %s=%12.6g meV",lm4,Llm(i));}
+                                                else
+                                                {lm4[0]='L';fprintf(stderr,"<-> %s=Wybourne parameter not implemented, ",lm4);}
+                                   fprintf(stderr,"\n");  
+                                  }
+                     }
+
+// here set the crystal field Hamiltonian Matrix
   Hcf= Matrix(1,dimj,1,dimj); 
   Hcf=0;
 
    if(Hcf==(double)0.0){
-   // calculation of the cf matrix according 
-   fprintf(stderr,"crystal field parameters\n");  
+
    for(l=1;l<=45;++l){Hcf+=Blm(l)*(*Olm[l]);
-                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
-		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
-		                }
+//                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
+//		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
+//		                }
                   }
    }
    

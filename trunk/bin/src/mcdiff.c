@@ -412,7 +412,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  FILE * fout;char l[MAXNOFCHARINLINE];
  int i,j,chinr=0,ortho=1;
  double isave=0,isavedip=0,alpha,beta,gamma;
-   extract(unitcell, " alpha", alpha); extract(unitcell, " beta", beta); extract(unitcell, " gamma", gamma); 
+   extract(unitcell, "alpha", alpha); extract(unitcell, "beta", beta); extract(unitcell, "gamma", gamma); 
    if(alpha!=90||beta!=90||gamma!=90){ortho=0;}
  time_t curtime;
  struct tm * loctime;
@@ -624,10 +624,10 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    } 
 
  }
-if (code>=2){rpvalue*=100.0/total;fprintf(fout,"#rpvalue=%6.2f\n",rpvalue);
-             rpvaluedip*=100.0/total;fprintf(fout,"#rpvaluedip=%6.2f\n",rpvaluedip);}
-if (code==3){chisquared*=1.0/(double)chinr;fprintf(fout,"#chisquared=%6.4f\n",chisquared);
-             chisquareddip*=1.0/(double)chinr;fprintf(fout,"#chisquareddip=%6.4f\n",chisquareddip);}
+if (code>=2){rpvalue*=100.0/total;fprintf(fout,"#!rpvalue=%6.2f\n",rpvalue);
+             rpvaluedip*=100.0/total;fprintf(fout,"#!rpvaluedip=%6.2f\n",rpvaluedip);}
+if (code==3){chisquared*=1.0/(double)chinr;fprintf(fout,"#!chisquared=%6.4f\n",chisquared);
+             chisquareddip*=1.0/(double)chinr;fprintf(fout,"#!chisquareddip=%6.4f\n",chisquareddip);}
 
 fclose(fout);
 return;}
@@ -790,12 +790,12 @@ fprintf(fout,"#\n");
        {fprintf(stderr,"Error mcdiff: wrong sps file format\n");exit (EXIT_FAILURE);}
    fgets(instr,MAXNOFCHARINLINE,fin_coq); 
    extract(instr, "nat", nat);
-   extract(instr, " a", a);
-   extract(instr, " b", b);
-   extract(instr, " c", c);
-   extract(instr, " alpha", alpha);
-   extract(instr, " beta", beta);
-   extract(instr, " gamma", gamma);
+   extract(instr, "a", a);
+   extract(instr, "b", b);
+   extract(instr, "c", c);
+   extract(instr, "alpha", alpha);
+   extract(instr, "beta", beta);
+   extract(instr, "gamma", gamma);
   }
   fseek(fin_coq,pos,SEEK_SET); 
   printf ("     section 2 - nat=%i\n",nat);
@@ -837,12 +837,12 @@ fprintf(fout,"# Real Imag[scattering length(10^-12cm)]   da(a)    db(b)    dc(c)
  while (instr[strspn(instr," \t")]=='#'&&nr1*nr2*nr3==0) 
   { pos=ftell(fin_coq); 
    fgets(instr,MAXNOFCHARINLINE,fin_coq); 
-   if(a==0)extract(instr, " a", a);
-   if(b==0)extract(instr, " b", b);
-   if(c==0)extract(instr, " c", c);
-   if(alpha==0)extract(instr, " alpha", alpha);
-   if(beta==0)extract(instr, " beta", beta);
-   if(gamma==0)extract(instr, " gamma", gamma);
+   if(a==0)extract(instr, "a", a);
+   if(b==0)extract(instr, "b", b);
+   if(c==0)extract(instr, "c", c);
+   if(alpha==0)extract(instr, "alpha", alpha);
+   if(beta==0)extract(instr, "beta", beta);
+   if(gamma==0)extract(instr, "gamma", gamma);
     extract(instr, "r1x", r1(1));
     extract(instr, "r1y", r1(2));
     extract(instr, "r1z", r1(3));
@@ -1019,6 +1019,7 @@ for(i=1;i<=natmagnetic;++i){
                             j=inputline(fin_coq,numbers);
                             if (j<9) {fprintf(stderr,"ERROR mcdiff: too few parameters for magnetic atom %i: %s\n",i,instr);exit(EXIT_FAILURE);}
                              jjjpars[i]=new jjjpar(numbers[4] / nr1,numbers[5] / nr2,numbers[6] / nr3, cffilename);
+                             (*jjjpars[i]).save_sipf("./results/_");// save read single ion parameter file
                               // store moment and components of S and L (if given)
                               for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
                               if((*jjjpars[i]).gJ==0){if(j>=15){J[i]=-2; // do not use input moment but spin and angular momentum for calculation
@@ -1091,6 +1092,7 @@ fprintf(fout,"\n");
                            }
   fclose(fin_coq);
   fclose(fout);
+
 printf ("calculating ...\n");  
 
 //now insert also nonmagnetic elements into the unit cell

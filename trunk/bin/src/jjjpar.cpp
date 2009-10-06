@@ -36,7 +36,9 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,Com
    case 2: return (*iops).cfield(T,gjmbH,lnZ,U,ests);break;
    case 3: return brillouin(T,gjmbH,lnZ,U);break;
    default: static Vector returnmoment(gjmbH.Lo(),gjmbH.Hi());
-            (*m)(&returnmoment,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);return returnmoment;
+            (*m)(&returnmoment,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);
+           // int i; for(i=gjmbH.Lo();i<=gjmbH.Hi();++i)printf("m(%i)=%12.6f",i,returnmoment(i));
+            return returnmoment;
   }
 }
 
@@ -296,7 +298,9 @@ void jjjpar::save_radial_wavefunction(const char * filename)
     fprintf(fout,"# R_Np,XIp(r)=r^(Np-1).exp(-XIp * r).(2 * XIp)^(Np+0.5)/sqrt(2Np!)\n");
     fprintf(fout,"# radial wave function parameters Np XIp Cp values are\n");
     fprintf(fout,"# tabulated in clementi & roetti Atomic data and \n");
-    fprintf(fout,"# nuclear data tables 14 (1974) 177-478\n");
+    fprintf(fout,"# nuclear data tables 14 (1974) 177-478 for the transition metals\n");
+    fprintf(fout,"# for rare earth parameters can be found in Freeman and Watson PR 127 (1962) 2058\n");
+    fprintf(fout,"# and O. Sovers, J. Phys. Chem. Solids Vol 28 (1966) 1073\n");
     fprintf(fout,"# the parameters used are: \n");
     int p;    
     for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"#! N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
@@ -412,9 +416,9 @@ return ro;
 
 
 void jjjpar::set_zlm_constants()
-{// cnst is the Zlm constants - put them into the matrix
+{// cnst is the Zlm constants - put them into the matrix ... (same code is reused in ionpars.cpp)
  cnst= Matrix(0,6,-6,6);
-
+ 
 cnst(2,0) = 0.3153962;
 cnst(2,1)=  1.092548;
 cnst(2,2)=  0.5462823;
@@ -424,7 +428,7 @@ cnst(4,2)=  0.4730943;
 cnst(4,3)=  1.77013;
 cnst(4,4)=  0.625845;
 cnst(6,0)=  0.06357014;
-cnst(6,1)=  1.032669;
+cnst(6,1)=  0.582621;
 cnst(6,2)=  0.4606094;
 cnst(6,3)=  0.921205;
 cnst(6,4)=  0.5045723;
@@ -735,8 +739,9 @@ void jjjpar::save_sipf(char * path)
                     fprintf(fout,"# radial wave function parameters, for transition metal ions the the values are tabulated in\n");
                     fprintf(fout,"# Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave\n");
                     fprintf(fout,"# function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)\n");
+                    fprintf(fout,"# for rare earth ions see Freeman & Watson PR 127(1962)2058, Sovers J. Phys. Chem. Sol. 28(1966)1073\n");
                     fprintf(fout,"#---------------------------------------------------------------------------------------------------\n");
-                    for(i=Np.Lo();i<=Np.Hi();++i){if(Np(i)!=0){fprintf(fout,"N%i=%i XI%i=%g C%i=%g\n",i,Np(i),i,Xip(i),i,Cp(i));}
+                    for(i=Np.Lo();i<=Np.Hi();++i){if(Np(i)!=0){fprintf(fout,"N%i=%i XI%i=%g C%i=%g\n",i,(int)Np(i),i,Xip(i),i,Cp(i));}
                                                  }
                    fprintf(fout,"\n");
                    }
@@ -747,7 +752,7 @@ void jjjpar::save_sipf(char * path)
  delete []savfilename;
 }
 
-void jjjpar::get_parameters_from_sipfile(char * cffilename)
+void jjjpar::get_parameters_from_sipfile(char * sipffilename)
 {FILE * cf_file;
  int i,j;
  float nn[MAXNOFNUMBERSINLINE];
@@ -755,15 +760,15 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
   char modulefilename[MAXNOFCHARINLINE];
 
  char instr[MAXNOFCHARINLINE];
-  cf_file = fopen_errchk (cffilename, "rb");
+  cf_file = fopen_errchk (sipffilename, "rb");
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
   if(extract(instr,"MODULE=",modulefilename,(size_t)MAXNOFCHARINLINE))
    {if(extract(instr,"#!",modulefilename,(size_t)MAXNOFCHARINLINE))
-    {fprintf(stderr,"Error: single ion property file %s does not start with '#!' or 'MODULE='\n",cffilename);
+    {fprintf(stderr,"Error: single ion property file %s does not start with '#!' or 'MODULE='\n",sipffilename);
      exit(EXIT_FAILURE);}
    }
 
-  fprintf (stderr,"#parsing single ion property file: %s - loading module %s\n",cffilename,modulefilename);
+  fprintf (stderr,"#parsing single ion property file: %s - loading module %s\n",sipffilename,modulefilename);
 
   if(strcmp(modulefilename,"kramer")==0)
     {module_type=1;fprintf (stderr,"[internal]\n");
@@ -777,7 +782,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
                                           }
       }
       // input all  lines starting with comments
-      if(i!=0){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n",cffilename);
+      if(i!=0){fprintf(stderr,"Error reading |<+-|Ja|-+>|,|<+-|Jb|-+>|,|<+-|Jc|+->| from file %s\ncorrect file format is:\n",sipffilename);
               fprintf(stderr,"\nMODULE=kramer\n#comment lines ..\n#matrix elements A=|<+-|Ja|-+>| B=|<+-|Jb|-+>| C=|<+-|Jc|+->|\nA=2 \nB=3 \nC=1\n\n");exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
       fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n",ABC(1),ABC(2),ABC(3));
@@ -794,7 +799,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
                                           }
       }// input all  lines starting with comments
       if(i!=0){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n");
-              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n",cffilename);exit(EXIT_FAILURE);}
+              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n",sipffilename);exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
       fprintf(stderr," ... Brillouin function with J=S=%g\n",ABC(1));
       est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
@@ -803,7 +808,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
      else 
      {if(strcmp(modulefilename,"cfield")==0)
      {module_type=2;fprintf (stderr,"#[internal]\n");
-      fclose(cf_file);cf_file = fopen_errchk (cffilename, "rb"); // reopen file
+      fclose(cf_file);cf_file = fopen_errchk (sipffilename, "rb"); // reopen file
       iops=new ionpars(cf_file);  
       int dj;dj=(int)(2*J()+1);
       est=ComplexMatrix(0,dj,1,dj);
@@ -846,9 +851,9 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 	         {fprintf (stderr,"%s\n",error);}
 	       exit (EXIT_FAILURE);
 	      }
-  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*))dlsym(handle,"mcalc");
+  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))dlsym(handle,"mcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s\n",error);exit (EXIT_FAILURE);}
-  dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*))dlsym(handle,"dmcalc");
+  dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))dlsym(handle,"dmcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);dm=NULL;}
   mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))dlsym(handle,"mq");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mq=NULL;}
@@ -904,7 +909,7 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
 
   DWF=0;  gJ=0;
 
-  cf_file = fopen_errchk (cffilename, "rb");
+  cf_file = fopen_errchk (sipffilename, "rb");
 
   while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
@@ -968,8 +973,8 @@ void jjjpar::get_parameters_from_sipfile(char * cffilename)
  fclose (cf_file); 
 // check gJ
 if(module_type==2&&fabs(gJ-(*iops).gJ)>0.00001)
-{fprintf(stderr,"Error internal module cfield : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",cffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
-if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc (S... Spin, L... angular momentum)\n",cffilename);
+{fprintf(stderr,"Error internal module cfield : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",sipffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
+if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc (S... Spin, L... angular momentum)\n",sipffilename);
            if (module_type==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (module_type==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (module_type==3){fprintf(stderr,"Error internal module brillouin: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
@@ -989,17 +994,22 @@ jjjpar::jjjpar(FILE * file)
   nn[0]=MAXNOFNUMBERSINLINE;
   xyz=Vector(1,3);
   set_zlm_constants();
-  fgets_errchk (instr, MAXNOFCHARINLINE, file);
-  extract(instr,"x",xyz[1]);
-  extract(instr,"y",xyz[2]);
-  extract(instr,"z",xyz[3]);
-  extract(instr,"da",xyz[1]);
-  extract(instr,"db",xyz[2]);
-  extract(instr,"dc",xyz[3]);
-  extract(instr,"nofneighbours",paranz);
-  extract(instr,"diagonalexchange",diagonalexchange);
-  extract(instr,"gJ",gjcheck);
-  extract(instr,"cffilename",cffilename,(size_t)MAXNOFCHARINLINE);
+  i=7;
+  while(i>0){fgets_errchk (instr, MAXNOFCHARINLINE, file);
+             if(instr[strspn(instr," \t")]!='#'){fprintf (stderr, "Error reading mcphas.j - exchangeparameters start before all variables (da,db,dc,gJ,nofneighbors,diagonalexchange and cffilename) have been given\n");
+                                                 exit (EXIT_FAILURE);}
+             i+=extract(instr,"x",xyz[1])-1;
+             i+=extract(instr,"y",xyz[2])-1;
+             i+=extract(instr,"z",xyz[3])-1;
+             i+=extract(instr,"da",xyz[1])-1;
+             i+=extract(instr,"db",xyz[2])-1;
+             i+=extract(instr,"dc",xyz[3])-1;
+             i+=extract(instr,"nofneighbours",paranz)-1;
+             i+=extract(instr,"diagonalexchange",diagonalexchange)-1;
+             i+=extract(instr,"gJ",gjcheck)-1;
+             i+=extract(instr,"cffilename",cffilename,(size_t)MAXNOFCHARINLINE)-1;
+            }
+
   fgets_errchk (instr, MAXNOFCHARINLINE, file);
 
 // read single ion parameter file and see which type it is (internal module or loadable)
@@ -1010,20 +1020,15 @@ jjjpar::jjjpar(FILE * file)
   if (gJ!=gjcheck){fprintf (stderr, "Error: Lande factor gJ in file mcphas.j and %s are not the same\n",cffilename);
                    exit (EXIT_FAILURE);}
   Mq=ComplexVector(1,3);
-//fprintf(stderr,"\nmagnetic formfactors\n");
-//fprintf(stderr," FFj0A=%4.4g  FFj0a=%4.4g FFj0B=0%4.4g FFj0b=%4.4g  FFj0C=%4.4g  FFj0c=%4.4g FFj0D=%4.4g\n",magFFj0(1),magFFj0(2),magFFj0(3),magFFj0(4),magFFj0(5),magFFj0(6),magFFj0(7));  
-//fprintf(stderr," FFj2A=%4.4g FFj2a=%4.4g FFj2B =%4.4g FFj2b=%4.4g FFj2C=%4.4g  FFj2c=%4.4g FFj2D=%4.4g\n",magFFj2(1), magFFj2(2),magFFj2(3),magFFj2(4),magFFj2(5),magFFj2(6),magFFj2(7));
-//fprintf(stderr,"Debey-Waller Factor\n DWF=%g\n\n",DWF);
-
 
   nofcomponents=3; // default value for nofcomponents - (important in case nofparameters=0)
 // read the exchange parameters from file (exactly paranz parameters!)
   for  (i=1;i<=paranz;++i)
   {while((j=inputline(file, nn))==0&&feof(file)==0){}; // returns 0 if comment line or eof, exits with error, if input string too long
    if(feof(file)!=0){ fprintf (stderr, "Error in jjjpar.cpp: input jjj parameters - \n");
-  fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
-      exit (EXIT_FAILURE);
-    }
+                      fprintf(stderr," end of file reached while reading exchange parameter %i(%i)",i,paranz);
+                      exit (EXIT_FAILURE);
+                    }
     if(i==1){// determine nofcomponents from number of parameters read in first line of mcphas.j
              if(diagonalexchange==1){nofcomponents=j-3;}else{nofcomponents=(int)sqrt((double)(j-3));}
              if(module_type==1)

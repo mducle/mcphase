@@ -30,6 +30,7 @@ if (instr[strspn(instr," \t")]=='#'&&instr[strspn(instr," \t#")]!='!') return 1;
  // while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
  
   if ((token = strstr (instr, parameter))==NULL) return 1; // parameter string not found
+  if (token>instr&&1!=strspn(token-1," \t!?$%&*()[]{}\"£€/><;@:=+-~|"))return 1; // no space etc before parameter
  td=instr;while ((te=strstr(td,"#!"))!=NULL){td=te+1;} // skip all "#!" signs and
  if ((td=strchr(td,'#'))!=NULL){if(td<token) return 1;} // check if comment sign "#" appears before parameter - if yes return 1
  
@@ -201,9 +202,11 @@ int inputparline (const char * parname, FILE * fin_coq, float *nn)
  
 // check line contains parname -> if no return 0
   if ((token = strstr (instr, parname))==NULL) return 0;
-
+  if (strstr(instr,"#")!=NULL){if(token>strstr(instr,"#")) return 0;}
   token+=strlen(parname);
-  token = strstr (token, "=")+1;
+// check if there is a "=" character -> if no return 0
+  if((token = strstr (token, "="))==NULL) return 0;
+  token +=1;
   while (*token==' '){++token;} // remove starting spaces
   //+ initialize token to first nonspace character
   i=0;
@@ -311,7 +314,7 @@ float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
 
 
 // If gcc version 4.5.0 or greater, conflicts with declaration in <cmath>
-#if GCC_VERSION > 40500
+#if GCC_VERSION < 40500
 //copysign function
 double copysign(double a,double b)
 {//if fabs(a)

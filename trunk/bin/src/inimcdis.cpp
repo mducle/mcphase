@@ -19,7 +19,7 @@ void inimcdis::errexit() // type info and error exit
     printf ("                               [file] ... input file with mean field set (default mcdisp.mf)\n");
     printf ("			       \n");
     printf ("	       Note: files which must be in current directory -\n");
-    printf ("	             ./mcdisp.ini, ./mcphas.j, directory ./results\n");
+    printf ("	             ./mcdisp.par, ./mcphas.j, directory ./results\n");
     printf ("\n");
     printf (" Options: -jq                  ... calculate J(Q) (Fourier transform of exchange)\n");
     printf ("          -max n               ... restrict single ion susceptibility to n lowest\n");
@@ -39,8 +39,8 @@ void inimcdis::errexit() // type info and error exit
 void inimcdis::save()
 {  FILE * fout;int i,j;
   fout=fopen(savfilename,"w");if (fout==NULL) {fprintf(stderr,"ERROR - file %s cannot be opened \n",savfilename);errexit();} 
-  fprintf(fout,"# Parameter file  mcdisp.ini - read by %s\n",MCDISPVERSION);
-  fprintf(fout,"#<!--mcdisp.mcdisp.ini>\n");
+  fprintf(fout,"# Parameter file  mcdisp.par - read by %s\n",MCDISPVERSION);
+  fprintf(fout,"#<!--mcdisp.mcdisp.par>\n");
   fprintf(fout,"#*********************************************************************\n");
   fprintf(fout,"# mcdisp - program to calculate the dispersion of magnetic excitations\n");
   fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
@@ -50,30 +50,37 @@ void inimcdis::save()
   fprintf(fout,"#           f.u.=crystallogrpaphic unit cell (r1xr2xr3) for inelastic and diffuse scattering\n");
   fprintf(fout,"#\n");
   fprintf(fout,"# depending on what is kept constant it follows either kf or ki (1/A)\n");
-  if(kf!=0){fprintf(fout,"kf=%g\n",kf);}else{fprintf(fout,"ki=%g\n",ki);}
+  if(kf!=0){fprintf(fout,"#!kf=%g\n",kf);}else{fprintf(fout,"#!ki=%g\n",ki);}
   fprintf(fout,"# \n");
   fprintf(fout,"# for full calculation of the dynamical susceptibility (option \"-r\", inversion of the MF-RPA equation \n");
   fprintf(fout,"# for each point in Q-omega space) the minimum and maximum energy has to be given (energy stepwidth is \n");
   fprintf(fout,"# equal to the parameter epsilon given in the command line after \"-r\")\n");
+
   fprintf(fout,"#\n");
-  fprintf(fout,"emin=%g\n",emin);
-  fprintf(fout,"emax=%g\n",emax);
+  fprintf(fout,"#!emin=%g\n",emin);
+
+  fprintf(fout,"#!emax=%g\n",emax);
+
   fprintf(fout,"#\n");
   fprintf(fout,"# optional parameter is extended_eigenvector_dimension\n");
   fprintf(fout,"# which is used to define, how many components of the\n");
   fprintf(fout,"# eigenvector should be in the ouput to file mcdisp.qee\n");
   fprintf(fout,"# (important for charge density movies)\n");
-  fprintf(fout,"extended_eigenvector_dimension=%i\n",extended_eigenvector_dimension);
+  fprintf(fout,"#!extended_eigenvector_dimension=%i\n",extended_eigenvector_dimension);
+
   fprintf(fout,"#\n");
   fprintf(fout,"# It follows either \n");
   fprintf(fout,"#\n");
   fprintf(fout,"# (i) a Q vector mesh to be mapped in the calculation\n");
-  if(hkllist!=0)fprintf(fout,"#");
+  if(hkllist!=0){fprintf(fout,"#");}else{fprintf(fout,"#!");}
   fprintf(fout,"hmin=%g hmax=%g deltah=%g\n",qmin[1],qmax[1],deltaq[1]);
-  if(hkllist!=0)fprintf(fout,"#");
+
+  if(hkllist!=0){fprintf(fout,"#");}else{fprintf(fout,"#!");}
   fprintf(fout,"kmin=%g kmax=%g deltak=%g\n",qmin[2],qmax[2],deltaq[2]);
-  if(hkllist!=0)fprintf(fout,"#");
+
+  if(hkllist!=0){fprintf(fout,"#");}else{fprintf(fout,"#!");}
   fprintf(fout,"lmin=%g lmax=%g deltal=%g\n",qmin[3],qmax[3],deltaq[3]);
+
   fprintf(fout,"#\n");
   fprintf(fout,"# or (if no mesh is given the program takes)\n");
   fprintf(fout,"# (ii) a list of Q vectors with (optional) energies of observed excitations to be fitted\n");
@@ -110,7 +117,7 @@ void inimcdis::save()
 inimcdis::inimcdis (const char * file,const char * spinfile)
 { float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
   char instr[MAXNOFCHARINLINE];
-  int i,j;
+  int i=0,j=0;
   FILE * fin;
   fin=fopen(spinfile,"rb");if (fin==NULL) {fprintf(stderr,"ERROR - file %s not found \n",spinfile);errexit();}
   instr[0]='#';  
@@ -140,13 +147,12 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
   emin=0;emax=10;extended_eigenvector_dimension=nofcomponents;
   printf("reading file %s\n",file);
   fin_coq = fopen(file, "rb"); if (fin_coq==NULL) {fprintf(stderr,"ERROR - file %s not found \n",file);errexit();}   
-  // save the parameters read from mcdisp.ini into results/mcdisp.ini)
+  // save the parameters read from mcdisp.par into results/mcdisp.par)
   ki=0;kf=0;
   qmin=0;qmax=0;deltaq=0;
   while (fgets(instr,MAXNOFCHARINLINE,fin_coq)!=NULL)
   {++i;
-   if(instr[strspn(instr," \t")]!='#')
-   { extract(instr,"hmin",qmin[1]); 
+     extract(instr,"hmin",qmin[1]); 
      extract(instr,"kmin",qmin[2]); 
      extract(instr,"lmin",qmin[3]); 
      extract(instr,"hmax",qmax[1]); 
@@ -160,7 +166,6 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
      extract(instr,"ki",ki); 
      extract(instr,"kf",kf); 
      extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
-   }
   }
   if (ki==0) {if (kf==0) kf=10;
               fprintf(stdout,"#Calculating intensities for  kf=const=%4.4g/A\n",kf);

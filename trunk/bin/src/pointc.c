@@ -35,6 +35,8 @@ int main (int argc, char **argv)
              Alternative Usage: pointc Ce3+ filename\n\
              ... meaning read several charges+coordinates from file,\n\
              file format: column 1=charge, column 2-4 = x y z coordinate.\n\
+             (note,progam makenn creates useful files for this option from \n\
+             the crystal structure).\n\
              results are written to stdout (including radial matrix elements\n\
              and Stevens factors)\n\n\
           Note: if an ion is not implemented, it's parameters can be \n\
@@ -56,13 +58,10 @@ int main (int argc, char **argv)
                   R2=1.309\n\
                   R4=3.964\n\
                   R6=23.31\n\
-                  # alternatively the radial wave function can be given:\n\
-                  # the radial wave function is expanded as \n\
-                  # R(r)=sum_p C_p R_Np,XIp(r)\n\
-                  # R_Np,XIp(r)=r^(Np-1).exp(-xi r).(2 XIp)^(Np+0.5)/sqrt(2Np!)\n\
-                  # radial wave function parameters Np XIp Cp values are\n\
-                  # tabulated in clementi & roetti Atomic data and \n\
-                  # nuclear data tables 14 (1974) 177-478\n\
+                  # radial wave function parameters, for transition metal ions the the values are tabulated in\n\
+                  # Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave\n\
+                  # function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)\n\
+                  # for rare earth ions see Freeman & Watson PR 127(1962)2058, Sovers J. Phys. Chem. Sol. 28(1966)1073\n\
                   # e.g. Co2+ is isoelectronic to Fe+, looking at page 422\n\
                   # of Clemente & Roetti the parameters are \n\
                   N1=3 XI1=4.95296 C1=0.36301 \n\
@@ -100,7 +99,7 @@ float invalues[100];invalues[0]=99;
                                       printf("%s",instr);
                                     }
    
-   if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+//   if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
         extract(instr,"IONTYPE",(*iops).iontype,(size_t)MAXNOFCHARINLINE);
         
         extract(instr,"N1",(*jjjps).Np(1));extract(instr,"XI1",(*jjjps).Xip(1));extract(instr,"C1",(*jjjps).Cp(1));
@@ -120,7 +119,7 @@ float invalues[100];invalues[0]=99;
         extract(instr,"R2",  (*jjjps).r2);
         extract(instr,"R4",  (*jjjps).r4);
         extract(instr,"R6",  (*jjjps).r6);
-        }
+//        }
   }
       if((*jjjps).r2==0){(*jjjps).r2_from_radial_wavefunction();printf("#<r^2> in units of a0^2 a0=0.5292 Angstroem\nR2=%g\n",(*jjjps).r2);}
       if((*jjjps).r4==0){(*jjjps).r4_from_radial_wavefunction();printf("#<r^4> in units of a0^4 a0=0.5292 Angstroem\nR4=%g\n",(*jjjps).r4);}
@@ -193,7 +192,7 @@ while(n>0)
  cfi =  x/sqrt(x*x+y*y);} 
 
   int l,m;   
- // cnst is the Zlm constants - put them into the matrix
+ // cnst is the Zlm constants - put them into the matrix (same constants are used in jjjpar.cpp and ionpars.cpp)
  Matrix cnst(0,6,-6,6); 
 
  cnst(2,0) = 0.3153962;
@@ -313,16 +312,16 @@ while(n>0)
 
  // now calculation of the B_LM  and L_LM in meV
  for (i=1;i<=5;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r2*(*iops).alpha*ehv2; // printf("B(%i)=%g sum(B)=%g\n",i,B(i),(*iops).Blm(i));
-                   if(i!=3){(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/8/PI)*J2meV;}  //m<>0
-                   else    {(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/4/PI)*J2meV;}  //m=0
+                   if(i!=3){(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/8.0/PI)*J2meV;}  //m<>0
+                   else    {(*iops).Llm(i)+=-echarge*(*iops).r2*a0*a0*1e-20*gamma(i)*sqrt(5.0/4.0/PI)*J2meV;}  //m=0
                   }
  for (i=13;i<=21;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r4*(*iops).beta*ehv4; 
-                   if(i!=17){(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/8/PI)*J2meV;}  //m<>0
-                   else     {(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/4/PI)*J2meV;}  //m=0
+                   if(i!=17){(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/8.0/PI)*J2meV;}  //m<>0
+                   else     {(*iops).Llm(i)+=-echarge*(*iops).r4*a0*a0*a0*a0*1e-40*gamma(i)*sqrt(9.0/4.0/PI)*J2meV;}  //m=0
                     }
- for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r6*(*iops).gamma*ehv6;
-                   if(i!=39){(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/8/PI)*J2meV;}  //m<>0
-                   else     {(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*sqrt(13.0/4/PI)*J2meV;}  //m=0
+ for (i=33;i<=45;++i){(*iops).Blm(i)+=-B(i)*e*e*(*iops).r6*ehv6*(*iops).gamma;
+                   if(i!=39){(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*J2meV*sqrt(13.0/8.0/PI);}  //m<>0
+                   else     {(*iops).Llm(i)+=-echarge*(*iops).r6*a0*a0*a0*a0*a0*a0*1e-60*gamma(i)*J2meV*sqrt(13.0/4.0/PI);}  //m=0
                     }
  n=0;
  if (argc<5)
@@ -339,12 +338,21 @@ if (argc<5){fclose(table_file);}
 printf ("# 1 meV = 8.066 cm-1\n# 1 cm-1 = 0.124 meV\n");
 printf ("# 1 meV = 11.6 K\n# 1 K = 0.0862 meV\n");
 
+
+printf("#-------------------------------------------------------\n");
+printf("# Crystal Field parameters Blm in Stevens Notation (meV)\n");
+printf("#-------------------------------------------------------\n");
 (*iops).savBlm(stdout);
+printf("#--------------------------------------------------------\n");
+printf("# Crystal Field parameters Llm in Wybourne Notation (meV)\n");
+printf("#--------------------------------------------------------\n");
 (*iops).savLlm(stdout);
   fprintf(stderr,"#***********************************************************************\n");
   fprintf(stderr,"#                         end of program pointc\n");
-  fprintf(stderr,"# Reference: Ernst Bauer and Martin Rotter - Crystal field effects \n");
-  fprintf(stderr,"#            in Rare Earth Compounds, in print\n");
+  fprintf(stderr,"# Reference: Ernst Bauer and Martin Rotter - Magnetism of Complex\n");
+  fprintf(stderr,"#            Metallic Alloys: Crystalline Electric Field Effects \n");
+  fprintf(stderr,"#            Book Series on Complex Metallic Alloys - Vol. 2, edited\n");
+  fprintf(stderr,"#            by Esther Belin-Ferré, World Scientific, 2009\n");
   fprintf(stderr,"#***********************************************************************\n");
 
 }

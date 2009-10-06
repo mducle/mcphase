@@ -262,8 +262,8 @@ __declspec(dllexport)
  
    // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
    int num_op = gjmbheff.Hi()-gjmbheff.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6));
-   int i,j,gLo=gjmbheff.Lo(),gHi=gjmbheff.Hi(); std::vector<double> vgjmbH(gHi-gLo+1,0.);
-   for(i=gLo; i<=gHi; i++) vgjmbH[i] = -gjmbheff[i+1];
+   int i,j,gLo=gjmbheff.Lo(),gHi=gjmbheff.Hi(); std::vector<double> vgjmbH(gHi,0.);
+   for(i=gLo; i<=gHi; i++) vgjmbH[i-1] = -gjmbheff[i];
    sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); 
 
    // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)

@@ -8,7 +8,7 @@
 #include<mcphas.h>
 
 // maximum number of spinconfigurations allowed in phasediagramm
-#define MAXNOFSPINCF 100
+#define MAXNOFSPINCF 500
 #define MAXNOFCHARINLINE 1024
 #define MU_B 0.05788
 #define K_B  0.0862
@@ -75,6 +75,7 @@ T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1
                             if((*inputpars.jjj[l]).gJ!=0){h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;}
                             else                         {h1(im)=20*MU_B;} //just put some high field
                             mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u,(*inputpars.jjj[l]).est)(im);
+                           // printf("mmax(%i)=%g\n",inputpars.nofcomponents*(l-1)+im,mmax(inputpars.nofcomponents*(l-1)+im));
 			   }
                                         }
 for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}

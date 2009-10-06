@@ -45,13 +45,7 @@ printf("***********************************************************\n");
 		the statistical probability of each CF state has to be entered by hand.\n\
 		\n");
       printf ("\n ... to view chargeplots type: javaview chrgplt.jvx\n\n");
-      printf ("mind: 1)the 4f wavefunction R4f(r) is taken the same for all RE.\n");
-      printf ("      2) the coordinate system is xyz||cab\n\n\n");
       exit (1);
-    }
-    else
-    { printf ("#mind: 1) the 4f wavefunction R4f(r) is taken the same for all RE.\n");
-      printf ("#      2) the coordinate system is xyz||cab, i.e. Ha=Hy=%sT  Hb=Hz=%sT  Hc=Hx=%sT \n",argv[2],argv[3],argv[4]);
     }
 
   double T,ha,hb,hc;
@@ -116,24 +110,24 @@ printf("\n");
  if(jjjps.module_type==0){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
  if(jjjps.module_type==2){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=cab</title>\n", T, ha, hb, hc);}
 
-
  char * cffilenames[MAXNOFATOMS];
  cffilenames[1]=new char[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
 
  strcpy(cffilenames[1],argv[5]);
  x[1]=0;y[1]=0;z[1]=0;
+printf("hello\n");
 
 // read pointcharge-parameters 
  cf_file = fopen_errchk (argv[5], "rb");
  float par[100];par[0]=99;
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){;}
-while(pchere>0)
+while(pchere>3)
 {if(jjjps.module_type==0){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=abc\n",par[1],par[2],par[3],par[4]);}
  if(jjjps.module_type==2){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=cab\n",par[1],par[2],par[3],par[4]);}
  ++nofpc;if(nofpc>MAXNOFATOMS){fprintf(stderr,"Error chrgplt - too many pointcharges");exit(1);}
   cffilenames[1+nofpc]=new char[MAXNOFCHARINLINE];
-  sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",par[1]);
+  sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",0.529177*pow(par[1],0.3333));
   if(jjjps.module_type==0){
   x[nofpc+1]=par[2];// these are the positions in Angstroem (we set a=b=c=1A below)
   y[nofpc+1]=par[3];// however in order to be in line with the cfield xyz=cab

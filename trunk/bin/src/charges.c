@@ -189,10 +189,13 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
     Vector moments(1,ext_nof_components[ii]);
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
-            moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
+            if((*inputpars.jjj[ii]).module_type!=1&&(*inputpars.jjj[ii]).module_type!=3)
+            {moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
                                                            // module to calculate all 48 (ext_nof_components)
                                                            // higher order moments 
- 
+            }
+            else
+            {moments=0;}
 
           // output atoms and moments in primitive unit cell to stdout
               Vector dd3(1,3);
@@ -221,7 +224,6 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
   }}}}
 
 fclose(fout);
-//if(ext_nof_components<48){exit(0);} // stop if gJ=0 has been found - no charge density will be plotted
 
 //print out the long vector of moments 1-48
   printf("%s - spin configuration <Olm>(i)\n",outstr);

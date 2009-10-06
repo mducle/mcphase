@@ -137,7 +137,7 @@ jjjpar.o: jjjpar.cpp jjjpar_intmod_kramer.cpp jjjpar_intmod_brillouin.cpp jjjpar
 testspin.o: testspin.cpp testspin.hpp spincf.hpp martin.h
 	$(CCC) $(CFLAGS) $< 
 
-spincf.o: spincf.cpp spincf.hpp vector.h
+spincf.o: spincf.cpp spincf.hpp vector.h chargedensity.hpp jjjpar.hpp
 	$(CCC) $(CFLAGS) $< 
 
 chargedensity.o: chargedensity.cpp chargedensity.hpp vector.h
@@ -195,10 +195,10 @@ singleion.o: singleion.c par.hpp  martin.h vector.h
 charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h myev.h
 	$(CCC) $(CFLAGS) $<
 
-chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h ionpars.hpp
+chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h jjjpar.hpp
 	$(CCC) $(CFLAGS) $<
 
-pointc.o:  pointc.c  martin.h vector.h ionpars.hpp 
+pointc.o:  pointc.c  martin.h vector.h ionpars.hpp jjjpar.hpp
 	$(CCC) $(CFLAGS) $<
 
 addj.o: addj.c par.hpp  martin.h vector.h
@@ -241,7 +241,7 @@ spins: spincf.o spins.o martin.o  $(VOBS) chargedensity.o ionpars.o jjjpar.o $(C
 spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
 
-singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o
+singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
 charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o myev.o
@@ -250,13 +250,13 @@ charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJ
 chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o spincf.o jjjpar.o
 	$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
-pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o jjjpar.o $(FUNCTIONOBJS) 
+pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) jjjpar.o
 	$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
 
-addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o
+addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
 
-mcdiff: mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o
+mcdiff: mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o chargedensity.o
 	$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
 

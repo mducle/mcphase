@@ -101,15 +101,13 @@ void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize)
                epe = (ep + em*pow(-1.,qp)) / icfact[k]; eme = (ep - em*pow(-1.,qm)) / icfact[k];
                if(pars.n>(2*pars.l+1))
                {
-                  FM << -eme << "\n"; FP << -epe << "\n";
-                  if(pars.B(k,qp)!=0) Hrmj[i+j*icv].r -= epe * pars.B(k,qp);
-                  if(pars.B(k,qm)!=0) Hrmj[i+j*icv].i -= eme * pars.B(k,qm);
+                  if(fabs(eme)>DBL_EPSILON) { FM << -eme << "\n"; if(fabs(pars.B(k,qm))>DBL_EPSILON) Hrmj[i+j*icv].i -= eme * pars.B(k,qm); } else FM << 0 << "\n";
+                  if(fabs(eme)>DBL_EPSILON) { FP << -epe << "\n"; if(fabs(pars.B(k,qp))>DBL_EPSILON) Hrmj[i+j*icv].r -= epe * pars.B(k,qp); } else FP << 0 << "\n";
                }
                else
                {
-                  FM << eme << "\n"; FP << epe << "\n";
-                  if(pars.B(k,qp)!=0) Hrmj[i+j*icv].r += epe * pars.B(k,qp);
-                  if(pars.B(k,qm)!=0) Hrmj[i+j*icv].i += eme * pars.B(k,qm);
+                  if(fabs(eme)>DBL_EPSILON) { FM <<  eme << "\n"; if(fabs(pars.B(k,qm))>DBL_EPSILON) Hrmj[i+j*icv].i += eme * pars.B(k,qm); } else FM << 0 << "\n";
+                  if(fabs(eme)>DBL_EPSILON) { FP <<  epe << "\n"; if(fabs(pars.B(k,qp))>DBL_EPSILON) Hrmj[i+j*icv].r += epe * pars.B(k,qp); } else FP << 0 << "\n";
                }
             }
             FM.close(); FP.close();
@@ -134,7 +132,7 @@ void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize)
    F77NAME(zgemm)(&transpose,&notranspose,&Hcso_sz,&cb,&Hcso_sz,&zalpha,Srm,&Hcso_sz,Vcso,&Hcso_sz,&zbeta,zmt,&Hcso_sz);
    F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hcso_sz,&zalpha,Vcso,&Hcso_sz,zmt,&Hcso_sz,&zbeta,Srj,&cb); delete[]Srm; delete[]zmt;
 
-   double sqrt2 = sqrt(2.);
+   double sqrt2 = sqrt(2.),elem;
    char fSx[] = "results/ic1ion.m1"; std::fstream FSx; FSx.open(fSx, std::fstream::out); FSx.precision(24);
    char fLx[] = "results/ic1ion.m2"; std::fstream FLx; FLx.open(fLx, std::fstream::out); FLx.precision(24);
    char fSy[] = "results/ic1ion.m3"; std::fstream FSy; FSy.open(fSy, std::fstream::out); FSy.precision(24);
@@ -145,10 +143,13 @@ void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize)
    {
       ep = pow(-1.,(J2r[id[i]]-Jz2r[i])/2.) * threej(J2r[id[i]],2,J2r[id[j]],-Jz2r[i], 2,Jz2r[j])/sqrt2;
       em = pow(-1.,(J2r[id[i]]-Jz2r[i])/2.) * threej(J2r[id[i]],2,J2r[id[j]],-Jz2r[i],-2,Jz2r[j])/sqrt2;
-      FLx << (em-ep)*Lrj[id[i]+id[j]*cb].r << "\n"; FLy << (em+ep)*Lrj[id[i]+id[j]*cb].r << "\n";
-      FSx << (em-ep)*Srj[id[i]+id[j]*cb].r << "\n"; FSy << (em+ep)*Srj[id[i]+id[j]*cb].r << "\n";
+      elem = (em-ep)*Lrj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FLx << elem << "\n"; else FLx << 0 << "\n";
+      elem = (em+ep)*Lrj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FLy << elem << "\n"; else FLy << 0 << "\n";
+      elem = (em-ep)*Srj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FSx << elem << "\n"; else FSx << 0 << "\n";
+      elem = (em+ep)*Srj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FSy << elem << "\n"; else FSy << 0 << "\n";
       ep = pow(-1.,(J2r[id[i]]-Jz2r[i])/2.) * threej(J2r[id[i]],2,J2r[id[j]],-Jz2r[i], 0,Jz2r[j]);
-      FLz << ep*Lrj[id[i]+id[j]*cb].r << "\n"; FSz << ep*Srj[id[i]+id[j]*cb].r << "\n";
+      elem = ep*Lrj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FLz << elem << "\n"; else FLz << 0 << "\n";
+      elem = ep*Srj[id[i]+id[j]*cb].r; if(fabs(elem)>DBL_EPSILON) FSz << elem << "\n"; else FSz << 0 << "\n";
    }
    FSx.close(); FLx.close(); FSy.close(); FLy.close(); FSz.close(); FLz.close(); delete[]Lrj; delete[]Srj; delete[]Vcso;
 }
