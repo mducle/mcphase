@@ -140,22 +140,35 @@ __declspec(dllexport)
          if(pars.spectrelevels==-2)
          {
             std::cerr << "Trying to determine optimal number of levels for spectre... ";
+            std::fstream FH; FH.open("results/ic1ion.spectre", std::fstream::out);
             sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
             std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
-            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); int cbbest=1;
-            Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.lcalc(pars,Jm); double Unew,Ubest,Uref,dbest=DBL_MAX,dnew=DBL_MAX;
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); int cbbest=1,ibest=1;
+            Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm); 
+            double Uref,dbest=DBL_MAX,dnew=DBL_MAX; std::vector<double> vBest,vNew; // double Unew,Ubest;
             std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel); Uref=vJ[J.Hi()-J.Lo()+2];
+            FH << "\nRef:\t["; for(i=0; i<(int)vJ.size(); i++) FH << vJ[i] << "\t"; FH << "]\n";
             for(int cb=1; cb<=Hic.nr(); cb++)
             {
                pars.spectrelevels=cb; spectre_hmltn(pars,est,parval.size());
                std::vector<double> vJt = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
-               if(cb==1) { Ubest = vJt[J.Hi()+2]; dbest = fabs(Ubest-Uref); if(dbest<DBL_EPSILON) break; else continue; }
+               FH << "cb=" << cb << "\t["; for(i=J.Lo(); i<(int)vJt.size(); i++) FH << vJt[i] << "\t"; FH << "]\n";
+               if(cb==1) //{ Ubest = vJt[J.Hi()+2]; dbest = fabs(Ubest-Uref); if(dbest<DBL_EPSILON) break; else continue; }
+               { 
+                  dbest=0.; for(i=J.Lo(); i<=J.Hi(); i++) dbest+=fabs(vJ[i-J.Lo()]-vJt[i]); vBest=vJt;
+//FH << "\tdnew=" << dnew << "\tdbest=" << dbest << "\n";
+               } 
                else
                { 
-                  Unew = vJt[J.Hi()+2]; if(fabs(Unew-Uref)>dnew) break; dnew = fabs(Unew-Uref);
-                  if(dnew<dbest) { Ubest=Unew; dbest=dnew; cbbest=cb; }
+                  vNew = vJt; double dt=0.; for(i=J.Lo(); i<=J.Hi(); i++) dt+=fabs(vJ[i-J.Lo()]-vJt[i]); 
+//FH << "\tdnew=" << dnew << "\tdbest=" << dbest << "\tdt=" << dt << "\n";
+                  dnew = dt; if(dnew<dbest) { vBest=vNew; dbest=dnew; cbbest=cb; } 
+                  if(dnew>dbest) ibest++; if(ibest==5) break;  
+//                Unew = vJt[J.Hi()+2]; if(fabs(Unew-Uref)<dnew) ibest++; if(ibest==5) break; dnew = fabs(Unew-Uref);
+//                if(dnew<dbest) { Ubest=Unew; dbest=dnew; cbbest=cb; }
                } 
             }
+            FH.close();
             pars.spectrelevels=cbbest; std::cerr << cbbest << " levels seems optimal\n";
          }
          spectre_hmltn(pars,est,parval.size());

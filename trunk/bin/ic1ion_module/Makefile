@@ -128,10 +128,10 @@ libs/libarpack.a:
 
 ifdef integral
 ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
-	$(LINKER) -o ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
+	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
 else
 ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o
-	$(LINKER) -o ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)
+	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)
 endif
 
 ic1ion.o: ic1ion.cpp maths.hpp states.hpp ic1ion.hpp
@@ -157,9 +157,9 @@ endif
 
 ic1ion.so: checkgcc libs/libarpack.a $(OBJ) ic1ion.o spectre.o ic1ion_module.o
 ifdef WINDOWS
-	$(LINKER) -o ic1ion.dll ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
+	$(LINKER) -o ic1ion.so ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS) -Wl,--out-implib,libic1ion_module.a
 else
-	$(LINKER) -o ic1ion.so  ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS)
+	$(LINKER) -o ic1ion.so ic1ion_module.o ic1ion.o spectre.o $(OBJ) $(VECOBJ) -shared $(LDFLAGS)
 endif
 
 # Patern rules

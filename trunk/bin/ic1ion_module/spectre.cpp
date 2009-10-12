@@ -159,7 +159,7 @@ void spectre_hmltn(icpars &pars, ComplexMatrix &est, int parvalsize)
 // --------------------------------------------------------------------------------------------------------------- //
 std::vector<double> spectre_expJ(icpars &pars, ComplexMatrix &est, int parvalsize, Vector &gjmbH, int Jlo, int Jhi, double T)
 {
-   std::vector<double> J(Jhi+2,0.);
+   std::vector<double> J(Jhi+3,0.);
    // Reloads the magnetic operator matrix in the rotated basis
    int i,icv = (int)real(est[0][parvalsize/2+1]); char fn[] = "results/ic1ion.mq"; complexdouble *Jm = new complexdouble[icv*icv]; double elem;
  /*int Jhi = (J.Hi()>6) ? 6 : J.Hi();*/ memset(Jm,0,icv*icv*sizeof(complexdouble)); std::fstream FILEIN; 

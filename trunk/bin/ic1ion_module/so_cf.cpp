@@ -418,7 +418,7 @@ sMat<double> racah_mumat(int n, int q, orbital e_l)
 // --------------------------------------------------------------------------------------------------------------- //
 void racah_mumat(int n, int q, sMat<double> &L1q, sMat<double> &S1q, orbital e_l)
 {
-   bool df;
+   bool df=false;
    if(e_l==D) df = true;
    else if(e_l==F) df = false;
    else { std::cerr << "racah_mumat(): Only d- and f- configurations are implemented.\n"; }
