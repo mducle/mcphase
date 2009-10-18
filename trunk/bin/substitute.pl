@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 
+
 # program to replace text in several files with another text
 
 unless ($#ARGV >1) 
@@ -15,6 +16,8 @@ exit 0;}
 $colx=$ARGV[0];shift @ARGV; 
 
 $coly=$ARGV[0];shift @ARGV; 
+
+@ARGV=map{glob($_)}@ARGV;
 
 print "substituting '".$colx."' with '".$coly."' in \n"; 
 

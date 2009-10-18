@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 #\begin{verbatim}
 
@@ -49,7 +50,7 @@ $col2=$ARGV[0];shift @ARGV;
 
       close Fin;
 
-      print Fout $command;
+ #     print Fout $command;
 
       close Fout;
 

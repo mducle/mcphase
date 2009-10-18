@@ -83,7 +83,7 @@ CFOBJS= cfield.o diahermx.o eingabe.o intensit.o komplex.o matrix.o mb11a.o mini
 ${CFOBJS}: types.c
 
 # used for internal module in mcphas and mcdisp
-cfieldrout.o: cfieldrout.c
+cfieldrout.o: cfieldrout.c $(VECOBJS) $(CFOBJS) 
 
 #	$(CC) -o cfieldrout.o cfieldrout.c  $(INCLDIRS)
 

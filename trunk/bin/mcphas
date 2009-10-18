@@ -33,7 +33,7 @@ cat << EOF > results/.fe_status.dat
 EOF
 java display 1 2 ./results/.fe_status.dat 1 3 ./results/.fe_status.dat 1 5 ./results/.fe_status.dat &
 status1id=$!
-java display 1 4 ./results/.fe_status.dat &
+java display 1 4 ./results/.fe_status.dat 1 5 ./results/.fe_status.dat &
 status2id=$!
 fi
 

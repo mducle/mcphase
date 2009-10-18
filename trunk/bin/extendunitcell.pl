@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 use FileHandle;
 
@@ -16,7 +17,7 @@ print " usage: extendunitcell 3 1 4\n\n";
 
 print " meaning take mcphas.j, mcphas.tst and mcdiff.in and generate an extended description of the unit cell 3xr1,1xr2,4xr3\n";
 
-print " put result into results/extend.j, results/extend.tst and results/extend.in\n";
+print " put result into results/extend.j, results/extend.tst and results/extend.head (only header without magnetic atoms is generated from mcdiff.in)\n";
 
  exit 0;}
 
@@ -29,12 +30,11 @@ my ($n2) = $ARGV[0];shift @ARGV;
 my ($n3) = $ARGV[0]; 
 
 
-
-print "reading mcphas.j ....\n";
+ print "reading mcphas.j ....\n";
 
  my ($latt,$p) = getlattice("./mcphas.j");
 
- my ($a,$b,$c,$nofa) = @{$latt};
+ my ($a,$b,$c,$nofa,$nofcomponents) = @{$latt};
 
  print "a=".$a." b=".$b." c=".$c."\n";
 
@@ -46,11 +46,14 @@ print "reading mcphas.j ....\n";
 
  #initialize output file extendj.j
 
- my ($h,$l)=printlattice("./mcphas.j",$n1,$n2,$n3,">./results/extend.j");
+ my ($l)=printlattice("./mcphas.j",$n1,$n2,$n3,">./results/extend.j");
 
-  printneighbourlist($h,$l,$n1,$n2,$n3,$p,$nofa);   
+ printneighbourlist("./mcphas.j",$l,$n1,$n2,$n3,$p,$nofa);   
 
-  endprint($h,$l);   
+ close $l;
+   
+
+
 
  # extend lattice
 
@@ -65,13 +68,11 @@ print "reading mcphas.j ....\n";
  print "new primitive lattice[abc]:".$p."\n";
 
 
+if (open ($h, "mcphas.tst")){
 
-print "reading mcphas.tst ...\n";
+ print "reading mcphas.tst ...\n";
 
-
-
-    unless (open ($h, "mcphas.tst")){die "\n error:unable to open mcphas.tst\n";}   
-   
+ $nofcomponents=0;   
  open ($l,">./results/extend.tst"); 
 
  while(<$h>)
@@ -80,11 +81,9 @@ print "reading mcphas.tst ...\n";
 
   {$text=$_;
 
-   if (/^.*\Qnofcomponents=\E/){($nofcomponents)=(/^.*\Qnofcomponents=\E\s*([^\s]*)\s/);}
-
-   $text=~s/\Qnofatoms=\E\s*[\d.]+/nofatoms=$nofatoms /;
-
-   print $l ($text);
+  if($nofcomponents==0){($nofcomponents)=extract("nofcomponents",$text);}
+  $text=~s/\Qnofatoms=\E\s*[\d.]+/nofatoms=$nofatoms /;
+  print $l ($text);
 
   }
 
@@ -94,16 +93,18 @@ print "reading mcphas.tst ...\n";
 
    my @list =();
 
-   push(@list,new PDL(split " "));
-
+   push(@list,new PDL([split " "]));
    @dims=$list[0]->dims; $nr1=$dims[0];
+   print @list;
+   print @dims;
+   print "  $nr1\n";
 
     for($i=2;$i<=$nofcomponents;++$i)
 
      {$_=<$h>;push(@list,new PDL(split " "));}
 
    $nr2=1;$nr3=1;
-
+   
    while(<$h>)
 
    {last if !/^\s*\d/;
@@ -167,18 +168,22 @@ print "reading mcphas.tst ...\n";
   }
 
 
-
+ 
  } 
 
  close $h,$l;
 
+}
+
+
+else {print "\n unable to open mcphas.tst\n";}   
 
 
 
 
-print "reading mcdiff.in ...\n";
+unless (open ($h,"mcdiff.in")) {print "\nunable to read mcdiff.in\n";exit(0);}
 
- open ($h,"mcdiff.in");
+ print "reading mcdiff.in ...\n";
 
  open ($l,">./results/extend.head"); 
 
@@ -256,8 +261,6 @@ print "reading mcdiff.in ...\n";
 
 #-----------------------------------------------------------------------
 
-
-
 # Get lattic data, reading it from file 
 
 sub getlattice {
@@ -267,6 +270,8 @@ sub getlattice {
     my $h = new FileHandle;
 
     my $n = 0;
+
+    $nofcomponents=0;
 
 #     my @xlist = ();
 
@@ -280,71 +285,49 @@ sub getlattice {
 
       # detect a= b= c= ...
 
-      if ($a==0&&/^#\s*\Qa=\E/){($a)=(/^#\s*\Qa=\E\s*([^\s]*)\s/);}
+         
+      if ($a==0){($a)=extract("a",$_);}
+      if ($b==0){($b)=extract("b",$_);}
+      if ($c==0){($c)=extract("c",$_);}
 
-      if ($b==0&&/^.*\Qb=\E/){($b)=(/^.*\Qb=\E\s*([^\s]*)\s/);}
+      if ($r1x==0){($r1x)=extract("r1a",$_);}
+      if ($r1y==0){($r1y)=extract("r1b",$_);}
+      if ($r1z==0){($r1z)=extract("r1c",$_);}
+      if ($r2x==0){($r2x)=extract("r2a",$_);}
+      if ($r2y==0){($r2y)=extract("r2b",$_);}
+      if ($r2z==0){($r2z)=extract("r2c",$_);}
+      if ($r3x==0){($r3x)=extract("r3a",$_);}
+      if ($r3y==0){($r3y)=extract("r3b",$_);}
+      if ($r3z==0){($r3z)=extract("r3c",$_);}
 
-      if ($c==0&&/^.*\Qc=\E/){($c)=(/^.*\Qc=\E\s*([^\s]*)\s/);}
+      if ($r1x==0){($r1x)=extract("r1x",$_);}
+      if ($r1y==0){($r1y)=extract("r1y",$_);}
+      if ($r1z==0){($r1z)=extract("r1z",$_);}
+      if ($r2x==0){($r2x)=extract("r2x",$_);}
+      if ($r2y==0){($r2y)=extract("r2y",$_);}
+      if ($r2z==0){($r2z)=extract("r2z",$_);}
+      if ($r3x==0){($r3x)=extract("r3x",$_);}
+      if ($r3y==0){($r3y)=extract("r3y",$_);}
+      if ($r3z==0){($r3z)=extract("r3z",$_);}
 
+      if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
+      if ($nofcomponents==0){($nofcomponents)=extract("nofcomponents",$_);}
 
+      if (/^(#!|[^#])*nofneighbours\s*=\s*/){++$n;
 
-      if (/^.*\Qr1x=\E/){($r1x)=(/^.*\Qr1x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1y=\E/){($r1y)=(/^.*\Qr1y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1z=\E/){($r1z)=(/^.*\Qr1z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2x=\E/){($r2x)=(/^.*\Qr2x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2y=\E/){($r2y)=(/^.*\Qr2y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2z=\E/){($r2z)=(/^.*\Qr2z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3x=\E/){($r3x)=(/^.*\Qr3x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3y=\E/){($r3y)=(/^.*\Qr3y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3z=\E/){($r3z)=(/^.*\Qr3z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1a=\E/){($r1x)=(/^.*\Qr1a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1b=\E/){($r1y)=(/^.*\Qr1b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1c=\E/){($r1z)=(/^.*\Qr1c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2a=\E/){($r2x)=(/^.*\Qr2a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2b=\E/){($r2y)=(/^.*\Qr2b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2c=\E/){($r2z)=(/^.*\Qr2c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3a=\E/){($r3x)=(/^.*\Qr3a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3b=\E/){($r3y)=(/^.*\Qr3b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3c=\E/){($r3z)=(/^.*\Qr3c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qnofatoms=\E/){($nofatoms)=(/^.*\Qnofatoms=\E\s*([^\s]*)\s/);}
-
-
-
-      if (/^.*\Qnofneighbours=\E/){++$n;
-
-                                   ($nofneighbours[$n])=(/^.*\Qnofneighbours=\E\s*([^\s]*)\s/);
-
-				   if (/^.*\Qx=\E/){($x[$n])=(/^.*\Qx=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qy=\E/){($y[$n])=(/^.*\Qy=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qz=\E/){($z[$n])=(/^.*\Qz=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qda=\E/){($x[$n])=(/^.*\Qda=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qdb=\E/){($y[$n])=(/^.*\Qdb=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qdc=\E/){($z[$n])=(/^.*\Qdc=\E\s*([^\s]*)\s/);}
-
-				   ($gJ[$n])=(/^.*\QgJ=\E\s*([^\s]*)\s/);
+                                   ($nofneighbours[$n])=extract("nofneighbours",$_);
+                                   ($x[$n])=extract("da",$_);
+                                   ($y[$n])=extract("db",$_);
+                                   ($z[$n])=extract("dc",$_);
+                                   ($gJ[$n])=extract("gJ",$_);
+				   if (/^.*\Qx=\E/){($x[$n])=extract("x",$_);}
+				   if (/^.*\Qy=\E/){($y[$n])=extract("y",$_);}
+				   if (/^.*\Qz=\E/){($z[$n])=extract("z",$_);}
+				     ($cffilename)=extractstring("cffilename",$_);
+                                     ($charge[$n])=extractfromfile("CHARGE",$cffilename);
+                                     if($charge[$n]==""){$charge[$n]=$cffilename;}                                 
+                                             #               print "$cffilename  charge=".$charge[$n]."\n";
+                                                           
 
 				  }
 
@@ -356,7 +339,9 @@ sub getlattice {
 
                          return undef;}
 
-     return ([$a,$b,$c,$nofatoms],pdl [[$r1x,$r1y,$r1z],[$r2x,$r2y,$r2z],[$r3x,$r3y,$r3z]]);
+     if($nofcomponents==0) {$nofcomponents=3;}
+
+     return ([$a,$b,$c,$nofatoms,$nofcomponents],pdl [[$r1x,$r1y,$r1z],[$r2x,$r2y,$r2z],[$r3x,$r3y,$r3z]]);
 
     } else {
 
@@ -367,7 +352,6 @@ sub getlattice {
     }
 
 }
-
 
 
 sub printlattice {
@@ -386,57 +370,43 @@ sub printlattice {
 
      while(<$h>)
 
-     {#next if /^\s*#/;
+     {$text=$_;
 
-      $text=$_;
+      
+      ($r1x)=extract("r1x",$text);if($r1x!=""){$r1x*=$n1;$text=~s/\Qr1x=\E\s*[\d.]+/r1a=$r1x /;}
+      ($r1y)=extract("r1y",$text);if($r1y!=""){$r1y*=$n1;$text=~s/\Qr1y=\E\s*[\d.]+/r1b=$r1y /;}
+      ($r1z)=extract("r1z",$text);if($r1z!=""){$r1z*=$n1;$text=~s/\Qr1z=\E\s*[\d.]+/r1c=$r1z /;}
 
-      if (/^.*\Qr1x=\E/){($r1x)=(/^.*\Qr1x=\E\s*([^\s]*)\s/);$r1x*=$n1;$text=~s/\Qr1x=\E\s*[\d.]+/r1x=$r1x /;}
+      ($r2x)=extract("r2x",$text);if($r2x!=""){$r2x*=$n2;$text=~s/\Qr2x=\E\s*[\d.]+/r2a=$r2x /;}
+      ($r2y)=extract("r2y",$text);if($r2y!=""){$r2y*=$n2;$text=~s/\Qr2y=\E\s*[\d.]+/r2b=$r2y /;}
+      ($r2z)=extract("r2z",$text);if($r2z!=""){$r2z*=$n2;$text=~s/\Qr2z=\E\s*[\d.]+/r2c=$r2z /;}
 
-      if (/^.*\Qr1y=\E/){($r1y)=(/^.*\Qr1y=\E\s*([^\s]*)\s/);$r1y*=$n1;$text=~s/\Qr1y=\E\s*[\d.]+/r1y=$r1y /;}
+      ($r3x)=extract("r3x",$text);if($r3x!=""){$r3x*=$n3;$text=~s/\Qr3x=\E\s*[\d.]+/r3a=$r3x /;}
+      ($r3y)=extract("r3y",$text);if($r3y!=""){$r3y*=$n3;$text=~s/\Qr3y=\E\s*[\d.]+/r3b=$r3y /;}
+      ($r3z)=extract("r3z",$text);if($r3z!=""){$r3z*=$n3;$text=~s/\Qr3z=\E\s*[\d.]+/r3c=$r3z /;}
 
-      if (/^.*\Qr1z=\E/){($r1z)=(/^.*\Qr1z=\E\s*([^\s]*)\s/);$r1z*=$n1;$text=~s/\Qr1z=\E\s*[\d.]+/r1z=$r1z /;}
+      ($r1a)=extract("r1a",$text);if($r1a!=""){$r1a*=$n1;$text=~s/\Qr1a=\E\s*[\d.]+/r1a=$r1a /;}
+      ($r1b)=extract("r1b",$text);if($r1b!=""){$r1b*=$n1;$text=~s/\Qr1b=\E\s*[\d.]+/r1b=$r1b /;}
+      ($r1c)=extract("r1c",$text);if($r1c!=""){$r1c*=$n1;$text=~s/\Qr1c=\E\s*[\d.]+/r1c=$r1c /;}
 
-      if (/^.*\Qr2x=\E/){($r2x)=(/^.*\Qr2x=\E\s*([^\s]*)\s/);$r2x*=$n2;$text=~s/\Qr2x=\E\s*[\d.]+/r2x=$r2x /;}
+      ($r2a)=extract("r2a",$text);if($r2a!=""){$r2a*=$n2;$text=~s/\Qr2a=\E\s*[\d.]+/r2a=$r2a /;}
+      ($r2b)=extract("r2b",$text);if($r2b!=""){$r2b*=$n2;$text=~s/\Qr2b=\E\s*[\d.]+/r2b=$r2b /;}
+      ($r2c)=extract("r2c",$text);if($r2c!=""){$r2c*=$n2;$text=~s/\Qr2c=\E\s*[\d.]+/r2c=$r2c /;}
 
-      if (/^.*\Qr2y=\E/){($r2y)=(/^.*\Qr2y=\E\s*([^\s]*)\s/);$r2y*=$n2;$text=~s/\Qr2y=\E\s*[\d.]+/r2y=$r2y /;}
+      ($r3a)=extract("r3a",$text);if($r3a!=""){$r3a*=$n3;$text=~s/\Qr3a=\E\s*[\d.]+/r3a=$r3a /;}
+      ($r3b)=extract("r3b",$text);if($r3b!=""){$r3b*=$n3;$text=~s/\Qr3b=\E\s*[\d.]+/r3b=$r3b /;}
+      ($r3c)=extract("r3c",$text);if($r3c!=""){$r3c*=$n3;$text=~s/\Qr3c=\E\s*[\d.]+/r3c=$r3c /;}
 
-      if (/^.*\Qr2z=\E/){($r2z)=(/^.*\Qr2z=\E\s*([^\s]*)\s/);$r2z*=$n2;$text=~s/\Qr2z=\E\s*[\d.]+/r2z=$r2z /;}
+      ($nofatoms)=extract("nofatoms",$text);if($nofatoms!=""){$nofatoms*=$n1*$n2*$n3;$text=~s/\Qnofatoms=\E\s*[\d.]+/nofatoms=$nofatoms /;}
 
-      if (/^.*\Qr3x=\E/){($r3x)=(/^.*\Qr3x=\E\s*([^\s]*)\s/);$r3x*=$n3;$text=~s/\Qr3x=\E\s*[\d.]+/r3x=$r3x /;}
-
-      if (/^.*\Qr3y=\E/){($r3y)=(/^.*\Qr3y=\E\s*([^\s]*)\s/);$r3y*=$n3;$text=~s/\Qr3y=\E\s*[\d.]+/r3y=$r3y /;}
-
-      if (/^.*\Qr3z=\E/){($r3z)=(/^.*\Qr3z=\E\s*([^\s]*)\s/);$r3z*=$n3;$text=~s/\Qr3z=\E\s*[\d.]+/r3z=$r3z /;}
-
-      if (/^.*\Qr1a=\E/){($r1a)=(/^.*\Qr1a=\E\s*([^\s]*)\s/);$r1a*=$n1;$text=~s/\Qr1a=\E\s*[\d.]+/r1a=$r1a /;}
-
-      if (/^.*\Qr1b=\E/){($r1b)=(/^.*\Qr1b=\E\s*([^\s]*)\s/);$r1b*=$n1;$text=~s/\Qr1b=\E\s*[\d.]+/r1b=$r1b /;}
-
-      if (/^.*\Qr1c=\E/){($r1c)=(/^.*\Qr1c=\E\s*([^\s]*)\s/);$r1c*=$n1;$text=~s/\Qr1c=\E\s*[\d.]+/r1c=$r1c /;}
-
-      if (/^.*\Qr2a=\E/){($r2a)=(/^.*\Qr2a=\E\s*([^\s]*)\s/);$r2a*=$n2;$text=~s/\Qr2a=\E\s*[\d.]+/r2a=$r2a /;}
-
-      if (/^.*\Qr2b=\E/){($r2b)=(/^.*\Qr2b=\E\s*([^\s]*)\s/);$r2b*=$n2;$text=~s/\Qr2b=\E\s*[\d.]+/r2b=$r2b /;}
-
-      if (/^.*\Qr2c=\E/){($r2c)=(/^.*\Qr2c=\E\s*([^\s]*)\s/);$r2c*=$n2;$text=~s/\Qr2c=\E\s*[\d.]+/r2c=$r2c /;}
-
-      if (/^.*\Qr3a=\E/){($r3a)=(/^.*\Qr3a=\E\s*([^\s]*)\s/);$r3a*=$n3;$text=~s/\Qr3a=\E\s*[\d.]+/r3a=$r3a /;}
-
-      if (/^.*\Qr3b=\E/){($r3b)=(/^.*\Qr3b=\E\s*([^\s]*)\s/);$r3b*=$n3;$text=~s/\Qr3b=\E\s*[\d.]+/r3b=$r3b /;}
-
-      if (/^.*\Qr3c=\E/){($r3c)=(/^.*\Qr3c=\E\s*([^\s]*)\s/);$r3c*=$n3;$text=~s/\Qr3c=\E\s*[\d.]+/r3c=$r3c /;}
-
-      if (/^.*\Qnofatoms=\E/){($nofatoms)=(/^.*\Qnofatoms=\E\s*([^\s]*)\s/);$nofatoms*=$n1*$n2*$n3;$text=~s/\Qnofatoms=\E\s*[\d.]+/nofatoms=$nofatoms /;}
-
-
-
-      last if /^#.*\Q**********\E/;
+      last if /^(#!|[^#])*nofneighbours\s*=\s*/;
 
       print $l ($text);      
 
      }
 
- return ($h,$l);
+ close $h;
+ return ($l);
 
 }
 
@@ -444,9 +414,14 @@ sub printlattice {
 
 sub printneighbourlist {
 
-  my ($h,$l,$n1,$n2,$n3,$p,$nofatoms)=@_;   
+  my ($filein,$l,$n1,$n2,$n3,$p,$nofatoms)=@_;   
 
+  open($h,$filein);
 
+     while(<$h>)
+     {last if /^(#!|[^#])*nofatoms\s*=\s*/;}
+     while(<$h>)
+     {last if /^#.*\Q**********\E/;}
 
   for($n=1;$n<=$nofatoms;++$n)
 
@@ -484,7 +459,6 @@ sub printneighbourlist {
 
      # print out neighbor
 
-     print $l ("#*************************************************************************\n");
 
      for($i=1;$i<=$nn;++$i)
 
@@ -499,6 +473,7 @@ sub printneighbourlist {
         print $l ($text[$i]) 
 
        }
+     print $l ("#*************************************************************************\n");
 
    }}}
 
@@ -510,13 +485,69 @@ sub printneighbourlist {
 
 
 
-sub endprint {
 
-  my ($h,$l)=@_;   
+# **********************************************************************************************
+# extracts number from string
+# 
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+# 
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extract { 
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
 
-     close $h; 
+# **********************************************************************************************
+# extracts string from string
+# 
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+# 
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extractstring { 
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*\b([^\n\s]+)[\s\n]/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
 
-     close $l;
 
-}
 
+
+# **********************************************************************************************
+# extracts number from file
+# 
+# for example somewhere in a file data.dat is written the text "sta=0.24"
+# to extract this number 0.24 just use:         
+#
+# ($standarddeviation)=extractfromfile("sta","data.dat");
+# 
+# ... it stores 0.24 in the variable $standarddeviation
+#
+sub extractfromfile { 
+             my ($variable,$filename)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if(open (Fin,$filename))
+             {while($line=<Fin>){
+                if($line=~/^.*$var\s*=/) {($value)=($line=~m|$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);}                                        }
+              close Fin;
+       	     }
+             else
+             {
+             print STDERR "Warning: failed to read data file \"$filename\"\n";
+             }
+             return $value;
+            }
+# **********************************************************************************************

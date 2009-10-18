@@ -22,7 +22,8 @@ print " meaning take mcphas.j, generate all neighbors within sphere of 23.3A and
 print " put them into makenn.j, in interaction columns put the classical dipole interaction\n";
 
 print " the output values are sorted by ascending distance\n";
-
+print " Note that in order to use makenn you have to set up a \n";
+print " working  mcphas.j file with the crystal structure. \n\n";
 print " option -rkky A(meV) kf(1/A) calculates the rkky interaction\n";
 
 print "              according to J(R)=A.cos(2.kf.R)/(2.kf.R)^3\n";
@@ -69,8 +70,11 @@ print "              with RD=sqrt(Ra^2/Da^2+Rb^2/Db^2+Rc^2/Dc^2)\n";
 
 print "              the exponential alpha is conveniently put to  about 1\n";
 
-print " option -d puts to the last column the distance of the neighbors (A)\n";
+print " option -d puts to the last column the distance of the neighbors (A)\n\n";
 
+print " The neigbours of each atom are also stored in seperate files\n";
+print " results\/makenn.a*.pc, which can be used with the program pointc to evaluate\n";
+print " the pointcharge model and calculate crystal field paramaters.\n\n";
  exit 0;}
 
 
@@ -331,7 +335,8 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
  endprint($h,$l);   
 
- print "file results/makenn.j created\n";
+ print "created files: results/makenn.j     (interaction parameters)\n";
+ print "               results/makenn.a*.pc (pointcharge environment files)\n";
 print "********************************************************\n";
 print "               end of program makenn\n";
 print " Reference: M. Rotter et al. PRB 68 (2003) 144418\n";
@@ -465,72 +470,49 @@ sub getlattice {
 
       # detect a= b= c= ...
 
-      if ($a==0&&/^#\s*\Qa=\E/){($a)=(/^#\s*\Qa=\E\s*([^\s]*)\s/);}
+         
+      if ($a==0){($a)=extract("a",$_);}
+      if ($b==0){($b)=extract("b",$_);}
+      if ($c==0){($c)=extract("c",$_);}
 
-      if ($b==0&&/^.*\Qb=\E/){($b)=(/^.*\Qb=\E\s*([^\s]*)\s/);}
+      if ($r1x==0){($r1x)=extract("r1a",$_);}
+      if ($r1y==0){($r1y)=extract("r1b",$_);}
+      if ($r1z==0){($r1z)=extract("r1c",$_);}
+      if ($r2x==0){($r2x)=extract("r2a",$_);}
+      if ($r2y==0){($r2y)=extract("r2b",$_);}
+      if ($r2z==0){($r2z)=extract("r2c",$_);}
+      if ($r3x==0){($r3x)=extract("r3a",$_);}
+      if ($r3y==0){($r3y)=extract("r3b",$_);}
+      if ($r3z==0){($r3z)=extract("r3c",$_);}
 
-      if ($c==0&&/^.*\Qc=\E/){($c)=(/^.*\Qc=\E\s*([^\s]*)\s/);}
+      if ($r1x==0){($r1x)=extract("r1x",$_);}
+      if ($r1y==0){($r1y)=extract("r1y",$_);}
+      if ($r1z==0){($r1z)=extract("r1z",$_);}
+      if ($r2x==0){($r2x)=extract("r2x",$_);}
+      if ($r2y==0){($r2y)=extract("r2y",$_);}
+      if ($r2z==0){($r2z)=extract("r2z",$_);}
+      if ($r3x==0){($r3x)=extract("r3x",$_);}
+      if ($r3y==0){($r3y)=extract("r3y",$_);}
+      if ($r3z==0){($r3z)=extract("r3z",$_);}
 
+      if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
+      if ($nofcomponents==0){($nofcomponents)=extract("nofcomponents",$_);}
 
+      if (/^(#!|[^#])*nofneighbours\s*=\s*/){++$n;
 
-      if (/^.*\Qr1x=\E/){($r1x)=(/^.*\Qr1x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1y=\E/){($r1y)=(/^.*\Qr1y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1z=\E/){($r1z)=(/^.*\Qr1z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2x=\E/){($r2x)=(/^.*\Qr2x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2y=\E/){($r2y)=(/^.*\Qr2y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2z=\E/){($r2z)=(/^.*\Qr2z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3x=\E/){($r3x)=(/^.*\Qr3x=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3y=\E/){($r3y)=(/^.*\Qr3y=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3z=\E/){($r3z)=(/^.*\Qr3z=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1a=\E/){($r1x)=(/^.*\Qr1a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1b=\E/){($r1y)=(/^.*\Qr1b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr1c=\E/){($r1z)=(/^.*\Qr1c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2a=\E/){($r2x)=(/^.*\Qr2a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2b=\E/){($r2y)=(/^.*\Qr2b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr2c=\E/){($r2z)=(/^.*\Qr2c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3a=\E/){($r3x)=(/^.*\Qr3a=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3b=\E/){($r3y)=(/^.*\Qr3b=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qr3c=\E/){($r3z)=(/^.*\Qr3c=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qnofatoms=\E/){($nofatoms)=(/^.*\Qnofatoms=\E\s*([^\s]*)\s/);}
-
-      if (/^.*\Qnofcomponents=\E/){($nofcomponents)=(/^.*\Qnofcomponents=\E\s*([^\s]*)\s/);}
-
-
-      if (/^.*\Qnofneighbours=\E/){++$n;
-
-                                   ($nofneighbours[$n])=(/^.*\Qnofneighbours=\E\s*([^\s]*)\s/);
-
-				   if (/^.*\Qx=\E/){($x[$n])=(/^.*\Qx=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qy=\E/){($y[$n])=(/^.*\Qy=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qz=\E/){($z[$n])=(/^.*\Qz=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qda=\E/){($x[$n])=(/^.*\Qda=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qdb=\E/){($y[$n])=(/^.*\Qdb=\E\s*([^\s]*)\s/);}
-
-				   if (/^.*\Qdc=\E/){($z[$n])=(/^.*\Qdc=\E\s*([^\s]*)\s/);}
-
-				   ($gJ[$n])=(/^.*\QgJ=\E\s*([^\s]*)\s/);
+                                   ($nofneighbours[$n])=extract("nofneighbours",$_);
+                                   ($x[$n])=extract("da",$_);
+                                   ($y[$n])=extract("db",$_);
+                                   ($z[$n])=extract("dc",$_);
+                                   ($gJ[$n])=extract("gJ",$_);
+				   if (/^.*\Qx=\E/){($x[$n])=extract("x",$_);}
+				   if (/^.*\Qy=\E/){($y[$n])=extract("y",$_);}
+				   if (/^.*\Qz=\E/){($z[$n])=extract("z",$_);}
+				     ($cffilename)=extractstring("cffilename",$_);
+                                     ($charge[$n])=extractfromfile("CHARGE",$cffilename);
+                                     if($charge[$n]==""){$charge[$n]=$cffilename;}                                 
+                                             #               print "$cffilename  charge=".$charge[$n]."\n";
+                                                           
 
 				  }
 
@@ -568,9 +550,10 @@ sub printlattice {
 
     my $l = new FileHandle;
 
-    open($l,$fileout);
+    unless (open($l,$fileout)){die "cannot open file $fileout\n";}
 
-    open($h,$filein);
+    unless (open($h,$filein)) {die "cannot open file $fileout\n";}
+    
 
      $nofatoms=0;
 
@@ -580,7 +563,7 @@ sub printlattice {
 
       $text=$_;
 
-      if (/^.*\Qnofatoms=\E/){($nofatoms)=(/^.*\Qnofatoms=\E\s*([^\s]*)\s/);}
+      if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
 
       last if (/^#.*\Q**********\E/&&$nofatoms!=0);
 
@@ -614,17 +597,17 @@ sub printneighbourlist {
 
       $text=$_;
 
-     if (/^.*\Qnofneighbours=\E/){$text=~s!\Qnofneighbours=\E\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
+     if (/^(#!|[^#])*nofneighbours\s*=\s*/){$text=~s!nofneighbours\s*=\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
 
-     if (/^.*\Qdiagonalexchange=\E/){
+     if (/^(#!|[^#])*diagonalexchange\s*=\s*/){
 
       if ($rkky>=1)
 
-       {$text=~s!\Qdiagonalexchange=\E\s*\d+!diagonalexchange=1!;$stopheader=1;}
+       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=1!;$stopheader=1;}
 
       else
 
-       {$text=~s!\Qdiagonalexchange=\E\s*\d+!diagonalexchange=0!;$stopheader=1;}
+       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=0!;$stopheader=1;}
 
       }
 
@@ -678,6 +661,15 @@ print $l "#---------------------------------------------------------------------
 print $l ("#da[a]    db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
 
 
+my $pcout=">./results/makenn.a".$nnn.".pc";
+unless (open($l1,$pcout)){die "cannot open file $pcout\n";}
+print $l1 "#-------------------------------------------------------------------------------------\n";
+print $l1 "#  table with neighbors and charges for atom $nnn\n";
+print $l1 "# output of program makenn:, Reference: M. Rotter et al. PRB 68 (2003) 144418\n";
+print $l1 "#-------------------------------------------------------------------------------------\n";
+print $l1 "#charge[|e|]  da[A]   db[A]   dc[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";
+
+
  for ($n1=1;$n1<(($rn->dims)[0]);++$n1)
 
 # the position xyz is relative position (not absolute coordinate of neighbour)
@@ -685,7 +677,10 @@ print $l ("#da[a]    db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV
  {print $l sprintf("%4.4g %4.4g %4.4g ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
 
  $ddd=$an->index($n)->at($n1);
-  
+
+  print $l1 sprintf("%8s   %+8.4f %+8.4f %+8.4f     ",$charge[$ddd],$a*$xn->index($n)->at($n1),$b*$yn->index($n)->at($n1),$c*$zn->index($n)->at($n1));
+  print $l1 sprintf("%+8.4f %+8.4f %+8.4f ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
+  print $l1 sprintf("%+8.4f     %s\n",$rn->index($n)->at($n1),$ddd);
 
   if (($gJ!=0&&$gJ[$ddd]==0)||($gJ==0&&$gJ[$ddd]!=0)){ die "error makenn. mixing of atoms with gJ=0 (intermediate coupling) and gJ>0 not implemented\n";}
 
@@ -746,6 +741,7 @@ print $l ("#da[a]    db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV
 
  }
 
+ close $l1;
 }
 
 
@@ -760,3 +756,68 @@ sub endprint {
 
 }
 
+# **********************************************************************************************
+# extracts number from string
+# 
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+# 
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extract { 
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
+
+# **********************************************************************************************
+# extracts string from string
+# 
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+# 
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extractstring { 
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*\b([^\n\s]+)[\s\n]/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
+
+
+
+
+# **********************************************************************************************
+# extracts number from file
+# 
+# for example somewhere in a file data.dat is written the text "sta=0.24"
+# to extract this number 0.24 just use:         
+#
+# ($standarddeviation)=extractfromfile("sta","data.dat");
+# 
+# ... it stores 0.24 in the variable $standarddeviation
+#
+sub extractfromfile { 
+             my ($variable,$filename)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if(open (Fin,$filename))
+             {while($line=<Fin>){
+                if($line=~/^.*$var\s*=/) {($value)=($line=~m|$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);}                                        }
+              close Fin;
+       	     }
+             else
+             {
+             print STDERR "Warning: failed to read data file \"$filename\"\n";
+             }
+             return $value;
+            }
+# **********************************************************************************************

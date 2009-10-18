@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
@@ -92,7 +93,7 @@ $noflevels=1; # initialize noflevels
 
        ($deg[$i])=($line=~m|.*\QDegeneracy\E\s*:\s*([\d.eEdD]+)|);
 
-      print "#E($i)=".$E[$i]."meV degeneracy ".$deg[$i]."-fold\n";
+      print "#! E($i)=".$E[$i]."meV degeneracy ".$deg[$i]."-fold\n";
 
       } 
 

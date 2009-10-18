@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 # batch to remove every comment line 
 

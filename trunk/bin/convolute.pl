@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 #\begin{verbatim}
 
@@ -426,15 +427,15 @@ else
 
  } 
 
- print "#sta=$sta\n"; 
+ print "#!sta=$sta\n"; 
 
- print "#areadata=$areadata\n";
+ print "#!areadata=$areadata\n";
 
- print "#areacalc=$areacalc\n";
+ print "#!areacalc=$areacalc\n";
 
- print "#column $d2 scaled by\n#scale_factor=$scale\n";
+ print "#!column $d2 scaled by\n#scale_factor=$scale\n";
 
- print "#sta_of_normalized_curves=$stanorm\n";
+ print "#!sta_of_normalized_curves=$stanorm\n";
 
 }
 

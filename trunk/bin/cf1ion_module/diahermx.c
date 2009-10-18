@@ -393,8 +393,8 @@ t01=" -----------------------\n";
 t02="| VERSION : %6.2f      |\n";
 t03=" -----------------------\n";
 t04="\n";
-fprintf(fp,t01);
-fprintf(fp,t02,VERSION);fprintf(fp,t03);fprintf(fp,t04);
+/*fprintf(fp,t01);*/
+fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
  
 t01=" -------------------------------------------------------------- \n";
 t02="|                                                              |\n";
@@ -414,9 +414,9 @@ t15="               |Tel.: 02461-616896                |             \n";
 t16="                __________________________________              \n";
  
  
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
+fprintf(fp,t01);/*fprintf(fp,t02);*/fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
+/*fprintf(fp,t06);fprintf(fp,t07);*/fprintf(fp,t08);/*fprintf(fp,t09);fprintf(fp,t10);*/
+/*fprintf(fp,t11);*/fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
 fprintf(fp,t16);
  
  
@@ -431,11 +431,11 @@ write_titlecom(fp)  /* setupfile erzeugen */
    CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
  
 t01="#{-----------------------\n";
-t02="# VERSION : %6.2f      |\n";
+t02="#{VERSION : %6.2f      |\n";
 t03="#-----------------------\n";
 t04="#\n";
-fprintf(fp,t01);
-fprintf(fp,t02,VERSION);fprintf(fp,t03);fprintf(fp,t04);
+/*fprintf(fp,t01);*/
+fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
  
 t01="#-------------------------------------------------------------- \n";
 t02="#                                                              |\n";
@@ -455,9 +455,9 @@ t15="#              |Tel.: 02461-616896                |             \n";
 t16="#               __________________________________              \n";
  
  
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
+fprintf(fp,t01);/*fprintf(fp,t02);*/fprintf(fp,t03);/*fprintf(fp,t04);*/fprintf(fp,t05);
+/*fprintf(fp,t06);fprintf(fp,t07);*/fprintf(fp,t08);/*fprintf(fp,t09);fprintf(fp,t10);*/
+/*fprintf(fp,t11);*/fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
 fprintf(fp,t16);
  
  

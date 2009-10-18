@@ -364,7 +364,7 @@ sub read_data_file_2D {
 
 package TOBJ;
 
-BEGIN{@TOBJ::ISA = qw/PDL::Graphics::TriD::Object/;}
+BEGIN{@ARGV=map{glob($_)}@ARGV}{@TOBJ::ISA = qw/PDL::Graphics::TriD::Object/;}
 
 use PDL::Graphics::OpenGLQ;
 

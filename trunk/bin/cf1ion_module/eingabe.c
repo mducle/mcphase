@@ -2510,7 +2510,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
 
      }
     }
-    fclose(fp);printf("\n");
+    printf("\n");
  
      /* Auswahlregeln fuer Lkq beachten */
     iteration = auswahlregel(iteration,symmetrienr);

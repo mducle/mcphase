@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 # batch to remove every nth line (n>2) in output.txt
 
@@ -10,7 +11,7 @@ unless ($#ARGV >0)
 {print " program to remove every nth line (n>2) in output.txt
 \n";
 
- print " usage: nth_rm n < input.txt > output.txt\n";
+ print " usage: nth_rm n input.txt > output.txt\n";
 
  exit 0;}
 
@@ -33,14 +34,40 @@ unless ($#ARGV >0)
 $n=$ARGV[0];shift @ARGV;
 
 
+ foreach (@ARGV)
 
-while(<>){
+  {
 
-$l=$_;
+   $file=$_;
 
-for($i=1;$i<$n;++$i){print $l;$l=<>;}
+   unless (open (Fin, $file)){die "\n error:unable to open $file\n";}  
+   open (Fout, ">range.out");
+   $i=0;
+   while($line=<Fin>){
+   ++$i;unless($i==$n){ print Fout $line;}
+   else {$i=0;}
+                     }
 
-}
+      close Fin;
 
+      close Fout;
 
+       unless (rename "range.out",$file)
 
+          {unless(open (Fout, ">$file"))     
+
+      {die "\n error:unable to write to $file\n";}
+
+      open (Fin, "range.out");
+
+      while($line=<Fin>){ print Fout $line;}
+
+      close Fin;
+
+      close Fout;
+
+      system "del range.out"; 
+ 
+     }
+
+ }

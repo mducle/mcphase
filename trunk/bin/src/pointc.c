@@ -70,7 +70,7 @@ int main (int argc, char **argv)
                   N4=3 XI4=2.74850 C4=0.49771 \n\
                   N5=3 XI5=1.69027 C5=0.11388 \n\
                   # if the above parameters are given the radial wave function\n\
-                  # is output to file radwavfun.dat\n\
+                  # is output to file results\\radwavfun.dat\n\
 	\n");
       exit (1);
     }

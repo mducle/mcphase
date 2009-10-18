@@ -130,7 +130,7 @@ t01="#-------------------------------------------------------------- \n";
 t02="#                          O U T P U T                         |\n";
 t03="#-------------------------------------------------------------- \n";
 t04="#\n#\n";
-        fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
+/*        fprintf(fp,t01);*/fprintf(fp,t02);/*fprintf(fp,t03);fprintf(fp,t04);*/
  
     }
     else      fp=fopen_errchk(FILENAME(kristallfeld),"a");
@@ -139,34 +139,34 @@ t04="#\n#\n";
     iteration   = ITERATION(   kristallfeld );
  
  
-t01="#-------------------------------------------------------------- \n";
-t02="# Temperature of the sample       : %7.2f Kelvin                  |\n";
-t03="#-------------------------------------------------------------- \n";
-t04="#\n";
+t01="#--------------------------------------------------------------|\n";
+t02="#!Temperature of the sample       T=%7.2f Kelvin               |\n";
+/*3="#--------------------------------------------------------------|\n";
+t04="#\n";*/
     temperatur  = TEMPERATUR( iteration );
 if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
     fprintf(fp,t01);fprintf(fp,t02,temperatur);
-    fprintf(fp,t03);fprintf(fp,t04);
+/* fprintf(fp,t03);fprintf(fp,t04);*/
 }
  
-t01="#-------------------------------------------------------------- \n";
-t02="# Ion                         :   %4s                          |\n";
+t01="#--------------------------------------------------------------|\n";
+t02="#!Ion                    IONTYPE= %4s                          |\n";
 t03="#--------------------------------------------------------------|\n";
 t04="#                                                              |\n";
-t05="# Lande factor of the ion g  :  %8.6f                       |\n";
-t06="#                          J                                   |\n";
+t05="#!Lande factor of the ion   gJ= %8.6f                       |\n";
+t06="#                                                              |\n";
 t07="# Total angular momentum J of the                               |\n";
-t08="# Spin - orbit - level      : %4.1f                            |\n";
+t08="#!Spin - orbit - level     J= %4.1f                            |\n";
 t09="#                                                              |\n";
-t10="# Electrons in 4f shell    : %2d                              |\n";
+t10="#!Electrons in 4f shell   Ne= %2d                              |\n";
 t11="#                                                              |\n";
 t12="#                                                              |\n";
-t13="#--------------------------------------------------------------|\n";
+t13="#--------------------------------------------------------------\n";
 t14="#                                                              |\n";
 t15="#  local point symmetry                                        |\n";
-t16="#  of the ion                : %10s                            |\n";
+t16="#! of the ion              PS= %10s                            |\n";
 t17="#                                                              |\n";
-t18="#  Symmetry number           : %2d                              |\n";
+t18="#! Symmetry_number            =%2d                              |\n";
 t19="#                                                              |\n";
 t20="#-------------------------------------------------------------- \n";
 t21="#\n";
@@ -204,17 +204,17 @@ t21="#\n";
  
  
  if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
-    fprintf(fp,t01);fprintf(fp,t02,ionname);
-    fprintf(fp,t03);fprintf(fp,t04);
+   /*fprintf(fp,t01);*/fprintf(fp,t02,ionname);
+   /* fprintf(fp,t03);fprintf(fp,t04);*/
     fprintf(fp,t05,gj);fprintf(fp,t06);
     fprintf(fp,t07);fprintf(fp,t08,(DOUBLE)( (dimj-1)/2.0 ) );
-    fprintf(fp,t09);fprintf(fp,t10,elektronen4f);
-    fprintf(fp,t11);fprintf(fp,t12);
-    fprintf(fp,t13);fprintf(fp,t14);
+  /*  fprintf(fp,t09);*/fprintf(fp,t10,elektronen4f);
+  /*  fprintf(fp,t11);fprintf(fp,t12);
+    fprintf(fp,t13);fprintf(fp,t14);*/
     fprintf(fp,t15);fprintf(fp,t16,symname);
-    fprintf(fp,t17);fprintf(fp,t18,symmetrienr);
-    fprintf(fp,t19);fprintf(fp,t20);
-    fprintf(fp,t21);
+  /*  fprintf(fp,t17);*/fprintf(fp,t18,symmetrienr);
+  /*  fprintf(fp,t19);fprintf(fp,t20);
+    fprintf(fp,t21);*/
  }
  
  
@@ -228,9 +228,9 @@ t21="#\n";
   t01="#-------------------------------------------------------------- \n";
   t02="# Paramter          :     %2d von %2d                      |\n";
   t03="#-------------------------------------------------------------- \n";
-  fprintf(fp,t01);
+/*  fprintf(fp,t01);*/
   fprintf(fp,t02,ZEILE(iteration),MAX_ZEILE(iteration));
-  fprintf(fp,t03);
+/*  fprintf(fp,t03);*/
  }
  
  if(ps_null == NEIN){
@@ -289,14 +289,14 @@ t17="#                                                              |\n";
 t18="#--------------------------------------------------------------|\n";
  
 t19="#                                                              |\n";
-t20="#  Bx_ex   =   %11.2f                                     |\n";
-t21="#  By_ex   =   %11.2f                                     |\n";
-t22="#  Bz_ex   =   %11.2f                                     |\n";
+t20="#! Bx_ex   =   %11.2f                                     |\n";
+t21="#! By_ex   =   %11.2f                                     |\n";
+t22="#! Bz_ex   =   %11.2f                                     |\n";
  
 t23="#                                                              |\n";
-t24="#  Bx_mol  =   %11.2f                                     |\n";
-t25="#  By_mol  =   %11.2f                                     |\n";
-t26="#  Bz_mol  =   %11.2f                                     |\n";
+t24="#! Bx_mol  =   %11.2f                                     |\n";
+t25="#! By_mol  =   %11.2f                                     |\n";
+t26="#! Bz_mol  =   %11.2f                                     |\n";
 t27="#                                                              |\n";
 t28="#-------------------------------------------------------------- \n";
 t29="#\n#\n";
@@ -341,8 +341,8 @@ t21="# external Field B_ex in direction of  [ %5d, %5d, %5d].   |\n";
 t01="#-------------------------------------------------------------- \n";
 t02="# Energy Eigenvalues are in  %6s.          	            |\n";
 t03="#--------------------------------------------------------------|\n";
-t04="# Number of different energy levels       : %2d                 |\n";
-t05="# Energy shift  (Eshift)                  : %17.4f |\n";
+t04="#!Nr of different energy levels   noflevels=%2d                 |\n";
+t05="#!Energy shift   Eshift=             %17.4f \n";
 t06="#                                                              |\n";
 t07="# Because of the calibration freedom the smallest energy       |\n";
 t08="# eigenvalue is shifted to zero. You can get the energy        |\n";
@@ -350,8 +350,8 @@ t09="# eigen-value of the applied eigen-value problem               |\n";
 t10="# by shifting the energy by the added energy value above       |\n";
 t11="#                                                              |\n";
  
-t13 ="# E(%2d) =   %11.4f        Degeneracy :  %2d-fold             |\n";
-t13s="#*E(%2d) =   %11.4f        Degeneracy :  %2d-fold             |\n";
+t13 ="#! E(%2d)=   %11.4f        Degeneracy =  %2d -fold            |\n";
+t13s="#!*E(%2d)=   %11.4f        Degeneracy =  %2d -fold            |\n";
  
 t14="#                                                              |\n";
 t15="#--------------------------------------------------------------|\n";
@@ -364,7 +364,7 @@ t18="#\n";
     fprintf(fp,t03);fprintf(fp,t04,anz_niveaus);
     fprintf(fp,t05,shift);fprintf(fp,t06);fprintf(fp,t07);
     fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t11);
+/*    fprintf(fp,t11);*/
  
  
     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile){
@@ -375,7 +375,7 @@ t18="#\n";
        *EINHEITIMP[einheitnr_in].fek*EINHEITIMP[einheitnr_out].fke,
                   VALUE(gi,zeile) );
     }
-    fprintf(fp,t14);fprintf(fp,t15);
+  /*  fprintf(fp,t14);*/fprintf(fp,t15);
     fprintf(fp,t16);fprintf(fp,t17);
     if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,t18);
  
@@ -553,7 +553,7 @@ if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
 if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
  
 fprintf(fp,"#\n");
-fprintf(fp,"#magnetic moment(mb/f.u.): mx=%6.3f my=%6.3f mz=%6.3f\n", 
+fprintf(fp,"#!magnetic moment(mb/f.u.): mx=%6.3f my=%6.3f mz=%6.3f\n", 
   magnetm(mat_Jx,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur),
   magnetm(mat_Jy,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur),
   magnetm(mat_Jz,setup,ewproblem,kristallfeld,B1(iteration),B2(iteration),B3(iteration),temperatur));
@@ -677,7 +677,7 @@ t32="#                                      -12                     |\n";
 t33="#                  r      = - 0.54 * 10    cm                  |\n";
 t34="#                   0                                          |\n";
 t35="#                                                              |\n";
-t36="#--------------------------------------------------------------|\n";
+t36="#--------------------------------------------------------------\n";
 t37="#                                                              |\n";
 t38="#                       1.Sum rule :                           |\n";
 t39="#                                                 - E /T       |\n";
@@ -688,7 +688,7 @@ t43="#  ----  =            3                     ----     - E /T    |\n";
 t44="#   k     E -> E                            >    n  e   i      |\n";
 t45="#          i    k                           ----  i            |\n";
 t46="#                                            i                 |\n";
-t47="#--------------------------------------------------------------|\n";
+t47="#--------------------------------------------------------------\n";
 t48="#                                                              |\n";
 t49="#                       2. sum rule :                          |\n";
 t50="#                                                              |\n";
@@ -714,7 +714,7 @@ fprintf(fp,t56);fprintf(fp,t57);
 }/* endif nicht ortho */
  
 t01="#-------------------------------------------------------------- \n";
-t02="# Temperature of the sample                = %7.2f Kelvin         |\n";
+t02="#!Temperature of the sample               T= %7.2f Kelvin         |\n";
     fprintf(fp,t01);fprintf(fp,t02,temperatur);
  
  
@@ -723,9 +723,9 @@ t02="# Temperature of the sample                = %7.2f Kelvin         |\n";
  gesamte_intensitaet = 2.0/3.0*const*gj*gj* ((DOUBLE)(dimj*dimj-1)/4);
  
 t01="#-------------------------------------------------------------- \n";
-t02="# parition function               = %6.2f                 |\n";
+t02="#!parition function            Z  = %6.2f                 |\n";
 t03="#-------------------------------------------------------------- \n";
-t04="# Total magnetic scattering intensity = %6.2f barn            |\n";
+t04="#!Total_magnetic_scattering_intensity = %6.2f barn            |\n";
 t05="#-------------------------------------------------------------- \n";
 fprintf(fp,t01);fprintf(fp,t02,zu_summe);fprintf(fp,t03);
 fprintf(fp,t04,gesamte_intensitaet);fprintf(fp,t05);
@@ -1418,10 +1418,10 @@ t35="#|   J                                                          |\n";
 t36="#|                                                              |\n";
 t37="#|                                                              |\n";
 t38="# -------------------------------------------------------------- \n";
-t46="#| start field       : %6.2f Tesla                             |\n"  ;
-t47="#| End field           : %6.2f Tesla                             |\n"  ;
+t46="#! start_field       = %6.2f Tesla                             |\n"  ;
+t47="#! End_field           = %6.2f Tesla                             |\n"  ;
 t48="#|                                                              |\n";
-t49="#| temp              : %6.2f Kelvin                            |\n";
+t49="#! temp              = %6.2f Kelvin                            |\n";
 t50="#|                                                              |\n";
 t51="#|                                                              |\n";
 t52="#| The magnetic %4s - moment in der Field direction             |\n"  ;
@@ -1430,9 +1430,9 @@ t54="#|         B  =  (%2d,%2d,%2d)                                     |\n";
 t55="#|         -                                                    |\n";
 t56="#| calculated.                                                   |\n";
 t57="#|                                                              |\n";
-t58="#| Bx_mol            : %6.2f Tesla                             |\n"  ;
-t59="#| By_mol            : %6.2f Tesla                             |\n"  ;
-t60="#| Bz_mol            : %6.2f Tesla                             |\n"  ;
+t58="#! Bx_mol            = %6.2f Tesla                             |\n"  ;
+t59="#! By_mol            = %6.2f Tesla                             |\n"  ;
+t60="#! Bz_mol            = %6.2f Tesla                             |\n"  ;
 t61="# -------------------------------------------------------------- \n";
  
 fprintf(fp,t01);
@@ -1532,14 +1532,14 @@ t15="#|                                                              |\n";
 t16="#|  calculated.                                                  |\n";
 t17="#|                                                              |\n";
 t18="# -------------------------------------------------------------- \n";
-t19="#| start field       : %6.2f Tesla                             |\n"  ;
-t20="#| End field         : %6.2f Tesla                             |\n"  ;
+t19="#! start_field       = %6.2f Tesla                             |\n"  ;
+t20="#! End_field         = %6.2f Tesla                             |\n"  ;
 t21="#|                                                              |\n";
-t22="#| temp              : %6.2f Kelvin                            |\n";
+t22="#! temp              = %6.2f Kelvin                            |\n";
 t23="#|                                                              |\n";
-t24="#| Bx_mol            : %6.2f Tesla                             |\n"  ;
-t25="#| By_mol            : %6.2f Tesla                             |\n"  ;
-t26="#| Bz_mol            : %6.2f Tesla                             |\n"  ;
+t24="#! Bx_mol            = %6.2f Tesla                             |\n"  ;
+t25="#! By_mol            = %6.2f Tesla                             |\n"  ;
+t26="#! Bz_mol            = %6.2f Tesla                             |\n"  ;
 t27="# -------------------------------------------------------------- \n";
  
 fprintf(fp,t01);
@@ -1634,7 +1634,7 @@ t37="#|  with  :                                                     |\n";
 t38="#|                                                              |\n";
 t39="#|  a,b,c   :   the three crystal directions                    |\n";
 t40="#|                                                              |\n";
-t41="#|  E       :   Crystal Field energy to the state |m> in Kelvin |\n";
+t41="#|  E       :   Crystal Field energy to the state |m> in Kelvin \n";
 t42="#|   m                                                          |\n";
 t43="#|                                                              |\n";
 t44="#|  g       :   Lande factor                                    |\n";
@@ -1671,11 +1671,11 @@ t74="#|                                                              |\n";
 t75="#|                                                              |\n";
 t76="#|                                                              |\n";
 t77="# -------------------------------------------------------------- \n";
-t78="#| start temperature : %4.0f                                    |\n";
-t79="#| end temperature     : %4.0f                                  |\n";
+t78="#! start_temperature = %4.0f                                    |\n";
+t79="#! end_temperature     = %4.0f                                  |\n";
 t80="#|                                                              |\n";
-t81="#| lambda            : %7.2f mol/emu                          |\n";
-t82="#| theta             : %7.2f Kelvin                           |\n";
+t81="#! lambda            = %7.2f mol/emu                          |\n";
+t82="#! theta             = %7.2f Kelvin                           |\n";
 t83="#| theta(T) is read from file %16s .            |\n";
 t84="# -------------------------------------------------------------- \n";
  
@@ -1782,8 +1782,8 @@ INT printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im)
   INT k,q;
   DOUBLE re,im;
 {CHAR *tc,*ts;
- tc="# %c%1d%1d  =  %16.6f                                     |\n";
- ts="# %c%1d%1ds =              %16.6f                         |\n" ;
+ tc="#!%c%1d%1d  =  %16.6f                                     |\n";
+ ts="#!%c%1d%1ds =              %16.6f                         |\n" ;
  if (modus==BKQ || modus=='B' || modus==AKQ || modus=='A')
   {
         if( re!=0.0 ){fprintf(fp,tc,modus,k,q,re);}
@@ -1814,7 +1814,7 @@ parametersatz(fp,modus,kristallfeld,ionennr,einheit,eingabeart)
     CHAR *einheit;
     CHAR eingabeart;
 {
-    CHAR    *t01,*t02,*t02a,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10,*t12,*t12a;
+    CHAR    *t01,*t02,*t02a,*t02b,*t02l,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10,*t12,*t12a;
     CHAR    *t16,*t22,*t26,*t33,*t34,*t36,*t45,*t46,*t47;
     DOUBLE  v20r,v21r,v22r,v40r,v41r,v42r,v43r,v44r;
     DOUBLE  v20i,v21i,v22i,v40i,v41i,v42i,v43i,v44i;
@@ -1832,8 +1832,8 @@ parametersatz(fp,modus,kristallfeld,ionennr,einheit,eingabeart)
 if(eingabeart==modus &&  *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="#                     Parameters                     |\n";
-  fprintf(fp,t01);
-  fprintf(fp,t02);
+ /* fprintf(fp,t01);
+  fprintf(fp,t02);*/
 }
 if( modus == XW      &&  *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
@@ -1844,20 +1844,22 @@ if( modus == XW      &&  *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
  
 t01="#-------------------------------------------------------------- \n";
 t02="# Parameter           :  %ckq   in  %6s                        |\n";
-t02a="# (NOT the same Vlm as in Hutchings p255 or Elliot and Stevens)|\n";
+t02a="# (NOT the same Vlm as in Hutchings p255 or Elliot and Stevens)\n";
+t02b="#                        (Stevens Parameters comp Hutchings)\n";
+t02l="#                        (Wybourne Parameters comp Kassmann)\n";
 t12="# Parameter           :  %ckq   in  %6s/a0**k                  |\n";
 t12a="# (compare Hutchings p 255 eq 5.5)                             |\n";
 t22="# Parameter           :  x,W    in  %6s                        |\n";
 t03="#--------------------------------------------------------------|\n";
 t04="#                                                              |\n";
-t05="# %c%1d%1d =   %16.6f  +  %16.6f*i              |\n" ;
-t06="# %c%1d%1d =   %16.6f                                     |\n";
-t07="# %c%1d%1d =              %16.6f*i                        |\n" ;
-t46="# %c%1d%1d  =  %16.6f                                     |\n";
-t47="# %c%1d-%1d =              %16.6f                         |\n" ;
-t16="#    x     =   %16.6f                                |\n";
+t05="#!%c%1d%1d =   %16.6f  +  %16.6f*i              |\n" ;
+t06="#!%c%1d%1d =   %16.6f                                     |\n";
+t07="#!%c%1d%1d =              %16.6f*i                        |\n" ;
+t46="#!%c%1d%1d  =  %16.6f                                     |\n";
+t47="#!%c%1d-%1d =              %16.6f                         |\n" ;
+t16="#!   x     =   %16.6f                                |\n";
 t36="#-1<=x<= 1                                           |\n";
-t26="#    W     =   %16.6f                                |\n";
+t26="#!   W     =   %16.6f                                |\n";
     if( modus == SIN )  modus = VKQ;
     modus = up(modus);
  
@@ -1872,11 +1874,11 @@ t26="#    W     =   %16.6f                                |\n";
     if( b40==0.0 && b60==0.0 ){
        fprintf(fp,t01);
        fprintf(fp,t22,einheit);
-       fprintf(fp,t03);fprintf(fp,t04);
+ /*      fprintf(fp,t03);fprintf(fp,t04);*/
        fprintf(fp,t36);fprintf(fp,t26,0.0);
-       fprintf(fp,t04);
+/*       fprintf(fp,t04);*/
        fprintf(fp,t01);
-       if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");
+ /*      if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
        return;
     }
  
@@ -1885,19 +1887,19 @@ t26="#    W     =   %16.6f                                |\n";
              x = 1; w = b40*f4/x;
              fprintf(fp,t01);
              fprintf(fp,t22,einheit);
-             fprintf(fp,t03);fprintf(fp,t04);
+/*             fprintf(fp,t03);fprintf(fp,t04);*/
              fprintf(fp,t16,x);fprintf(fp,t26,w);
-             fprintf(fp,t04);
-             fprintf(fp,t01);
-             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");
+/*             fprintf(fp,t04);*/
+/*             fprintf(fp,t01);*/
+/*             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
              x =-1; w = b40*f4/x;
-             fprintf(fp,t01);
+ /*            fprintf(fp,t01);*/
              fprintf(fp,t22,einheit);
              fprintf(fp,t03);fprintf(fp,t04);
              fprintf(fp,t16,x);fprintf(fp,t26,w);
-             fprintf(fp,t04);
+/*             fprintf(fp,t04);*/
              fprintf(fp,t01);
-             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");
+/*             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
              return;
     }
  
@@ -1921,11 +1923,11 @@ t26="#    W     =   %16.6f                                |\n";
  
     fprintf(fp,t01);
     fprintf(fp,t22,einheit);
-    fprintf(fp,t03);fprintf(fp,t04);
+/*    fprintf(fp,t03);fprintf(fp,t04);*/
     fprintf(fp,t16,x);fprintf(fp,t26,w);
-    fprintf(fp,t04);
+/*    fprintf(fp,t04);*/
     fprintf(fp,t01);
-    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");
+/*    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
  
     return;
  }
@@ -1935,8 +1937,10 @@ t26="#    W     =   %16.6f                                |\n";
     else fprintf(fp,t02,modus,einheit);
 
     if( modus==up(VKQ)) fprintf(fp,t02a);
+    if( modus==up(BKQ)) fprintf(fp,t02b);
+    if( modus==up(LKQ)) fprintf(fp,t02l);
     if( modus==up(AKQ)) fprintf(fp,t12a);
-    fprintf(fp,t03);fprintf(fp,t04);
+/*    fprintf(fp,t03);fprintf(fp,t04);*/
     e_4f = E4f( ionennr );
     if(alpha_J[e_4f]==0.0 || beta_J[e_4f]==0.0 || gamma_J[e_4f]==0.0){
        if(alpha_J[e_4f]==0.0) alpha_J[e_4f]=1.0;
@@ -2244,11 +2248,11 @@ t26="#    W     =   %16.6f                                |\n";
                  q  = 6;
                  f=printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im);
  
-                 if( f==JA ) { f=NEIN; fprintf(fp,t04); }
+                 if( f==JA ) { f=NEIN; /*fprintf(fp,t04); */}
     }
  
     fprintf(fp,t01);
-    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");
+/*    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
  
  
 }
@@ -2331,16 +2335,16 @@ mittlung(fp,anz_niveaus,inten,ew,entartung,
     DOUBLE                 int_ew_g[17];
  
     t01="#-----------------------------------------------------------\n" ;
-    t02="# Total quasielastic intensity :      %11.2f barn           |\n";
+    t02="#!Total_quasielastic_intensity =      %11.2f barn           |\n";
     t03="#-----------------------------------------------------------|\n";
     t04="#                  Neutron-Energy-loss                      |\n";
-    t05="# middle position of the energy        : %11.2f %6s |\n";
-    t06="# relative error in the middl. Position : %11.2f %%      |\n"    ;
-    t07="# Intensity of the middle position   : %11.2f barn   |\n";
+    t05="#!middle_position_of_the_energy        = %11.2f %6s \n";
+    t06="#!relative_error_in_the_middl_Position  = %11.2f %%      |\n"    ;
+    t07="#!Intensity_of_the_middle_position   = %11.2f barn   |\n";
     t08="#                  Neutron-Energy-Gain                 |\n";
-    t09="# middle position of the energy        : %11.2f %6s |\n";
-    t10="# relative error in the middl. Position : %11.2f %%      |\n"    ;
-    t11="# Intensity of the middle position   : %11.2f barn   |\n";
+    t09="#!middle position of the energy        = %11.2f %6s \n";
+    t10="#!relative_error_in_the_middl_Position  = %11.2f %%      |\n"    ;
+    t11="#!Intensity_of_the_middle_position   = %11.2f barn   |\n";
     t12="#-----------------------------------------------------------\n";
  
 /* gesamte quasielastische Intensitaet berechnen*/
@@ -2780,9 +2784,9 @@ DOUBLE mat_Jt2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
  
    if( !is_equal(IT(aJtb),0.0,macheps) ){
        printf("Unexpected error in mat_Jt2() in Intensity.c\n");
-       printf("              2             \n");
+       printf("              2             |\n");
        printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJtb) );
-       printf("         T                  \n\n");
+       printf("         T                  |\n\n");
        exit(0);
    }
    erg = RT(aJtb);
@@ -2815,9 +2819,9 @@ DOUBLE mat_Jx2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
  
    if( !is_equal(IT(aJxb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jx2() in Intensity.c\n");
-       printf("              2             \n");
+       printf("              2             |\n");
        printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJxb_norm2) );
-       printf("         x                  \n\n");
+       printf("         x                  |\n\n");
        exit(0);
    }
    erg        = RT(aJxb_norm2);
@@ -2851,9 +2855,9 @@ DOUBLE mat_Jy2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
    aJyb_norm2 = cmult(aJyb,aJyb_star);
    if( !is_equal(IT(aJyb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jy2() in Intensity.c\n");
-       printf("              2             \n");
+       printf("              2             |\n");
        printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJyb_norm2) );
-       printf("         y                  \n\n");
+       printf("         y                  |\n\n");
        exit(0);
    }
    erg        = RT(aJyb_norm2);
@@ -2887,9 +2891,9 @@ DOUBLE mat_Jz2(a,b,macheps)   /* Matrixelement  |<aºJ ºb>|   */
    aJzb_norm2 = cmult(aJzb,aJzb_star);
    if( !is_equal(IT(aJzb_norm2),0.0,macheps) ){
        printf("Unexpected error in mat_Jz2() in Intensity.c\n");
-       printf("              2             \n");
+       printf("              2             |\n");
        printf("IT( |<aºJ ºb>|  ) = %f != 0 \n",IT(aJzb_norm2) );
-       printf("         z                  \n\n");
+       printf("         z                  |\n\n");
        exit(0);
    }
    erg        = RT(aJzb_norm2);

@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 # rotmat - program to rotate Crystal Field parameters about an azimuthal angle fi and polar angle theta
 

@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 #\begin{verbatim}
 
@@ -59,9 +60,11 @@ $colx=$ARGV[0];shift @ARGV;
 
    $absppoint=$abs/$i;
 
+   print "sum of values sum=".$sum."\n";
+
    print "number of points n=".$i."\n";
 
-   print "standard deviation sta=".$sta."\n";
+   print "standard deviation sum_i (value_i*value_i) sta=".$sta."\n";
 
    print "standard deviation/n stappoint=".$stappoint."\n";
 

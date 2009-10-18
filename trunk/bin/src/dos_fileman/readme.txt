@@ -32,8 +32,7 @@ VIEW *.* 13         - means view columns 1 vs.3, add option /c if you
                       the programs PRINTF,GRAPH and PLOT described below)
                       points can be deleted - then the program view
                       creates a file delpoint.del, which contains the
-                      new data set
-.
+                      new data set.
 		      
 GRAPH {xaxis=axistext] {yaxis=axistext]
                       - makes the scales and the axis TITLES (axistext ...)
