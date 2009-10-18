@@ -64,7 +64,7 @@ bool lovesey_aKK(sMat<double> &aKK, int K, int Kp, int n, orbital l)
    // Selection rules on K.
    if(K<0  || K>(2*abs(l))   || (K%2)!=0)      return 1;        // Eqn 4.2.2
    if(Kp<1 || Kp>=(2*abs(l)) || ((Kp+1)%2)!=0) return 1;        // Eqn 4.2.3
-   if(K!=(Kp+1) && K!=(Kp-1))                  return 1;        // Eqn 4.2.4
+   if(K!=(Kp+1) && K!=(Kp-1))                  return 1;        // Eqn 4.2.4  (first 3j symbol, needs 1+K+K' even)
 
    // Calculates the matrix elements:
    // Eqn. 3.6.8 (d==delta)
@@ -192,10 +192,6 @@ bool lovesey_cKK(sMat<double> &cKK, int K, int Kp, int n, orbital l)
    //              /\   ( 0 0 0 )  { S  L  J  }    ---                        { s  Sb s  }  { l  Lb l  }
    //                                               t
 
-   // Calculates part of the prefactor which only depends on K,K',l
-   double redmat = sqrt(1./2) * (2*l+1.) * sqrt(2*K+1.) * (2*Kp+1.) * threej(2*l,2*K,2*l,0,0,0); 
-   if(fabs(redmat)<DBL_EPSILON) return 1;
-
    // Determines the L S J values for each matrix elements and the index of each J-J' block
    for(i=0; i<num_states; i++)
    {
@@ -206,6 +202,14 @@ bool lovesey_cKK(sMat<double> &cKK, int K, int Kp, int n, orbital l)
    }
 
    cKK.zero(ns,ns);
+
+   // The triangular conditions require that K<=2l and K=even (from 3j), and that (K-1)<=K'<=(K+1) (from 9j)
+   if(K%2!=0 || abs(Kp-K)>1) return 1;
+
+   // Calculates part of the prefactor which only depends on K,K',l
+   double redmat = sqrt(1./2) * (2*l+1.) * sqrt(2*K+1.) * (2*Kp+1.) * threej(2*l,2*K,2*l,0,0,0); 
+   if(fabs(redmat)<DBL_EPSILON) return 1;
+
 
    // Determines the factor i^K - because K is always even, matrix is always real
    if(K%4==2) redmat = -redmat;
@@ -312,9 +316,7 @@ complexdouble spherical_harmonics(int k, int q, double theta, double phi)
 // --------------------------------------------------------------------------------------------------------------- //
 void lovesey_Qq(std::vector< sMat<double> > &Qq, int q, int n, orbital l, std::vector<double> &Jvec)
 {
-   int i,j,ns,nn=(n>(4*abs(l)+2))?(4*abs(l)+2-n):n; 
-   ns=1; for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i; 
-   j=1; for(i=n; i>1; i--) j*=i; ns/=j;                         // Number of states = ^{4l+2}C_{n}
+   int i,j,ns=getdim(n,l);                                      // Number of states = ^{4l+2}C_{n}
 
    std::string errormsg("lovesey_Qq(): Unable to calculate the A(K,K') or B(K,K') matrix\n");
    double theta = Jvec[0], phi = Jvec[1], J[]={Jvec[2],0,Jvec[3],0,Jvec[4],0,Jvec[5]};
@@ -432,6 +434,350 @@ void lovesey_Qq(std::vector< sMat<double> > &Qq, int q, int n, orbital l, std::v
    }
 
    for(i=0; i<6; i++) { rmzeros(Qq[i]); Qq[i] *= sqrt(4*PI); }
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Calculates the coefficient of the spin density operator M^S_q(r), after Balcar, J.Phys.C. v8, p1581, 1975, eqn 10.
+// --------------------------------------------------------------------------------------------------------------- //
+sMat<double> balcar_MSq(int q, int K, int Q, int n, orbital l)  
+{
+   std::string errormsg("balcar_MSq(): Unable to calculate the c(K,K') matrix\n");
+   int i,j,ns=getdim(n,l);                                      // Number of states = ^{4l+2}C_{n}
+   sMat<double> ckk,Mmat,Qmat; Mmat.zero(ns,ns);
+
+   // Eqn 10 of Balcar 1975:
+   //
+   //         S                     -2uB     ---  K     2    ---   [     1/2+M+q-J+L'+S'      1/2
+   // <vSLJM|M (r)|v'S'L'J'M'> =  ---------  >   Y (r) U (r) >     [ (-1)                (3/2)
+   //         q                   sqrt(4PI)  ---  Q          ---   [
+   //                                        K,Q             K',Q'
+   //
+   //              \/                                1/2  ( l K l )  { 1  K  K' }
+   //              /\    [l,l,S,S',L,L',J,J',K,K',K']     ( 0 0 0 )  { S' L' J' }
+   //                                                                { S  L  J  }
+   //                                            _ _
+   //                     ---     _   _          S+L                                                         ]
+   //              \/   n >   (t{|t) (t|}t') (-1)    { S  1  S' }  { L  K  L' }    (  J K' J' ) ( K K'  1 )  ]
+   //              /\     ---                        { s  Sb s  }  { l  Lb l  }    ( -M Q' M' ) ( Q Q' -q )  ]
+   //                      t
+   //
+   // In this function we calculate only the sum over the square brackets, leaving the K,Q sum to chrgplt.
+   // The first 3j symbol imposes the selection rule that K=even,K<=2l. The 9j symbol means (K-1)<=K'<=(K+1), whilst
+   // the final 3j symbol means that Q+Q'=q, that is Q'=q-Q, and that -K'<=Q'<=K', so there is only ever one Q' term
+   // in the sum.
+
+   if(K%2!=0 || K>(2*l) || Q<-K || Q>K || q<-1 || q>1) return Mmat;
+   int Kp,Qp=q-Q;
+
+   int k,minJ2,maxJ2,valJ,valJ_i,valJ_j;
+   int imJ_i,imJ_j,J2,J2p,Jz2,Jz2p;
+   std::vector<int> iJst,iJen;
+   fconf conf(n,0,l); minJ2=99; maxJ2=0; k=0;
+   for(i=0; i<(int)conf.states.size(); i++) {
+      j = conf.states[i].J2; if(j<minJ2) minJ2 = j; if(j>maxJ2) maxJ2 = j; iJst.push_back(k+1); k+=j+1; iJen.push_back(k); }
+
+   bool ic; 
+   double Tj,Tj2,phase = 1.; if(q%2==1) phase = -1.; if(K%4==2) phase = -phase;
+   std::vector< std::vector<int> > nz;
+
+   // Initialises a cell array of matrices of q- and Jz- dependent matrices so that we don't have to calculate
+   //    each (2J+1)x(2J'+1) matrix more than once, for each J and J' values.
+   sMat<double> mJmat_i(1,1);
+   std::vector< std::vector< sMat<double> > > mJmat;
+   std::vector< sMat<double> > mJmat_row;
+   valJ = (maxJ2-minJ2)/2;
+   for(i=0; i<=valJ; i++)
+      mJmat_row.push_back(mJmat_i);
+   for(i=0; i<=valJ; i++)
+      mJmat.push_back(mJmat_row);
+
+   // Simplifying, using the C(K,K') coeficients previously calculated in lovesey_cKK()  (Balcar+Lovesey Book, eqn 3.8.5)
+   //
+   //          S                    -2uB    ---  K     2    ---   [             M+q-J       1/2  K                            ]
+   //  <vSLJM|M (r)|v'S'L'J'M'> = --------- >   Y (r) U (r) >     [ C(K,K') (-1)      (3[J])    i   (  J K' J' ) ( K K'  1 )  ]
+   //          q                  sqrt(4PI) ---  Q          ---   [                                 ( -M Q' M' ) ( Q Q' -q )  ]
+   //                                       K,Q             K',Q'
+   //
+
+   for(Kp=(K-1); Kp<=(K+1); Kp++)
+   {
+      if(Qp<-Kp || Qp>Kp) continue; Qmat.zero(ns,ns);
+      Tj = phase * sqrt(3) * threej(2*K,2*Kp,2,2*Q,2*Qp,-2*q);
+      ic = lovesey_cKK(ckk,K,Kp,n,l); if(ic) ckk *= Tj; else { std::cerr << errormsg; return Qmat; }
+      
+      nz = ckk.find();
+      for(i=0; i<(int)nz.size(); i++)                        // The matrices above already contain the dependence on |vULSJ>
+      {                                                      //    we now use the W-E theorem to add the Jz, Q, dependence
+         J2 = conf.states[nz[i][0]].J2;
+         J2p = conf.states[nz[i][1]].J2;
+         valJ_i = (J2-minJ2)/2; valJ_j = (J2p-minJ2)/2;
+         if(mJmat[valJ_i][valJ_j].isempty())
+         {
+            mJmat[valJ_i][valJ_j].zero(J2+1,J2p+1);
+            for(imJ_i=0; imJ_i<=J2; imJ_i++)
+            {
+               Jz2 = imJ_i*2-J2;
+               for(imJ_j=0; imJ_j<=J2p; imJ_j++)
+               {
+                  Jz2p = imJ_j*2-J2p; Tj2 = threej(J2,2*Kp,J2p,-Jz2,2*Qp,Jz2p);
+                  if(fabs(Tj2)>DBL_EPSILON) mJmat[valJ_i][valJ_j](imJ_i,imJ_j) = pow(-1.,(-J2p+Jz2)/2.) * sqrt(J2+1.) * Tj2;
+               }
+            }
+         }
+         Qmat.pset(iJst[nz[i][0]],iJen[nz[i][0]],iJst[nz[i][1]],iJen[nz[i][1]],mJmat[valJ_i][valJ_j]*ckk(nz[i][0],nz[i][1]));
+      }
+      for(i=0; i<=valJ; i++) for(j=0; j<=valJ; j++) mJmat[i][j].clear();
+
+      Mmat += Qmat;
+   }
+   return Mmat;
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Calculates the coefficient of the orbital magnetic density operator M^L_q(r), after Balcar 1975, eqn 12.
+// --------------------------------------------------------------------------------------------------------------- //
+sMat<double> balcar_MLq(int q, int K, int Q, int n, orbital l)  
+{
+   std::string errormsg("balcar_MLq(): Unable to calculate the c(K,K') matrix\n");
+   int i,j,ns=getdim(n,l);                                      // Number of states = ^{4l+2}C_{n}
+   sMat<double> akk,Mmat,Qmat; Mmat.zero(ns,ns);
+
+   // Eqn 12 of Balcar 1975:
+   //                                                       infty
+   //         L                     -2uB     ---  K     1  /     2     ---   [     q+M+L+L'+S
+   // <vSLJM|M (r)|v'S'L'J'M'> =  ---------  >   Y (r) --- | dX U (X)  >     [ (-1)            d
+   //         q                   sqrt(4PI)  ---  Q     r  /           ---   [                  SS'
+   //                                        K,Q            r          K',Q'
+   //
+   //              \/                             1/2         1/2  ( l K l )  { l  K' l  }  { K' L' L  }
+   //              /\    [l,l,l,L,L',J,J',K,K',K']    [l(l+1)]     ( 0 0 0 )  { K  l  1  }  { S  J  J' }
+   //                                                                                      
+   //                                            _
+   //                     ---     _   _          L                                           ]
+   //              \/   n >   (t{|t) (t|}t') (-1)  { L  K  L' }    (  J K' J' ) ( K K'  1 )  ]
+   //              /\     ---                      { l  Lb l  }    ( -M Q' M' ) ( Q Q' -q )  ]
+   //                      t
+   //
+   // In this function we calculate only the sum over the square brackets, leaving the K,Q sum to chrgplt.
+   // The first 3j symbol imposes the selection rule that K=even,0<=K<=2l. The 9j symbol means (K-1)<=K'<=(K+1), whilst
+   // the final 3j symbol means that Q+Q'=q, that is Q'=q-Q, and that -K'<=Q'<=K', so there is only ever one Q' term
+   // in the sum.
+
+   if(K%2!=0 || K>(2*l) || Q<-K || Q>K || q<-1 || q>1) return Mmat;
+   int Kp,Qp=q-Q;
+
+   int k,minJ2,maxJ2,valJ,valJ_i,valJ_j;
+   int imJ_i,imJ_j,J2,J2p,Jz2,Jz2p;
+   std::vector<int> iJst,iJen;
+   fconf conf(n,0,l); minJ2=99; maxJ2=0; k=0;
+   for(i=0; i<(int)conf.states.size(); i++) {
+      j = conf.states[i].J2; if(j<minJ2) minJ2 = j; if(j>maxJ2) maxJ2 = j; iJst.push_back(k+1); k+=j+1; iJen.push_back(k); }
+
+   bool iA;
+   double Tj,Tj2,phase = 1.; if(q%2==1) phase = -1.; if(K%4==2) phase = -phase;
+   std::vector< std::vector<int> > nz;
+
+   // Initialises a cell array of matrices of q- and Jz- dependent matrices so that we don't have to calculate
+   //    each (2J+1)x(2J'+1) matrix more than once, for each J and J' values.
+   sMat<double> mJmat_i(1,1);
+   std::vector< sMat<double> > mJmat_row;
+   std::vector< std::vector< sMat<double> > > mJmat;
+   valJ = (maxJ2-minJ2)/2;
+   for(i=0; i<=valJ; i++)
+      mJmat_row.push_back(mJmat_i);
+   for(i=0; i<=valJ; i++)
+      mJmat.push_back(mJmat_row);
+
+   // Noting that the e(K,K') coefficient is, from Balcar and Lovesey, eqn 3.6.4:
+   //
+   //                    i^K                            1/2          1/2      S+L+L'+J'  ( l K l ) { 1 K' K } { L  K' L' }
+   //  e(K,K') = d     --------  [l,l,l,K,K',K',J',L,L']     [l(l+1)]     (-1)           ( 0 0 0 ) { l l  l } { J' S  J  }
+   //             SS'  2 sqrt(3)
+   //                                            _
+   //                     ---     _   _          L
+   //              \/   n >   (t{|t) (t|}t') (-1)  { L  K  L' }
+   //              /\     ---                      { l  Lb l  }
+   //                      t
+   //
+   // We can simplify the matrix element above, eqn 3.8.9. Note the 2/r rather than 1/r in the previous equation.
+   //
+   //          L                    -2uB    ---  K      infty
+   //  <vSLJM|M (r)|v'S'L'J'M'> = --------- >   Y (r) 2  /     2    ---   [          K        1/2     J'+M+q                          ]
+   //          q                  sqrt(4PI) ---  Q   --- | dX U(X)  >     [ e(K,K') i  (3[J])    (-1)       (  J K' J' ) ( K  K'  1 ) ]
+   //                                       K,Q       r  /          ---   [                                 ( -M Q' M' ) ( Q  Q' -q ) ]
+   //                                                    r          K',Q'
+   //
+   // Finally, we use the relation 4.2.14 of Balcar and Lovesey,  e(K,K') = +/- (2K'+1) a(K,K')  where + is for K'=K+1, - for K'=K-1
+
+   for(Kp=(K-1); Kp<=(K+1); Kp+=2)       // The 3j symbol in A(K,K') means that K==Kp gives zero... (NB. Does this apply to E(K,K') too?)
+   {
+      if(Qp<-Kp || Qp>Kp) continue; Qmat.zero(ns,ns);
+      if(Kp==(K-1)) Tj = phase * 2*sqrt(3) * threej(2*K,2*Kp,2,2*Q,2*Qp,-2*q) * -(2*Kp+1);
+      else          Tj = phase * 2*sqrt(3) * threej(2*K,2*Kp,2,2*Q,2*Qp,-2*q) *  (2*Kp+1);
+      iA = lovesey_aKK(akk,K,Kp,n,l); if(iA) akk *= Tj; else { std::cerr << errormsg; return Qmat; }
+      
+      nz = akk.find();
+      for(i=0; i<(int)nz.size(); i++)                        // The matrices above already contain the dependence on |vULSJ>
+      {                                                      //    we now use the W-E theorem to add the Jz, Q, dependence
+         J2 = conf.states[nz[i][0]].J2;
+         J2p = conf.states[nz[i][1]].J2;
+         valJ_i = (J2-minJ2)/2; valJ_j = (J2p-minJ2)/2;
+         if(mJmat[valJ_i][valJ_j].isempty())
+         {
+            mJmat[valJ_i][valJ_j].zero(J2+1,J2p+1);
+            for(imJ_i=0; imJ_i<=J2; imJ_i++)
+            {
+               Jz2 = imJ_i*2-J2;
+               for(imJ_j=0; imJ_j<=J2p; imJ_j++)
+               {
+                  Jz2p = imJ_j*2-J2p; Tj2 = threej(J2,2*Kp,J2p,-Jz2,2*Qp,Jz2p);
+                  if(fabs(Tj2)>DBL_EPSILON) mJmat[valJ_i][valJ_j](imJ_i,imJ_j) = pow(-1.,(-J2p+Jz2)/2.) * sqrt(J2+1.) * Tj2;
+               }
+            }
+         }
+         Qmat.pset(iJst[nz[i][0]],iJen[nz[i][0]],iJst[nz[i][1]],iJen[nz[i][1]],mJmat[valJ_i][valJ_j]*akk(nz[i][0],nz[i][1]));
+      }
+      for(i=0; i<=valJ; i++) for(j=0; j<=valJ; j++) mJmat[i][j].clear();
+
+      Mmat += Qmat;
+   }
+   return Mmat;
+}
+
+complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)  
+{
+#define NSTR(K,Q) nstr[3] = K+48; nstr[4] = Q+48; nstr[5] = 0
+#define MSTR(K,Q) nstr[3] = K+48; nstr[4] = 109;  nstr[5] = Q+48; nstr[6] = 0
+   strtolower(density); int Hsz = getdim(n,l);
+   sMat<double> retval_r(Hsz,Hsz),retval_i(Hsz,Hsz),qpp,qmp,qpm,qmm;
+   char nstr[7]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR");
+   if(mcphasedir==NULL) strcpy(basename,"mms/"); else {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+   nstr[0] = (l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
+   strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 77;   // ASCII codes: 77="M", 83=="S", 100=="d", 102=="f", 109=="m", 112="p"
+   if(density.find("sx")!=std::string::npos || density.find("sy")!=std::string::npos)
+   {
+      nstr[1]=83;
+      if(Q!=0)
+      {
+         NSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MSq(1,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         MSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(1,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         NSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MSq(-1,K,abs(Q),n,l); rmzeros(qpm); mm_gout(qpm,filename); }
+         MSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MSq(-1,K,abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
+         if(Q<0) { if(Q%2==0) { qpp -= qmp; qpm -= qmm; } else { qpp += qmp; qpm += qmm; } }
+         else    { if(Q%2==0) { qpp += qmp; qpm += qmm; } else { qpp -= qmp; qpm -= qmm; } }
+      }
+      else
+      {
+         NSTR(K,0); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MSq(1,K,0,n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         NSTR(K,0); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MSq(-1,K,0,n,l); rmzeros(qpm); mm_gout(qpm,filename); }
+      }
+      if(density.find("sx")!=std::string::npos) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
+      if(density.find("sy")!=std::string::npos) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
+   }
+   else if(density.find("sz")!=std::string::npos)
+   {
+      nstr[1]=83;
+      if(Q!=0)
+      {
+         NSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MSq(0,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         MSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(0,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         if(Q<0) { if(Q%2==0) qpp -= qmp; else qpp += qmp; }
+         else    { if(Q%2==0) qpp += qmp; else qpp -= qmp; }
+         retval_r = qpp/sqrt(2.);
+      }
+      else
+      {
+         NSTR(K,0); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MSq(0,K,0,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
+      }
+   }
+   else if(density.find("lx")!=std::string::npos || density.find("ly")!=std::string::npos)
+   {
+      nstr[1]=76;
+      if(Q!=0)
+      {
+         NSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MLq(1,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         MSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(1,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         NSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MLq(-1,K,abs(Q),n,l); rmzeros(qpm); mm_gout(qpm,filename); }
+         MSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MLq(-1,K,abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
+         if(Q<0) { if(Q%2==0) { qpp -= qmp; qpm -= qmm; } else { qpp += qmp; qpm += qmm; } }
+         else    { if(Q%2==0) { qpp += qmp; qpm += qmm; } else { qpp -= qmp; qpm -= qmm; } }
+      }
+      else
+      {
+         NSTR(K,0); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MLq(1,K,0,n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         NSTR(K,0); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MLq(-1,K,0,n,l); rmzeros(qpm); mm_gout(qpm,filename); }
+      }
+      if(density.find("sx")!=std::string::npos) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
+      if(density.find("sy")!=std::string::npos) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
+   }
+   else if(density.find("lz")!=std::string::npos)
+   {
+      nstr[1]=76;
+      if(Q!=0)
+      {
+         NSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MLq(0,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
+         MSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(0,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         if(Q<0) { if(Q%2==0) qpp -= qmp; else qpp += qmp; }
+         else    { if(Q%2==0) qpp += qmp; else qpp -= qmp; }
+         retval_r = qpp/sqrt(2.);
+      }
+      else
+      {
+         NSTR(K,0); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+         retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MLq(0,K,0,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
+      }
+   }
+/* if(density.find("sx")!=std::string::npos || density.find("sy")!=std::string::npos)
+   {
+      nstr[1]=83; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
+      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      qp = mm_gin(filename); if(qp.isempty()) { qp = balcar_MSq(1,K,Q,n,l); rmzeros(qp); mm_gout(qp,filename); }
+      nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      qm = mm_gin(filename); if(qm.isempty()) { qm = balcar_MSq(-1,K,Q,n,l); rmzeros(qm); mm_gout(qm,filename); }
+      if(density.find("sx")!=std::string::npos) retval_r = (qp-qm)/sqrt(2.);
+      if(density.find("sy")!=std::string::npos) retval_i = (qp+qm)/sqrt(2.);
+   }
+   else if(density.find("sz")!=std::string::npos)
+   {
+      nstr[1]=83; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
+      nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MSq(0,K,Q,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
+   }
+   else if(density.find("lx")!=std::string::npos || density.find("ly")!=std::string::npos)
+   {
+      nstr[1]=76; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
+      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      qp = mm_gin(filename); if(qp.isempty()) { qp = balcar_MLq(1,K,Q,n,l); rmzeros(qp); mm_gout(qp,filename); }
+      nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      qm = mm_gin(filename); if(qm.isempty()) { qm = balcar_MLq(-1,K,Q,n,l); rmzeros(qm); mm_gout(qm,filename); }
+      if(density.find("lx")!=std::string::npos) retval_r = (qp-qm)/sqrt(2.);
+      if(density.find("ly")!=std::string::npos) retval_i = (qp+qm)/sqrt(2.);
+   }
+   else if(density.find("lz")!=std::string::npos)
+   {
+      nstr[1]=76; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
+      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
+      retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MLq(0,K,Q,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
+   }
+   else { std::cerr << "balcar_Mq(): Sorry density type \"" << density << "\" not recognised. Must be form of Lx,Sy, etc.\n"; exit(EXIT_FAILURE); }
+*/ return zmat2f(retval_r,retval_i);
 }
 
 // --------------------------------------------------------------------------------------------------------------- //

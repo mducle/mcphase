@@ -654,9 +654,9 @@ icmfmat::icmfmat()
    iflag.assign(6,0); iflag[2]=1; iflag[3]=1;
    _n = 1; _l = S; _num_op = 1;
 }
-icmfmat::icmfmat(int n, orbital l, int num_op)
+icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
 {
-   _n = n; _l = l; _num_op = num_op;
+   _n = n; _l = l; _num_op = num_op; _density = density;
    sMat<double> t; J.assign(6,t); 
    iflag.assign(num_op>6?num_op:6,0); iflag[2]=1; iflag[3]=1;
    // Determines the filename strings for where the moment operator matrices are stored if previously calculated
@@ -783,11 +783,6 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       {
          VE.zV(ii,jj).r=0.; VE.zV(ii,jj).i=0.;  
       }  
-// if(T<0) { for(Esz=0; Esz<J[0].nr(); Esz++) if(fabs(E[Esz])>DBL_EPSILON*100) break; T=fabs(T);}
-// fconf conf(_n,1,_l); int imax = F77NAME(izamax)(&Hsz,VE.zV(0),&incx); Esz = conf.states[imax-1].J2+1;
-// for(int ii=0; ii<Esz; ii++) { E.push_back(VE.E(ii)-VE.E(0)); };
-// icpars pars; pars.n=_n; pars.l=_l; ic_showoutput("results/myout",pars,VE);
-// std::cout << "Esz=" << Esz << "\n";
 
    // For first run calculate also the partition function and internal energy
    me.assign(Esz,0.); eb.assign(Esz,0.); Z=0.;
@@ -834,13 +829,15 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
    sMat<double> Upq,Umq; double redmat; int n = _n; //if(n>(2*_l+1)) n = 4*_l+2-n; 
 
+   if(!_density.empty()) { std::cout << "Calculating the expectation of the moment density operator " << _density << "\n"; }
+
    // Rest of the runs only calculate the new matrix elements
    for(iJ=1; iJ<(_num_op>6?_num_op:6); iJ++)
    {
       me.assign(Esz,0.);
       // Using the above reduced matrix element with at (l k l; 0 0 0) 3-j symbol, odd k gives zero...
       if((iJ>6 && k[iJ]%2==1) || (k[iJ]>4 && _l==D)) { matel.push_back(me); continue; }
-      if(!VE.iscomplex())
+      if(!VE.iscomplex() && _density.empty())
       {
          if(iflag[iJ]==0) {
             double *fJmat; vt = (double*)malloc(Hsz*sizeof(double)); 
@@ -853,9 +850,6 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
                MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
                Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
                redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
-//redmat *= clm(iJ);
-//redmat=1.;
-//redmat=sqrt(factorial(2*_l+k[iJ]+1)/factorial(2*_l-k[iJ]))/pow(2.,k[iJ]);
                if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
                Upq *= redmat; fJmat = Upq.f_array();
             }
@@ -882,16 +876,14 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
          }
          else 
          {
+            if(!_density.empty()) { zJmat = balcar_Mq(_density,k[iJ],q[iJ],_n,_l); } else {
             NSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
             Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[iJ],abs(q[iJ]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
             MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
             Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
             redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
-//redmat *= clm(iJ);
-//redmat=1.;
-//redmat=sqrt(factorial(2*_l+k[iJ]+1)/factorial(2*_l-k[iJ]))/pow(2.,k[iJ]);
             if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
-            Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq);
+            Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq); }
          }
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
          for(ind_j=0; ind_j<Esz; ind_j++)
@@ -906,7 +898,6 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             ex[iJ]+=me[ind_j]*eb[ind_j];
          }
          free(zJmat); free(zt); matel.push_back(me); ex[iJ]/=Z;
-//ex[iJ]*=clm(iJ);
       }
       if(fabs(ex[iJ])<DBL_EPSILON) ex[iJ]=0.; 
    }

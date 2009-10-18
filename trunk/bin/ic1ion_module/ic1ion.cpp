@@ -323,6 +323,8 @@ void ic_parseinput(const char *filename, icpars &pars)
          ic_parsecfpars(varname, varval, pars);
       else if(varname.compare(0,2,"ar")==0 && varname.find_first_of("0123456789.")==2)
          ic_parsecfpars(varname, varval, pars, 2);
+      else if(varname.find("density")!=std::string::npos)
+         pars.density = varval;
       else if(varname.find("calc")!=std::string::npos)
       {
          if(varname.find("mag")!=std::string::npos)  // Physical properties calculation flags.

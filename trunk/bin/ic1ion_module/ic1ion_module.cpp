@@ -178,7 +178,7 @@ __declspec(dllexport)
    if(pars.spectrelevels==-1)
    {
       // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-      icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1);
+      icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.density);
       std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
       sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); 
       complex<double> a(1.,0.); int incx = 1;

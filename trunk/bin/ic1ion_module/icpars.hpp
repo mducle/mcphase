@@ -111,6 +111,7 @@ class icpars
       bool arnoldi;                          // Flag to indicate if the Arnoldi method should be use to diagonalise H
     //bool bflag;                            // Flag to show if a field norm= or nostevfact is given
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
+      std::string density;                   // Flag to output expectation values of spin/orbital density operator.
       double xT,xHa,xHb,xHc;                 // The vector in (H-T) phase space to calculate the x-axis of phase diag
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram
       double yT,yHa,yHb,yHc;                 // The vector in (H-T) phase space to calculate the y-axis of phase diag
@@ -171,13 +172,15 @@ class icmfmat
       int _n;
       orbital _l;
       int _num_op;
+      std::string _density;                        // Flag to output expectation values of spin/orbital density operator.
 
    public:
       std::vector<sMat<double> > J;                // A vector of the matrices [Sx Lx Sy Ly Sz Lz]
       std::vector<int> iflag;                      // Vector to determine if matrix is imaginery
 
       icmfmat();                                   // Blank constructor
-      icmfmat(int n, orbital l, int num_op);       // Constructor for l^n configuration
+      icmfmat(int n, orbital l, int num_op,        // Constructor for l^n configuration
+        std::string density="");
       void Jmat(sMat<double>&J, sMat<double>&iJ,   // Calculates the mean field matrix sum_i (H_i*J_i)
         std::vector<double>&gjmbH);
       std::vector<double> expJ(iceig&VE, double T, // Calculates the expectation values <V|J|V>exp(-beta*T)

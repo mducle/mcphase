@@ -109,7 +109,7 @@ HEADER = maths states ic1ion icpars
 .PHONY: default all clean
 
 default: all
-all: ic1ion ic1ion.so
+all: ../ic1ion ic1ion.so
 
 # Defines some variables
 OBJ := $(foreach objs,$(OBJECT),$(objs).o)

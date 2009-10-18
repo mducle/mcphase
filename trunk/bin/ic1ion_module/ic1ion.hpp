@@ -105,9 +105,12 @@ void racah_mumat(int n,int q,sMat<double>&L,sMat<double>&S, orbital l=F); // Cal
 // --------------------------------------------------------------------------------------------------------------- //
 bool lovesey_aKK(sMat<double> &aKK, int K, int Kp, int n, orbital l);     // Calculates the matrix a(K,K')
 bool lovesey_cKK(sMat<double> &aKK, int K, int Kp, int n, orbital l);     // Calculates the matrix c(K,K')
+complexdouble spherical_harmonics(int k, int q, double th, double phi);   // Calculates the spherical harmonic
 void lovesey_Qq(std::vector<sMat<double> >&Q, int q, int n, orbital l,    // Calculates the transition matrix Qq
        std::vector<double>&);
-complexdouble spherical_harmonics(int k, int q, double th, double phi);   // Calculates the spherical harmonic
+sMat<double> balcar_MSq(int q, int K, int Q, int n, orbital l);           // Calculates the coeff. of the spin density
+sMat<double> balcar_MLq(int q, int K, int Q, int n, orbital l);           // Calculates the coeff. of the orbital dens.
+complexdouble*balcar_Mq(std::string density,int K,int Q,int n,orbital l); // Driver for calculation of density coeff.
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in ic_hmltn.cpp
