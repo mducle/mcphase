@@ -35,6 +35,7 @@ import com.sun.image.codec.jpeg.JPEGImageEncoder;
 public class displaybubbles extends ApplicationFrame {
  Button bRot=new Button("save display.jpg");                       //erstellt einen Button
  static String[] file;
+ static long[] lastmod;
  static int[] colx;
  static int[] coly;
  static int[] colint;
@@ -160,6 +161,7 @@ public class displaybubbles extends ApplicationFrame {
        System.exit(0);
       }
        file = new String[args.length/3];
+       lastmod = new long[args.length/3];
        colx = new int[args.length/3];
        coly = new int[args.length/3];
        colint = new int[args.length/3];
@@ -170,7 +172,7 @@ public class displaybubbles extends ApplicationFrame {
        int j=0;
        String title="";
        for(int i=0; i<args.length-1;	i+=4)
-       {file[j]=args[i+3];
+       {file[j]=args[i+3];lastmod[j]=0;
        Integer pp;
        ss=args[i];
        colx[j]=p.valueOf(ss).intValue();
@@ -209,7 +211,13 @@ public class displaybubbles extends ApplicationFrame {
                 }
 
             File fileIni;
-       try{
+           int filechanged=0;
+           for (int i=0;i<file.length;++i)
+                  {fileIni = new File(file[i]);
+                   if(fileIni.lastModified()!=lastmod[i]){lastmod[i]=fileIni.lastModified();filechanged=1;}
+                  }
+       if(filechanged==1)
+      { try{
            for (int i=0;i<file.length;++i)
            {           
             String s="";
@@ -220,7 +228,6 @@ public class displaybubbles extends ApplicationFrame {
            {double [][] data=new double [3][maxnofpoints];//={{0,1},{0,1},{0,1}};             
 
             fileIni = new File(file[i]);
-
             //?ffnen der Datei
              DataInputStream inStream = new DataInputStream(new FileInputStream(fileIni));
              String strLine;
@@ -327,7 +334,7 @@ public class displaybubbles extends ApplicationFrame {
     }
     repaint();
   }
- }}
+ }}}
  static private String FirstWord(String strSource)
  {String fw;
   fw=TrimString(strSource);

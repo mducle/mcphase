@@ -79,6 +79,10 @@ class spincf
                  int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
                  double spins_show_ellipses,double spins_show_direction_of_static_moment,char ** cffilenames,double show_chargedensity,double show_spindensity);
 
+     void cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,char ** cffilenames,int showprim,
+                int nofpointsi, int nofpointsj, int nofpointsk,double scale_view_1,double scale_view_2,double scale_view_3,
+                spincf & savev_real,spincf & savev_imag,double phase,double amplitude,Vector & hkl);
+
     void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
     int  load(FILE * fin_coq);	
      

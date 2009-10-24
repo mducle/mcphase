@@ -127,10 +127,10 @@ libs/libarpack.a:
 	cd libs && make
 
 ifdef integral
-ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
+../ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
 	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
 else
-ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o
+../ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o
 	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)
 endif
 

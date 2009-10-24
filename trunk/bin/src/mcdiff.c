@@ -67,11 +67,11 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 // (*jjjpars[1...n]).mom(1..3)(45)(67)(89)        atomic magnetic moment Ma Mb Mc [mb] and (if input) Sa La Sb Lb Sc Lc
 //                                       ' (with respect to coordinates 1,2,3=yzx)
 // (*jjjpars[1...n]).gj		      Lande factor
-// J[1..n] // code for indicating if ion is nonmagnetic (J=1), 
-            //rare earth with dipole approx (J=-1), 
-            //rare earth beyond dipole approx, but with given nonzero gJ (stevens-balcar formalism) (J=0),
-            //gJ=0,general L and S moments given, use dipole approximation and separate formfactor for spin and orbital moment (J=-2)
-            //intermediate coupling (gJ=0), go beyond dipole approximation (J=-3)
+// J[1..n] // code for indicating if ion is J=1: nonmagnetic, 
+            //J[i]= 0  rare earth beyond dipole approx, but with given nonzero gJ (stevens-balcar formalism),
+            //J[i]=-1 rare earth with dipole approx (if gJ>0), spin formfactor only (if gJ=0) 
+            //J[i]=-2 and gJ=0,general L and S moments given, use dipole approximation and separate formfactor for spin and orbital moment
+            //J[i]=-3 intermediate coupling (gJ=0), go beyond dipole approximation 
 // (*jjjpars[1...n]).magFFj0(1..7)         formfactor j0 for atom 1...n <j0(kr)>-terms A,a,B,b,C,c,D
 // (*jjjpars[1...n]).magFFj2(1..7)         formfactor j2 for atom 1...n <j2(kr)>-terms A,a,B,b,C,c,D
 //     <jl(kr)> is defined as = integral[0,inf] U^2(r) jl(kr) 4 pi r^2 dr
@@ -124,7 +124,10 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 
                                 //magnetic structure factors
                                 if(J[i]<=0){   // i.e. atom is magnetic
+
                                              // formfactor F(Q)
+                                             if(J[i]==-1){if((*jjjpars[i]).gJ==0)(*jjjpars[i]).gJ=2.0;} // set gJ to 2 in case it is zero (non rare earth) 
+                                                                                                        // so that we get spin only formfactor
                                              FQ = (*jjjpars[i]).F(Q); //rare earth
 
                                              if(J[i]==0){ // go beyond dipole approximation for rare earth
@@ -452,8 +455,8 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
  if (ortho==1)
  {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
  } else
- {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
-  fprintf(fout, "#                         ...with x||(a x b), z||b and y normal to x and z\n");
+ {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]mi[MuB]mj[MuB]mk[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+  fprintf(fout, "#                         ...with j||b, k||(a x b) and i normal to k and j\n");
  }
  for (i = 1;i<=n;++i)
  {if((double)(i)/50==(double)(i/50))
@@ -461,8 +464,8 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    if (ortho==1)
    {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]ma[MuB]mb[MuB]mc[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
    } else
-   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]my[MuB]mz[MuB]mx[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
-    fprintf(fout, "#                         ...with x||a x b, z||b and y normal to x and z\n");
+   {fprintf(fout, "#  dr1[r1]dr2[r2]dr3[r3]mi[MuB]mj[MuB]mk[MuB]sl[10^-12cm]  DWF[A^2] gJ     <j0>:A a      B      b      C      c      D      <j2>A  a      B      b      C      c      D\n");
+    fprintf(fout, "#                         ...with j||b, k||(a x b) and i normal to k and j\n");
    }
   }
   fprintf(fout, "# %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f %6.3f%+6.3fi %6.3f %6.3f ",(*jjjpars[i]).xyz(1),(*jjjpars[i]).xyz(2),(*jjjpars[i]).xyz(3),(*jjjpars[i]).mom(1),(*jjjpars[i]).mom(2),(*jjjpars[i]).mom(3),(*jjjpars[i]).SLR,(*jjjpars[i]).SLI,(*jjjpars[i]).DWF,(*jjjpars[i]).gJ);
@@ -987,6 +990,9 @@ fprintf(fout,"#                 -it may contain a    Debey Waller Factor\n");
 fprintf(fout,"# 'da' 'db' and 'dc' are not used by the program, \n");
 fprintf(fout,"# 'dr1','dr2' and 'dr3' refer to the primitive lattice given below\n");
 fprintf(fout,"# 'Ma','Mb','Mc' denote the magnetic moment components in Bohr magnetons\n");
+fprintf(fout,"#                in case of non orthogonal lattices instead of Ma Mb Mc the components Mi Mj Mk\n");
+fprintf(fout,"#                have to be given, which refer to an right handed orthogonal coordinate system \n");
+fprintf(fout,"#                defined by j||b, k||(a x b) and i normal to k and j\n");
 fprintf(fout,"# '<Ja>' '<Jb>' '<Jc>' (optional) denote the momentum components \n");
 fprintf(fout,"# 'gjmbHeffa' 'gjmbHeffb' 'gjmbHeffc' (optional line, used to go beyond dipole approx for formfactor)\n");
 fprintf(fout,"#                                     denote the corresponding meanfields multiplied by \n");
@@ -1031,7 +1037,7 @@ for(i=1;i<=natmagnetic;++i){
                                                                 (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);
                                                                 (*jjjpars[i]).mom(3)=2*(*jjjpars[i]).mom(8)+(*jjjpars[i]).mom(9);
                                                                 }
-                                                           else {J[i]=-1;(*jjjpars[i]).gJ=2;} // just use spin formfactor
+                                                           else {J[i]=-1;} // just use spin formfactor
                                                       }
 fprintf(fout,"{%s} %8.5f %8.5f %8.5f  ",cffilename,numbers[4]*r1s(1)+numbers[5]*r2s(1)+numbers[6]*r3s(1),numbers[4]*r1s(2)+numbers[5]*r2s(2)+numbers[6]*r3s(2),numbers[4]*r1s(3)+numbers[5]*r2s(3)+numbers[6]*r3s(3));
 fprintf(fout,"%8.5f %8.5f %8.5f  ",numbers[4],numbers[5],numbers[6]); // positions
@@ -1055,7 +1061,7 @@ fprintf(fout,"\n");
                                              est=(*jjjpars[i]).est;
                                Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
                                for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
-                                                  (*jjjpars[i]).mom(3+k)=moment(k);
+                                                  (*jjjpars[i]).mom(3+k)=moment(k);//printf("m(%i)=%g ",k,moment(k));
                                                  }
                                (*jjjpars[i]).mom(1)=2*(*jjjpars[i]).mom(4)+(*jjjpars[i]).mom(5);
                                (*jjjpars[i]).mom(2)=2*(*jjjpars[i]).mom(6)+(*jjjpars[i]).mom(7);

@@ -61,7 +61,7 @@ par::par (const char *filejjj)
   jjj=new jjjpar * [nofatoms+1];
   gJ=Vector(1,nofatoms);
   for(i=1;i<=nofatoms;++i)  
-  {jjj[i]=new jjjpar(fin_coq);  
+  {jjj[i]=new jjjpar(fin_coq,nofcomponents);  
    gJ(i)=(*jjj[i]).gJ;
   // fgets (instr, MAXNOFCHARINLINE, fin_coq);
    rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);

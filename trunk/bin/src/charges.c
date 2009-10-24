@@ -233,6 +233,11 @@ fclose(fout);
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              
+  fout = fopen_errchk ("./results/charges.grid", "w");
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,50,50,50,scale_view_1,scale_view_2,scale_view_3,
+                       savev_real,savev_imag,0.0,0.0,hkl);
+    fclose (fout);
+
   fout = fopen_errchk ("./results/charges.jvx", "w");
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                   0,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0,cffilenames,show_chargedensity,show_spindensity);
@@ -242,7 +247,6 @@ fclose(fout);
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
                   1,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0,cffilenames,show_chargedensity,show_spindensity);
     fclose (fout);
-
 
 
 if (argc>=9){// try a spinwave picture

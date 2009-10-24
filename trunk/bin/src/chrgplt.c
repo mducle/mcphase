@@ -37,7 +37,7 @@ printf("***********************************************************\n");
 // check command line
   if (argc < 6)
     { printf ("\nprogram chrgplt - calculate chargdensity of a single ion\n\n\
-                use as: chrgplt T Ha Hb Hc mcphas.cf \n\n\
+                use as: chrgplt T Ha Hb Hc mcphas.sipf \n\n\
                 given is temperature T[K] and magnetic effective field H[T]\n \
 		and crystal field  parameters Blm should be read from a \n\
 	        standard mcphas single ion property file mcphas.cf \n\
@@ -114,10 +114,15 @@ printf("\n");
  cffilenames[1]=new char[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
 
- strcpy(cffilenames[1],argv[5]);
- x[1]=0;y[1]=0;z[1]=0;
-printf("hello\n");
+Vector abc(1,3);abc(1)=6.0;abc(2)=6.0;abc(3)=6.0;
+Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
 
+ strcpy(cffilenames[1],argv[5]);
+ x[1]=0.5;y[1]=0.5;z[1]=0.5; // put atom in middle of cell
+//printf("hello\n");
+
+if(jjjps.calcmagdensity==0)
+{
 // read pointcharge-parameters 
  cf_file = fopen_errchk (argv[5], "rb");
  float par[100];par[0]=99;
@@ -127,26 +132,24 @@ while(pchere>3)
  if(jjjps.module_type==2){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=cab\n",par[1],par[2],par[3],par[4]);}
  ++nofpc;if(nofpc>MAXNOFATOMS){fprintf(stderr,"Error chrgplt - too many pointcharges");exit(1);}
   cffilenames[1+nofpc]=new char[MAXNOFCHARINLINE];
-  sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",0.529177*pow(par[1],0.3333));
+  sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",0.529177*copysign(1.0,par[1])*pow(fabs(par[1]),0.3333));
   if(jjjps.module_type==0){
-  x[nofpc+1]=par[2];// these are the positions in Angstroem (we set a=b=c=1A below)
-  y[nofpc+1]=par[3];// however in order to be in line with the cfield xyz=cab
-  z[nofpc+1]=par[4];// and ic1ion xyz=abc we have to set these parameters
+  x[nofpc+1]=par[2]/abc(1)+x[1];// these are the positions in Angstroem
+  y[nofpc+1]=par[3]/abc(2)+y[1];// however in order to be in line with the cfield xyz=cab
+  z[nofpc+1]=par[4]/abc(3)+z[1];// and ic1ion xyz=abc we have to set these parameters
                           }
   if(jjjps.module_type==2){
-  x[nofpc+1]=par[3];// these are the positions in Angstroem (we set a=b=c=1A below)
-  y[nofpc+1]=par[4];// however in order to be in line with the cfield xyz=cab
-  z[nofpc+1]=par[2];// and ic1ion xyz=abc we have to set these parameters
+  x[nofpc+1]=par[3]/abc(1)+x[1];// these are the positions in Angstroem (we set a=b=c=1A below)
+  y[nofpc+1]=par[4]/abc(2)+y[1];// however in order to be in line with the cfield xyz=cab
+  z[nofpc+1]=par[2]/abc(3)+z[1];// and ic1ion xyz=abc we have to set these parameters
                           }
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){}
 }
 fclose(cf_file);
-
+}
   spincf s(1,1,1,nofpc+1,dim);
   
-  Vector abc(1,3);abc(1)=1.0;abc(2)=1.0;abc(3)=1.0;
   
-  Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
   Vector gJJ(1,nofpc+1);gJJ=0;gJJ(1)=jjjps.gJ;
   Vector hkl(1,3);hkl=0;s=s*0;
   spincf ev_real(s),ev_imag(s);
@@ -158,6 +161,15 @@ fclose(cf_file);
    s.jvx_cd(fout,text,abc,r,x,y,z,gJJ,0,0,0,show_atoms,1.0,1.0,1.0,
             1,0.0,ev_real,ev_imag,0.0,hkl,0.0,0.0,
             cffilenames,1.0,show_spindensity);
+  fclose (fout);
+  fout = fopen_errchk ("results/chrgplti.grid", "w");
+  s.cd(fout,abc,r,x,y,z,cffilenames,1,1,80,80,1.0,1.0,1.0,ev_real,ev_imag,0.0,0.0,hkl);
+  fclose (fout);
+  fout = fopen_errchk ("results/chrgpltj.grid", "w");
+  s.cd(fout,abc,r,x,y,z,cffilenames,1,80,1,80,1.0,1.0,1.0,ev_real,ev_imag,0.0,0.0,hkl);
+  fclose (fout);
+  fout = fopen_errchk ("results/chrgpltk.grid", "w");
+  s.cd(fout,abc,r,x,y,z,cffilenames,1,80,80,1,1.0,1.0,1.0,ev_real,ev_imag,0.0,0.0,hkl);
   fclose (fout);
 fprintf(stderr,"# ************************************************************************\n");
 fprintf(stderr,"# *             end of program chrgplt\n");

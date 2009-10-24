@@ -315,7 +315,7 @@ void jjjpar::save_radial_wavefunction(const char * filename)
 double jjjpar::rocalc (double & teta,double & fi,double & R, Vector & moments)
 {double ro,ct,ct2,st,st2,sfi,cfi,rs,rr;
 
-if (R>3.0||R<0){ro = 1e+10;}else{
+if (R>4.0||R<0){ro=0;}else{
 ct = cos(teta);                      //z
 ct2 = ct * ct;
 st = sin(teta);
@@ -334,6 +334,7 @@ cfi = cos(fi);
 
 Matrix a(0,6,-6,6);
 a(0, 0) = 1 / sqrt(4.0 * 3.1415);
+if(calcmagdensity>0)a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
 
 a(2,-2)=moments(offset+4);
 a(2,-1)=moments(offset+5);
@@ -908,6 +909,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
    Cp=Vector(1,9);Cp=0;
 
   DWF=0;  gJ=0;
+   calcmagdensity=0;
 
   cf_file = fopen_errchk (sipffilename, "rb");
 
@@ -918,7 +920,8 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
     extract(instr,"SCATTERINGLENGTHIMAG",SLI);  
     extract(instr,"GJ",gJ);  
     extract(instr,"gJ",gJ);  
-   // read formfactor if given
+    extract(instr,"calcmagdensity",calcmagdensity);
+    // read formfactor if given
     extract(instr,"FFj0A",magFFj0[1]);
     extract(instr,"FFj0a",magFFj0[2]);
     extract(instr,"FFj0B",magFFj0[3]);
@@ -984,7 +987,7 @@ if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering int
 
 /*****************************************************************************************/
 //constructor with file handle of mcphas.j
-jjjpar::jjjpar(FILE * file) 
+jjjpar::jjjpar(FILE * file,int nofcomps) 
 { FILE * cf_file;   
   char instr[MAXNOFCHARINLINE];
   cffilename= new char [MAXNOFCHARINLINE];
@@ -1021,7 +1024,7 @@ jjjpar::jjjpar(FILE * file)
                    exit (EXIT_FAILURE);}
   Mq=ComplexVector(1,3);
 
-  nofcomponents=3; // default value for nofcomponents - (important in case nofparameters=0)
+  nofcomponents=nofcomps; // default value for nofcomponents - (important in case nofparameters=0)
 // read the exchange parameters from file (exactly paranz parameters!)
   for  (i=1;i<=paranz;++i)
   {while((j=inputline(file, nn))==0&&feof(file)==0){}; // returns 0 if comment line or eof, exits with error, if input string too long
@@ -1102,6 +1105,8 @@ jjjpar::jjjpar(double x,double y,double z, double slr,double sli, double dwf)
    Xip=Vector(1,9);Xip=0;
    Cp=Vector(1,9);Cp=0;
    r2=0;r4=0;r6=0;
+  calcmagdensity=0;
+
 }
 //constructor without file
 jjjpar::jjjpar(int n,int diag,int nofmom) 
@@ -1114,7 +1119,9 @@ jjjpar::jjjpar(int n,int diag,int nofmom)
   transitionnumber=1;
   nofcomponents=nofmom;
   mom=Vector(1,nofcomponents);
-  mom=0; 
+  mom=0;
+  calcmagdensity=0;
+
   dn = new Vector[n+1];for(i1=0;i1<=n;++i1){dn[i1]=Vector(1,3);}
   if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
   sublattice = new int[paranz+1];
@@ -1147,7 +1154,8 @@ jjjpar::jjjpar (const jjjpar & p)
   gJ=p.gJ;module_type=p.module_type;
   Mq=ComplexVector(1,3);
   Mq=p.Mq;
-  
+   calcmagdensity=p.calcmagdensity;
+
   Np=p.Np; Xip=p.Xip;Cp=p.Cp;
   r2=p.r2;r4=p.r4;r6=p.r6;
 

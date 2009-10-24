@@ -744,40 +744,7 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MLq(0,K,0,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
       }
    }
-/* if(density.find("sx")!=std::string::npos || density.find("sy")!=std::string::npos)
-   {
-      nstr[1]=83; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
-      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      qp = mm_gin(filename); if(qp.isempty()) { qp = balcar_MSq(1,K,Q,n,l); rmzeros(qp); mm_gout(qp,filename); }
-      nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      qm = mm_gin(filename); if(qm.isempty()) { qm = balcar_MSq(-1,K,Q,n,l); rmzeros(qm); mm_gout(qm,filename); }
-      if(density.find("sx")!=std::string::npos) retval_r = (qp-qm)/sqrt(2.);
-      if(density.find("sy")!=std::string::npos) retval_i = (qp+qm)/sqrt(2.);
-   }
-   else if(density.find("sz")!=std::string::npos)
-   {
-      nstr[1]=83; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
-      nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MSq(0,K,Q,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
-   }
-   else if(density.find("lx")!=std::string::npos || density.find("ly")!=std::string::npos)
-   {
-      nstr[1]=76; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
-      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      qp = mm_gin(filename); if(qp.isempty()) { qp = balcar_MLq(1,K,Q,n,l); rmzeros(qp); mm_gout(qp,filename); }
-      nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      qm = mm_gin(filename); if(qm.isempty()) { qm = balcar_MLq(-1,K,Q,n,l); rmzeros(qm); mm_gout(qm,filename); }
-      if(density.find("lx")!=std::string::npos) retval_r = (qp-qm)/sqrt(2.);
-      if(density.find("ly")!=std::string::npos) retval_i = (qp+qm)/sqrt(2.);
-   }
-   else if(density.find("lz")!=std::string::npos)
-   {
-      nstr[1]=76; if(Q<0) { MSTR(K,abs(Q)); } else { NSTR(K,Q); }
-      nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-      retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MLq(0,K,Q,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
-   }
-   else { std::cerr << "balcar_Mq(): Sorry density type \"" << density << "\" not recognised. Must be form of Lx,Sy, etc.\n"; exit(EXIT_FAILURE); }
-*/ return zmat2f(retval_r,retval_i);
+   return zmat2f(retval_r,retval_i);
 }
 
 // --------------------------------------------------------------------------------------------------------------- //

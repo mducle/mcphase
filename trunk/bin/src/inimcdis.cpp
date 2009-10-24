@@ -175,7 +175,7 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
 	      fprintf(stdout,"#Calculating intensities for ki=const=%4.4g/A\n",ki);
 	     }
   fclose (fin_coq);
-  if (Norm(qmin)+Norm(qmax)+Norm(deltaq)==0)
+  if (Norm(qmin)+Norm(qmax)+Norm(deltaq)<=0.00001)
     {  hkllist=1;
        hkls=new double *[i+10];
        deltaq(1)=1.0;qmin(1)=1.0;

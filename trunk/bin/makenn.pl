@@ -2,6 +2,7 @@
 
 use FileHandle;
 
+#use Math::Trig;
 use PDL;
 
 use PDL::Slatec;
@@ -10,325 +11,214 @@ print "********************************************************\n";
 print " makenn - create table with neighbors and interactions\n";
 print " References: M. Rotter et al. PRB 68 (2003) 144418\n";
 print "********************************************************\n";
+$PI=3.141592654;
 
 unless ($#ARGV>=0) 
 
 {
 
 print " usage: makenn 23.3 [options] \n\n";
-
 print " meaning take mcphas.j, generate all neighbors within sphere of 23.3A and\n";
-
 print " put them into makenn.j, in interaction columns put the classical dipole interaction\n";
-
 print " the output values are sorted by ascending distance\n";
 print " Note that in order to use makenn you have to set up a \n";
 print " working  mcphas.j file with the crystal structure. \n\n";
 print " option -rkky A(meV) kf(1/A) calculates the rkky interaction\n";
-
 print "              according to J(R)=A.cos(2.kf.R)/(2.kf.R)^3\n";
-
 print "              scaling A<0, kf should be the Fermi wavevector (usually\n";
-
 print "              between 0.3-2.5 A^-1 depending on the electrondensity^0.333)\n";
-
 print " option -rkky3d A(meV) ka(1/A) kb(1/A) kc(1/A) calculates the rkky interaction\n";
-
 print "              according to J(R)=A.cos(2.kfR)/(2.kfR)^3\n";
-
 print "              scaling A<0, kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2)\n";
-
 print " option -rkkz A(meV) kf(1/A) calculates the rkky interaction\n";
-
 print "              according to J(R)=A [sin(2.kf.R)-2.kf.R.cos(2.kf.R)]/(2.kf.R)^4\n";
-
 print "              scaling A>0, kf should be the Fermi wavevector\n";
-
 print " option -rkkz3d A(meV) ka(1/A) kb(1/A) kc(1/A)  calculates the rkky interaction\n";
-
 print "              according to J(R)=A [sin(2.kfR)-2.kfR.cos(2.kfR)]/(2.kfR)^4\n";
-
 print "              scaling A>0, kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2)\n";
-
 print " option -kaneyoshi A(meV) D(A) alpha  calculates the kaneyoshi\n";
-
 print  "             parametrization for the Bethe-Slater\n";
-
 print "              curve: J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2]\n";
-
 print "              with D corresponding to the orbital radius\n";
-
 print "              the exponential alpha is conveniently put to  about 1\n";
-
 print " option -kaneyoshi3d A(meV) Da(A) Db(A) Dc(A) alpha  calculates the 3d-kaneyoshi\n";
-
 print  "             parametrization for the Bethe-Slater\n";
-
 print "              curve: J(R)= A [-(RD)^2+(RD)^4].exp[-alpha.(RD)^2]\n";
-
 print "              with RD=sqrt(Ra^2/Da^2+Rb^2/Db^2+Rc^2/Dc^2)\n";
-
 print "              the exponential alpha is conveniently put to  about 1\n";
-
 print " option -d puts to the last column the distance of the neighbors (A)\n\n";
-
 print " The neigbours of each atom are also stored in seperate files\n";
 print " results\/makenn.a*.pc, which can be used with the program pointc to evaluate\n";
 print " the pointcharge model and calculate crystal field paramaters.\n\n";
  exit 0;}
 
-
-
 my ($rmax) = $ARGV[0];
-
 $rkky=0;$calcdist=0;
-
 shift @ARGV; 
-
 $_=$ARGV[0];
-
 if(/-rkky3d/)
-
   {$rkky=4;shift @ARGV; $scale=$ARGV[0];shift @ARGV;
-
    $ka=$ARGV[0];shift @ARGV;  $kb=$ARGV[0];shift @ARGV;   $kc=$ARGV[0];shift @ARGV;
-
    print "calculating RKKY interaction J(R)=A.cos(2.kfR)/(2.kfR)^3 for scale A=$scale meV and\n";
-
    print "kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2) with ka=$ka A^-1 kb=$kb A^-1 kc=$kc A^-1\n";}
-
 elsif(/-kaneyoshi3d/)
-
   {$rkky=5;shift @ARGV; $scale=$ARGV[0];shift @ARGV;
-
    $Da=$ARGV[0];shift @ARGV;   $Db=$ARGV[0];shift @ARGV;
-
    $Dc=$ARGV[0];shift @ARGV;$aa=$ARGV[0];shift @ARGV;
-
    print "calculating kaneyoshi parametrization for the Bethe-Slater curve\n";
-
    print "J(R)= A [-(RD)^2+(RD)^4].exp[-alpha.(RD)^2] for scale A=$scale meV \n";
-
    print "with RD=sqrt(Ra^2/Da^2+Rb^2/Db^2+Rc^2/Dc^2) with Da=$Da A^-1 Db=$Db A^-1 Dc=$Dc A^-1  and alpha=$aa\n";}
-
 elsif(/-rkkz3d/)
-
   {$rkky=6;shift @ARGV; $scale=$ARGV[0];shift @ARGV;
-
    $ka=$ARGV[0];shift @ARGV;  $kb=$ARGV[0];shift @ARGV;   $kc=$ARGV[0];shift @ARGV;
-
    print "calculating RKKY interaction J(R)=A [sin(2.kf.R)-2.kf.R.cos(2.kf.R)]/(2.kf.R)^4 for scale A=$scale meV\n";
-
    print "kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2) with ka=$ka A^-1 kb=$kb A^-1 kc=$kc A^-1\n";}
-
 elsif(/-rkky/)
-
   {$rkky=1;shift @ARGV; $scale=$ARGV[0];shift @ARGV;$kf=$ARGV[0];shift @ARGV;
-
    print "calculating RKKY interaction J(R)=A.cos(2.kf.R)/(2.kf.R)^3 for scale A=$scale meV and kf=$kf A^-1\n";}
-
 elsif(/-kaneyoshi/)
-
   {$rkky=2;shift @ARGV; $scale=$ARGV[0];shift @ARGV;$D=$ARGV[0];shift @ARGV;$aa=$ARGV[0];shift @ARGV;
-
    print "calculating kaneyoshi parametrization for the Bethe-Slater curve\n";
-
    print "J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2] for scale A=$scale meV D=$D A^-1  alpha=$aa\n";}
-
 elsif(/-rkkz/)
-
   {$rkky=3;shift @ARGV; $scale=$ARGV[0];shift @ARGV;$kf=$ARGV[0];shift @ARGV;
-
    print "calculating RKKY interaction J(R)=A [sin(2.kf.R)-2.kf.R.cos(2.kf.R)]/(2.kf.R)^4 for scale A=$scale meV and kf=$kf A^-1\n";}
-
 $_=$ARGV[0];
-
 if(/-d/)
-
   {$calcdist=1;print "putting distance of neighbors (A) to last column of makenn.j\n";}
 
-
-
-my ($latt,$p) = getlattice("./mcphas.j");
-
-my ($a,$b,$c,$nofatoms,$nofcomponents) = @{$latt};
-
+my ($latt,$p) = getlattice("./mcphas.j"); # gets lattice and atomic positions
+my ($a,$b,$c,$alpha,$beta,$gamma,$nofatoms,$nofcomponents) = @{$latt};
  print "rmax=".$rmax." A\n";
-
- print "a=".$a." b=".$b." c=".$c."\n";
-
+ print "a=".$a." b=".$b." c=".$c." alpha=".$alpha." beta=".$beta." gamma=".$gamma."\n";
  print "primitive lattice[abc]:".$p."\n";
 
- $t=$p->slice("0,"); $t*=$a;
+# define transformation matrix to calculate components of
+# r1 r2 and r3 with respect to the ijk coordinate system
+# defined by j||b, k||(a x b) and i normal to k and j
+$rtoijk = pdl [ [$a*sin($gamma*$PI/180),$a*cos($gamma*$PI/180),0],   # vector a in ijk coordinates
+                [0,$b, 0],                                           # vector b in ijk coordinates
+                [$c*(cos($beta*$PI/180)-cos($alpha*$PI/180)*cos($gamma*$PI/180))/sin($gamma*$PI/180),$c*cos($alpha*$PI/180),0]
+                                                                    # not yet vector c in ijk coordinates
+                  ];
+if (abs($rtoijk->at(2,0))>$c){die "ERROR makenn: alpha beta and gamma geometrically inconsistent\n";}
+$t=$rtoijk->slice("2:2,2:2");
+$t.=pdl[[$c*$c-$rtoijk->at(2,0)*$rtoijk->at(2,0)-$rtoijk->at(2,1)*$rtoijk->at(2,1)]];
+if ($rtoijk->at(2,2)<=0){die "ERROR makenn: alpha beta and gamma geometrically inconsistent\n";}
+$t.=sqrt($t);
+#print $t;
+#print $rtoijk;
+$invrtoijk=matinv($rtoijk); #invert this matrix for use later
+#print $invrtoijk;
+#'x' is hijacked as the matrix multiplication operator. e.g. $c = $a x $b;#
+#
+#perlDL is row-major not column major so this is actually c(i,j) = sum_k a(k,j) b(i,k) - but when matrices are printed the results will look right. Just remember the indices are reversed. e.g.:#
+#
+# $a = [                   $b = [
+#       [ 1  2  3  0]            [1 1]
+#       [ 1 -1  2  7]            [0 2]
+#       [ 1  0  0  1]            [0 2]
+#      ]                         [1 1]
+#                               ]#
+#
+# gives $c = [
+#             [ 1 11]
+#             [ 8 10]
+#             [ 2  2]
+#            ]Note: transpose() does what it says and is a convenient way to turn row vectors into column vectors.
 
- $t=$p->slice("1,"); $t*=$b;
-
- $t=$p->slice("2,"); $t*=$c;
-
+$p= $p x $rtoijk;
  print "primitive lattice[A]:".$p."\n";
-
-
-
     $r=0;
 
 # determine $nmin,$nmax by looking at a cube with side 3rmax
-
      $inv=matinv(transpose($p)); #invert primitive lattice
-
 # print "inverted primitive lattice[A]:".$inv."\n";
-
      #loop all corner points
-
   for ($i1=-1;$i1<=1;$i1+=2){
-
   for ($i2=-1;$i2<=1;$i2+=2){
-
   for ($i3=-1;$i3<=1;$i3+=2){
-
     $n=inner($inv , pdl[$i1*$rmax*1.5,$i2*$rmax*1.5,$i3*$rmax*1.5]); 
-
     if (($n->at(0))<$n1min) {$n1min=int($n->at(0))-1;}
-
     if (($n->at(1))<$n2min) {$n2min=int($n->at(1))-1;}
-
     if (($n->at(2))<$n3min) {$n3min=int($n->at(2))-1;}
-
     if (($n->at(0))>$n1max) {$n1max=int($n->at(0))+1;}
-
     if (($n->at(1))>$n2max) {$n2max=int($n->at(1))+1;}
-
     if (($n->at(2))>$n3max) {$n3max=int($n->at(2))+1;}
-
 #    print"corner $i1 $i2 $i3 coordinates in prim bases:$n\n";
-
  #   print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
-
   }}}
-
 print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
-
-
      #initialize output file results/makenn.j
-
- my ($h,$l)=printlattice("./mcphas.j",$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb,">./results/makenn.j");
-
-
+ my ($h,$l)=printlattice("./mcphas.j",">./results/makenn.j");
 
  for ($nnn=1;$nnn<=$nofatoms;++$nnn)    
-
  {   my $gJ=$gJ[$nnn];
-
      my ($rn)=new PDL ();
-
      my ($an)=new PDL ();
 
-
-
      my ($xn)=new PDL();    
-
      my ($yn)=new PDL();    
-
      my ($zn)=new PDL();    
 
+     my ($in)=new PDL();
+     my ($jn)=new PDL();
+     my ($kn)=new PDL();
 
-
-     my ($Jaa)=new PDL();    
-
+     my ($Jaa)=new PDL();   
      my ($Jab)=new PDL();    
-
      my ($Jac)=new PDL();    
 
-
-
      my ($Jba)=new PDL();    
-
      my ($Jbb)=new PDL();    
-
      my ($Jbc)=new PDL();    
 
-
-
      my ($Jca)=new PDL();    
-
      my ($Jcb)=new PDL();    
-
      my ($Jcc)=new PDL();    
 
-
-
-
-
   for ($n1=$n1min;$n1<=$n1max;++$n1){ 
-
   for ($n2=$n2min;$n2<=$n2max;++$n2){ 
-
   for ($n3=$n3min;$n3<=$n3max;++$n3){  
-
   for ($nz=1;$nz<=$nofatoms;++$nz){  
-
-   $rvec=pdl [$a*($x[$nz]-$x[$nnn]),$b*($y[$nz]-$y[$nnn]),$c*($z[$nz]-$z[$nnn])];
-
+   $dabc=pdl [($x[$nz]-$x[$nnn]),($y[$nz]-$y[$nnn]),($z[$nz]-$z[$nnn])];
+   $rvec= $dabc x $rtoijk;$rvec=$rvec->slice(":,(0)");
    $rvec+=$n1*$p->slice(",(0)")+$n2*$p->slice(",(1)")+$n3*$p->slice(",(2)");
-
    $rr=inner($rvec, $rvec);
-
    $r=sqrt($rr->at());
-
-   $xx=$rvec->at(0)/$a;
-
-   $yy=$rvec->at(1)/$b;
-
-   $zz=$rvec->at(2)/$c;
-
-#   if ($r<=$rmax && $r>0 && $x>=0 && $y>=0 && $z>=0){#save neighbour jjj format
+   $aabbcc=$rvec x $invrtoijk;$aabbcc=$aabbcc->slice(":,(0)");
+   $xx=$aabbcc->at(0);
+   $yy=$aabbcc->at(1);
+   $zz=$aabbcc->at(2);
 
    if ($r<=$rmax && $r>0){#save neighbour j format
 
-#       print $r."   ($xx,$yy,$zz,$n1,$n2,$n3,$nz\n";
-
     $an=$an->append( pdl ([$nz]));
-
     $rn=$rn->append( pdl ([$r]));
-
     $xn=$xn->append( pdl ([$xx]));
-
     $yn=$yn->append( pdl ([$yy]));
-
     $zn=$zn->append( pdl ([$zz]));
+    $in=$in->append( pdl ([$rvec->at(0)]));
+    $jn=$jn->append( pdl ([$rvec->at(1)]));
+    $kn=$kn->append( pdl ([$rvec->at(2)]));
 
-    my ($interaction) = getinteraction($gJ,$gJ[$nz],$r,$xx*$a,$yy*$b,$zz*$c);
-
+    my ($interaction) = getinteraction($gJ,$gJ[$nz],$r,$rvec->at(0),$rvec->at(1),$rvec->at(2));
     my ($jaa,$jab,$jac,$jba,$jbb,$jbc,$jca,$jcb,$jcc) = @{$interaction};
-
-
-
     $Jaa=$Jaa->append( pdl ([$jaa]));
-
     $Jab=$Jab->append( pdl ([$jab]));
-
     $Jac=$Jac->append( pdl ([$jac]));
-
     $Jba=$Jba->append( pdl ([$jba]));
-
     $Jbb=$Jbb->append( pdl ([$jbb]));
-
     $Jbc=$Jbc->append( pdl ([$jbc]));
-
     $Jca=$Jca->append( pdl ([$jca]));
-
     $Jcb=$Jcb->append( pdl ([$jcb]));
-
     $Jcc=$Jcc->append( pdl ([$jcc]));                         }
-
     }}}}  
 
    $n= qsorti($rn);
-
    $nofneighbours[$nnn]=(($rn->dims)[0]-1);
-
-   printneighbourlist($h,$l,$nofneighbours[$nnn],$gJ,$n,$an,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb);   
-
+   printneighbourlist($h,$l,$nofneighbours[$nnn],$gJ,$n,$an,$rn,$xn,$yn,$zn,$in,$jn,$kn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb);
  }
 
 
@@ -351,129 +241,83 @@ print "********************************************************\n";
 sub getinteraction {
 
    my ($gJthis,$gJ,$r,$rx,$ry,$rz)=@_;
-
    if ($gJthis==0){$gJthis=1;} # set gJ=1 for ions with intermediate coupling
    if ($gJ==0){$gJ=1;}
 
    # calculate classical dipole interaction
-
 if ($rkky==1)
-
 {$jaa = $scale*cos(2*$kf*$r)/8/$kf/$kf/$kf/$r/$r/$r;
-
  $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;$jcb=0;$jca=0;
-
 }
 
 elsif ($rkky==4)
-
 {$kfr=sqrt($ka*$ka*$rx*$rx+$kb*$kb*$ry*$ry+$kc*$kc*$rz*$rz);
-
  $jaa = $scale*cos(2*$kfr)/8/$kfr/$kfr/$kfr;
-
  $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;$jcb=0;$jca=0;
-
 }
 
 elsif ($rkky==3)
 
 {$jaa = $scale*(sin(2*$kf*$r)-2*$kf*$r*cos(2*$kf*$r))/16/$kf/$kf/$kf/$kf/$r/$r/$r/$r;
-
  $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;$jcb=0;$jca=0;
-
 }
 
 elsif ($rkky==6)
-
 {$kfr=sqrt($ka*$ka*$rx*$rx+$kb*$kb*$ry*$ry+$kc*$kc*$rz*$rz);
-
  $jaa = $scale*(sin(2*$kfr)-2*$kfr*cos(2*$kfr))/16/$kfr/$kfr/$kfr/$kfr;
-
  $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;$jcb=0;$jca=0;
-
 }
 
 elsif($rkky==2)
 
 {my ($xx)=$r*$r/$D/$D;
-
 $jaa= $scale*(-$xx+$xx*$xx)*exp(-$aa*$xx);
-
 $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;  $jcb=0;$jca=0;
-
 }
 
 elsif($rkky==5)
 
 {my ($xx)=$rx*$rx/$Da/$Da+$ry*$ry/$Db/$Db+$rz*$rz/$Dc/$Dc;
-
 $jaa= $scale*(-$xx+$xx*$xx)*exp(-$aa*$xx);
-
 $jbb =$jaa;$jcc =$jaa;$jab = 0;$jbc =0;$jac =0;$jba=0;  $jcb=0;$jca=0;
-
 }
 
 else
 
 {
-  
 my $c = $gJthis * $gJ * .927405 * .927405 / 16.02183;  #[meV A^3]
-
-
 $jaa = $c * (3 * $rx * $rx -$r *$r) /$r /$r /$r /$r /$r;
-
 $jbb = $c * (3 * $ry * $ry -$r *$r) /$r /$r /$r /$r /$r;
-
 $jcc = $c * (3 * $rz * $rz -$r *$r) /$r /$r /$r /$r /$r;
 
-
-
 $jab = $c * (3 * $rx * $ry) /$r /$r /$r /$r /$r;
-
 $jbc = $c * (3 * $ry * $rz) /$r /$r /$r /$r /$r;
-
 $jac = $c * (3 * $rx * $rz) /$r /$r /$r /$r /$r;
-
    $jba=$jab;   $jcb=$jbc;   $jca=$jac;
-
 }     
 
  return ([$jaa,$jab,$jac,$jba,$jbb,$jbc,$jca,$jcb,$jcc]);  
-
 }
-
-
-
-
 
 # Get lattic data, reading it from file 
 
 sub getlattice {
 
     my ($file) = @_;
-
     my $h = new FileHandle;
-
     my $n = 0;
-
     $nofcomponents=0;
-
-#     my @xlist = ();
-
   # input data int piddle
-
   if(open($h,$file))
-
   {      while(<$h>)
-
      {#next if /^\s*#/;
-
       # detect a= b= c= ...
-
-         
       if ($a==0){($a)=extract("a",$_);}
       if ($b==0){($b)=extract("b",$_);}
       if ($c==0){($c)=extract("c",$_);}
+      if ($alpha==0){($alpha)=extract("alpha",$_);}
+      if ($beta==0){($beta)=extract("beta",$_);}
+      if ($gamma==0){($gamma)=extract("gamma",$_);}
 
       if ($r1x==0){($r1x)=extract("r1a",$_);}
       if ($r1y==0){($r1y)=extract("r1b",$_);}
@@ -523,100 +367,61 @@ sub getlattice {
      if ($n!=$nofatoms) {print STDOUT "Failed to read data file \"$file\": wrong number of atoms\n";
 
                          return undef;}
+     if ($alpha<=0) { die "ERROR makenn: reading unit cell angle alpha=$alpha <=0\n";}
+     if ($beta<=0) { die "ERROR makenn: reading unit cell angle beta=$beta <=0\n";}
+     if ($gamma<=0) { die "ERROR makenn: reading unit cell angle gamma=$gamma <=0\n";}
 
      if($nofcomponents==0) {$nofcomponents=3;}
 
-     return ([$a,$b,$c,$nofatoms,$nofcomponents],pdl [[$r1x,$r1y,$r1z],[$r2x,$r2y,$r2z],[$r3x,$r3y,$r3z]]);
+     return ([$a,$b,$c,$alpha,$beta,$gamma,$nofatoms,$nofcomponents],pdl [[$r1x,$r1y,$r1z],[$r2x,$r2y,$r2z],[$r3x,$r3y,$r3z]]);
 
     } else {
-
 	print STDOUT "Warning: failed to read data file \"$file\"\n";
-
 	return undef;
-
     }
-
 }
 
-
-
 sub printlattice {
-
-  my ($filein,$n,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb,$fileout)=@_;   
-
-#   print $rn->index($n)."\n";
-
+  my ($filein,$fileout)=@_;   
     my $h = new FileHandle;
-
     my $l = new FileHandle;
-
     unless (open($l,$fileout)){die "cannot open file $fileout\n";}
-
     unless (open($h,$filein)) {die "cannot open file $fileout\n";}
-    
 
      $nofatoms=0;
-
      while(<$h>)
-
      {#next if /^\s*#/;
-
       $text=$_;
-
       if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
-
       last if (/^#.*\Q**********\E/&&$nofatoms!=0);
-
       print $l ($text);      
-
      }
-
  return ($h,$l);
-
 }
 
 
 
 sub printneighbourlist {
-
-  my ($h,$l,$nofn,$gJ,$n,$an,$rn,$xn,$yn,$zn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb)=@_;   
-
+  my ($h,$l,$nofn,$gJ,$n,$an,$rn,$xn,$yn,$zn,$in,$jn,$kn,$Jaa,$Jbb,$Jcc,$Jab,$Jba,$Jac,$Jca,$Jbc,$Jcb)=@_;
      if ($nofn=="-1"){$nofn="0";}
 
      print $l ("#*************************************************************************\n");
-
      my $stopheader=0;
-
      my $stopprint=0;
-
      while(<$h>)
-
      {#next if /^\s*#/;
-
       last if /^#.*\Q**********\E/;
-
       $text=$_;
-
      if (/^(#!|[^#])*nofneighbours\s*=\s*/){$text=~s!nofneighbours\s*=\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
-
      if (/^(#!|[^#])*diagonalexchange\s*=\s*/){
 
       if ($rkky>=1)
-
        {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=1!;$stopheader=1;}
-
       else
-
        {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=0!;$stopheader=1;}
-
       }
-
-
-
       if ($stopprint==0){print $l ($text);}
-
       $stopprint=$stopheader;
-
      }
 print $l "#-------------------------------------------------------------------------------------\n";
 print $l "# output of program makenn - table with neighbors and interactions\n";
@@ -624,42 +429,27 @@ print $l "# Reference: M. Rotter et al. PRB 68 (2003) 144418\n";
 
 
 if ($rkky==1)
-
 {print $l ("# it follows output of RKKY interaction according to J(R)=A.cos(2.kf.R)/(2.kf.R)^3 with A=$scale meV and kf=$kf A^-1 generated by makenn\n");}
-
 elsif ($rkky==3)
-
 {print $l ("# it follows output of RKKY interaction according to J(R)=A.[sin(2.kf.R)-2.kf.R.cos(2.kf.R)]/(2.kf.R)^4 with A=$scale meV and kf=$kf A^-1 generated by makenn\n");}
-
 elsif ($rkky==2)
-
 {print $l ("# kaneyoshi parametrization for the Bethe-Slater curve J(R)= A [-(R/D)^2+(R/D)^4].exp[-alpha.(R/D)^2] for scale A=$scale meV kf=$D A^-1  alpha=$aa\n");}
-
 elsif ($rkky==4)
-
 {print $l ("# it follows output of RKKY interaction J(R)=A.cos(2.kfR)/(2.kfR)^3 for scale A=$scale meV and\n");
-
  print $l ("# kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2) with ka=$ka A^-1 kb=$kb A^-1 kc=$kc A^-1\n");}
-
 elsif($rkky==5)
-
 {print $l ("# kaneyoshi parametrization for the Bethe-Slater curve J(R)= A [-(RD)^2+(RD)^4].exp[-alpha.(RD)^2] for scale A=$scale meV\n");
-
  print $l ("# with RD=sqrt(Ra^2/Da^2+Rb^2/Db^2+Rc^2/Dc^2) with Da=$Da A^-1 Db=$Db A^-1 Dc=$Dc A^-1  and alpha=$aa\n");}
-
 elsif($rkky==6)
-
  {print $l ("# it follows output of RKKY interaction  J(R)=A [sin(2.kfR)-2.kfR.cos(2.kfR)]/(2.kfR)^4 for scale A=$scale meV\n");
-
   print $l ("# kfR=sqrt(ka^2.Ra^2+kb^2.Rb^2+kc^2.Rc^2) with ka=$ka A^-1 kb=$kb A^-1 kc=$kc A^-1\n");}
-
 else
-
 {print $l ("# it follows output of classical DD interaction generated by makenn\n");}
-
 print $l "#-------------------------------------------------------------------------------------\n";
-print $l ("#da[a]    db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");
-
+    if($alpha!=90||$beta!=90||$gamma!=90)
+     {print $l ("#da[a]    db[b]     dc[c]       Jii[meV]  Jjj[meV]  Jkk[meV]  Jij[meV]  Jji[meV]  Jik[meV]  Jki[meV]  Jjk[meV]  Jkj[meV] with j||b, k||(a x b) and i normal to k and j\n");}
+    else
+     {print $l ("#da[a]    db[b]     dc[c]       Jaa[meV]  Jbb[meV]  Jcc[meV]  Jab[meV]  Jba[meV]  Jac[meV]  Jca[meV]  Jbc[meV]  Jcb[meV]\n");}
 
 my $pcout=">./results/makenn.a".$nnn.".pc";
 unless (open($l1,$pcout)){die "cannot open file $pcout\n";}
@@ -667,18 +457,16 @@ print $l1 "#--------------------------------------------------------------------
 print $l1 "#  table with neighbors and charges for atom $nnn\n";
 print $l1 "# output of program makenn:, Reference: M. Rotter et al. PRB 68 (2003) 144418\n";
 print $l1 "#-------------------------------------------------------------------------------------\n";
-print $l1 "#charge[|e|]  da[A]   db[A]   dc[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";
-
+    if($alpha!=90||$beta!=90||$gamma!=90)
+     {print $l1 "#orthonormal coordinate system ijk is defined with respect to abc as j||b, k||(a x b) and i normal to k and j\n#charge[|e|]  di[A]   dj[A]   dk[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";}
+     else
+     {print $l1 "#charge[|e|]  da[A]   db[A]   dc[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";}
 
  for ($n1=1;$n1<(($rn->dims)[0]);++$n1)
-
 # the position xyz is relative position (not absolute coordinate of neighbour)
-
  {print $l sprintf("%4.4g %4.4g %4.4g ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
-
  $ddd=$an->index($n)->at($n1);
-
-  print $l1 sprintf("%8s   %+8.4f %+8.4f %+8.4f     ",$charge[$ddd],$a*$xn->index($n)->at($n1),$b*$yn->index($n)->at($n1),$c*$zn->index($n)->at($n1));
+  print $l1 sprintf("%8s   %+8.4f %+8.4f %+8.4f     ",$charge[$ddd],$in->index($n)->at($n1),$jn->index($n)->at($n1),$kn->index($n)->at($n1));
   print $l1 sprintf("%+8.4f %+8.4f %+8.4f ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
   print $l1 sprintf("%+8.4f     %s\n",$rn->index($n)->at($n1),$ddd);
 

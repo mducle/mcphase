@@ -31,7 +31,7 @@ int main (int argc, char **argv)
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
   Matrix r(1,3,1,3);
-  Vector abc(1,3);
+  Vector abc(1,6);
 // check command line
 printf("#****************************************************\n");
 printf("# spins - display spinconfiguration at given htpoint\n");
@@ -78,7 +78,7 @@ abc=0;
    
    if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
-                 extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
+                 extract(instr,"alpha",abc[4]);  extract(instr,"beta",abc[5]);extract(instr,"gamma",abc[6]); 
    }
    extract(instr,"show_abc_unitcell",show_abc_unitcell);
    extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
@@ -109,8 +109,8 @@ abc=0;
 //		   printf("%s\n",cffilenames[n]);
 		  }
   }
-  if (alpha!=90||beta!=90||gamma!=90)
-  {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
+  if (abc(4)!=90||abc(5)!=90||abc(6)!=90)
+  {fprintf(stderr,"#!!!! WARNING: non orthogonal lattice not supported yet !!!!!!!\n");}
    Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];}
   
 

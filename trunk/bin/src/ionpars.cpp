@@ -39,7 +39,8 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
   Llm=p.Llm; // vector of crystal field parameters
- 
+  calcmagdensity=p.calcmagdensity;
+
   
    int i;
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
@@ -66,6 +67,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
   Jaa=ComplexMatrix(1,dimj,1,dimj);
   Jbb=ComplexMatrix(1,dimj,1,dimj);
   Jcc=ComplexMatrix(1,dimj,1,dimj);
+   calcmagdensity=0;
 
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
@@ -143,7 +145,7 @@ ionpars::ionpars(FILE * cf_file)
   
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
-
+   calcmagdensity=0;
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;gJ=0;
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
   // strip /r (dos line feed) from line if necessary
@@ -163,6 +165,7 @@ ionpars::ionpars(FILE * cf_file)
         extract(instr,"GAMMA",gammar);
 
         extract(instr,"GJ",gJr);
+       extract(instr,"calcmagdensity",calcmagdensity);
 
         extract(instr,"R2",r2r);
         extract(instr,"R4",r4r);
@@ -1119,18 +1122,15 @@ if(gjmbH.Hi()>48)
 
    // calculate U
      U=En*wn;
-   // calculate Ja,Jb,Jc
+   // calculate <Ja>,<Jb>,<Jc>
      z=ComplexMatrix(zr,zi);
 //     z=ests(1,dj,1,dj)*z; // transform to original eigenstates ... however we deleted this because it needs more time to transform than to solve the eigenvalue problem
 //     ests(1,dj,1,dj)=z;
 //     for (i=1;i<=dj;++i) {ests(0,i)=complex <double> (En(i),wn(i));}
 //     myPrintComplexMat(stdout,ests);     
-//     myPrintComplexMat(stdout,z);     
-     
-     za=Jaa*z;
-     zb=Jbb*z;
-     zc=Jcc*z;
+//     myPrintComplexMat(stdout,z);
 
+   za=Jaa*z;zb=Jbb*z;zc=Jcc*z;
     
      JJ=0;
 //    ComplexVector ddd;
@@ -1144,7 +1144,14 @@ if(gjmbH.Hi()>48)
 // here the expectation values of the multipolar moments are calculated
    for(j=4;j<=JJ.Hi();++j)
    {
-    zolm=(*OOlm[j-3])*z;
+// calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
+                       // of chargedensiy in chrgplt,charges ...
+    switch(calcmagdensity)
+    {case 1:  zolm=0.5*gJ*(Jaa*(*OOlm[j-3])+(*OOlm[j-3])*Jaa)*z;
+     case 2:  zolm=0.5*gJ*(Jbb*(*OOlm[j-3])+(*OOlm[j-3])*Jbb)*z;
+     case 3:  zolm=0.5*gJ*(Jcc*(*OOlm[j-3])+(*OOlm[j-3])*Jcc)*z;
+     default: zolm=(*OOlm[j-3])*z;
+    }
     for (i=1;i<=dj;++i) JJ[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));
    };
   

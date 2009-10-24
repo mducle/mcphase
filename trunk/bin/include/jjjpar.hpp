@@ -55,6 +55,9 @@ class jjjpar
   Vector magFFj4; // magnetic formfactor numbers
   Vector magFFj6; // magnetic formfactor numbers
   Vector Zc;      // Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
+  int calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
+                        // of chargedensiy in chrgplt,charges ...
+
 
 //  D = 2 * pi / Q
 //  s = 1 / 2 / D: sintheta = lambda * s
@@ -113,7 +116,7 @@ class jjjpar
    void save_sipf(char * path); //save single ion parameter file filename to path*
 
 
-   jjjpar (FILE * fin); //konstruktor with filehandle of mcphas.j file
+   jjjpar (FILE * fin, int nofcomp); //konstruktor with filehandle of mcphas.j file
    jjjpar (double x, double y, double z,char * sipffile); // constructor with filename of single ion parameter file
                // constructor with positions scattering length dwf
    jjjpar(double x,double y,double z, double slr,double sli, double dwf);
@@ -124,8 +127,8 @@ class jjjpar
   
   // integer to tell which module is loaded 0 - external, 1 - kramer, 2- cfield, 3 - brillouin
   int module_type;
-   Matrix cnst;// cnst is the Zlm constants - put them into the matrix
-
+  Matrix cnst;// cnst is the Zlm constants - put them into the matrix  
+ 
   private:
 
 
@@ -147,6 +150,7 @@ class jjjpar
 
   double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
    void set_zlm_constants();
+
 
   // kramers internal module functions, intern_mcalc=1
   Vector & kramer (double & T,Vector & H, double & Z,double & U);
