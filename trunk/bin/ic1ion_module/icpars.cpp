@@ -829,7 +829,20 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
    sMat<double> Upq,Umq; double redmat; int n = _n; //if(n>(2*_l+1)) n = 4*_l+2-n; 
 
-   if(!_density.empty()) { std::cout << "Calculating the expectation of the moment density operator " << _density << "\n"; }
+   if(!_density.empty()) 
+   { 
+      std::cout << "Calculating the expectation of the moment density operator ";
+      if(_density.find("l")!=std::string::npos || _density.find("s")!=std::string::npos) std::cout << _density << "\n"; 
+      else
+      {
+         if(_density.find("1")!=std::string::npos) std::cout << "Sx\n";
+         if(_density.find("2")!=std::string::npos) std::cout << "Lx\n";
+         if(_density.find("3")!=std::string::npos) std::cout << "Sy\n";
+         if(_density.find("4")!=std::string::npos) std::cout << "Ly\n";
+         if(_density.find("5")!=std::string::npos) std::cout << "Sz\n";
+         if(_density.find("6")!=std::string::npos) std::cout << "Lz\n";
+      }
+   }
 
    // Rest of the runs only calculate the new matrix elements
    for(iJ=1; iJ<(_num_op>6?_num_op:6); iJ++)

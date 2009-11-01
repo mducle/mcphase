@@ -353,8 +353,8 @@ void lovesey_Qq(std::vector< sMat<double> > &Qq, int q, int n, orbital l, std::v
    // <i|Q |j> = \/4*pi >    { Y    (k) [ ------ ] [ A(K'-1,K') + B(K'-1,K') ] ( K'-1 K' 1  ) + Y  B(K',K') ( K' K' 1  ) }
    //     q             ---  {  Q    -     K'+1                                ( Q    Q' -q )    Q          ( Q  Q' -q ) }
    //                  K'QQ'
-   //                              ( K' J' J )
-   //                           *  ( Q' M' M )                   with |i>==|avUSLJM> and |j>==|a'v'U'S'L'J'M'> 
+   //                              ( K' J'  J )
+   //                           *  ( Q' M' -M )                  with |i>==|avUSLJM> and |j>==|a'v'U'S'L'J'M'> 
    //
    // The matrices A(K,K') and B(K,K') are:                                                              1/2 
    //                                                                K+2 [                        ( K+1 )            ]
@@ -648,13 +648,14 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
 {
 #define NSTR(K,Q) nstr[3] = K+48; nstr[4] = Q+48; nstr[5] = 0
 #define MSTR(K,Q) nstr[3] = K+48; nstr[4] = 109;  nstr[5] = Q+48; nstr[6] = 0
+#define NPOS std::string::npos
    strtolower(density); int Hsz = getdim(n,l);
    sMat<double> retval_r(Hsz,Hsz),retval_i(Hsz,Hsz),qpp,qmp,qpm,qmm;
    char nstr[7]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR");
    if(mcphasedir==NULL) strcpy(basename,"mms/"); else {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
    nstr[0] = (l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 77;   // ASCII codes: 77="M", 83=="S", 100=="d", 102=="f", 109=="m", 112="p"
-   if(density.find("sx")!=std::string::npos || density.find("sy")!=std::string::npos)
+   if(density.find("sx")!=NPOS || density.find("sy")!=NPOS || density.find("1")!=NPOS || density.find("3")!=NPOS)
    {
       nstr[1]=83;
       if(Q!=0)
@@ -662,11 +663,11 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MSq(1,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
          MSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(1,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(1,K,-abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
          NSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MSq(-1,K,abs(Q),n,l); rmzeros(qpm); mm_gout(qpm,filename); }
          MSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MSq(-1,K,abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
+         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MSq(-1,K,-abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
          if(Q<0) { if(Q%2==0) { qpp -= qmp; qpm -= qmm; } else { qpp += qmp; qpm += qmm; } }
          else    { if(Q%2==0) { qpp += qmp; qpm += qmm; } else { qpp -= qmp; qpm -= qmm; } }
       }
@@ -677,10 +678,10 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,0); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MSq(-1,K,0,n,l); rmzeros(qpm); mm_gout(qpm,filename); }
       }
-      if(density.find("sx")!=std::string::npos) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
-      if(density.find("sy")!=std::string::npos) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
+      if(density.find("sx")!=NPOS || density.find("1")!=NPOS) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
+      if(density.find("sy")!=NPOS || density.find("3")!=NPOS) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
    }
-   else if(density.find("sz")!=std::string::npos)
+   else if(density.find("sz")!=NPOS || density.find("5")!=NPOS)
    {
       nstr[1]=83;
       if(Q!=0)
@@ -688,7 +689,7 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MSq(0,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
          MSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(0,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MSq(0,K,-abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
          if(Q<0) { if(Q%2==0) qpp -= qmp; else qpp += qmp; }
          else    { if(Q%2==0) qpp += qmp; else qpp -= qmp; }
          retval_r = qpp/sqrt(2.);
@@ -699,7 +700,7 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          retval_r = mm_gin(filename); if(retval_r.isempty()) { retval_r = balcar_MSq(0,K,0,n,l); rmzeros(retval_r); mm_gout(retval_r,filename); }
       }
    }
-   else if(density.find("lx")!=std::string::npos || density.find("ly")!=std::string::npos)
+   else if(density.find("lx")!=NPOS || density.find("ly")!=NPOS || density.find("2")!=NPOS || density.find("4")!=NPOS)
    {
       nstr[1]=76;
       if(Q!=0)
@@ -707,11 +708,11 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MLq(1,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
          MSTR(K,abs(Q)); nstr[2]=112; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(1,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(1,K,-abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
          NSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MLq(-1,K,abs(Q),n,l); rmzeros(qpm); mm_gout(qpm,filename); }
          MSTR(K,abs(Q)); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MLq(-1,K,abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
+         qmm = mm_gin(filename); if(qmm.isempty()) { qmm = balcar_MLq(-1,K,-abs(Q),n,l); rmzeros(qmm); mm_gout(qmm,filename); }
          if(Q<0) { if(Q%2==0) { qpp -= qmp; qpm -= qmm; } else { qpp += qmp; qpm += qmm; } }
          else    { if(Q%2==0) { qpp += qmp; qpm += qmm; } else { qpp -= qmp; qpm -= qmm; } }
       }
@@ -722,10 +723,10 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,0); nstr[2]=109; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpm = mm_gin(filename); if(qpm.isempty()) { qpm = balcar_MLq(-1,K,0,n,l); rmzeros(qpm); mm_gout(qpm,filename); }
       }
-      if(density.find("sx")!=std::string::npos) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
-      if(density.find("sy")!=std::string::npos) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
+      if(density.find("sx")!=NPOS || density.find("2")!=NPOS) { if(Q<0) retval_i = (qpp-qpm)/2.;    else retval_r = (qpp-qpm)/2.; }
+      if(density.find("sy")!=NPOS || density.find("4")!=NPOS) { if(Q<0) retval_r = (qpp+qpm)/(-2.); else retval_i = (qpp+qpm)/2.; }
    }
-   else if(density.find("lz")!=std::string::npos)
+   else if(density.find("lz")!=NPOS || density.find("6")!=NPOS)
    {
       nstr[1]=76;
       if(Q!=0)
@@ -733,7 +734,7 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
          NSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          qpp = mm_gin(filename); if(qpp.isempty()) { qpp = balcar_MLq(0,K,abs(Q),n,l); rmzeros(qpp); mm_gout(qpp,filename); }
          MSTR(K,abs(Q)); nstr[2]=48; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
-         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(0,K,abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
+         qmp = mm_gin(filename); if(qmp.isempty()) { qmp = balcar_MLq(0,K,-abs(Q),n,l); rmzeros(qmp); mm_gout(qmp,filename); }
          if(Q<0) { if(Q%2==0) qpp -= qmp; else qpp += qmp; }
          else    { if(Q%2==0) qpp += qmp; else qpp -= qmp; }
          retval_r = qpp/sqrt(2.);

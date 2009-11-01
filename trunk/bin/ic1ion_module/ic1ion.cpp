@@ -303,7 +303,7 @@ void ic_parseinput(const char *filename, icpars &pars)
       else if(varname.compare("f2")==0) { iss >> pars.F[1]; pars._F[1]=pars.F[1]*pars._econv; }
       else if(varname.compare("f4")==0) { iss >> pars.F[2]; pars._F[2]=pars.F[2]*pars._econv; }
       else if(varname.compare("f6")==0) { iss >> pars.F[3]; pars._F[3]=pars.F[3]*pars._econv; }
-      else if(varname.find("xi")!=std::string::npos) { iss >> pars.xi; pars._xi = pars.xi*pars._econv; }
+      else if(varname.compare("xi")==0) { iss >> pars.xi; pars._xi = pars.xi*pars._econv; }
       else if(varname.compare("alpha")==0)
       {
          if(varval.find(",")!=std::string::npos)
