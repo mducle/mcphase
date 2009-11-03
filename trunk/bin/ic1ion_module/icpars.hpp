@@ -111,6 +111,7 @@ class icpars
       bool arnoldi;                          // Flag to indicate if the Arnoldi method should be use to diagonalise H
     //bool bflag;                            // Flag to show if a field norm= or nostevfact is given
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
+      double chanlam;                        // Fraction of matrix to keep, for matrix truncation.
       std::string density;                   // Flag to output expectation values of spin/orbital density operator.
       double xT,xHa,xHb,xHc;                 // The vector in (H-T) phase space to calculate the x-axis of phase diag
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram

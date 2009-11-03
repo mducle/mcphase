@@ -82,6 +82,8 @@ extern "C"
                       double *beta, double *y, int *incy);
   void F77NAME(dgemm)(char *transa, char *transb, int *m, int *n, int *k, double *alpha, double *A,
                       int *lda, double *B, int *ldb, double *beta, double *c, int *ldc);
+  void F77NAME(zhemm)(char *side, char *uplo, int *m, int *n, complexdouble *alpha, complexdouble *A, int *lda,
+                      complexdouble *B, int *ldb, complexdouble *beta, complexdouble *C, int *ldc);
   void F77NAME(dcopy)(int *n, double *x, int *incx, double *y, int *incy);
   void F77NAME(zgemv)(char *trans, int *n, int *m, complexdouble *alpha, complexdouble *a,
                       int *lda, complexdouble *x, int *incx, complexdouble *beta,

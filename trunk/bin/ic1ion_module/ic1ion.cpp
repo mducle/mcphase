@@ -345,6 +345,10 @@ void ic_parseinput(const char *filename, icpars &pars)
          pars.arnoldi = true;
       else if(varname.find("spectrelevels")!=std::string::npos)
          iss >> pars.spectrelevels;
+      else if(varname.find("truncate_matrix")!=std::string::npos)
+      {  
+         iss >> pars.chanlam; if(pars.chanlam<=0 || pars.chanlam>=1) pars.chanlam=0.5;
+      }  
       else if(varname.find("emu")!=std::string::npos)
          pars.mag_units = 1;
       else if(varname.find("simag")!=std::string::npos)
@@ -354,7 +358,7 @@ void ic_parseinput(const char *filename, icpars &pars)
          tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xT = atof(tmpstr.c_str());
          first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
          last_num_pos = varval.find_first_not_of("0123456789.",first_num_pos);
-	 if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
+         if(first_num_pos!=std::string::npos || last_num_pos!=std::string::npos)
          {
             tmpstr = varval.substr(first_num_pos,last_num_pos-first_num_pos); pars.xHa = atof(tmpstr.c_str());
             first_num_pos = varval.find_first_of("0123456789.",last_num_pos);
