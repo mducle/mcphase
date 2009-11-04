@@ -292,7 +292,7 @@ void cfpars::assign(std::string &S, int &k, int &q, double v) // Assign a partic
    }
    else if(S.compare("B")==0)
    {
-      if(_cfname.compare("B")!=0) conv(S); _Bo[i] = v; _Bi[i] = val*_istevfact[k/2-1]/l[i]; if(q!=0) _Bi[i] = -_Bi[i]; MTP 0;
+      if(_cfname.compare("B")!=0) conv(S); _Bo[i] = v; _Bi[i] = val*_istevfact[k/2-1]/l[i]; if(q<0) _Bi[i] = -_Bi[i]; MTP 0;
    }
    else if(S.compare("V")==0)
    {

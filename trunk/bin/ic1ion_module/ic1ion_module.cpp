@@ -145,8 +145,8 @@ __declspec(dllexport)
 #ifndef _WINDOWS
          if(pars.chanlam!=1)  // Truncates the matrix, and stores the single ion part in a memorymapped array (Linux only)
          {
-std::cout << "mcalc(): Calculating rotated matrix for truncation. Setting up eigenvector mmaped matrix... " << std::flush;
-clock_t start,end; start = clock();
+            std::cout << "mcalc(): Calculating rotated matrix for truncation. Setting up eigenvector mmaped matrix... " << std::flush;
+            clock_t start,end; start = clock();
             size_t filesize = Hsz*Hsz*sizeof(complexdouble);
             // Creates a file for memory mapping.
             int fd = open("results/ic1ion.trunc", O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); if(fd==-1) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
@@ -156,11 +156,11 @@ clock_t start,end; start = clock();
             Vf = (complexdouble*)mmap(0, filesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             if (Vf == MAP_FAILED) { close(fd); std::cerr << "mcalc(): Truncation failed to mmapp the file\n"; exit(EXIT_FAILURE); }
             // Calculates the eigenvectors and puts it into the memory mapped file
-std::cout << "Done.\nStarting single ion matrix diagonalisation... " << std::flush;
+            std::cout << "Done.\nStarting single ion matrix diagonalisation... " << std::flush;
             i = ic_diag(Hic,iHic,Vf,Ef); delete[]Ef; 
             for(int ii=0; ii<Hsz; ii++) for(int jj=0; jj<Hsz; jj++) { 
                if(fabs(Vf[ii*Hsz+jj].r)<DBL_EPSILON) Vf[ii*Hsz+jj].r=0.; if(fabs(Vf[ii*Hsz+jj].i)<DBL_EPSILON) Vf[ii*Hsz+jj].i=0.; } 
-std::cout << "Finished." << std::endl;
+            std::cout << "Finished.";
             // Calculates the rotated operators for the mean field terms
             char nstr[6]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR"); char mapname[255]; char mapbasename[255];
             if(mcphasedir==NULL) strcpy(basename,"mms/"); else { strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
@@ -174,7 +174,7 @@ std::cout << "Finished." << std::endl;
             int im[]= {0,0,1,1,0,0, 1, 1,0,0,0, 1, 1, 1,0,0,0,0, 1, 1, 1, 1,0,0,0,0,0, 1, 1, 1, 1, 1,0,0,0,0,0,0, 1, 1, 1, 1, 1, 1,0,0,0,0,0,0,0};
             sMat<double> zeroes; zeroes.zero(Hsz,Hsz); sMat<double> Upq,Umq; complexdouble *zJmat;
             int cb = (int)(pars.chanlam*(double)Hsz); complexdouble *Hrot,*zmt; zmt = new complexdouble[Hsz*cb]; size_t filesize2 = cb*cb*sizeof(complexdouble); 
-double cbd = pars.chanlam*(double)Hsz; std::cout << "cb=" << cb << "; pars.chanlam=" << pars.chanlam << "; cbd=" << cbd << ";\n";
+            std::cout << " Using " << cb << " levels of " << Hsz << "." << std::endl;
             icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); double redmat;
             char notranspose='N',transpose='C',uplo='U',side='L'; complexdouble zalpha; zalpha.r=1; zalpha.i=0; complexdouble zbeta; zbeta.r=0; zbeta.i=0;
             for(int iJ=(J.Lo()-1); iJ<J.Hi(); iJ++)
@@ -202,7 +202,6 @@ double cbd = pars.chanlam*(double)Hsz; std::cout << "cb=" << cb << "; pars.chanl
                result = write(fd2, "", 1); if (result==-1) { close(fd2); std::cerr << "mcalc(): Can't write last byte\n"; exit(EXIT_FAILURE); }
                Hrot = (complexdouble*)mmap(0, filesize2, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0);
                if (Vf == MAP_FAILED) { close(fd2); std::cerr << "mcalc(): Truncation failed to mmapp the file\n"; exit(EXIT_FAILURE); }
-//             F77NAME(zgemm)(&notranspose,&notranspose,&Hsz,&cb,&Hsz,&zalpha,zJmat,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
                F77NAME(zhemm)(&side,&uplo,&Hsz,&cb,&zalpha,zJmat,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
                F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hsz,&zalpha,Vf,&Hsz,zmt,&Hsz,&zbeta,Hrot,&cb); free(zJmat);
                for(int ii=0; ii<cb; ii++) for(int jj=0; jj<cb; jj++) { 
@@ -210,7 +209,7 @@ double cbd = pars.chanlam*(double)Hsz; std::cout << "cb=" << cb << "; pars.chanl
                if (munmap(Hrot,filesize2)==-1) { close(fd2); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd2);
             }
             if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd); delete[]zmt;
-end = clock(); std::cerr << "Time to mmap files = " << (double)(end-start)/CLOCKS_PER_SEC << "s." << std::endl;
+            end = clock(); std::cout << "Time to mmap files = " << (double)(end-start)/CLOCKS_PER_SEC << "s." << std::endl;
          }
 #endif
       }
@@ -260,12 +259,6 @@ end = clock(); std::cerr << "Time to mmap files = " << (double)(end-start)/CLOCK
       Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
 
 #ifndef _WINDOWS
-if(0){ iceig VE; VE.calc(Hsz,Jm); std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel);
-for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i-J.Lo()]; *lnZ = vJ[J.Hi()-J.Lo()+1]; *U = vJ[J.Hi()-J.Lo()+2];
-std::cout << "Full:  J=["; for(int iJ=J.Lo(); iJ<J.Hi(); iJ++) std::cout << J[iJ] << " "; std::cout << "]. lnZ=" << *lnZ << ". U=" << *U << "\n"; 
-std::cout << "       E=["; for(int iE=0; iE<10; iE++) std::cout << VE.E(iE) << " "; std::cout << "]\n"; }
-std::cout << std::flush;
-
       if(pars.chanlam!=1)  // Uses the memory mapped eigenvectors of the single ion Hamiltonian to truncate the matrix (Linux only)
       {
          size_t filesize = Hsz*Hsz*sizeof(complexdouble); char notranspose='N',transpose='C',uplo='U',side='L'; complexdouble *Vf, zme;
@@ -277,12 +270,8 @@ std::cout << std::flush;
          if(Vf==MAP_FAILED) { close(fd); std::cerr << "mcalc(): Can't mmapp file\n"; exit(EXIT_FAILURE); }
          int cb = (int)(pars.chanlam*Hsz); complexdouble *Hrot,*zmt; zmt = new complexdouble[Hsz*cb]; Hrot = new complexdouble[cb*cb]; 
          F77NAME(zhemm)(&side,&uplo,&Hsz,&cb,&zalpha,Jm,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
-//       F77NAME(zgemm)(&notranspose,&notranspose,&Hsz,&cb,&Hsz,&zalpha,Jm,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
          F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hsz,&zalpha,Vf,&Hsz,zmt,&Hsz,&zbeta,Hrot,&cb); free(Jm); delete[]zmt;
          if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Truncation failed to un-mmapp the file\n"; exit(EXIT_FAILURE); }
-// Checks Hrot is Hermitian...
-if(0){ double summ=0.; for(int ii=0; ii<cb; ii++) for(int jj=0; jj<cb; jj++) summ+=(Hrot[ii*cb+jj].r-Hrot[jj*cb+ii].r+Hrot[ii*cb+jj].i+Hrot[jj*cb+ii].i); 
-std::cout << "summ=" << summ << "\n"; }
          close(fd); iceig VE; VE.calc(cb,Hrot); delete[]Hrot;
          for(int ii=0; ii<cb; ii++) for(int jj=0; jj<cb; jj++) { 
             if(fabs(VE.zV(ii,jj).r)<DBL_EPSILON) VE.zV(ii,jj).r=0.; if(fabs(VE.zV(ii,jj).i)<DBL_EPSILON) VE.zV(ii,jj).i=0.; } 
@@ -322,8 +311,6 @@ std::cout << "summ=" << summ << "\n"; }
             if(munmap(zJmat,filesize)==-1) { close(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd);
          }
 	 *lnZ = log(Z)-VE.E(0)/(KB**T);
-//std::cout << "Trunc: J=["; for(int iJ=J.Lo(); iJ<J.Hi(); iJ++) std::cout << J[iJ] << " "; std::cout << "]. lnZ=" << *lnZ << ". U=" << *U << "\n";
-//std::cout << "       E=["; for(int iE=0; iE<10; iE++) std::cout << VE.E(iE) << " "; std::cout << "]\n";
       }
       else
       {
