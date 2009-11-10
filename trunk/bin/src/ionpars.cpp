@@ -442,8 +442,14 @@ ionpars::ionpars(FILE * cf_file)
     }
      
 
-if (pr==1) printf("#using cfield ...\n");
-
+if (pr==1) {printf("#using cfield ...\n");
+            switch(calcmagdensity)
+               {case 1: printf("# - calculating magnetization density in x direction\n"); break;
+                case 2: printf("# - calculating magnetization density in y direction\n"); break;
+                case 3: printf("# - calculating magnetization density in z direction\n"); break;
+                default: ;
+               }
+           }
   
   fprintf(stderr,"# module cfield ... for ion %s\n",iontype);
   cfield_mcphasnew(iontype,Jxr,Jxi,  Jyr, Jyi, Jzr, Jzi,
@@ -1147,9 +1153,9 @@ if(gjmbH.Hi()>48)
 // calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
                        // of chargedensiy in chrgplt,charges ...
     switch(calcmagdensity)
-    {case 1:  zolm=0.5*gJ*(Jaa*(*OOlm[j-3])+(*OOlm[j-3])*Jaa)*z;
-     case 2:  zolm=0.5*gJ*(Jbb*(*OOlm[j-3])+(*OOlm[j-3])*Jbb)*z;
-     case 3:  zolm=0.5*gJ*(Jcc*(*OOlm[j-3])+(*OOlm[j-3])*Jcc)*z;
+    {case 1:  zolm=(0.5*gJ)*(((Jaa*(*OOlm[j-3]))+((*OOlm[j-3])*Jaa))*z);break;
+     case 2:  zolm=(0.5*gJ)*(((Jbb*(*OOlm[j-3]))+((*OOlm[j-3])*Jbb))*z);break;
+     case 3:  zolm=(0.5*gJ)*(((Jcc*(*OOlm[j-3]))+((*OOlm[j-3])*Jcc))*z);break;
      default: zolm=(*OOlm[j-3])*z;
     }
     for (i=1;i<=dj;++i) JJ[j]+=wn(i)*real(z.Column(i)*zolm.Column(i));

@@ -1198,13 +1198,12 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
   Vector maxv(1,3),minv(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
   Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,abc);
   Matrix abc_in_ijk_Inverse(1,3,1,3); abc_in_ijk_Inverse=abc_in_ijk.Inverse();
-  Matrix p(1,3,1,3);
-  calc_prim_mag_unitcell(p,abc,r);
+  Matrix p(1,3,1,3); calc_prim_mag_unitcell(p,abc,r);
+  Matrix p_inverse (1,3,1,3); p_inverse=p.Inverse();
   calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,abc,scale_view_1,scale_view_2,scale_view_3);
-   if(showprim==1){ijkmin(1)=1;ijkmin(2)=1;ijkmin(3)=1;ijkmax(1)=-2+(int)(scale_view_1);ijkmax(2)=-2+(int)(scale_view_2);ijkmax(3)=-2+(int)(scale_view_3);} // show only primitive magnetic unit cell
   max_min=maxv-minv;
 
-  int i,j,k,i1,j1,k1;Vector rijk(1,3);
+  int i,j,k,i1,j1,k1,imin,imax,jmin,jmax,kmin,kmax;Vector rijk(1,3);
   double ro[nofpointsi*nofpointsj*nofpointsk];
   for(i=0;i<=nofpointsi*nofpointsj*nofpointsk-1;++i)ro[i]=0;
     // calculate density contribution of each ion around
@@ -1215,11 +1214,16 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
   extract(cffilenames[l],"radius",radius);
   if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
   {     double rp=abs(radius);
-       for (i1=1;i1<=(1+(nofa-1)*scale_view_1);++i1){for(j1=1;j1<=(1+(nofb-1)*scale_view_2);++j1){for(k1=1;k1<=(1+(nofc-1)*scale_view_3);++k1){
-        //for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
-        //for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
-        //for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
-        for (i=1;i<=nofpointsi;++i){for (j=1;j<=nofpointsj;++j){for (k=1;k<=nofpointsk;++k){
+       for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
+        // here the ijk range is be more special according to the sphere radius rp
+        imax=1+(int)((dd0(1)+rp-minv(1))*nofpointsi/max_min(1)+0.5);
+        imin=-1+(int)((dd0(1)-rp-minv(1))*nofpointsi/max_min(1)+0.5);
+        jmax=1+(int)((dd0(2)+rp-minv(2))*nofpointsj/max_min(2)+0.5);
+        jmin=-1+(int)((dd0(2)-rp-minv(2))*nofpointsj/max_min(2)+0.5);
+        kmax=1+(int)((dd0(3)+rp-minv(3))*nofpointsk/max_min(3)+0.5);
+        kmin=-1+(int)((dd0(3)-rp-minv(3))*nofpointsk/max_min(3)+0.5);
+        if (imin<1)imin=1;if (jmin<1)jmin=1;if (kmin<1)kmin=1;if (imax>nofpointsi)imax=nofpointsi;if (jmax>nofpointsj)jmax=nofpointsj;if (kmax>nofpointsk)kmax=nofpointsk;
+        for (i=imin;i<=imax;++i){for (j=jmin;j<=jmax;++j){for (k=kmin;k<=kmax;++k){
         // set position vector
         rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;
         dd=pos(i1,j1,k1,l, abc, r,x,y,z)-rijk;
@@ -1231,33 +1235,48 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
   {jjjpar ionpar(x[l],y[l],z[l],cffilenames[l]);
 //   chargedensity cd(dtheta,dfi);
    int ndd;
-   for (i1=1;i1<=1+(nofa-1)*scale_view_1;++i1){for(j1=1;j1<=1+(nofb-1)*scale_view_2;++j1){for(k1=1;k1<=1+(nofc-1)*scale_view_2;++k1){
- //       for (i1=int(ijkmin(1)-1.0);i1<=int(ijkmax(1)+1);++i1){
- //       for (j1=int(ijkmin(2)-1.0);j1<=int(ijkmax(2)+1);++j1){
- //       for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
-   //printf("%i %i %i\n",i1,j1,k1);
-   dd0=pos(i1,j1,k1,l, abc, r,x,y,z);
+   // here we should introduce another loop to go around +-1 around the primitive
+   // magnetic unit cell so that we see also atoms at the borders in the density map:
+   int i0,j0,k0;
+   for(i0=-1;i0<=1;++i0){for(j0=-1;j0<=1;++j0){for(k0=-1;k0<=1;++k0){
+   for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
+   dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, abc, r,x,y,z);
+  //printf("%i %i %i\n",i1,j1,k1);
    Vector moments(1,nofcomponents);
    double QR; // old: QR=hkl(1)*dd0(1)/abc(1)+hkl(2)*dd0(2)/abc(2)+hkl(3)*dd0(3)/abc(3);
    QR=(hkl*abc_in_ijk_Inverse)*dd0;
    QR*=2*PI;int i1r=i1,j1r=j1,k1r=k1;
-   while(i1r<=0)i1r+=nofa;while(i1r>nofa)i1r-=nofa;
-   while(j1r<=0)j1r+=nofb;while(j1r>nofb)j1r-=nofb;
-   while(k1r<=0)k1r+=nofc;while(k1r>nofc)k1r-=nofc;
+//   while(i1r<=0)i1r+=nofa;while(i1r>nofa)i1r-=nofa;
+//   while(j1r<=0)j1r+=nofb;while(j1r>nofb)j1r-=nofb;
+//   while(k1r<=0)k1r+=nofc;while(k1r>nofc)k1r-=nofc;
                 for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
    {moments(ndd)=moment(i1r,j1r,k1r,l)(ndd)+amplitude*(cos(-phase+QR)*savev_real.moment(i1r,j1r,k1r,l)(ndd)+sin(phase-QR)*savev_imag.moment(i1r,j1r,k1r,l)(ndd));}
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
 
-        for (i=1;i<=nofpointsi;++i){for (j=1;j<=nofpointsj;++j){for (k=1;k<=nofpointsk;++k){
+        // here the ijk range should be more special according to the maximum sphere radius 3A - to get speed up!!!!
+        // dd0 is the center of the atom ...
+        radius=3.0;// only pixels nearer maxR (A) to the center of an atom will be considered
+        imax=1+(int)((dd0(1)+radius-minv(1))*nofpointsi/max_min(1)+0.5);
+        imin=-1+(int)((dd0(1)-radius-minv(1))*nofpointsi/max_min(1)+0.5);
+        jmax=1+(int)((dd0(2)+radius-minv(2))*nofpointsj/max_min(2)+0.5);
+        jmin=-1+(int)((dd0(2)-radius-minv(2))*nofpointsj/max_min(2)+0.5);
+        kmax=1+(int)((dd0(3)+radius-minv(3))*nofpointsk/max_min(3)+0.5);
+        kmin=-1+(int)((dd0(3)-radius-minv(3))*nofpointsk/max_min(3)+0.5);
+        if (imin<1)imin=1;if (jmin<1)jmin=1;if (kmin<1)kmin=1;if (imax>nofpointsi)imax=nofpointsi;if (jmax>nofpointsj)jmax=nofpointsj;if (kmax>nofpointsk)kmax=nofpointsk;
+        for (i=imin;i<=imax;++i){for (j=jmin;j<=jmax;++j){for (k=kmin;k<=kmax;++k){
         // set position vector
         rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;
+        // we should check here if rijk is in primitive unitcell otherwise take next rijk
+        dd=p_inverse*rijk;
+        if(dd(1)>0&dd(1)<1&dd(2)>0&dd(2)<1&dd(3)>0&dd(3)<1)
+        {
         dd=dd0-rijk;
         // get theta phi R from dd
     double R,Rxy,theta,fi;
     R=Norm(dd);
-    if(R<4.0){
+    if(R<radius){ // do not consider any pixels further away than maxR
     if(ionpar.module_type==2){// mind abc||yzx in module cfield
      //dx=R*sin(theta)*sin(fi);dy=R*cos(theta);dz=R*sin(theta)*cos(fi);
      theta=acos(dd(2)/R);Rxy=sqrt(dd(1)*dd(1)+dd(3)*dd(3));if(Rxy>SMALL){fi=acos(dd(3)/Rxy);}else{fi=0;}
@@ -1273,6 +1292,8 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
     ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.rocalc(theta,fi,R,moments);
    // printf("%g %g %g %g\n",R,theta,fi,ro);
         }
+   } // end if rijk is in primitive magnetic unit cell
+   }}}
    }}}
    }}}
   }

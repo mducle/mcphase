@@ -113,6 +113,7 @@ class icpars
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
       double chanlam;                        // Fraction of matrix to keep, for matrix truncation.
       std::string density;                   // Flag to output expectation values of spin/orbital density operator.
+      double Bx,By,Bz;                       // For magnetic field for Zeeman term
       double xT,xHa,xHb,xHc;                 // The vector in (H-T) phase space to calculate the x-axis of phase diag
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram
       double yT,yHa,yHb,yHc;                 // The vector in (H-T) phase space to calculate the y-axis of phase diag

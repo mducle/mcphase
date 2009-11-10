@@ -214,6 +214,7 @@ icpars::icpars()
    n = 1; l = (orbital)3; e_units.assign("cm^{-1}"); calcphys = 0; mag_units = 0;
    xT=0.; xHa=0.; xHb=0.; xHc=0.; xMin=0.; xStep=0.; xMax=0.;
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
+   Bx=0.; By=0.;  Bz=0.;
    perturb = false; partial = false; arnoldi = false; spectrelevels = -1; chanlam = 1;
 }
 // --------------------------------------------------------------------------------------------------------------- //

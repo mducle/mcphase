@@ -50,7 +50,7 @@ $col2=$ARGV[0];shift @ARGV;
 
       $rpvalue/=$nofpoints/100;
 
-      print "rpvalue=".$rpvalue;
+      print " rpvalue=".$rpvalue." ";
 
       close Fin;
 

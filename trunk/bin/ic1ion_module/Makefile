@@ -122,7 +122,7 @@ VECOBJ = ../src/vector/cheigen.o ../src/vector/chgeigen.o ../src/vector/cludcomp
 FORCE:
 
 checkgcc: FORCE
-	./checkgcc.sh 3.2 $(CC) -warn
+	./checkgcc.sh 3.4.5 $(CC) -warn
 
 libs/libarpack.a:
 	cd libs && make

@@ -2023,7 +2023,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
     line=fgets( string , buffer_size , fp );
     fclose(fp);
-    if(strncmp(line,"#!cfield",8)==0)
+    if(strncmp(line,"#!cfield",8)==0||strncmp(line,"#!MODULE=cfield",15)==0)
    {/* read mcphas single ion input file */
        printf("file format as single ion input module #!cfield\n");
 
@@ -3541,7 +3541,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
     line=fgets( string , buffer_size , fp );
     fclose(fp);
-    if(strncmp(line,"#!cfield",8)==0)
+    if(strncmp(line,"#!cfield",8)==0||strncmp(line,"#!MODULE=cfield",15)==0)
    {/* read mcphas single ion input file */
        printf("file format as single ion input module #!cfield\n");
 

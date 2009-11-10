@@ -131,6 +131,15 @@ $p= $p x $rtoijk;
  print "primitive lattice[A]:".$p."\n";
     $r=0;
 
+# first determine maximum distance of a basis atom to origin of unit cell
+    $distmax=0;
+  for ($nz=1;$nz<=$nofatoms;++$nz){
+   $dabc=pdl [($x[$nz]),($y[$nz]),($z[$nz])];
+   $rvec= $dabc x $rtoijk;$rvec=$rvec->slice(":,(0)");
+   $rr=inner($rvec, $rvec);
+   $r=sqrt($rr->at());
+   if($r>$distmax){$distmax=$r;}
+  }
 # determine $nmin,$nmax by looking at a cube with side 3rmax
      $inv=matinv(transpose($p)); #invert primitive lattice
 # print "inverted primitive lattice[A]:".$inv."\n";
@@ -138,15 +147,15 @@ $p= $p x $rtoijk;
   for ($i1=-1;$i1<=1;$i1+=2){
   for ($i2=-1;$i2<=1;$i2+=2){
   for ($i3=-1;$i3<=1;$i3+=2){
-    $n=inner($inv , pdl[$i1*$rmax*1.5,$i2*$rmax*1.5,$i3*$rmax*1.5]); 
+    $n=inner($inv , pdl[$i1*($rmax+$distmax)*1.5,$i2*($rmax+$distmax)*1.5,$i3*($rmax+$distmax)*1.5]);
     if (($n->at(0))<$n1min) {$n1min=int($n->at(0))-1;}
     if (($n->at(1))<$n2min) {$n2min=int($n->at(1))-1;}
     if (($n->at(2))<$n3min) {$n3min=int($n->at(2))-1;}
     if (($n->at(0))>$n1max) {$n1max=int($n->at(0))+1;}
     if (($n->at(1))>$n2max) {$n2max=int($n->at(1))+1;}
     if (($n->at(2))>$n3max) {$n3max=int($n->at(2))+1;}
-#    print"corner $i1 $i2 $i3 coordinates in prim bases:$n\n";
- #   print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
+#   print"corner $i1 $i2 $i3 coordinates in prim bases:$n\n";
+#   print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
   }}}
 print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
@@ -302,7 +311,6 @@ $jac = $c * (3 * $rx * $rz) /$r /$r /$r /$r /$r;
 # Get lattic data, reading it from file 
 
 sub getlattice {
-
     my ($file) = @_;
     my $h = new FileHandle;
     my $n = 0;
@@ -341,6 +349,7 @@ sub getlattice {
 
       if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
       if ($nofcomponents==0){($nofcomponents)=extract("nofcomponents",$_);}
+
 
       if (/^(#!|[^#])*nofneighbours\s*=\s*/){++$n;
 

@@ -443,6 +443,9 @@ void ic_parseinput(const char *filename, icpars &pars)
       else if(varname.compare("ymin")==0)  { tmpstr=iss.str(); pars.yMin  = atof(tmpstr.c_str()); }
       else if(varname.compare("ystep")==0) { tmpstr=iss.str(); pars.yStep = atof(tmpstr.c_str()); }
       else if(varname.compare("ymax")==0)  { tmpstr=iss.str(); pars.yMax  = atof(tmpstr.c_str()); }
+      else if(varname.compare("bx")==0)    { tmpstr=iss.str(); pars.Bx    = atof(tmpstr.c_str()); }
+      else if(varname.compare("by")==0)    { tmpstr=iss.str(); pars.By    = atof(tmpstr.c_str()); }
+      else if(varname.compare("bz")==0)    { tmpstr=iss.str(); pars.Bz    = atof(tmpstr.c_str()); }
    }  // while(!FILEIN.eof())
    FILEIN.close();
 }
@@ -463,6 +466,10 @@ void ic_printheader(const char *outfile, icpars &pars)
    if(pars.l==D) FILEOUT << "\n"; else FILEOUT << " gamma=" << pars.alpha[2] << "\n";
    FILEOUT << "# Crystal Field parameters normalisation: " << pars.B.norm() << "\n";
    FILEOUT << "# Crystal Field parameters (" << pars.B.units() << "): " << pars.B.cfparsout(", ") << "\n";
+   if(fabs(pars.Bx)>DBL_EPSILON || fabs(pars.By)>DBL_EPSILON || fabs(pars.Bz)>DBL_EPSILON)
+   {
+      FILEOUT << "# With magnetic field: Bx=" << pars.Bx << ", By=" << pars.By << ", Bz=" << pars.Bz << " Tesla.\n";
+   }
    FILEOUT.close();
 }
  
@@ -638,6 +645,15 @@ int main(int argc, char *argv[])
 
    // Calculates the intermediate coupling Hamilton matrix
    sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars);
+   // Calculates the Zeeman term if magnetic field is not zero
+   if(fabs(pars.Bx)>DBL_EPSILON || fabs(pars.By)>DBL_EPSILON || fabs(pars.Bz)>DBL_EPSILON)
+   {
+      std::vector<double> gjmbH(6,0.);
+      if(fabs(pars.Bx)>DBL_EPSILON) { gjmbH[1]=-MUB*pars.Bx; gjmbH[0]=GS*gjmbH[1]; }
+      if(fabs(pars.By)>DBL_EPSILON) { gjmbH[3]=-MUB*pars.By; gjmbH[2]=GS*gjmbH[3]; }
+      if(fabs(pars.Bz)>DBL_EPSILON) { gjmbH[5]=-MUB*pars.Bz; gjmbH[4]=GS*gjmbH[5]; }
+      sMat<double> J,iJ; icmfmat mfmat(pars.n,pars.l,6); mfmat.Jmat(J,iJ,gjmbH); Hic+=J; iHic+=iJ;
+   }
 
    end = clock(); std::cerr << "Time to calculate Hic = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
 

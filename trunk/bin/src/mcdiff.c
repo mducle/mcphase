@@ -165,20 +165,28 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 					               }
                                      if(J[i]==-3){ // go beyond dipole approximation for gJ=0 (intermediate coupling)
                                                        ComplexVector MQ(1,3);MQ=(*jjjpars[i]).MQ(Qvec);
-//                                             printf("MQxyz=(%g %+g i, %g %+g i,%g %+g i)",real(MQ(1)),imag(MQ(1)),real(MQ(2)),imag(MQ(2)),real(MQ(3)),imag(MQ(3)));
-					               msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);//MQ(123)=MQ(xyz)
-					               msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
-					               msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
                                              FQL = (*jjjpars[i]).F(-Q); // orbital formfactor
                                                         msfdipx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
 					                msfdipy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
-//printf("%g %g %g\n",(*jjjpars[i]).mom(8),(*jjjpars[i]).mom(4),(*jjjpars[i]).mom(6));
 					                msfdipx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
 					                msfdipy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
 					                msfdipz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
+                                                       if (Q<SMALL){// for Q=0 put dipole results, because M(Q) givs NaN
+                                                                 msfx+=(*jjjpars[i]).mom(8)*FQ*exp(-2*PI*qr*im); // spin FF
+					                         msfy+=(*jjjpars[i]).mom(4)*FQ*exp(-2*PI*qr*im);
+					                         msfz+=(*jjjpars[i]).mom(6)*FQ*exp(-2*PI*qr*im);
+					                         msfx+=(*jjjpars[i]).mom(9)*FQL/2*exp(-2*PI*qr*im); // orbital FF
+					                         msfy+=(*jjjpars[i]).mom(5)*FQL/2*exp(-2*PI*qr*im);
+					                         msfz+=(*jjjpars[i]).mom(7)*FQL/2*exp(-2*PI*qr*im);
+                                                           }
+					               else{
+                                                            msfx+=0.5*MQ(1)*exp(-2*PI*qr*im);//MQ(123)=MQ(xyz)
+					                    msfy+=0.5*MQ(2)*exp(-2*PI*qr*im);
+					                    msfz+=0.5*MQ(3)*exp(-2*PI*qr*im);
+                                                           }
 					               }
-//printf("%g %g %g\n",real(msfdipx),real(msfdipy),real(msfdipz));
+//printf("added ion %i MSF=(%8.6f %+8.6f i,%8.6f %+8.6f i,%8.6f %+8.6f i)\n         MSFdip=(%8.6f %+8.6f i,%8.6f %+8.6f i,%8.6f %+8.6f i)\n",i,real(msfx),imag(msfx),real(msfy),imag(msfy),real(msfz),imag(msfz),real(msfdipx),imag(msfdipx),real(msfdipy),imag(msfdipy),real(msfdipz),imag(msfdipz));
 // myPrintVector(stdout,(*jjjpars[i]).mom);//equivalent to moment ...
                                           
                                                          //mux=(*jjjpars[i]).mom(3); // this should be done in future to implement
