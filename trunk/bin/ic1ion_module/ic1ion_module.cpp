@@ -34,12 +34,9 @@
 #define SMALL 1e-6           // must match SMALL in mcdisp.c and ionpars.cpp because it is used to decide wether for small
                              // transition, energy the matrix Mijkl contains wn-wn' or wn/kT
 #ifndef _WINDOWS
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>           // For file control options
 #include <sys/mman.h>        // For memory map for truncation routines.
-#include <errno.h>
 #endif
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -162,8 +159,15 @@ __declspec(dllexport)
                if(fabs(Vf[ii*Hsz+jj].r)<DBL_EPSILON) Vf[ii*Hsz+jj].r=0.; if(fabs(Vf[ii*Hsz+jj].i)<DBL_EPSILON) Vf[ii*Hsz+jj].i=0.; } 
             std::cout << "Finished.";
             // Calculates the rotated operators for the mean field terms
-            char nstr[6]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR"); char mapname[255]; char mapbasename[255];
-            if(mcphasedir==NULL) strcpy(basename,"mms/"); else { strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+            #ifndef _WINDOWS 
+            char nstr[6]; char filename[255]; char basename[255]; char mapname[255]; char mapbasename[255]; int dirstat=0; struct stat status;
+            stat("results/mms/",&status); if(!S_ISDIR(status.st_mode)) dirstat = mkdir("results/mms",0777); strcpy(basename,"results/mms");
+            if(dirstat!=0) { std::cerr << "mcalc(): " << errno << "\n"; exit(EXIT_FAILURE); }
+            #else
+            strcpy(basename,"results/mms/"); CString myDir("results\\mms"); DWORD drAttr = GetFileAttributes(myDir); 
+            if(dwAttr==0xffffffff || !(dwAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+               if (!CreateDirectory("results\\mms", NULL)) { std::cerr << "mcalc(): Cannot create directory\n"; exit(EXIT_FAILURE); }
+            #endif
             nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
             strcat(basename,nstr); strcat(basename,"_"); strcat(mapbasename,"results/"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;  
             #define NSTR(K,Q) nstr[1] = K+48; nstr[2] = Q+48; nstr[3] = 0

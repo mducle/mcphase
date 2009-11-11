@@ -68,7 +68,7 @@ void getfromionname(std::string &ionname, icpars &pars)
    orbital l = (orbital)3;    // Defaults for f-electrons
    std::vector<double> F,a;
    double xi = 0.;
-   double B,C; bool flg3d = false; int S2;
+   double B=0.,C=0.; bool flg3d = false, flgBC = false; int S2;
    F.assign(4,0.); a.assign(3,0.);
    pars.ionname.assign(ionname);
    strtolower(ionname);
@@ -127,70 +127,70 @@ void getfromionname(std::string &ionname, icpars &pars)
    // 3d ions parameters from JS Grifiths, The Theory of Transition Metal Ions, CUP, 1961 (A and B); lambda from TM Dunn, Trans. Faraday Soc. v57, 1441 (1961)
    //   where 0 is shown, parameter not known... (where 0. is shown parameter is zero!) where theory_lamdba shows "-" parameter is actually theoretical...
    //                                      lambda_experimental lambda_theory-[from M Blume and RE Watson, Proc. R. Soc. Lon. A v271, 565 (1963)]
-   else if(IONCMP("sc2+")==0) { B = 0.;    C = 0.;     xi = 79.;  /*xi=86.;*/ n = 1; l=D; flg3d=1; }
-   else if(IONCMP("ti")==0)   { B = 560.;  C = 1840.;  xi = 0;    /*xi=   ;*/ n = 4; l=D; flg3d=1; } //
-   else if(IONCMP("ti+")==0)  { B = 682.;  C = 2481.;  xi = 0;    /*xi=   ;*/ n = 3; l=D; flg3d=1; } //
-   else if(IONCMP("ti2+")==0) { B = 718.;  C = 2629.;  xi = 60.;  /*xi=61.;*/ n = 2; l=D; flg3d=1; }
-   else if(IONCMP("ti3+")==0) { B = 0.;    C = 0.;     xi = 154.; /*xi=159;*/ n = 1; l=D; flg3d=1; }
-   else if(IONCMP("v")==0)    { B = 578.;  C = 2273.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; }
-   else if(IONCMP("v+")==0)   { B = 659.;  C = 2417.;  xi = 0;    /*xi=   ;*/ n = 4; l=D; flg3d=1; }
-   else if(IONCMP("v2+")==0)  { B = 766.;  C = 2855.;  xi = 55.;  /*xi=57.;*/ n = 3; l=D; flg3d=1; }
-   else if(IONCMP("v3+")==0)  { B = 861.;  C = 4165.;  xi = 106.; /*xi=104;*/ n = 2; l=D; flg3d=1; }
-   else if(IONCMP("v4+")==0)  { B = 0.;    C = 0.;     xi = 248.; /*xi=255;*/ n = 1; l=D; flg3d=1; }
-   else if(IONCMP("cr")==0)   { B = 790.;  C = 2520.;  xi = 0;    /*xi=   ;*/ n = 6; l=D; flg3d=1; } //
-   else if(IONCMP("cr+")==0)  { B = 710.;  C = 2790.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; } //
-   else if(IONCMP("cr2+")==0) { B = 830.;  C = 3430.;  xi = 58.;  /*xi=59.;*/ n = 4; l=D; flg3d=1; }
-   else if(IONCMP("cr3+")==0) { B = 1030.; C = 3850.;  xi = 91.;  /*xi=91.;*/ n = 3; l=D; flg3d=1; }
-   else if(IONCMP("cr4+")==0) { B = 1039.; C = 4238.;  xi = 164.; /*xi=163;*/ n = 2; l=D; flg3d=1; }
-   else if(IONCMP("mn")==0)   { B = 720.;  C = 3087.;  xi = 0;    /*xi=   ;*/ n = 7; l=D; flg3d=1; }
-   else if(IONCMP("mn+")==0)  { B = 873.;  C = 3130.;  xi = 64.;  /*xi=64.;*/ n = 6; l=D; flg3d=1; }
-   else if(IONCMP("mn2+")==0) { B = 960.;  C = 3325.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; }
-   else if(IONCMP("mn3+")==0) { B = 1140.; C = 3675.;  xi = 88.;  /*xi=87.;*/ n = 4; l=D; flg3d=1; }
-   else if(IONCMP("mn4+")==0) { B = 0;     C = 0;      xi = 134.; /*xi=135;*/ n = 3; l=D; flg3d=1; } //
-   else if(IONCMP("fe")==0)   { B = 806.;  C = 3506.;  xi = 0;    /*xi=   ;*/ n = 8; l=D; flg3d=1; } //
-   else if(IONCMP("fe+")==0)  { B = 869.;  C = 3638.;  xi = 119.; /*xi=115;*/ n = 7; l=D; flg3d=1; }
-   else if(IONCMP("fe2+")==0) { B = 1058.; C = 3091.;  xi = 103.; /*xi=114;*/ n = 6; l=D; flg3d=1; }
-   else if(IONCMP("fe4+")==0) { B = 1144.; C = 4459.;  xi = 129.; /*xi=125;*/ n = 4; l=D; flg3d=1; }
-   else if(IONCMP("co")==0)   { B = 798.;  C = 4167.;  xi = 0;    /*xi=   ;*/ n = 9; l=D; flg3d=1; } //
-   else if(IONCMP("co+")==0)  { B = 878.;  C = 3828.;  xi = 228.; /*xi=228;*/ n = 8; l=D; flg3d=1; }
-   else if(IONCMP("co2+")==0) { B = 1115.; C = 4366.;  xi = 178.; /*xi=189;*/ n = 7; l=D; flg3d=1; }
-   else if(IONCMP("co3+")==0) { B = 1065.; C = 5120.;  xi = 128.6;/*xi=145;*/ n = 6; l=D; flg3d=1; } // Abragam Bleaney 1970 p 391 for B,C. xi from PRB 67 172401
-   else if(IONCMP("ni")==0)   { B = 1025.; C = 4226.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; } //
-   else if(IONCMP("ni+")==0)  { B = 1037.; C = 4314.;  xi = 0;    /*xi=   ;*/ n = 9; l=D; flg3d=1; } //
-   else if(IONCMP("ni2+")==0) { B = 1084.; C = 4831.;  xi = 324.; /*xi=343;*/ n = 8; l=D; flg3d=1; }
-   else if(IONCMP("ni3+")==0) { B = 1184.; C = 5105.;  xi = 272.; /*xi= - ;*/ n = 7; l=D; flg3d=1; } // B,C, from fit to NIST data using Racah II, eqn 84
-   else if(IONCMP("ni4+")==0) { B = 0;     C = 0;      xi = 197.; /*xi= - ;*/ n = 6; l=D; flg3d=1; }
-   else if(IONCMP("cu+")==0)  { B = 1216.; C = 4745.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; } //
-   else if(IONCMP("cu2+")==0) { B = 1238.; C = 4659.;  xi = 830.; /*xi=830;*/ n = 9; l=D; flg3d=1; }
+   else if(IONCMP("sc2+")==0) { B = 0.;    C = 0.;     xi = 79.;  /*xi=86.;*/ n = 1; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("ti")==0)   { B = 560.;  C = 1840.;  xi = 0;    /*xi=   ;*/ n = 4; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("ti+")==0)  { B = 682.;  C = 2481.;  xi = 0;    /*xi=   ;*/ n = 3; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("ti2+")==0) { B = 718.;  C = 2629.;  xi = 60.;  /*xi=61.;*/ n = 2; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("ti3+")==0) { B = 0.;    C = 0.;     xi = 154.; /*xi=159;*/ n = 1; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("v")==0)    { B = 578.;  C = 2273.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("v+")==0)   { B = 659.;  C = 2417.;  xi = 0;    /*xi=   ;*/ n = 4; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("v2+")==0)  { B = 766.;  C = 2855.;  xi = 55.;  /*xi=57.;*/ n = 3; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("v3+")==0)  { B = 861.;  C = 4165.;  xi = 106.; /*xi=104;*/ n = 2; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("v4+")==0)  { B = 0.;    C = 0.;     xi = 248.; /*xi=255;*/ n = 1; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("cr")==0)   { B = 790.;  C = 2520.;  xi = 0;    /*xi=   ;*/ n = 6; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("cr+")==0)  { B = 710.;  C = 2790.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("cr2+")==0) { B = 830.;  C = 3430.;  xi = 58.;  /*xi=59.;*/ n = 4; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("cr3+")==0) { B = 1030.; C = 3850.;  xi = 91.;  /*xi=91.;*/ n = 3; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("cr4+")==0) { B = 1039.; C = 4238.;  xi = 164.; /*xi=163;*/ n = 2; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("mn")==0)   { B = 720.;  C = 3087.;  xi = 0;    /*xi=   ;*/ n = 7; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("mn+")==0)  { B = 873.;  C = 3130.;  xi = 64.;  /*xi=64.;*/ n = 6; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("mn2+")==0) { B = 960.;  C = 3325.;  xi = 0;    /*xi=   ;*/ n = 5; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("mn3+")==0) { B = 1140.; C = 3675.;  xi = 88.;  /*xi=87.;*/ n = 4; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("mn4+")==0) { F[1]=87044;F[2]=54316; xi = 134.; /*xi=135;*/ n = 3; l=D; flg3d=1;          } // (Expt.) Uylings et al., J. Phys. B. 17 (1984) 4103
+   else if(IONCMP("fe")==0)   { B = 806.;  C = 3506.;  xi = 0;    /*xi=   ;*/ n = 8; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("fe+")==0)  { B = 869.;  C = 3638.;  xi = 119.; /*xi=115;*/ n = 7; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("fe2+")==0) { B = 1058.; C = 3091.;  xi = 103.; /*xi=114;*/ n = 6; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("fe4+")==0) { B = 1144.; C = 4459.;  xi = 129.; /*xi=125;*/ n = 4; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("co")==0)   { B = 798.;  C = 4167.;  xi = 0;    /*xi=   ;*/ n = 9; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("co+")==0)  { B = 878.;  C = 3828.;  xi = 228.; /*xi=228;*/ n = 8; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("co2+")==0) { B = 1115.; C = 4366.;  xi = 178.; /*xi=189;*/ n = 7; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("co3+")==0) { B = 1065.; C = 5120.;  xi = 128.6;/*xi=145;*/ n = 6; l=D; flg3d=1; flgBC=1; } // Abragam Bleaney 1970 p 391 for B,C. xi from PRB 67 172401
+   else if(IONCMP("ni")==0)   { B = 1025.; C = 4226.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("ni+")==0)  { B = 1037.; C = 4314.;  xi = 0;    /*xi=   ;*/ n = 9; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("ni2+")==0) { B = 1084.; C = 4831.;  xi = 324.; /*xi=343;*/ n = 8; l=D; flg3d=1; flgBC=1; }
+   else if(IONCMP("ni3+")==0) { B = 1184.; C = 5105.;  xi = 272.; /*xi= - ;*/ n = 7; l=D; flg3d=1; flgBC=1; } // B,C, from fit to NIST data using Racah II, eqn 84
+   else if(IONCMP("ni4+")==0) { F[1]=100185;F[2]=64787;xi = 197.; /*xi= - ;*/ n = 6; l=D; flg3d=1;          } // (Expt.) Uylings et al., J. Phys. B. 17 (1984) 4103
+   else if(IONCMP("cu+")==0)  { B = 1216.; C = 4745.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
+   else if(IONCMP("cu2+")==0) { B = 1238.; C = 4659.;  xi = 830.; /*xi=830;*/ n = 9; l=D; flg3d=1; flgBC=1; }
    // 4d ions parameters from Richardson, Blackman and Ranschak, J. Chem. Phys. v58, 3010 (1973).
    //   xi from calculations of Blume, Freeman, Watson, Phys. Rev. v134, A320 (1964), or where not calculated from TM Dunn, Trans. Faraday Soc. v57, 1441 (1961)
-   else if(IONCMP("y2+")==0)  { B = 0.;    C = 0.;     xi = 312.; /*xi=300;*/ n = 1; l=D; }
-   else if(IONCMP("zr2+")==0) { B = 333.;  C = 3.96*B; xi = 432.; /*xi=425;*/ n = 2; l=D; }
-   else if(IONCMP("zr3+")==0) { B = 0.;    C = 0.;     xi = 507.; /*xi=500;*/ n = 1; l=D; }
-   else if(IONCMP("nb+")==0)  { B = 324.;  C = 3.89*B; xi = 0;    /*xi=   ;*/ n = 4; l=D; }
-   else if(IONCMP("nb2+")==0) { B = 360.;  C = 3.97*B; xi = 560.; /*xi=555;*/ n = 3; l=D; }
-   else if(IONCMP("nb3+")==0) { B = 391.;  C = 4.03*B; xi = 644.; /*xi=670;*/ n = 2; l=D; }
-   else if(IONCMP("nb4+")==0) { B = 0.;    C = 0.;     xi = 750.; /*xi=   ;*/ n = 1; l=D; }
-   else if(IONCMP("mo+")==0)  { B = 355.;  C = 3.91*B; xi = 630.; /*xi=   ;*/ n = 5; l=D; }
-   else if(IONCMP("mo2+")==0) { B = 387.;  C = 3.98*B; xi = 717.; /*xi=695;*/ n = 4; l=D; }
-   else if(IONCMP("mo3+")==0) { B = 416.;  C = 4.03*B; xi = 812.; /*xi=800;*/ n = 3; l=D; }
-   else if(IONCMP("mo4+")==0) { B = 440.;  C = 4.08*B; xi = 950.; /*xi=   ;*/ n = 2; l=D; }
-   else if(IONCMP("mo5+")==0) { B = 0.;    C = 0.;     xi =1030.; /*xi=   ;*/ n = 1; l=D; }
-   else if(IONCMP("tc2+")==0) { B = 414.;  C = 3.99*B; xi = 850.; /*xi=   ;*/ n = 5; l=D; }
-   else if(IONCMP("tc3+")==0) { B = 440.;  C = 4.03*B; xi = 990.; /*xi=   ;*/ n = 4; l=D; }
-   else if(IONCMP("tc4+")==0) { B = 0;     C = 0;      xi =1150.; /*xi=   ;*/ n = 3; l=D; } //
-   else if(IONCMP("ru2+")==0) { B = 436.;  C = 3.99*B; xi =1077.; /*xi=1000*/ n = 6; l=D; }
-   else if(IONCMP("ru3+")==0) { B = 464.;  C = 4.04*B; xi =1197.; /*xi=1180*/ n = 5; l=D; }
-   else if(IONCMP("ru4+")==0) { B = 0;     C = 0;      xi =1350.; /*xi=   ;*/ n = 4; l=D; } //
-   else if(IONCMP("rh+")==0)  { B = 427.;  C = 3.93*B; xi =0;     /*xi=   ;*/ n = 8; l=D; } //
-   else if(IONCMP("rh2+")==0) { B = 458.;  C = 3.98*B; xi =1664.; /*xi=1640*/ n = 7; l=D; }
-   else if(IONCMP("rh3+")==0) { B = 484.;  C = 4.03*B; xi =1416.; /*xi=1400*/ n = 6; l=D; }
-   else if(IONCMP("rh4+")==0) { B = 0;     C = 0;      xi =1570.; /*xi=   ;*/ n = 5; l=D; } //
-   else if(IONCMP("pd+")==0)  { B = 451.;  C = 3.94*B; xi =0;     /*xi=   ;*/ n = 9; l=D; } //
-   else if(IONCMP("pd2+")==0) { B = 480.;  C = 3.99*B; xi =1529.; /*xi=1600*/ n = 8; l=D; }
-   else if(IONCMP("pd3+")==0) { B = 506.;  C = 4.03*B; xi =1529.; /*xi=1600*/ n = 7; l=D; }
-   else if(IONCMP("ag2+")==0) { B = 502.;  C = 3.99*B; xi =1794.; /*xi=1840*/ n = 9; l=D; }
-   else if(IONCMP("ag3+")==0) { B = 528.;  C = 4.03*B; xi =1940.; /*xi=1930*/ n = 8; l=D; }
+   else if(IONCMP("y2+")==0)  { B = 0.;    C = 0.;     xi = 312.; /*xi=300;*/ n = 1; l=D; flgBC=1; }
+   else if(IONCMP("zr2+")==0) { B = 333.;  C = 3.96*B; xi = 432.; /*xi=425;*/ n = 2; l=D; flgBC=1; }
+   else if(IONCMP("zr3+")==0) { B = 0.;    C = 0.;     xi = 507.; /*xi=500;*/ n = 1; l=D; flgBC=1; }
+   else if(IONCMP("nb+")==0)  { B = 324.;  C = 3.89*B; xi = 0;    /*xi=   ;*/ n = 4; l=D; flgBC=1; }
+   else if(IONCMP("nb2+")==0) { B = 360.;  C = 3.97*B; xi = 560.; /*xi=555;*/ n = 3; l=D; flgBC=1; }
+   else if(IONCMP("nb3+")==0) { B = 391.;  C = 4.03*B; xi = 644.; /*xi=670;*/ n = 2; l=D; flgBC=1; }
+   else if(IONCMP("nb4+")==0) { B = 0.;    C = 0.;     xi = 750.; /*xi=   ;*/ n = 1; l=D; flgBC=1; }
+   else if(IONCMP("mo+")==0)  { B = 355.;  C = 3.91*B; xi = 630.; /*xi=   ;*/ n = 5; l=D; flgBC=1; }
+   else if(IONCMP("mo2+")==0) { B = 387.;  C = 3.98*B; xi = 717.; /*xi=695;*/ n = 4; l=D; flgBC=1; }
+   else if(IONCMP("mo3+")==0) { B = 416.;  C = 4.03*B; xi = 812.; /*xi=800;*/ n = 3; l=D; flgBC=1; }
+   else if(IONCMP("mo4+")==0) { B = 440.;  C = 4.08*B; xi = 950.; /*xi=   ;*/ n = 2; l=D; flgBC=1; }
+   else if(IONCMP("mo5+")==0) { B = 0.;    C = 0.;     xi =1030.; /*xi=   ;*/ n = 1; l=D; flgBC=1; }
+   else if(IONCMP("tc2+")==0) { B = 414.;  C = 3.99*B; xi = 850.; /*xi=   ;*/ n = 5; l=D; flgBC=1; }
+   else if(IONCMP("tc3+")==0) { B = 440.;  C = 4.03*B; xi = 990.; /*xi=   ;*/ n = 4; l=D; flgBC=1; }
+   else if(IONCMP("tc4+")==0) { B = 0;     C = 0;      xi =1150.; /*xi=   ;*/ n = 3; l=D; flgBC=1; } //
+   else if(IONCMP("ru2+")==0) { B = 436.;  C = 3.99*B; xi =1077.; /*xi=1000*/ n = 6; l=D; flgBC=1; }
+   else if(IONCMP("ru3+")==0) { B = 464.;  C = 4.04*B; xi =1197.; /*xi=1180*/ n = 5; l=D; flgBC=1; }
+   else if(IONCMP("ru4+")==0) { B = 0;     C = 0;      xi =1350.; /*xi=   ;*/ n = 4; l=D; flgBC=1; } //
+   else if(IONCMP("rh+")==0)  { B = 427.;  C = 3.93*B; xi =0;     /*xi=   ;*/ n = 8; l=D; flgBC=1; } //
+   else if(IONCMP("rh2+")==0) { B = 458.;  C = 3.98*B; xi =1664.; /*xi=1640*/ n = 7; l=D; flgBC=1; }
+   else if(IONCMP("rh3+")==0) { B = 484.;  C = 4.03*B; xi =1416.; /*xi=1400*/ n = 6; l=D; flgBC=1; }
+   else if(IONCMP("rh4+")==0) { B = 0;     C = 0;      xi =1570.; /*xi=   ;*/ n = 5; l=D; flgBC=1; } //
+   else if(IONCMP("pd+")==0)  { B = 451.;  C = 3.94*B; xi =0;     /*xi=   ;*/ n = 9; l=D; flgBC=1; } //
+   else if(IONCMP("pd2+")==0) { B = 480.;  C = 3.99*B; xi =1529.; /*xi=1600*/ n = 8; l=D; flgBC=1; }
+   else if(IONCMP("pd3+")==0) { B = 506.;  C = 4.03*B; xi =1529.; /*xi=1600*/ n = 7; l=D; flgBC=1; }
+   else if(IONCMP("ag2+")==0) { B = 502.;  C = 3.99*B; xi =1794.; /*xi=1840*/ n = 9; l=D; flgBC=1; }
+   else if(IONCMP("ag3+")==0) { B = 528.;  C = 4.03*B; xi =1940.; /*xi=1930*/ n = 8; l=D; flgBC=1; }
    // 5d ions parameters from G Burns, J. Chem. Phys. v41, 1521 (1964) B,C only.
    
    else { std::cerr << "getfromionname(): Name of ion " << ionname << " not recognised.\n"; return; }
@@ -200,7 +200,7 @@ void getfromionname(std::string &ionname, icpars &pars)
       S2 = (n<=(2*l+1)) ? n : ((4*l+2)-n);    // Finds 2S (maximise S from Hund's Rules)
       xi *= (double)S2;
    }
-   if(l==D)  // d-electrons, need to convert B and C parameters to F^2, F^4 slater integrals
+   if(flgBC) // Need to convert B and C parameters to F^2, F^4 slater integrals
    {
       // Eqn 77 of Racah II, A = F_0-49F_4 = F^0-F^4/9; B = F_2-5F_4 = (9F^2-5F^4)/441; C = 35F_4 = 5F^4/63;
       F[2] = (63./5)*C; F[1] = (441.*B+5*F[2])/9.;
@@ -325,6 +325,8 @@ void ic_parseinput(const char *filename, icpars &pars)
          ic_parsecfpars(varname, varval, pars, 2);
       else if(varname.find("density")!=std::string::npos)
          pars.density = varval;
+      else if(varname.find("basis")!=std::string::npos)
+         pars.basis = varval;
       else if(varname.find("calc")!=std::string::npos)
       {
          if(varname.find("mag")!=std::string::npos)  // Physical properties calculation flags.
@@ -451,6 +453,99 @@ void ic_parseinput(const char *filename, icpars &pars)
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
+// Converts eigenvectors to different basis 
+// --------------------------------------------------------------------------------------------------------------- //
+void ic_conv_basis(icpars &pars, iceig &VE, fconf &conf)
+{
+   #define CFS conf.states
+   #define CJS confJ.states
+   std::string basis; basis.assign(pars.basis); strtolower(basis);
+   if(basis.find("msml")!=std::string::npos)
+   {
+      // Enumerate the states in the |LmL,SmS> basis
+      fconf confLS(pars.n,pars.l), confJ(pars.n,1,pars.l); int L2,S2,ns=0; char Jlabel[12];
+      for(int ii=0; ii<(int)confLS.states.size(); ii++)
+      {
+         L2 = 2*abs(confLS.states[ii].L); S2 = confLS.states[ii].S2;
+         for(int mL2=-L2; mL2<=L2; mL2+=2)
+         {
+            for(int mS2=-S2; mS2<=S2; mS2+=2)
+            {
+               conf.states[ns] = confLS.states[ii]; conf.states[ns].J2 = mL2; conf.states[ns].mJ2 = mS2; 
+               conf.states[ns].id.assign(confLS.states[ii].id);
+               if(mL2%2==0) sprintf(Jlabel,",mL=%i",mL2/2); else sprintf(Jlabel,",mL=%i/2",mL2); conf.states[ns].id.append(Jlabel);
+               if(mS2%2==0) sprintf(Jlabel,",mS=%i",mS2/2); else sprintf(Jlabel,",mS=%i/2",mS2); conf.states[ns].id.append(Jlabel);
+//std::cout << "State: " << ns+1 << "\t";
+//std::cout << "U=" << CFS[ns].U << ",v=" << CFS[ns].v << ",L=" << CFS[ns].L << ",S2=" << CFS[ns].S2 << ",mL=" << CFS[ns].J2/2. << ",mS=" << CFS[ns].mJ2/2. << "  \tid=" << CFS[ns].id << "\t";
+//std::cout << "U=" << CJS[ns].U << ",v=" << CJS[ns].v << ",L=" << CJS[ns].L << ",S2=" << CJS[ns].S2 << ",J="  << CJS[ns].J2/2. << ",mJ=" << CFS[ns].mJ2/2. << "\tid=" << CJS[ns].id << "\n";
+               ns++;
+            }
+         }
+      }
+      std::cout << "ic_conv_basis(): Converting from |LSmJ> to |LmL,SmS> basis.\n";
+      std::cout << "ic_conv_basis(): States Check. Number of LS states: " << ns << ", Number of mJ states " << (int)confJ.states.size() << "\n";     
+      char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+      #ifndef _WINDOWS
+      struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+         if(mkdir("results/mms",0777)!=0) std::cerr << "ic_conv_basis(): Can't create mms dir, " << strerror(errno) << "\n";
+      #else
+      DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+         if (!CreateDirectory("results\\mms", NULL)) std::cerr << "ic_conv_basis(): Cannot create mms directory\n";
+      #endif
+      nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
+      strcat(basename,nstr); strcpy(filename,basename); strcat(filename,"_JmJ2mSmL.mms");
+      sMat<double> convmat; convmat = mm_gin(filename); int J2,mL2,mS2,mJ2;
+      if(convmat.isempty())    // Conversion matrix not previously saved... Needs to be calculated
+      {
+         convmat.zero(ns,ns);
+         for(int i=0; i<ns; i++)
+            for(int j=0; j<ns; j++)
+            {
+               if(CFS[i].L==CJS[j].L && CFS[i].S2==CJS[j].S2 && CFS[i].U==CJS[j].U && CFS[i].v==CJS[j].v)
+               {
+                  L2=2*abs(CFS[i].L); S2=CFS[i].S2; J2=CJS[j].J2; mL2=CFS[i].J2; mS2=CFS[i].mJ2; mJ2=CJS[j].mJ2;
+                  convmat(i,j) = sqrt(J2+1) * threej(L2,S2,J2,mL2,mS2,-mJ2); if((L2-S2+mJ2)%4==2) convmat(i,j)=-convmat(i,j);
+               }
+            }
+         mm_gout(convmat,filename);
+      }
+      if(VE.iscomplex())
+      {
+         sMat<double> zeros(ns,ns); complexdouble *zmt,zalpha,zbeta; zalpha.r=1; zalpha.i=0; zbeta.r=0; zbeta.i=0; char notranspose = 'N';
+         complexdouble *zConv = zmat2f(convmat,zeros); zmt = new complexdouble[ns*ns];
+         F77NAME(zgemm)(&notranspose,&notranspose,&ns,&ns,&ns,&zalpha,zConv,&ns,VE.zV(0),&ns,&zbeta,zmt,&ns);
+         memcpy(VE.zV(0),zmt,ns*ns*sizeof(complexdouble)); delete[]zmt; free(zConv);
+      }
+      else
+      {
+         double *dConv = convmat.f_array(); double alpha=1., beta=0.; char notranspose = 'N'; double *dmt = new double[ns*ns];
+         F77NAME(dgemm)(&notranspose, &notranspose, &ns, &ns, &ns, &alpha, dConv, &ns, VE.V(0), &ns, &beta, dmt, &ns);
+         memcpy(VE.V(0),dmt,ns*ns*sizeof(double)); delete[]dmt; free(dConv);
+      }
+      // Checks that the eigenvalues are orthonormal
+      char transa='C', transb='N'; double summm=0., alpha=1., beta=0.; complexdouble zalpha,zbeta; zalpha.r=1; zalpha.i=0; zbeta.r=0; zbeta.i=0; int incx=1;
+      if(VE.iscomplex())
+      {
+         complexdouble *zmm = (complexdouble*)malloc(ns*ns*sizeof(complexdouble)); 
+         complexdouble *vet = (complexdouble*)malloc(ns*ns*sizeof(complexdouble)); memcpy(vet,VE.zV(0),ns*ns*sizeof(complexdouble));
+         F77NAME(zgemm)(&transa, &transb, &ns, &ns, &ns, &zalpha, vet, &ns, VE.zV(0), &ns, &zbeta, zmm, &ns);
+         for(int ii=0; ii<ns; ii++) { zmm[ii*ns+ii].r-=1.; summm += F77NAME(dzasum)(&ns, &zmm[ii*ns], &incx); if(VE.E(ii+1)==0) break; }
+         std::cout << "ic_conv_basis(): Orthonomality Test. Sum(V^TV-I) = " << summm << "\n";
+         free(zmm); free(vet);
+      }
+      else
+      {
+         double *dmm = (double*)malloc(ns*ns*sizeof(double)); 
+         double *vet = (double*)malloc(ns*ns*sizeof(double)); memcpy(vet,VE.V(0),ns*ns*sizeof(double));
+         F77NAME(dgemm)(&transa, &transb, &ns, &ns, &ns, &alpha, vet, &ns, VE.V(0), &ns, &beta, dmm, &ns);
+         for(int ii=0; ii<ns; ii++) { dmm[ii*ns+ii]-=1.; summm += F77NAME(dasum)(&ns, &dmm[ii*ns], &incx); if(VE.E(ii+1)==0) break; }
+         std::cout << "ic_conv_basis(): Orthonomality Test. Sum(V^TV-I) = " << summm << "\n";
+         free(dmm); free(vet);
+      }
+   }
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
 // Prints out a header to a specified file
 // --------------------------------------------------------------------------------------------------------------- //
 void ic_printheader(const char *outfile, icpars &pars)
@@ -490,6 +585,8 @@ void ic_showoutput(const char *filename,                        // Output file n
 
    if(pars.e_units.find("meV")!=std::string::npos) conv = 1./MEV2CM; 
    else if(pars.e_units.find("K")!=std::string::npos) conv = CM2K;
+
+   if(iconf==1) ic_conv_basis(pars,VE,conf);
 
    ic_printheader(filename,pars);
    std::fstream FILEOUT; FILEOUT.open(filename, std::fstream::out | std::fstream::app); // Opens file for appending

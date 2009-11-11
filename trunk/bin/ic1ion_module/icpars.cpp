@@ -214,7 +214,7 @@ icpars::icpars()
    n = 1; l = (orbital)3; e_units.assign("cm^{-1}"); calcphys = 0; mag_units = 0;
    xT=0.; xHa=0.; xHb=0.; xHc=0.; xMin=0.; xStep=0.; xMax=0.;
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
-   Bx=0.; By=0.;  Bz=0.;
+   Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ");
    perturb = false; partial = false; arnoldi = false; spectrelevels = -1; chanlam = 1;
 }
 // --------------------------------------------------------------------------------------------------------------- //
@@ -662,12 +662,14 @@ icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
    iflag.assign(num_op>6?num_op:6,0); iflag[2]=1; iflag[3]=1;
    // Determines the filename strings for where the moment operator matrices are stored if previously calculated
    int nn = n; if(n>(2*l+1)) nn = (4*l+2)-n;
-   char nstr[6], Lfilestr[255], Sfilestr[255], basename[255];
-   char *mcphasedir = getenv("MCPHASE_DIR");
-   if(mcphasedir==NULL)
-      strcpy(basename,"mms/");
-   else
-   {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+   char nstr[6]; char basename[255]; char Lfilestr[255], Sfilestr[255]; strcpy(basename,"results/mms/");
+   #ifndef _WINDOWS
+   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+      if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::(): Can't create mms dir, " << strerror(errno) << "\n";
+   #else
+   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "icmfmat::(): Cannot create mms directory\n";
+   #endif
    nstr[0] = (l==3?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 76;   // 76 is ASCII for "L", 85=="U", 100=="d" and 102=="f"
    nstr[1] = 49; // 49=="1"
@@ -710,8 +712,14 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
    // Higher order than dipole operators needed
    if(_num_op>6)
    {
-      char nstr[6]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR");
-      if(mcphasedir==NULL) strcpy(basename,"mms/"); else {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+      char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+      #ifndef _WINDOWS
+      struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+         if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::Jmat(): Can't create mms dir, " << strerror(errno) << "\n";
+      #else
+      DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+         if (!CreateDirectory("results\\mms", NULL)) std::cerr << "icmfmat::Jmat(): Cannot create mms directory\n";
+      #endif
       nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
       strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
 #define NSTR(K,Q) nstr[1] = K+48; nstr[2] = Q+48; nstr[3] = 0
@@ -821,8 +829,14 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
       free(zJmat); free(zt); matel.push_back(me); ex[0]/=Z; U/=Z;
    }
 
-   char nstr[6]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR");
-   if(mcphasedir==NULL) strcpy(basename,"mms/"); else {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+   char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+   #ifndef _WINDOWS
+   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+      if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::expJ(): Can't create mms dir, " << strerror(errno) << "\n";
+   #else
+   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "icmfmat::expJ(): Cannot create mms directory\n";
+   #endif
    nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
@@ -935,8 +949,14 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
    complexdouble *zJmat=0;
    char uplo = 'U';
 
-   char nstr[6]; char filename[255]; char basename[255]; char *mcphasedir = getenv("MCPHASE_DIR");
-   if(mcphasedir==NULL) strcpy(basename,"mms/"); else {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+   char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+   #ifndef _WINDOWS
+   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+      if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::Mab(): Can't create mms dir, " << strerror(errno) << "\n";
+   #else
+   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "icmfmat::Mab(): Cannot create mms directory\n";
+   #endif
    nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6

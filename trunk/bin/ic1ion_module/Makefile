@@ -25,7 +25,7 @@ endif                # if MSYS
 ifdef CYGWIN
 # To fix an error in spincf where min and max is used as variable names
 #   and conflicts with definitions in <w32api/windef.h>
-CFlAGS+=-DNOMINMAX
+CFLAGS+=-DNOMINMAX
 ifndef GCC4
 CFLAGS+=-mno-cygwin
 LINKER+=-mno-cygwin

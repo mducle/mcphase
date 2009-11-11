@@ -18,6 +18,14 @@
 #include <iostream>
 #include <cstring>
 
+#ifndef _WINDOWS             // For directory functions
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#else
+#include <windows.h>
+#endif
+
 #define IC1IONMODULE_VERSION 0.11
 
 #define PI 3.1415926535897932384626433832795
@@ -154,6 +162,7 @@ int  getdim(int n, orbital l);                                            // Num
 void getfromionname(std::string &ion, icpars &flags);                     // Gets free ion parameters from tables
 void ic_parsecfpars(std::string &n, std::string &v, icpars &p, int l=1);  // Parses CF parameter for k and q
 void ic_parseinput(const char *file, icpars &flags);                      // Parses file for 1-ion pars & phys prop.
+void ic_conv_basis(icpars &pars, iceig &VE, fconf &conf);                 // Converts eigenvectors to different basis
 void ic_printheader(const char *filename, icpars &pars);                  // Prints header to file
 void ic_showoutput(const char *file, icpars&pars, iceig&VE, int iconf=1); // Prints calculated spectra to file
 void ic_cmag(const char *filename, icpars &pars);                         // Calcs. magnetisation using icmfmat::

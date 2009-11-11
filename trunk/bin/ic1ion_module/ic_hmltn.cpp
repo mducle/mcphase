@@ -203,12 +203,14 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
    std::vector< std::vector<int> > cvSI2SO,cvSI2CF,cvSO2CF;
    std::vector<int> cvEl;
 
-   char nstr[6]; char filename[255]; char basename[255];
-   char *mcphasedir = getenv("MCPHASE_DIR");
-   if(mcphasedir==NULL)
-      strcpy(basename,"mms/");
-   else
-   {  strcpy(basename,mcphasedir); strcat(basename,"/bin/ic1ion_module/mms/"); }
+   char nstr[6]; char basename[255]; char filename[255]; strcpy(basename,"results/mms/");
+   #ifndef _WINDOWS
+   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
+      if(mkdir("results/mms",0777)!=0) std::cerr << "ic_hmltn(): Can't create mms dir, " << strerror(errno) << "\n";
+   #else
+   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "ic_hmltn(): Cannot create mms directory\n";
+   #endif
    nstr[0] = (e_l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
 

@@ -78,7 +78,6 @@ class cfpars
       cfpars(std::string&i,int n,orbital l); // Constructor for a particular ion, assigning a Stevens factor, and <r^k>.
 };
 
-// --------------------------------------------------------------------------------------------------------------- //
 // Defines a class to hold the values needed to for input to the module
 // --------------------------------------------------------------------------------------------------------------- //
 class icpars
@@ -113,6 +112,7 @@ class icpars
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
       double chanlam;                        // Fraction of matrix to keep, for matrix truncation.
       std::string density;                   // Flag to output expectation values of spin/orbital density operator.
+      std::string basis;                     // Name of basis to output eigenvectors, supported: "JmJ" and "mSmL"
       double Bx,By,Bz;                       // For magnetic field for Zeeman term
       double xT,xHa,xHb,xHc;                 // The vector in (H-T) phase space to calculate the x-axis of phase diag
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram

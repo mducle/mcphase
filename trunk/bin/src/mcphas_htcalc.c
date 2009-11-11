@@ -100,7 +100,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	      }
  if (verbose==1)
  { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
-   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(\%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
+   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(%%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
    fclose(fin_coq);	      
    printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
  }
@@ -109,7 +109,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
     //begin with j a random number, j<0 means test spinconfigurations 
     //constructed from q vector set testqs, j>0 means test spinconfigurations from
     //set testspins
-    //j=0;  //uncomment this for debugging purposes
+    j=0;  //uncomment this for debugging purposes
     
  for (k= -testqs.nofqs();k<=testspins.n;++k)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
@@ -827,7 +827,7 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
  {if (time(0)-time_of_last_output>2)
   {time_of_last_output=time(0);
    fin_coq= fopen_errchk ("./results/.fe_status.dat","a");
-   fprintf(fin_coq,"%i %g %g %g %g %g\n",time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio,100*(double)successrate/nofcalls);
+   fprintf(fin_coq,"%i %g %g %g %g %g\n",(int)time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio,100*(double)successrate/nofcalls);
    fclose(fin_coq);
   }
  }
