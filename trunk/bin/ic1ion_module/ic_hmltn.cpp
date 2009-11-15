@@ -204,6 +204,7 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
    std::vector<int> cvEl;
 
    char nstr[6]; char basename[255]; char filename[255]; strcpy(basename,"results/mms/");
+   if(pars.save_matrices) {
    #ifndef _WINDOWS
    struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
       if(mkdir("results/mms",0777)!=0) std::cerr << "ic_hmltn(): Can't create mms dir, " << strerror(errno) << "\n";
@@ -213,6 +214,7 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
    #endif
    nstr[0] = (e_l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
+   } else { strcpy(basename,"nodir/"); }
 
    cvSI2SO.reserve(num_states); cvSI2CF.reserve(num_states); cvSO2CF.reserve(num_states*5); icv=0; icv1=0; icv2=0;
    // Goes through all the states and gets the conversion matrix to use with convH2H, which is just a running index of blocks

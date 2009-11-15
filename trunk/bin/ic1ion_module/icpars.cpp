@@ -214,7 +214,7 @@ icpars::icpars()
    n = 1; l = (orbital)3; e_units.assign("cm^{-1}"); calcphys = 0; mag_units = 0;
    xT=0.; xHa=0.; xHb=0.; xHc=0.; xMin=0.; xStep=0.; xMax=0.;
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
-   Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ");
+   Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ"); save_matrices = false;
    perturb = false; partial = false; arnoldi = false; spectrelevels = -1; chanlam = 1;
 }
 // --------------------------------------------------------------------------------------------------------------- //
@@ -655,7 +655,7 @@ icmfmat::icmfmat()
    iflag.assign(6,0); iflag[2]=1; iflag[3]=1;
    _n = 1; _l = S; _num_op = 1;
 }
-icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
+icmfmat::icmfmat(int n, orbital l, int num_op, bool save_matrices, std::string density)
 {
    _n = n; _l = l; _num_op = num_op; _density = density;
    sMat<double> t; J.assign(6,t); 
@@ -663,6 +663,7 @@ icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
    // Determines the filename strings for where the moment operator matrices are stored if previously calculated
    int nn = n; if(n>(2*l+1)) nn = (4*l+2)-n;
    char nstr[6]; char basename[255]; char Lfilestr[255], Sfilestr[255]; strcpy(basename,"results/mms/");
+   if(save_matrices) {
    #ifndef _WINDOWS
    struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
       if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::(): Can't create mms dir, " << strerror(errno) << "\n";
@@ -672,6 +673,7 @@ icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
    #endif
    nstr[0] = (l==3?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 76;   // 76 is ASCII for "L", 85=="U", 100=="d" and 102=="f"
+   } else { strcpy(basename,"nodir/"); }
    nstr[1] = 49; // 49=="1"
 
    // Calculates the L and S operator matrix for the each directions
@@ -703,7 +705,7 @@ icmfmat::icmfmat(int n, orbital l, int num_op, std::string density)
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the mean field matrix sum_i (H_i*J_i)
 // --------------------------------------------------------------------------------------------------------------- //
-void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gjmbH)
+void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gjmbH, bool save_matrices)
 {
    int i; Jmat.zero(J[0].nr(),J[0].nc()); iJmat.zero(J[0].nr(),J[0].nc()); 
    if(_num_op<(int)gjmbH.size()) { iflag.resize(_num_op,0); _num_op = (int)gjmbH.size(); }
@@ -713,6 +715,7 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
    if(_num_op>6)
    {
       char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+      if(save_matrices) {
       #ifndef _WINDOWS
       struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
          if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::Jmat(): Can't create mms dir, " << strerror(errno) << "\n";
@@ -722,6 +725,7 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
       #endif
       nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
       strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
+      } else { strcpy(basename,"nodir/"); }
 #define NSTR(K,Q) nstr[1] = K+48; nstr[2] = Q+48; nstr[3] = 0
 #define MSTR(K,Q) nstr[1] = K+48; nstr[2] = 109;  nstr[3] = Q+48; nstr[4] = 0
       // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
@@ -754,7 +758,7 @@ void icmfmat::Jmat(sMat<double>&Jmat, sMat<double>&iJmat, std::vector<double>&gj
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the expectation values <V|J|V>exp(-beta*T) given a set of eigenstates
 // --------------------------------------------------------------------------------------------------------------- //
-std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<double> > &matel)
+std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<double> > &matel, bool save_matrices)
 {
    double *vt=0, Z=0., U=0.; complexdouble *zt=0, zme;
    std::vector<double> E, ex((_num_op>6?_num_op:6)+2,0.), me, eb; matel.clear();
@@ -830,6 +834,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    }
 
    char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+   if(save_matrices) {
    #ifndef _WINDOWS
    struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
       if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::expJ(): Can't create mms dir, " << strerror(errno) << "\n";
@@ -839,6 +844,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    #endif
    nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
+   } else { strcpy(basename,"nodir/"); }
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
@@ -935,7 +941,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the matrix M_ab=<i|Ja|j><j|Jb|i>{exp(-beta_i*T)-exp(-beta_j*T)} for some state i,j
 // --------------------------------------------------------------------------------------------------------------- //
-void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i, int j,int pr,float & delta)
+void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i, int j,int pr,float & delta, bool save_matrices)
 {
    double *vt=0, Z=0., therm; complexdouble *zt=0, zme; zme.r=0; zme.i=0.;
    int sz = (_num_op>6?_num_op:6);
@@ -950,6 +956,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
    char uplo = 'U';
 
    char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+   if(save_matrices) {
    #ifndef _WINDOWS
    struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
       if(mkdir("results/mms",0777)!=0) std::cerr << "icmfmat::Mab(): Can't create mms dir, " << strerror(errno) << "\n";
@@ -959,6 +966,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
    #endif
    nstr[0] = (_l==F?102:100); if(_n<10) { nstr[1] = _n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = _n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 85;   // 85 is ASCII for "U", 100=="d" and 102=="f"
+   } else { strcpy(basename,"nodir/"); }
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
@@ -1017,7 +1025,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
 
    if(i==j) {//subtract thermal expectation value from zij=zii
             std::vector< std::vector<double> > matel;
-            std::vector<double> vJ = expJ(VE,T,matel);
+            std::vector<double> vJ = expJ(VE,T,matel,save_matrices);
             for(iJ=0; iJ<sz; iJ++)zij[iJ].r-=vJ[iJ];
             }
 

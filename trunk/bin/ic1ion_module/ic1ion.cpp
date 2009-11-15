@@ -345,6 +345,8 @@ void ic_parseinput(const char *filename, icpars &pars)
          pars.partial = true;
       else if(varname.find("arnoldi")!=std::string::npos)
          pars.arnoldi = true;
+      else if(varname.find("save_matrices")!=std::string::npos)
+         pars.save_matrices = true;
       else if(varname.find("spectrelevels")!=std::string::npos)
          iss >> pars.spectrelevels;
       else if(varname.find("truncate_matrix")!=std::string::npos)
@@ -485,15 +487,17 @@ void ic_conv_basis(icpars &pars, iceig &VE, fconf &conf)
       std::cout << "ic_conv_basis(): Converting from |LSmJ> to |LmL,SmS> basis.\n";
       std::cout << "ic_conv_basis(): States Check. Number of LS states: " << ns << ", Number of mJ states " << (int)confJ.states.size() << "\n";     
       char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
+      if(pars.save_matrices) {
       #ifndef _WINDOWS
       struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
          if(mkdir("results/mms",0777)!=0) std::cerr << "ic_conv_basis(): Can't create mms dir, " << strerror(errno) << "\n";
       #else
       DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
          if (!CreateDirectory("results\\mms", NULL)) std::cerr << "ic_conv_basis(): Cannot create mms directory\n";
-      #endif
+      #endif 
       nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
-      strcat(basename,nstr); strcpy(filename,basename); strcat(filename,"_JmJ2mSmL.mms");
+      strcat(basename,nstr); strcpy(filename,basename); strcat(filename,"_JmJ2mSmL.mm");
+      } else { strcpy(filename,"nodir/nofile"); }
       sMat<double> convmat; convmat = mm_gin(filename); int J2,mL2,mS2,mJ2;
       if(convmat.isempty())    // Conversion matrix not previously saved... Needs to be calculated
       {
@@ -504,22 +508,25 @@ void ic_conv_basis(icpars &pars, iceig &VE, fconf &conf)
                if(CFS[i].L==CJS[j].L && CFS[i].S2==CJS[j].S2 && CFS[i].U==CJS[j].U && CFS[i].v==CJS[j].v)
                {
                   L2=2*abs(CFS[i].L); S2=CFS[i].S2; J2=CJS[j].J2; mL2=CFS[i].J2; mS2=CFS[i].mJ2; mJ2=CJS[j].mJ2;
-                  convmat(i,j) = sqrt(J2+1) * threej(L2,S2,J2,mL2,mS2,-mJ2); if((L2-S2+mJ2)%4==2) convmat(i,j)=-convmat(i,j);
+                  convmat(i,j) = sqrt(J2+1.) * threej(L2,S2,J2,mL2,mS2,-mJ2); if((L2-S2+mJ2)%4==2) convmat(i,j)=-convmat(i,j);
                }
             }
          mm_gout(convmat,filename);
       }
+      char /*transpose = 'C',*/ notranspose = 'N';
       if(VE.iscomplex())
       {
-         sMat<double> zeros(ns,ns); complexdouble *zmt,zalpha,zbeta; zalpha.r=1; zalpha.i=0; zbeta.r=0; zbeta.i=0; char notranspose = 'N';
+         sMat<double> zeros(ns,ns); complexdouble *zmt,zalpha,zbeta; zalpha.r=1; zalpha.i=0; zbeta.r=0; zbeta.i=0;
          complexdouble *zConv = zmat2f(convmat,zeros); zmt = new complexdouble[ns*ns];
          F77NAME(zgemm)(&notranspose,&notranspose,&ns,&ns,&ns,&zalpha,zConv,&ns,VE.zV(0),&ns,&zbeta,zmt,&ns);
+       //F77NAME(zgemm)(&notranspose,&notranspose,&ns,&ns,&ns,&zalpha,VE.zV(0),&ns,zConv,&ns,&zbeta,zmt,&ns);
          memcpy(VE.zV(0),zmt,ns*ns*sizeof(complexdouble)); delete[]zmt; free(zConv);
       }
       else
       {
          double *dConv = convmat.f_array(); double alpha=1., beta=0.; char notranspose = 'N'; double *dmt = new double[ns*ns];
          F77NAME(dgemm)(&notranspose, &notranspose, &ns, &ns, &ns, &alpha, dConv, &ns, VE.V(0), &ns, &beta, dmt, &ns);
+       //F77NAME(dgemm)(&notranspose, &notranspose, &ns, &ns, &ns, &alpha, VE.V(0), &ns, dConv, &ns, &beta, dmt, &ns);
          memcpy(VE.V(0),dmt,ns*ns*sizeof(double)); delete[]dmt; free(dConv);
       }
       // Checks that the eigenvalues are orthonormal
@@ -648,7 +655,7 @@ void ic_showoutput(const char *filename,                        // Output file n
 void ic_cmag(const char *filename, icpars &pars)
 {
    if(!(pars.calcphys & PHYSPROP_MAGBIT)) return;
-   icmfmat mfmat(pars.n,pars.l,6);
+   icmfmat mfmat(pars.n,pars.l,6,pars.save_matrices);
 
    ic_printheader(filename,pars);
    std::fstream FILEOUT; FILEOUT.open(filename, std::fstream::out | std::fstream::app); // Opens file for appending
@@ -691,10 +698,10 @@ void ic_cmag(const char *filename, icpars &pars)
    for(i=0; i<nH; i++)
    {
       for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUB*(Hmin+i*Hstep)); 
-      mfmat.Jmat(J,iJ,gjmbHmeV);
+      mfmat.Jmat(J,iJ,gjmbHmeV,pars.save_matrices);
       if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
          else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
-      ex = mfmat.expJ(VE,Tmax,matel); ex.assign(matel[0].size(),0.);
+      ex = mfmat.expJ(VE,Tmax,matel,pars.save_matrices); ex.assign(matel[0].size(),0.);
       for(k=0; k<(int)matel[0].size(); k++)
          for(j=0; j<6; j++) ex[k] += gjmbH[j]*matel[j][k];
       for(j=0; j<nT; j++) 
@@ -749,7 +756,7 @@ int main(int argc, char *argv[])
       if(fabs(pars.Bx)>DBL_EPSILON) { gjmbH[1]=-MUB*pars.Bx; gjmbH[0]=GS*gjmbH[1]; }
       if(fabs(pars.By)>DBL_EPSILON) { gjmbH[3]=-MUB*pars.By; gjmbH[2]=GS*gjmbH[3]; }
       if(fabs(pars.Bz)>DBL_EPSILON) { gjmbH[5]=-MUB*pars.Bz; gjmbH[4]=GS*gjmbH[5]; }
-      sMat<double> J,iJ; icmfmat mfmat(pars.n,pars.l,6); mfmat.Jmat(J,iJ,gjmbH); Hic+=J; iHic+=iJ;
+      sMat<double> J,iJ; icmfmat mfmat(pars.n,pars.l,6,pars.save_matrices); mfmat.Jmat(J,iJ,gjmbH,pars.save_matrices); Hic+=J; iHic+=iJ;
    }
 
    end = clock(); std::cerr << "Time to calculate Hic = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";

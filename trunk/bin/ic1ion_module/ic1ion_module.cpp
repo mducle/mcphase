@@ -159,17 +159,13 @@ __declspec(dllexport)
                if(fabs(Vf[ii*Hsz+jj].r)<DBL_EPSILON) Vf[ii*Hsz+jj].r=0.; if(fabs(Vf[ii*Hsz+jj].i)<DBL_EPSILON) Vf[ii*Hsz+jj].i=0.; } 
             std::cout << "Finished.";
             // Calculates the rotated operators for the mean field terms
-            #ifndef _WINDOWS 
             char nstr[6]; char filename[255]; char basename[255]; char mapname[255]; char mapbasename[255]; int dirstat=0; struct stat status;
+            if(pars.save_matrices) {
             stat("results/mms/",&status); if(!S_ISDIR(status.st_mode)) dirstat = mkdir("results/mms",0777); strcpy(basename,"results/mms");
             if(dirstat!=0) { std::cerr << "mcalc(): " << errno << "\n"; exit(EXIT_FAILURE); }
-            #else
-            strcpy(basename,"results/mms/"); CString myDir("results\\mms"); DWORD drAttr = GetFileAttributes(myDir); 
-            if(dwAttr==0xffffffff || !(dwAttr&FILE_ATTRIBUTE_DIRECTORY)) 
-               if (!CreateDirectory("results\\mms", NULL)) { std::cerr << "mcalc(): Cannot create directory\n"; exit(EXIT_FAILURE); }
-            #endif
             nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
             strcat(basename,nstr); strcat(basename,"_"); strcat(mapbasename,"results/"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;  
+            } else { strcpy(mapbasename,"nodir/"); strcpy(basename,"nodir/"); }
             #define NSTR(K,Q) nstr[1] = K+48; nstr[2] = Q+48; nstr[3] = 0
             #define MSTR(K,Q) nstr[1] = K+48; nstr[2] = 109;  nstr[3] = Q+48; nstr[4] = 0
             // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
@@ -179,7 +175,7 @@ __declspec(dllexport)
             sMat<double> zeroes; zeroes.zero(Hsz,Hsz); sMat<double> Upq,Umq; complexdouble *zJmat;
             int cb = (int)(pars.chanlam*(double)Hsz); complexdouble *Hrot,*zmt; zmt = new complexdouble[Hsz*cb]; size_t filesize2 = cb*cb*sizeof(complexdouble); 
             std::cout << " Using " << cb << " levels of " << Hsz << "." << std::endl;
-            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); double redmat;
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices); double redmat;
             char notranspose='N',transpose='C',uplo='U',side='L'; complexdouble zalpha; zalpha.r=1; zalpha.i=0; complexdouble zbeta; zbeta.r=0; zbeta.i=0;
             for(int iJ=(J.Lo()-1); iJ<J.Hi(); iJ++)
             {
@@ -225,10 +221,10 @@ __declspec(dllexport)
             std::fstream FH; FH.open("results/ic1ion.spectre", std::fstream::out);
             sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
             std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
-            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); int cbbest=1,ibest=1;
-            Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm); 
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
+            int cbbest=1,ibest=1; Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm); 
             double Uref,dbest=DBL_MAX,dnew=DBL_MAX; std::vector<double> vBest,vNew; // double Unew,Ubest;
-            std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel); Uref=vJ[J.Hi()-J.Lo()+2];
+            std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel,pars.save_matrices); Uref=vJ[J.Hi()-J.Lo()+2];
             FH << "\nRef:\t["; for(i=0; i<(int)vJ.size(); i++) FH << vJ[i] << "\t"; FH << "]\n";
             for(int cb=1; cb<=Hic.nr(); cb++)
             {
@@ -256,9 +252,9 @@ __declspec(dllexport)
    if(pars.spectrelevels==-1)
    {
       // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-      icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.density);
+      icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
       std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
-      sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); 
+      sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
       complex<double> a(1.,0.); int incx = 1;
       Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
 
@@ -323,7 +319,7 @@ __declspec(dllexport)
       iceig VE; if(pars.partial) VE.lcalc(pars,Jm); else if(pars.arnoldi) VE.acalc(pars,Jm); else VE.calc(Hsz,Jm); free(Jm);
 
       // Calculates the expectation values sum_n{ <n|Ja|n> exp(-En/kT) }
-      std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel);
+      std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel,pars.save_matrices);
       for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i-J.Lo()]; 
       *lnZ = vJ[J.Hi()-J.Lo()+1]; *U = vJ[J.Hi()-J.Lo()+2];
 #ifndef _WINDOWS
@@ -366,7 +362,7 @@ __declspec(dllexport)
    ic_parseinput(filename,pars);
 
    // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-   int num_op = gjmbH.Hi()-gjmbH.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6));
+   int num_op = gjmbH.Hi()-gjmbH.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6),pars.save_matrices);
 
    // Copies the already calculated energy levels / wavefunctions from *est
    if(est.Rows()!=est.Cols()) { std::cerr << "dmcalc(): Input rows and columns of eigenstates matrix don't match.\n"; return 0; }
@@ -378,7 +374,7 @@ __declspec(dllexport)
    //    M_ab = <i|Ja|j><j|Jb|i> * (exp(-Ei/kT)) / kTZ              if delta < small (quasielastic scattering)
    //    See file icpars.cpp, function mfmat::Mab() to see the actual code to calculate this.
    j=0;k=0; for(i=0; i<Hsz; ++i){ for(j=i; j<Hsz; ++j) { ++k; if(k==tn) break; } if(k==tn) break; }
-   sMat<double> Mab, iMab; mfmat.Mab(Mab,iMab,VE,T,i,j,pr,delta);
+   sMat<double> Mab, iMab; mfmat.Mab(Mab,iMab,VE,T,i,j,pr,delta,pars.save_matrices);
 
    for(i=1; i<=(num_op>6?num_op:6); i++)
       for(j=1; j<=(num_op>6?num_op:6); j++)
@@ -412,10 +408,10 @@ __declspec(dllexport)
    sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); int Hsz = Hic.nr();
  
    // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-   int num_op = gjmbheff.Hi()-gjmbheff.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6));
+   int num_op = gjmbheff.Hi()-gjmbheff.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6),pars.save_matrices);
    int i,j,gLo=gjmbheff.Lo(),gHi=gjmbheff.Hi(); std::vector<double> vgjmbH(gHi,0.);
    for(i=gLo; i<=gHi; i++) vgjmbH[i-1] = -gjmbheff[i];
-   sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH); 
+   sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
 
    // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)
    Hic/=MEV2CM; Hic+=Jmat; if(!iHic.isempty()) iHic/=MEV2CM; if(!iJmat.isempty()) iHic+=iJmat; 

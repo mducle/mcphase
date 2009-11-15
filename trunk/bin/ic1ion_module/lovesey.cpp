@@ -29,13 +29,6 @@ bool lovesey_aKK(sMat<double> &aKK, int K, int Kp, int n, orbital l)
 {
    // Loads a previously save matrix if it exists
    char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
-   #ifndef _WINDOWS
-   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
-      if(mkdir("results/mms",0777)!=0) std::cerr << "lovesey_aKK(): Cannot create mms folder, " << strerror(errno) << "\n";
-   #else
-   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
-      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "lovesey_aKK(): Cannot create mms directory\n";
-   #endif
    nstr[0] = (l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 65;   // 65 is ASCII for "A", 100=="d" and 102=="f"
    nstr[1] = K+48; nstr[2] = Kp+48; nstr[3] = 0; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
@@ -163,13 +156,6 @@ bool lovesey_cKK(sMat<double> &cKK, int K, int Kp, int n, orbital l)
 {
    // Loads a previously save matrix if it exists
    char nstr[6]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
-   #ifndef _WINDOWS
-   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
-      if(mkdir("results/mms",0777)!=0) std::cerr << "lovesey_cKK(): Cannot create mms folder, " << strerror(errno) << "\n";
-   #else
-   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
-      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "lovesey_cKK(): Cannot create mms directory\n";
-   #endif
    nstr[0] = (l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 67;   // 67 is ASCII for "C", 100=="d" and 102=="f"
    nstr[1] = K+48; nstr[2] = Kp+48; nstr[3] = 0; strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
@@ -664,13 +650,6 @@ complexdouble * balcar_Mq(std::string density, int K, int Q, int n, orbital l)
    strtolower(density); int Hsz = getdim(n,l);
    sMat<double> retval_r(Hsz,Hsz),retval_i(Hsz,Hsz),qpp,qmp,qpm,qmm;
    char nstr[7]; char filename[255]; char basename[255]; strcpy(basename,"results/mms/");
-   #ifndef _WINDOWS
-   struct stat status; stat("results/mms",&status); if(!S_ISDIR(status.st_mode))
-      if(mkdir("results/mms",0777)!=0) std::cerr << "balcar_Mq(): Cannot create mms folder, " << strerror(errno) << "\n";
-   #else
-   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
-      if (!CreateDirectory("results\\mms", NULL)) std::cerr << "balcar_Mq(): Cannot create mms directory\n";
-   #endif
    nstr[0] = (l==F?102:100); if(n<10) { nstr[1] = n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = n+38; nstr[3] = 0; }
    strcat(basename,nstr); strcat(basename,"_"); nstr[0] = 77;   // ASCII codes: 77="M", 83=="S", 100=="d", 102=="f", 109=="m", 112="p"
    if(density.find("sx")!=NPOS || density.find("sy")!=NPOS || density.find("1")!=NPOS || density.find("3")!=NPOS)

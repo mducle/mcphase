@@ -108,6 +108,7 @@ class icpars
       bool perturb;                          // Flag to indicate if perturbation routine should be used to calculate M
       bool partial;                          // Flag to indicate if partial diagonalisation should be used
       bool arnoldi;                          // Flag to indicate if the Arnoldi method should be use to diagonalise H
+      bool save_matrices;                    // Flag to indicate if matrices for CF, etc. should be saved and reloaded
     //bool bflag;                            // Flag to show if a field norm= or nostevfact is given
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
       double chanlam;                        // Fraction of matrix to keep, for matrix truncation.
@@ -182,13 +183,15 @@ class icmfmat
 
       icmfmat();                                   // Blank constructor
       icmfmat(int n, orbital l, int num_op,        // Constructor for l^n configuration
-        std::string density="");
+        bool save_matrices, std::string density="");
       void Jmat(sMat<double>&J, sMat<double>&iJ,   // Calculates the mean field matrix sum_i (H_i*J_i)
-        std::vector<double>&gjmbH);
+        std::vector<double>&gjmbH, bool save_matrices);
       std::vector<double> expJ(iceig&VE, double T, // Calculates the expectation values <V|J|V>exp(-beta*T)
-        std::vector<std::vector<double> >&matel);  //   matel is an m*n matrix of the elements <n|Jm|n>
+        std::vector<std::vector<double> >&matel,   //   matel is an m*n matrix of the elements <n|Jm|n>
+        bool save_matrices);
       void Mab(sMat<double>&M, sMat<double>&iM,    // Calculates the matrix M_ab = <i|Ja|j><j|Jb|i>
-        iceig&V,double T,int i,int j,int p,float&d); // * {exp(-beta_i*T)-exp(-beta_j*T)}
+        iceig&V, double T, int i, int j, int p,    // * {exp(-beta_i*T)-exp(-beta_j*T)}
+	float&d, bool save_matrices);
 };
 
 #endif
