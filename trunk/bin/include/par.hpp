@@ -46,6 +46,6 @@ void savelattice(FILE *fout);// save lattice to file
 void saveatoms(FILE *fout);// save atom positions and properties  to file
 void increase_nofcomponents (int n); //increases the number of components in the interaction vector
 
-void save_sipfs(char *path);   //save single ion parameter files filename to path*
+void save_sipfs(const char *path);   //save single ion parameter files filename to path*
 };
 #endif

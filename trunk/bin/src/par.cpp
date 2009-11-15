@@ -238,7 +238,7 @@ void par::saveatoms (FILE * file)
     {(*jjj[i]).saveatom(file);}
 }
 
-void par::save_sipfs(char *path)   //save single ion parameter files filename to path*
+void par::save_sipfs(const char *path)   //save single ion parameter files filename to path*
 {int i;
  for(i=1;i<=nofatoms;++i)
  {

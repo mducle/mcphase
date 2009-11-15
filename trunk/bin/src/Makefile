@@ -221,49 +221,68 @@ endif
 # make  binaries (link .o files)
 
 cond: cond.o paramete.o $(VOBS) martin.o
-	$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
+	@echo Linking ../cond
+	@$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
 
 coq2jjj: coq2jjj.o paramete.o $(VOBS) martin.o
-	$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
+	@echo Linking ../coq2jjj
+	@$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
 
 jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o
-	$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
+	@echo Linking ../jjj2j
+	@$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
 
 mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS)
-	$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS)
+	@echo Linking ../mcdispit
+	@$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS)
 
 mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
+	@echo Linking ../mcphasit
+	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) -lpthread
+
+threads: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
+	$(CCC) -D_THREADS $(CFLAGS) mcphas.c
+	@echo Linking ../mcphasit with threads
+	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) -lpthread
 
 spins: spincf.o spins.o martin.o  $(VOBS) chargedensity.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS)
-	$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
+	@echo Linking ../spins
+	@$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
 spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
+	@echo Linking ../spinsfromq
+	@$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
 
 singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
+	@echo Linking ../singleion
+	@$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
 charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o myev.o
-	$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
+	@echo Linking ../charges
+	@$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
 chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o spincf.o jjjpar.o
-	$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
+	@echo Linking ../chrgplt
+	@$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
 pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) jjjpar.o
-	$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
+	@echo Linking ../pointc
+	@$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
 
 addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
+	@echo Linking ../addj
+	@$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
 
 mcdiff: mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o chargedensity.o
-	$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
+	@echo Linking ../mcdiff
+	@$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
 
 ifdef LINUX
 
 inimenu: inimenu.o inipar.o martin.o $(VOBS)
-	$(LINKER)  -Wall  -o ../inimenu $^  $(LFLAGS)
+	@echo Linking ../inimenu
+	@$(LINKER)  -Wall  -o ../inimenu $^  $(LFLAGS)
 
 endif
 

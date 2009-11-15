@@ -113,7 +113,7 @@ class jjjpar
 
    void save (FILE *file); // to save the parameters to a filehandle
    void saveatom (FILE *file); // to save the atom coordinates and properties to a filehandle
-   void save_sipf(char * path); //save single ion parameter file filename to path*
+   void save_sipf(const char * path); //save single ion parameter file filename to path*
 
 
    jjjpar (FILE * fin, int nofcomp); //konstruktor with filehandle of mcphas.j file

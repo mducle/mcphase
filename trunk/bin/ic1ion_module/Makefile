@@ -67,8 +67,7 @@ endif
 #------------------------------    FAST    --------------------------------------#
 ifdef fast
 ifdef GCC4
-#CFLAGS+= -O2 -march=native -pipe -fomit-frame-pointer
-CFLAGS+= -O2 -pipe -fomit-frame-pointer -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
+CFLAGS+= -O2 -march=native -pipe -fomit-frame-pointer
 else
 CFLAGS+= -O2 -pipe -fomit-frame-pointer
 endif
@@ -87,7 +86,8 @@ ifeq (,$(findstring CYGWIN,$(shell uname)))
 LDFLAGS += -lpthread
 endif
 else
-LDFLAGS = -larpack -llapack -lblas
+#LDFLAGS = -larpack -llapack -lblas
+LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 endif
 endif
 #------------------------------  32/64bit  --------------------------------------#

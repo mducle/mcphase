@@ -76,7 +76,7 @@ abc=0;
    // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
    for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
    
-   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,instr);}
+   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,"%s",instr);}
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",abc[4]);  extract(instr,"beta",abc[5]);extract(instr,"gamma",abc[6]); 
    }

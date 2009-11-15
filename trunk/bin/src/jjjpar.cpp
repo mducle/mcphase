@@ -608,7 +608,7 @@ void jjjpar::saveatom(FILE * file)
 }
 
 //save single ion parameter file filename to path*
-void jjjpar::save_sipf(char * path)
+void jjjpar::save_sipf(const char * path)
 {char  instr[MAXNOFCHARINLINE];
  char * savfilename;
  int i;
@@ -799,8 +799,8 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
                                            i+=extract(instr,"J",ABC(1))-1; 
                                           }
       }// input all  lines starting with comments
-      if(i!=0){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n");
-              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n",sipffilename);exit(EXIT_FAILURE);}
+      if(i!=0){fprintf(stderr,"Error reading spin quantum number J=S from file %s\ncorrect file format is:\n",sipffilename);
+              fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n");exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
       fprintf(stderr," ... Brillouin function with J=S=%g\n",ABC(1));
       est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
