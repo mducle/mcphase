@@ -1,7 +1,23 @@
 // routines for mcphas for calculation of magnetic phases
 // htcalc.c
 #include "myev.h"
+#ifdef __linux__
 #include <pthread.h>
+#define MUTEX_LOCK    pthread_mutex_lock
+#define MUTEX_UNLOCK  pthread_mutex_unlock
+#define MUTEX_TYPE    pthread_mutex_t
+#define MUTEX_INIT(m) pthread_mutex_init (&m, NULL)
+#define EVENT_TYPE    pthread_cond_t
+#define EVENT_INIT(e) pthread_cond_init(&e, NULL)    
+#else
+#include <windows.h>
+#define MUTEX_LOCK    EnterCriticalSection
+#define MUTEX_UNLOCK  LeaveCriticalSection
+#define MUTEX_TYPE    CRITICAL_SECTION
+#define MUTEX_INIT(m) InitializeCriticalSection (&m)
+#define EVENT_TYPE    HANDLE
+#define EVENT_INIT(e) e = CreateEvent(NULL, TRUE, FALSE, NULL);
+#endif
 #define NUM_THREADS 2
 
 // ----------------------------------------------------------------------------------- //
@@ -30,10 +46,10 @@ class htcalc_input { public:
 // Declares these variables global, so all threads can see them
 // ----------------------------------------------------------------------------------- //
 htcalc_thread_data thrdat;
-pthread_mutex_t mutex_loop;
-pthread_mutex_t mutex_tests;
-pthread_mutex_t mutex_min;
-pthread_cond_t checkfinish;
+MUTEX_TYPE mutex_loop;
+MUTEX_TYPE mutex_tests;
+MUTEX_TYPE mutex_min;
+EVENT_TYPE checkfinish;
 
 void checkini(testspincf & testspins,qvectors & testqs)
 {struct stat filestatus;
@@ -94,7 +110,11 @@ void checkini(testspincf & testspins,qvectors & testqs)
     }
 }
 
+#ifdef __linux__
 void *htcalc_iteration(void *input)
+#else
+DWORD WINAPI htcalc_iteration(void *input)
+#endif
 {
  int i,ii,iii,k,tryrandom,nr,rr,ri,is;
  double fe,fered;
@@ -184,13 +204,13 @@ void *htcalc_iteration(void *input)
 
 	           
                            // see if spinconfiguration is already stored
-             pthread_mutex_lock (&mutex_tests); 
+             MUTEX_LOCK(&mutex_tests); 
              int checksret = checkspincf(myj,sps,(*thrdat.testqs),nettom,momentq0,phi,(*thrdat.testspins),(*thrdat.physprops)); //0 means error in checkspincf/addspincf
-             pthread_mutex_unlock (&mutex_tests); 
+             MUTEX_UNLOCK(&mutex_tests); 
 	     if (checksret==0) {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
                  (*thrdat.testspins).save(filemode);(*thrdat.testqs).save(filemode); 
 		 goto ret;}
-             pthread_mutex_lock (&mutex_min); thrdat.femin=fe; thrdat.spsmin=sps; pthread_mutex_unlock (&mutex_min);
+             MUTEX_LOCK (&mutex_min); thrdat.femin=fe; thrdat.spsmin=sps; MUTEX_UNLOCK (&mutex_min);
             //printout fe
 	    if (verbose==1) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,myj);
 	     }
@@ -261,11 +281,16 @@ void *htcalc_iteration(void *input)
 
       }
       ret:;
+      #ifdef __linux__
       pthread_mutex_lock (&mutex_loop); 
       thrdat.thread_id = thread_id;
       pthread_cond_signal(&checkfinish);
       pthread_mutex_unlock (&mutex_loop); 
       pthread_exit(NULL);
+      #else
+      thrdat.thread_id = thread_id;
+      SetEvent(checkfinish);
+      #endif	     
 }
 
 int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
@@ -330,39 +355,58 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
    thrdat.thread_id = -1;
    htcalc_input *tin[NUM_THREADS];
    for (int ithread=0; ithread<NUM_THREADS; ithread++) tin[ithread] = new htcalc_input(0,ithread,&inputpars);
-
+ 
+ MUTEX_INIT(mutex_loop);
+ MUTEX_INIT(mutex_tests);
+ MUTEX_INIT(mutex_min);
+ EVENT_INIT(checkfinish);
+ #ifdef __linux__
  pthread_t threads[NUM_THREADS]; int rc; void *status;
  pthread_attr_t attr;
  pthread_attr_init(&attr);
  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
- pthread_mutex_init(&mutex_loop, NULL);
- pthread_mutex_init(&mutex_tests, NULL);
- pthread_mutex_init(&mutex_min, NULL);
- pthread_cond_init(&checkfinish, NULL);
+ #else
+ HANDLE threads[NUM_THREADS];
+ DWORD tid[NUM_THREADS], dwError;
+ #endif
 
  bool all_threads_started = false; int ithread=0;
  for (k= -testqs.nofqs();k<=testspins.n;k++)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
        (*tin[ithread]).j = j;
+       #ifdef __linux__
        rc = pthread_create(&threads[ithread], &attr, htcalc_iteration, (void *) tin[ithread]);
        if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+       #else
+       threads[ithread] = CreateThread(NULL, 0, htcalc_iteration, (void *) tin[ithread], 0, &tid[ithread]);
+       if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+       #endif
        ithread++;
        if(ithread%NUM_THREADS==0 || all_threads_started)
        {
           all_threads_started = true;
+          #ifdef __linux__
           pthread_mutex_lock (&mutex_loop); 
           while(thrdat.thread_id==-1) pthread_cond_wait(&checkfinish, &mutex_loop);
           ithread = thrdat.thread_id;
           thrdat.thread_id=-1; 
           pthread_mutex_unlock (&mutex_loop); 
+          #else
+          WaitForSingleObject(checkfinish,INFINITE);
+          ithread = thrdat.thread_id;
+          thrdat.thread_id=-1; 
+          ResetEvent(checkfinish);
+          #endif
        }
     }
   femin = thrdat.femin;
 
+ #ifdef __linux__
  pthread_attr_destroy(&attr);
  pthread_mutex_destroy(&mutex_loop);
  pthread_mutex_destroy(&mutex_tests);
  pthread_mutex_destroy(&mutex_min);
+ #endif
 
 if (femin>=10000) // did we find a stable structure ??
  {fprintf(stderr,"Warning propcalc: femin positive ... no stable structure found at  T= %g K / H= %g T\n",
@@ -436,7 +480,9 @@ else // if yes ... then
  }
 
 return 0; // ok we are done with this (HT) point- return ok
+ #ifdef __linux__
  pthread_exit(NULL);
+ #endif
 }
 
 
@@ -912,9 +958,9 @@ for (r=1;sta>ini.maxstamf;++r)
   }}}
 
   //treat program interrupts 
-  pthread_mutex_lock (&mutex_tests); 
+  MUTEX_LOCK (&mutex_tests); 
   checkini(testspins,testqs); 
-  pthread_mutex_unlock (&mutex_tests); 
+  MUTEX_UNLOCK (&mutex_tests); 
 if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
  {
       fin_coq = fopen_errchk ("./results/.spins.eps", "w");

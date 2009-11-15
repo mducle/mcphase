@@ -33,9 +33,11 @@
 // d(5)=0.3010299956639812       log10(basis)
 // double d_int(double*) rounds towards zero
 
+#ifndef _FLOAT_H___
 #define DBL_EPSILON  2.220446049250313e-16
 #define   DBL_MIN  2.225073858507201e-258
 #define   DBL_MAX  1.797693134862316e+258
+#endif
 
 //#include "common.h"
 #include "vector.h"

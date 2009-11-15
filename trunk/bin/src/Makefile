@@ -238,12 +238,16 @@ mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars
 
 mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
 	@echo Linking ../mcphasit
-	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) -lpthread
+	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
 
 threads: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
 	$(CCC) -D_THREADS $(CFLAGS) mcphas.c
 	@echo Linking ../mcphasit with threads
+ifdef LINUX
 	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) -lpthread
+else
+	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
+endif
 
 spins: spincf.o spins.o martin.o  $(VOBS) chargedensity.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../spins

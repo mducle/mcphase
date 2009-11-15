@@ -31,8 +31,7 @@ ifneq ($(shell gcc --version|grep " 3."),)
 ARCHFLAG=-O2
 else
 ifneq ($(shell gcc --version|grep " 4."),)
-#ARCHFLAG=-O2 -march=native 
-ARCHFLAG=-O2 -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
+ARCHFLAG=-O2 -march=native 
 endif
 endif
 endif

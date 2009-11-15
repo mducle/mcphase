@@ -629,12 +629,12 @@ void iceig::acalc(icpars &pars, complexdouble *H)
    if(nev>=_Hsz)   // We want all eigenvalues - better not to use the Arnoldi method
    {
       int info = ic_diag(_Hsz,H,_zV,_E); 
-      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(-1); }
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(EXIT_FAILURE); }
    }
    else
    {
       int info = ic_arpackeig(_Hsz,H,_zV,_E,nev); 
-      if(info!=0) { std::cerr << "iceig::acalc() - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(-1); }
+      if(info!=0) { std::cerr << "iceig::acalc() - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_zV; _zV=0; exit(EXIT_FAILURE); }
    }
 }
 std::string iceig::strout() 
