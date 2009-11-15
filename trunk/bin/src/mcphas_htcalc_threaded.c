@@ -10,22 +10,16 @@
 typedef struct{
    Vector H;
    double T;
-// par * inputpars;
    qvectors * testqs;  
    testspincf * testspins;
    physproperties * physprops; 
    double femin;
    spincf spsmin;
+   int thread_id;
 } htcalc_thread_data;
 class htcalc_input { public:
    int j;
    int thread_id;
-// par **inputpars;
-// htcalc_input(int nt, par *pars_in) 
-// { 
-//    thread_id=nt; j=0; inputpars = new par * [nt];
-//    for(int it=0; it<nt; it++) inputpars[it] = new par(*pars_in);
-// }
    par *inputpars;
    htcalc_input(int _j, int _tid, par *pars_in) 
    { 
@@ -35,11 +29,11 @@ class htcalc_input { public:
 // ----------------------------------------------------------------------------------- //
 // Declares these variables global, so all threads can see them
 // ----------------------------------------------------------------------------------- //
-//par g_inputpars[NUM_THREADS];
 htcalc_thread_data thrdat;
-pthread_mutex_t mutex_mcalc;
+pthread_mutex_t mutex_loop;
 pthread_mutex_t mutex_tests;
 pthread_mutex_t mutex_min;
+pthread_cond_t checkfinish;
 
 void checkini(testspincf & testspins,qvectors & testqs)
 {struct stat filestatus;
@@ -105,7 +99,6 @@ void *htcalc_iteration(void *input)
  int i,ii,iii,k,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
-//long myinput = (long)input; int thread_id = myinput/10000, myj = myinput-thread_id*10000;
  htcalc_input *myinput; myinput = (htcalc_input *) input; int myj = myinput->j, thread_id = myinput->thread_id; Vector H(1,3); H = thrdat.H;
  Vector momentq0(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),phi(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),nettom(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),q(1,3);
  Vector h1(1,(*myinput->inputpars).nofcomponents),hkl(1,3);
@@ -268,6 +261,11 @@ void *htcalc_iteration(void *input)
 
       }
       ret:;
+      pthread_mutex_lock (&mutex_loop); 
+      thrdat.thread_id = thread_id;
+      pthread_cond_signal(&checkfinish);
+      pthread_mutex_unlock (&mutex_loop); 
+      pthread_exit(NULL);
 }
 
 int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
@@ -324,25 +322,12 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 // ----------------------------------------------------------------------------------- //
    thrdat.H = H;
    thrdat.T = T;
-// thrdat.inputpars = &inputpars;
    thrdat.testqs = &testqs;
    thrdat.testspins = &testspins;
    thrdat.physprops = &physprops;
    thrdat.femin = femin;
    thrdat.spsmin = spsmin; 
-// htcalc_input tin(NUM_THREADS,inputpars);
-// for (int ithread=0; ithread<NUM_THREADS; ithread++) 
-// { 
-//    par ipar(inputpars); 
-//    g_inputpars[ithread] = ipar; 
-//    g_inputpars[ithread] += inputpars; 
-//    for (i=1;i<=g_inputpars[ithread].nofatoms;++i) 
-//    { 
-//       jjjpar tjjj(*ipar.jjj[i]);
-//       g_inputpars[ithread].jjj[i] = &tjjj;
-//       g_inputpars[ithread].jjj[i] = new jjjpar(*g_inputpars[ithread].jjj[i]);
-//    }
-// }
+   thrdat.thread_id = -1;
    htcalc_input *tin[NUM_THREADS];
    for (int ithread=0; ithread<NUM_THREADS; ithread++) tin[ithread] = new htcalc_input(0,ithread,&inputpars);
 
@@ -350,30 +335,32 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
  pthread_attr_t attr;
  pthread_attr_init(&attr);
  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
- pthread_mutex_init(&mutex_mcalc, NULL);
+ pthread_mutex_init(&mutex_loop, NULL);
  pthread_mutex_init(&mutex_tests, NULL);
  pthread_mutex_init(&mutex_min, NULL);
+ pthread_cond_init(&checkfinish, NULL);
 
- for (k= -testqs.nofqs();k<=testspins.n;k+=NUM_THREADS)
- {
-    for (int ithread=0; ithread<NUM_THREADS; ithread++)
+ bool all_threads_started = false; int ithread=0;
+ for (k= -testqs.nofqs();k<=testspins.n;k++)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
-    // g_inputpars[ithread] = inputpars;
-    // rc = pthread_create(&threads[ithread], &attr, htcalc_iteration, (void *)(ithread*10000+j));
        (*tin[ithread]).j = j;
        rc = pthread_create(&threads[ithread], &attr, htcalc_iteration, (void *) tin[ithread]);
        if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+       ithread++;
+       if(ithread%NUM_THREADS==0 || all_threads_started)
+       {
+          all_threads_started = true;
+          pthread_mutex_lock (&mutex_loop); 
+          while(thrdat.thread_id==-1) pthread_cond_wait(&checkfinish, &mutex_loop);
+          ithread = thrdat.thread_id;
+          thrdat.thread_id=-1; 
+          pthread_mutex_unlock (&mutex_loop); 
+       }
     }
-    for (int ithread=0; ithread<NUM_THREADS; ithread++)
-    {
-       pthread_join(threads[ithread], &status);
-    }
-//  htcalc_iteration((void*)j);
-  }
   femin = thrdat.femin;
 
  pthread_attr_destroy(&attr);
- pthread_mutex_destroy(&mutex_mcalc);
+ pthread_mutex_destroy(&mutex_loop);
  pthread_mutex_destroy(&mutex_tests);
  pthread_mutex_destroy(&mutex_min);
 
@@ -916,10 +903,7 @@ for (r=1;sta>ini.maxstamf;++r)
    lm1m3=inputpars.nofcomponents*(l-1);
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
- //pthread_mutex_lock (&mutex_mcalc); 
-   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
- //pthread_mutex_unlock (&mutex_mcalc); 
- //fprintf(stdout,"%p-%f,%i,%f,%f\n",&inputpars,moment[1],s,lnzi[s][l],ui[s][l]);
+   (*inputpars.jjj[l]).mcalc(moment,T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
   }

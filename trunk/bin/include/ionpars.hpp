@@ -14,7 +14,6 @@ class ionpars
 {private: 
    // calculates scattering operator 
    void MQM(ComplexMatrix & MQXM,ComplexMatrix & MQYM,ComplexMatrix & MQZM, double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc);
-   void cfieldJJ(Vector & JJ,double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests);
   int calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
                         // of chargedensiy in chrgplt,charges ...
 
@@ -42,6 +41,7 @@ class ionpars
 
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U, ComplexMatrix & ests);
+   void cfieldJJ(Vector & JJ,double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests);
    ComplexMatrix & cfeigenstates (Vector & H, double & T);
    // and transition matrix elements
    int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);

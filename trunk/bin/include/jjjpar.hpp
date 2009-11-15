@@ -29,6 +29,7 @@ class jjjpar
    
    // subroutine to calculate momentum <J> from effective field gjmbH [meV]
    Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U,ComplexMatrix & ests);
+   Vector &  mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests);
 
    // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
    int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);

@@ -41,6 +41,14 @@ Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,Com
             return returnmoment;
   }
 }
+Vector & jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
+{switch (module_type)
+  {case 1: printf("Unsupported\n"); exit(EXIT_FAILURE);break;
+   case 2: (*iops).cfieldJJ(mom,T,gjmbH,lnZ,U,ests);break;
+   case 3: printf("Unsupported\n"); exit(EXIT_FAILURE);break;
+   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);
+  }
+}
 
 /****************************************************************************/
 // this function returns n (the number of transitions in the single ion susceptibility)
