@@ -8,7 +8,8 @@
 #define MUTEX_TYPE    pthread_mutex_t
 #define MUTEX_INIT(m) pthread_mutex_init (&m, NULL)
 #define EVENT_TYPE    pthread_cond_t
-#define EVENT_INIT(e) pthread_cond_init(&e, NULL)    
+#define EVENT_INIT(e) pthread_cond_init (&e, NULL)    
+#define EVENT_SIG(e)  pthread_cond_signal (&e)
 #else
 #include <windows.h>
 #define MUTEX_LOCK    EnterCriticalSection
@@ -16,7 +17,8 @@
 #define MUTEX_TYPE    CRITICAL_SECTION
 #define MUTEX_INIT(m) InitializeCriticalSection (&m)
 #define EVENT_TYPE    HANDLE
-#define EVENT_INIT(e) e = CreateEvent(NULL, TRUE, FALSE, NULL);
+#define EVENT_INIT(e) e = CreateEvent (NULL, TRUE, FALSE, NULL)
+#define EVENT_SIG(e)  SetEvent(e)
 #endif
 #define NUM_THREADS 2
 
@@ -120,7 +122,9 @@ DWORD WINAPI htcalc_iteration(void *input)
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
  htcalc_input *myinput; myinput = (htcalc_input *) input; int myj = myinput->j, thread_id = myinput->thread_id; Vector H(1,3); H = thrdat.H;
- Vector momentq0(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),phi(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),nettom(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),q(1,3);
+ Vector momentq0(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),phi(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms);
+ Vector nettom(1,(*myinput->inputpars).nofcomponents*(*myinput->inputpars).nofatoms),q(1,3);
+ Vector mmom(1,(*myinput->inputpars).nofcomponents);
  Vector h1(1,(*myinput->inputpars).nofcomponents),hkl(1,3);
  char text[100];
  spincf  sps(1,1,1,(*myinput->inputpars).nofatoms,(*myinput->inputpars).nofcomponents),sps1(1,1,1,(*myinput->inputpars).nofatoms,(*myinput->inputpars).nofcomponents);
@@ -130,7 +134,6 @@ DWORD WINAPI htcalc_iteration(void *input)
 
   for (tryrandom=0;tryrandom<=ini.nofrndtries&&myj!=0;++tryrandom)
    {if (myj>0){sps=(*(*thrdat.testspins).configurations[myj]);// take test-spinconfiguration
-	     if (tryrandom==0&&verbose==1) printf ( "conf. no %i (%ix%ix%i spins)"  ,myj,sps.na(),sps.nb(),sps.nc());
             }
     else     // take q vector and choose phase and mom dir randomly
             {q=(*thrdat.testqs).q(-myj);  
@@ -141,7 +144,8 @@ DWORD WINAPI htcalc_iteration(void *input)
 	     {for(i=1;i<=(*myinput->inputpars).nofatoms;++i)
 	      {for(ii=1;ii<=(*myinput->inputpars).nofcomponents;++ii)
 	        {iii=(*myinput->inputpars).nofcomponents*(i-1)+ii;h1=0;h1(ii)=10*MU_B;
-		 nettom(iii)=(*(*myinput->inputpars).jjj[i]).mcalc(thrdat.T,h1,lnz,u,(*(*myinput->inputpars).jjj[i]).est)(ii)*rnd(1);
+                 (*(*myinput->inputpars).jjj[i]).mcalc(mmom,thrdat.T,h1,lnz,u,(*(*myinput->inputpars).jjj[i]).est);
+		 nettom(iii)=mmom(ii)*rnd(1);
 	         momentq0(iii)=rnd(1);
 	         phi(iii)=rnd(1)*3.1415;
 		}
@@ -150,7 +154,6 @@ DWORD WINAPI htcalc_iteration(void *input)
 	     sps.spinfromq((*thrdat.testqs).na(-myj),(*thrdat.testqs).nb(-myj),(*thrdat.testqs).nc(-myj),
 	                   q,nettom,momentq0,phi);
              hkl=(*myinput->inputpars).rez.Transpose()*q;  
-   	     if (tryrandom==0&&verbose==1) printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc());
 	    }	 
     if (tryrandom>0){nr=(int)(rint(rnd(1.0)*(sps.n()*(*myinput->inputpars).nofatoms-1)))+1;
 	             for (i=1;i<=nr;++i) //MonteCarlo randomize nr spins
@@ -211,9 +214,12 @@ DWORD WINAPI htcalc_iteration(void *input)
                  (*thrdat.testspins).save(filemode);(*thrdat.testqs).save(filemode); 
 		 goto ret;}
              MUTEX_LOCK (&mutex_min); thrdat.femin=fe; thrdat.spsmin=sps; MUTEX_UNLOCK (&mutex_min);
-            //printout fe
-	    if (verbose==1) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,myj);
 	     }
+            //printout fe
+	    if (verbose==1) {
+	       if (tryrandom==0) { if(myj>0) printf ( "conf. no %i (%ix%ix%i spins)"  ,myj,sps.na(),sps.nb(),sps.nc());
+   	                           else      printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); }
+               if(fe==thrdat.femin) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,myj); }
             if (tryrandom==ini.nofrndtries&&verbose==1){printf("\n");}
 	    
 	    
@@ -281,15 +287,12 @@ DWORD WINAPI htcalc_iteration(void *input)
 
       }
       ret:;
+      MUTEX_LOCK(&mutex_loop);
+      thrdat.thread_id = thread_id;
+      EVENT_SIG(checkfinish);
+      MUTEX_UNLOCK(&mutex_loop);
       #ifdef __linux__
-      pthread_mutex_lock (&mutex_loop); 
-      thrdat.thread_id = thread_id;
-      pthread_cond_signal(&checkfinish);
-      pthread_mutex_unlock (&mutex_loop); 
       pthread_exit(NULL);
-      #else
-      thrdat.thread_id = thread_id;
-      SetEvent(checkfinish);
       #endif	     
 }
 
@@ -340,7 +343,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
     //begin with j a random number, j<0 means test spinconfigurations 
     //constructed from q vector set testqs, j>0 means test spinconfigurations from
     //set testspins
-    j=0;  //uncomment this for debugging purposes
+    //j=0;  //uncomment this for debugging purposes
     
 // ----------------------------------------------------------------------------------- //
 // Populates the thread data structure

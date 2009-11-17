@@ -61,6 +61,9 @@ class cfpars
       void calc_stevfact(int n, orbital l);  // (Re)calculates the stevens factor for l^n
       void find_rk(std::string &ionname);    // (Re)lookup the radial integral <r^k> for a particular ion
       double get(int k, int q);              // Returns the value of the external parameter k,q
+      double alpha(){ return _stevfact[0]; }
+      double beta() { return _stevfact[1]; }
+      double gamma(){ return _stevfact[2]; }
 
       // Methods
       std::string cfparsout(const char*de);  // Converts nonzero CF pars to string with delimiter de 

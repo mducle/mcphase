@@ -567,6 +567,11 @@ void ic_printheader(const char *outfile, icpars &pars)
    if(pars.l==F) FILEOUT << " F^6=" << pars.F[3]; FILEOUT << " xi=" << pars.xi << " alpha=" << pars.alpha[0] << " beta=" << pars.alpha[1]; 
    if(pars.l==D) FILEOUT << "\n"; else FILEOUT << " gamma=" << pars.alpha[2] << "\n";
    FILEOUT << "# Crystal Field parameters normalisation: " << pars.B.norm() << "\n";
+   std::string norm=pars.B.norm(); strtolower(norm); if(norm.find("stev")!=std::string::npos)
+   {
+      FILEOUT << "# Stevens Factors: alpha=" << pars.B.alpha() << ", beta=" << pars.B.beta();
+      if(pars.l==F) FILEOUT << ", gamma=" << pars.B.gamma(); FILEOUT << "\n";
+   }
    FILEOUT << "# Crystal Field parameters (" << pars.B.units() << "): " << pars.B.cfparsout(", ") << "\n";
    if(fabs(pars.Bx)>DBL_EPSILON || fabs(pars.By)>DBL_EPSILON || fabs(pars.Bz)>DBL_EPSILON)
    {

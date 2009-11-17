@@ -68,6 +68,7 @@ fprintf(stderr,"****************************************************************
  if(verbose==1){printf("reading parameters from file mcphas.j\n");}
  par inputpars("./mcphas.j"); inputpars.save("./results/_mcphas.j"); 
   Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
+  Vector mmom(1,inputpars.nofcomponents);
   Vector h1(1,inputpars.nofcomponents);
  
 // here save single ion property files to results
@@ -78,7 +79,8 @@ T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1
       for (im=1;im<=inputpars.nofcomponents;++im){h1=0;
                             if((*inputpars.jjj[l]).gJ!=0){h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;}
                             else                         {h1(im)=20*MU_B;} //just put some high field
-                            mmax(inputpars.nofcomponents*(l-1)+im)=(*inputpars.jjj[l]).mcalc(T,h1,z,u,(*inputpars.jjj[l]).est)(im);
+                            (*inputpars.jjj[l]).mcalc(mmom,T,h1,z,u,(*inputpars.jjj[l]).est);
+                            mmax(inputpars.nofcomponents*(l-1)+im)=mmom(im);
                            // printf("mmax(%i)=%g\n",inputpars.nofcomponents*(l-1)+im,mmax(inputpars.nofcomponents*(l-1)+im));
 			   }
                                         }

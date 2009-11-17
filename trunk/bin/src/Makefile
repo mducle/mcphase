@@ -237,6 +237,7 @@ mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars
 	@$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS)
 
 mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
+	$(CCC) $(CFLAGS) mcphas.c
 	@echo Linking ../mcphasit
 	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS)
 

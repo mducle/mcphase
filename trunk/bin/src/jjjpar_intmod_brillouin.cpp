@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------------------------
 //routine mcalc for brillouin function
 //------------------------------------------------------------------------------------------------
-Vector & jjjpar::brillouin (double & T, Vector & gjmbH, double & lnZ, double & U)
+void jjjpar::brillouin (Vector & Jret, double & T, Vector & gjmbH, double & lnZ, double & U)
 { /*on input
     ABC(1)  J=S....Spin quantum number
     gJ		lande factor
@@ -12,8 +12,6 @@ Vector & jjjpar::brillouin (double & T, Vector & gjmbH, double & lnZ, double & U
     Z		single ion partition function
     U		single ion magnetic energy
 */
-
-static Vector Jret(1,3);
 
 // check dimensions of vector
 if(Jret.Hi()!=3||gjmbH.Hi()!=3||ABC.Hi()!=1)
@@ -71,7 +69,6 @@ if (gmh>0)
  else
  {Jret=0;}
 //  printf ("Ha=%g Hb=%g Hc=%g ma=%g mb=%g mc=%g \n", H[1], H[2], H[3], m[1], m[2], m[3]);
-return Jret;
 }
 
 /**************************************************************************/

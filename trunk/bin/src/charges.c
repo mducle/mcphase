@@ -190,7 +190,7 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
             if((*inputpars.jjj[ii]).module_type!=1&&(*inputpars.jjj[ii]).module_type!=3)
-            {moments=(*inputpars.jjj[ii]).mcalc(T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion 
+            {(*inputpars.jjj[ii]).mcalc(moments,T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion
                                                            // module to calculate all 48 (ext_nof_components)
                                                            // higher order moments 
             }

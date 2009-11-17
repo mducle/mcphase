@@ -1067,7 +1067,7 @@ fprintf(fout,"\n");
                                // do some consistency checks
                                ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
                                              est=(*jjjpars[i]).est;
-                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
+                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,est);
                                for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
                                                   (*jjjpars[i]).mom(3+k)=moment(k);//printf("m(%i)=%g ",k,moment(k));
                                                  }
@@ -1081,7 +1081,7 @@ fprintf(fout,"\n");
                                // do some consistency checks
                                ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
                                              est=(*jjjpars[i]).est;
-                               Vector moment(1,j);moment=(*jjjpars[i]).mcalc(T,heff,lnZ,U,est);
+                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,est);
                                if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}

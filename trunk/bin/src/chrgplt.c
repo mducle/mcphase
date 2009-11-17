@@ -80,7 +80,7 @@ printf("***********************************************************\n");
  // ComplexMatrix ests(0,dj,1,dj);
   jjjps.eigenstates(h,T);
   printf("calculating expectation values ....\n");
-  moments=jjjps.mcalc(T,h,lnz,u,jjjps.est);
+  jjjps.mcalc(moments,T,h,lnz,u,jjjps.est);
 //  cfield  has to be used to calculate all the <Olm>.
 //  printf("Stevens factors: alpha beta gamma = %4g %4g %4g \n",(*iops).alpha,(*iops).beta,(*iops).gamma);
 //  printf("Lande Factor: gJ = %4g\n",(*iops).gJ);

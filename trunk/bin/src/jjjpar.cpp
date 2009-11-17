@@ -30,22 +30,11 @@
 // keep this routine as efficient as possible
 // at the moment we do only groundstate doublet
 /****************************************************************************/
-Vector & jjjpar::mcalc (double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
+void jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
 {switch (module_type)
-  {case 1: return kramer(T,gjmbH,lnZ,U);break;
-   case 2: return (*iops).cfield(T,gjmbH,lnZ,U,ests);break;
-   case 3: return brillouin(T,gjmbH,lnZ,U);break;
-   default: static Vector returnmoment(gjmbH.Lo(),gjmbH.Hi());
-            (*m)(&returnmoment,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);
-           // int i; for(i=gjmbH.Lo();i<=gjmbH.Hi();++i)printf("m(%i)=%12.6f",i,returnmoment(i));
-            return returnmoment;
-  }
-}
-Vector & jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
-{switch (module_type)
-  {case 1: printf("Unsupported\n"); exit(EXIT_FAILURE);break;
+  {case 1: kramer(mom,T,gjmbH,lnZ,U);break;
    case 2: (*iops).cfieldJJ(mom,T,gjmbH,lnZ,U,ests);break;
-   case 3: printf("Unsupported\n"); exit(EXIT_FAILURE);break;
+   case 3: brillouin(mom,T,gjmbH,lnZ,U);break;
    default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);
   }
 }

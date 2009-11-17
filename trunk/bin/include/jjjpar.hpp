@@ -28,8 +28,7 @@ class jjjpar
   public:
    
    // subroutine to calculate momentum <J> from effective field gjmbH [meV]
-   Vector &  mcalc (double & T,Vector &  gjmbH, double & Z,double & U,ComplexMatrix & ests);
-   Vector &  mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests);
+   void  mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests);
 
    // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
    int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);
@@ -154,7 +153,7 @@ class jjjpar
 
 
   // kramers internal module functions, intern_mcalc=1
-  Vector & kramer (double & T,Vector & H, double & Z,double & U);
+  void kramer (Vector &mom,double & T,Vector & H, double & Z,double & U);
   int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
 
   // realisation of class iops - cfield internal module functions, intern_mcalc=2
@@ -163,7 +162,7 @@ class jjjpar
   ionpars * iops;
 
   // brillouin internal module functions, intern_mcalc=3
-  Vector & brillouin (double & T,Vector & H, double & Z,double & U);
+  void brillouin (Vector &mom, double & T,Vector & H, double & Z,double & U);
   int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
 
     

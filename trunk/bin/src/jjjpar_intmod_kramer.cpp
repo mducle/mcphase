@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------------------------
 //routine mcalc for kramers doublet
 //------------------------------------------------------------------------------------------------
-Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
+void jjjpar::kramer (Vector & Jret,double & T, Vector & gjmbH, double & lnZ, double & U)
 { /*on input
     ABC(1...3)  A,M,Ci....saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
     gJ		lande factor
@@ -16,8 +16,6 @@ Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
   double nennerp, nennerm, jap, jam, jbp, jbm, jcp, jcm,Z;
   double alpha_lambdap,alphaplambdap,alphaxlambdap;
 
-  static Vector Jret(1,3);
-  
   alpha = ABC[2] * gjmbH[2];
   betar = -ABC[1] * gjmbH[1];
   betai = -ABC[3] * gjmbH[3];
@@ -89,7 +87,6 @@ Vector & jjjpar::kramer (double & T, Vector & gjmbH, double & lnZ, double & U)
   Jret[3] = np * jcp + nm * jcm;
 //  printf ("Ha=%g Hb=%g Hc=%g Ja=%g Jb=%g Jc=%g \n", 
 //     gjmbH[1]/MU_B/gjJ, gjmbH[2]/MU_B/gjJ, gjmbH[3]/MU_B/gjJ, J[1], J[2], J[3]);
-return Jret;
 }
 
 int jjjpar::kramerdm(int & transitionnumber,double & T,Vector & gjmbH,ComplexMatrix & mat,float & delta)
@@ -113,7 +110,7 @@ int jjjpar::kramerdm(int & transitionnumber,double & T,Vector & gjmbH,ComplexMat
   
   static Vector Jret(1,3);
   // clalculate thermal expectation values (needed for quasielastic scattering)
-  Jret=kramer(T,gjmbH,lnz,u);
+  kramer(Jret,T,gjmbH,lnz,u);
   int pr;
   pr=1;
   if (transitionnumber<0) {pr=0;transitionnumber*=-1;}

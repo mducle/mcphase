@@ -81,7 +81,9 @@ int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
  int i,ii,iii,j,k,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
- Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms),nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
+ Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms);
+ Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
+ Vector mmom(1,inputpars.nofcomponents);
  Vector h1(1,inputpars.nofcomponents),hkl(1,3);
  double femin=10000;char text[100];
  spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
@@ -109,7 +111,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
     //begin with j a random number, j<0 means test spinconfigurations 
     //constructed from q vector set testqs, j>0 means test spinconfigurations from
     //set testspins
-    j=0;  //uncomment this for debugging purposes
+    //j=0;  //uncomment this for debugging purposes
     
  for (k= -testqs.nofqs();k<=testspins.n;++k)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
@@ -126,7 +128,8 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	     {for(i=1;i<=inputpars.nofatoms;++i)
 	      {for(ii=1;ii<=inputpars.nofcomponents;++ii)
 	        {iii=inputpars.nofcomponents*(i-1)+ii;h1=0;h1(ii)=10*MU_B;
-		 nettom(iii)=(*inputpars.jjj[i]).mcalc(T,h1,lnz,u,(*inputpars.jjj[i]).est)(ii)*rnd(1);
+                 (*inputpars.jjj[i]).mcalc(mmom,T,h1,lnz,u,(*inputpars.jjj[i]).est);
+		 nettom(iii)=mmom(ii)*rnd(1);
 	         momentq0(iii)=rnd(1);
 	         phi(iii)=rnd(1)*3.1415;
 		}
@@ -804,7 +807,7 @@ for (r=1;sta>ini.maxstamf;++r)
    lm1m3=inputpars.nofcomponents*(l-1);
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
-   moment=(*inputpars.jjj[l]).mcalc(T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
+   (*inputpars.jjj[l]).mcalc(moment,T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
   }

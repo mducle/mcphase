@@ -65,7 +65,7 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
    ComplexMatrix * est;(*inputpars.jjj[i]).eigenstates(h,T);
    est= new ComplexMatrix((*inputpars.jjj[i]).est.Rlo(),(*inputpars.jjj[i]).est.Rhi(),(*inputpars.jjj[i]).est.Clo(),(*inputpars.jjj[i]).est.Chi()); 
    (*est)=(*inputpars.jjj[i]).est;
-   m=(*inputpars.jjj[i]).mcalc(T,h,lnz,u,(*inputpars.jjj[i]).est); // here calculate magnetic moment, mind (*inputpars.jjj[i]).est
+   (*inputpars.jjj[i]).mcalc(m,T,h,lnz,u,(*inputpars.jjj[i]).est); // here calculate magnetic moment, mind (*inputpars.jjj[i]).est
                                                                    //can be changed as user wishes in ext singleion module
 
   printf("%3i %13g ",i,T); // printout ion number and temperature
