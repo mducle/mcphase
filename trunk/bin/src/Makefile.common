@@ -25,14 +25,23 @@
 # Intel Pentium PC, use -m486 for 486 CPU or -mpentium for Pentium Systems
 ###########################################################################
 
+# Checks to see if the gcc compiler is newer than 4.2
+ifdef MATPACK
+ifeq ($(findstring false,$(shell ../../ic1ion_module/checkgcc.sh -4.2 $(CC))),false)
+GCC42=1
+endif
+else
+ifeq ($(findstring false,$(shell ../ic1ion_module/checkgcc.sh -4.2 $(CC))),false)
+GCC42=1
+endif
+endif
+
 # Checks whether we support the -march=native target
 ifdef fast
-ifneq ($(shell gcc --version|grep " 3."),)
-ARCHFLAG=-O2
-else
-ifneq ($(shell gcc --version|grep " 4."),)
+ifdef GCC42
 ARCHFLAG=-O2 -march=native 
-endif
+else
+ARCHFLAG=-O2
 endif
 endif
 

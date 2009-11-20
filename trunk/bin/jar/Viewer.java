@@ -29,7 +29,7 @@ public class Viewer extends Frame {
 		});
 		setSize(image.getWidth(null), image.getHeight(null));
 		setTitle(fileName);
-		show();
+		setVisible(true);
 	}
 
 	public void paint(Graphics graphics) {

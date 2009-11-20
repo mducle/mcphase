@@ -5,6 +5,9 @@ LINKER = g++
 ifeq ($(findstring false,$(shell ./checkgcc.sh -4 $(CC))),false)
 GCC4=1
 endif
+ifeq ($(findstring false,$(shell ./checkgcc.sh -4.2 $(CC))),false)
+GCC42=1
+endif
 
 # Figures operating system
 ifneq (,$(findstring MINGW,$(shell uname)))
@@ -66,7 +69,7 @@ CFLAGS+= -g -ansi -Wall --pedantic -fPIC
 endif
 #------------------------------    FAST    --------------------------------------#
 ifdef fast
-ifdef GCC4
+ifdef GCC42
 CFLAGS+= -O2 -march=native -pipe -fomit-frame-pointer
 else
 CFLAGS+= -O2 -pipe -fomit-frame-pointer

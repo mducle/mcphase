@@ -81,10 +81,10 @@ T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1
                             else                         {h1(im)=20*MU_B;} //just put some high field
                             (*inputpars.jjj[l]).mcalc(mmom,T,h1,z,u,(*inputpars.jjj[l]).est);
                             mmax(inputpars.nofcomponents*(l-1)+im)=mmom(im);
-                           // printf("mmax(%i)=%g\n",inputpars.nofcomponents*(l-1)+im,mmax(inputpars.nofcomponents*(l-1)+im));
+                           //printf("mmax(%i)=%g\n",inputpars.nofcomponents*(l-1)+im,mmax(inputpars.nofcomponents*(l-1)+im));
 			   }
                                         }
-for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}
+mmax1=0;for (im=1;im<=inputpars.nofcomponents&&im<=3;++im){mmax1(im)=mmax(im);}
 
 
 T=0.0;h=0;

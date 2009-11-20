@@ -738,7 +738,7 @@ double Norm (const Vector &A)
 {
   int n = A.Elements();
   if (n <= 0) Matpack.Error("double Norm (const Vector &A) -- empty vector");
-  double sum = sqrt(norm2(A.Store(),n));
+  double sum = sqrt(norm2(A.Store(),n)+1e-300);
   return sum;
 }
 

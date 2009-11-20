@@ -63,12 +63,7 @@ INCLDIRS =      -I. \
 
 
 
-ifdef LINUX
 all : cfieldrout.o cfield.so cfield module.o
-endif
-ifdef WINDOWS
-all : cfieldrout.o cfield module.o
-endif
 
 VECOBJS= matpack.o sortdbl.o sort2dbl.o sort3dbl.o ivector.o \
 		imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o \

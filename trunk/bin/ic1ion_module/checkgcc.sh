@@ -1,11 +1,13 @@
 #!/bin/sh
 
-if test ! -x checkgcc
+basedir=`dirname $(echo $0)`
+
+if test ! -x $basedir/checkgcc.exe
 then
-   $2 -static-libgcc checkgcc.cpp -o checkgcc 1>/dev/null 2>/dev/null
+   $2 -static-libgcc $basedir/checkgcc.cpp -o $basedir/checkgcc.exe 1>/dev/null 2>/dev/null
 fi
 
-./checkgcc $1
+$basedir/checkgcc.exe $1
 if [ "$?" -ne "0" ]
 then
   if [ $# -gt 2 ]
@@ -16,4 +18,3 @@ then
     exit 1
   fi
 fi
-

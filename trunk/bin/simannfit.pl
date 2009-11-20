@@ -55,7 +55,7 @@ sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i]
 				 ($parmax[$#par])=($line=~m/(?:#!|[^#])*?\bpar\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)/);
 				 ($parerr[$#par])=($line=~m/(?:#!|[^#])*?\bpar\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^,]+)/);
 				 ($parstp[$#par])=($line=~m/(?:#!|[^#])*?\bpar\w+\s*\Q[\E\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*([^\Q]\E]+)/);
-                         $parstp0[$#par]=$parstp[$#par];
+                         $parstp[$#par]=abs($parstp[$#par]);$parstp0[$#par]=$parstp[$#par];
                                  $i=$#par;write STDOUT;write Fout;
 				 #check if parmin<=parmax
                           if ($parmin[$#par]>$parmax[$#par]) 

@@ -24,10 +24,12 @@ vpath %.o  ./ ./vector ../cf1ion_module ./functions
 OSTYPE=$(shell uname)
 #  (linux windows)
 ifeq ($(OSTYPE),Linux)
-LINUX = linux
-#else ifeq($(OSTYPE),Cygwin)
+ LINUX = linux
 else
-WINDOWS = windows
+ WINDOWS = windows
+ifneq (,$(findstring CYGWIN,$(shell uname)))
+ CYGWIN=1
+endif
 endif
 #
 # STATIC = static

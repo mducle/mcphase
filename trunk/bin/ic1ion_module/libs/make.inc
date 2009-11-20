@@ -65,7 +65,7 @@ else
 FLAGS   += -pipe -g -fPIC
 endif
 ifdef fast
-ifneq ($(shell gcc --version|head -n1|grep " 3."),)
+ifneq ($(shell gcc --version|grep " 3."),)
 FLAGS   += -O2 -fomit-frame-pointer
 else
 FLAGS   += -O2 -fomit-frame-pointer -march=native 

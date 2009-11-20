@@ -34,7 +34,8 @@
 ### include common rules
 ###########################################################################
 
-include ../Makefile.common
+MATPACK = ..
+include $(MATPACK)/Makefile.common
 
 INCLUDE= ../../include
 

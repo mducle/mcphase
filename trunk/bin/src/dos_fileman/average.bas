@@ -7,7 +7,7 @@ DATA "*********************************************************************"
 DATA "this program is designed to AVERAGE data by deleting close data points"
 DATA "use as:
 DATA " AVERAGE *.* 4 [options] .... takes 4 points and averages data
-DATA "			       option 
+DATA "			       option
 DATA "			                middle point is taken
 DATA "			       /av      points are averaged
 DATA "			       /med     median of points is calculated and kept
