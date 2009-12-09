@@ -89,8 +89,8 @@ ifeq (,$(findstring CYGWIN,$(shell uname)))
 LDFLAGS += -lpthread
 endif
 else
-#LDFLAGS = -larpack -llapack -lblas
-LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
+LDFLAGS = -larpack -llapack -lblas
+#LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 endif
 endif
 #------------------------------  32/64bit  --------------------------------------#

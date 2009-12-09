@@ -106,7 +106,8 @@ sMat<double> racah_uJ(int n, int k, orbital e_l=F);                       // Cal
 sMat<double> racah_ukq(int n, int k, int q, orbital e_l=F);               // Calculates the tensor operator U^k_q 
 sMat<double> fast_ukq(int n, int k, int q, orbital e_l=F);                // Calculates the tensor operator U^k_q 
 sMat<double> racah_mumat(int n, int q, orbital e_l=F);                    // Calculates the magnetic moment operator
-void racah_mumat(int n,int q,sMat<double>&L,sMat<double>&S, orbital l=F); // Calculates the magnetic moment operator
+void racah_mumat(int n,int q,sMat<double>&L,sMat<double>&S, orbital l=F); // Calculates the magnetic moment operators
+void chanlam_mumat(int n,int q,sMat<double>&mu, orbital l=F);             // Calculates the magnetic moment operator
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in lovesey.cpp

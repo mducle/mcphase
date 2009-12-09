@@ -118,6 +118,7 @@ void *htcalc_iteration(void *input)
 DWORD WINAPI htcalc_iteration(void *input)
 #endif
 {
+ fflush(stderr); fflush(stdout);
  int i,ii,iii,k,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
@@ -293,6 +294,8 @@ DWORD WINAPI htcalc_iteration(void *input)
       MUTEX_UNLOCK(&mutex_loop);
       #ifdef __linux__
       pthread_exit(NULL);
+      #else
+      return 0;
       #endif	     
 }
 
@@ -374,7 +377,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
  #endif
 
  bool all_threads_started = false; int ithread=0;
- for (k= -testqs.nofqs();k<=testspins.n;k++)
+ for (k= -testqs.nofqs();k<testspins.n;k++)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
        (*tin[ithread]).j = j;
        #ifdef __linux__
@@ -402,6 +405,17 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
           #endif
        }
     }
+// Wait for all threads to finish, before moving on to calculate physical properties!
+  for(int th=0; th<(all_threads_started?NUM_THREADS:ithread); th++)
+  {
+     #ifdef __linux__
+     rc = pthread_join(threads[th], &status); 
+     if(rc) { printf("Error return code %i from joining thread %i\n",rc,th+1); exit(EXIT_FAILURE); }
+     #else
+     if(WaitForSingleObject(threads[th],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",th+1); exit(EXIT_FAILURE); }
+     #endif
+  }
+
   femin = thrdat.femin;
 
  #ifdef __linux__

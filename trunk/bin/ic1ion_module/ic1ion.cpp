@@ -155,12 +155,12 @@ void getfromionname(std::string &ionname, icpars &pars)
    else if(IONCMP("co+")==0)  { B = 878.;  C = 3828.;  xi = 228.; /*xi=228;*/ n = 8; l=D; flg3d=1; flgBC=1; }
    else if(IONCMP("co2+")==0) { B = 1115.; C = 4366.;  xi = 178.; /*xi=189;*/ n = 7; l=D; flg3d=1; flgBC=1; }
    else if(IONCMP("co3+")==0) { B = 1065.; C = 5120.;  xi = 128.6;/*xi=145;*/ n = 6; l=D; flg3d=1; flgBC=1; } // Abragam Bleaney 1970 p 391 for B,C. xi from PRB 67 172401
-   else if(IONCMP("ni")==0)   { B = 1025.; C = 4226.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
+// else if(IONCMP("ni")==0)   { B = 1025.; C = 4226.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
    else if(IONCMP("ni+")==0)  { B = 1037.; C = 4314.;  xi = 0;    /*xi=   ;*/ n = 9; l=D; flg3d=1; flgBC=1; } //
    else if(IONCMP("ni2+")==0) { B = 1084.; C = 4831.;  xi = 324.; /*xi=343;*/ n = 8; l=D; flg3d=1; flgBC=1; }
    else if(IONCMP("ni3+")==0) { B = 1184.; C = 5105.;  xi = 272.; /*xi= - ;*/ n = 7; l=D; flg3d=1; flgBC=1; } // B,C, from fit to NIST data using Racah II, eqn 84
    else if(IONCMP("ni4+")==0) { F[1]=100185;F[2]=64787;xi = 197.; /*xi= - ;*/ n = 6; l=D; flg3d=1;          } // (Expt.) Uylings et al., J. Phys. B. 17 (1984) 4103
-   else if(IONCMP("cu+")==0)  { B = 1216.; C = 4745.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
+// else if(IONCMP("cu+")==0)  { B = 1216.; C = 4745.;  xi = 0;    /*xi=   ;*/ n =10; l=D; flg3d=1; flgBC=1; } //
    else if(IONCMP("cu2+")==0) { B = 1238.; C = 4659.;  xi = 830.; /*xi=830;*/ n = 9; l=D; flg3d=1; flgBC=1; }
    // 4d ions parameters from Richardson, Blackman and Ranschak, J. Chem. Phys. v58, 3010 (1973).
    //   xi from calculations of Blume, Freeman, Watson, Phys. Rev. v134, A320 (1964), or where not calculated from TM Dunn, Trans. Faraday Soc. v57, 1441 (1961)
@@ -325,6 +325,8 @@ void ic_parseinput(const char *filename, icpars &pars)
          ic_parsecfpars(varname, varval, pars, 2);
       else if(varname.find("density")!=std::string::npos)
          pars.density = varval;
+      else if(varname.find("eigenvectors")!=std::string::npos)
+         iss >> pars.num_eigv;
       else if(varname.find("basis")!=std::string::npos)
          pars.basis = varval;
       else if(varname.find("calc")!=std::string::npos)
@@ -351,7 +353,7 @@ void ic_parseinput(const char *filename, icpars &pars)
          iss >> pars.spectrelevels;
       else if(varname.find("truncate_matrix")!=std::string::npos)
       {  
-         iss >> pars.chanlam; if(pars.chanlam<=0 || pars.chanlam>=1) pars.chanlam=0.5;
+         iss >> pars.truncate_level; if(pars.truncate_level<=0 || pars.truncate_level>=1) pars.truncate_level=0.5;
       }  
       else if(varname.find("emu")!=std::string::npos)
          pars.mag_units = 1;
@@ -624,7 +626,7 @@ void ic_showoutput(const char *filename,                        // Output file n
          FILEOUT << " (" << elc.r; if(elc.i>0) FILEOUT << "+"; else FILEOUT << "-";
          FILEOUT << "i" << elc.i << ")\t\t" << (elc.r*elc.r+elc.i*elc.i) << "\t";
          FILEOUT << "|" << conf.states[isV[0]].id << ">";
-         for(iV=1; iV<4; iV++)
+         for(iV=1; iV<(unsigned int)pars.num_eigv; iV++)
          {
             elc = zV[iV]; FILEOUT << "\n\t\t+";
             FILEOUT << "(" << elc.r; if(elc.i>0) FILEOUT << "+"; else FILEOUT << "-";
@@ -642,8 +644,9 @@ void ic_showoutput(const char *filename,                        // Output file n
             else { elem = V[i-1]; V[i-1] = V[i]; V[i] = elem; ii=isV[i-1]; isV[i-1]=isV[i]; isV[i]=ii; i--; if(i==0) i=1; }
          }
          FILEOUT << V[0] << "|" << conf.states[isV[0]].id << ">\t";
-         for(iV=1; iV<4; iV++)
+         for(iV=1; iV<(unsigned int)pars.num_eigv; iV++)
          {
+            if(iV%4==0) FILEOUT << "\n\t\t";
             if(V[iV]>0) FILEOUT << "+";
             FILEOUT << V[iV] << "|" << conf.states[isV[iV]].id << ">\t";
          }
@@ -687,9 +690,9 @@ void ic_cmag(const char *filename, icpars &pars)
    double xnorm = sqrt(pars.xHa*pars.xHa+pars.xHb*pars.xHb+pars.xHc*pars.xHc);
    double ynorm = sqrt(pars.yHa*pars.yHa+pars.yHb*pars.yHb+pars.yHc*pars.yHc);
    std::vector<double> gjmbH(6,0.), gjmbHmeV(6,0.); 
-   if(pars.xHa!=0.) gjmbH[1]=pars.xHa/xnorm; else gjmbH[1]=pars.yHa/ynorm; gjmbH[0]=GS*gjmbH[1];
-   if(pars.xHb!=0.) gjmbH[3]=pars.xHb/xnorm; else gjmbH[3]=pars.yHb/ynorm; gjmbH[2]=GS*gjmbH[3];
-   if(pars.xHc!=0.) gjmbH[5]=pars.xHc/xnorm; else gjmbH[5]=pars.yHc/ynorm; gjmbH[4]=GS*gjmbH[5];
+   if(pars.xT==0.) gjmbH[1]=pars.xHa/xnorm; else gjmbH[1]=pars.yHa/ynorm; gjmbH[0]=GS*gjmbH[1];
+   if(pars.xT==0.) gjmbH[3]=pars.xHb/xnorm; else gjmbH[3]=pars.yHb/ynorm; gjmbH[2]=GS*gjmbH[3];
+   if(pars.xT==0.) gjmbH[5]=pars.xHc/xnorm; else gjmbH[5]=pars.yHc/ynorm; gjmbH[4]=GS*gjmbH[5];
 
    iceig VE;
    std::vector<double> ex; std::vector< std::vector<double> > matel;

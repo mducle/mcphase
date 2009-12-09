@@ -26,14 +26,8 @@
 ###########################################################################
 
 # Checks to see if the gcc compiler is newer than 4.2
-ifdef MATPACK
-ifeq ($(findstring false,$(shell ../../ic1ion_module/checkgcc.sh -4.2 $(CC))),false)
+ifneq ($(shell gcc --version|grep " 4.[2345]"),)
 GCC42=1
-endif
-else
-ifeq ($(findstring false,$(shell ../ic1ion_module/checkgcc.sh -4.2 $(CC))),false)
-GCC42=1
-endif
 endif
 
 # Checks whether we support the -march=native target

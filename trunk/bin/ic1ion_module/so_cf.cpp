@@ -385,6 +385,9 @@ sMat<double> racah_mumat(int n, int q, orbital e_l)
          {
 	    Lrm = pow(-1.,(S2p+L2p+J2)/2.+1.)  * sqrt((L2p+1.)*(J2+1.)*(J2p+1.)*(L2p/2.)*(L2p/2.+1.)) * sixj(L2,J2,S2p,J2p,L2p,2);
 	    Srm = pow(-1.,(S2p+L2p+J2p)/2.+1.) * sqrt((S2p+1.)*(J2+1.)*(J2p+1.)*(S2p/2.)*(S2p/2.+1.)) * sixj(S2,J2,L2p,J2p,S2p,2);
+//          Lrm /= pow(-1.,L2p/2.)*(L2p+1.); Srm /= pow(-1.,S2p/2.)*(S2p+1.);
+//          Lrm /= pow(-1.,L2p/2.); Srm /= pow(-1.,S2p/2.);
+//          Lrm /= (L2p+1.); Srm /= (S2p+1.);
             rm  = -( Lrm + g_s*Srm );
 
             // Calculates the q- and Jz- dependent matrix elements as given by the Wigner-Eckart theorem
@@ -474,8 +477,11 @@ void racah_mumat(int n, int q, sMat<double> &L1q, sMat<double> &S1q, orbital e_l
          countp = 0; valJ_i = (J2-minJ2)/2;
          for(J2p=j2pmin; J2p<=j2pmax; J2p+=2)
          {
-	    Lrm = -( pow(-1.,(S2p+L2p+J2)/2.+1.)  * sqrt((L2p+1.)*(J2+1.)*(J2p+1.)*(L2p/2.)*(L2p/2.+1.)) * sixj(L2,J2,S2p,J2p,L2p,2) );
-	    Srm = -( pow(-1.,(S2p+L2p+J2p)/2.+1.) * sqrt((S2p+1.)*(J2+1.)*(J2p+1.)*(S2p/2.)*(S2p/2.+1.)) * sixj(S2,J2,L2p,J2p,S2p,2) );
+            Lrm = -( pow(-1.,(S2p+L2p+J2)/2.+1.)  * sqrt((L2p+1.)*(J2+1.)*(J2p+1.)*(L2p/2.)*(L2p/2.+1.)) * sixj(L2,J2,S2p,J2p,L2p,2) );
+            Srm = -( pow(-1.,(S2p+L2p+J2p)/2.+1.) * sqrt((S2p+1.)*(J2+1.)*(J2p+1.)*(S2p/2.)*(S2p/2.+1.)) * sixj(S2,J2,L2p,J2p,S2p,2) );
+//          Lrm /= pow(-1.,L2p/2.)*(L2p+1.); Srm /= pow(-1.,S2p/2.)*(S2p+1.);
+//          Lrm /= pow(-1.,L2p/2.); Srm /= pow(-1.,S2p/2.);
+//          Lrm /= (L2p+1.); Srm /= (S2p+1.);
 
             // Calculates the q- and Jz- dependent matrix elements as given by the Wigner-Eckart theorem
             valJ_j = (J2p-minJ2)/2;
@@ -501,6 +507,98 @@ void racah_mumat(int n, int q, sMat<double> &L1q, sMat<double> &S1q, orbital e_l
       L1q.pset(indexJstart[i],indexJstop[i],indexJstart[j],indexJstop[j],rmL);
       S1q.pset(indexJstart[i],indexJstop[i],indexJstart[j],indexJstop[j],rmS);
     }
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Calculates the magnetic moment operator as separate matrices, L_{x,y,z} and S_{x,y,z}, in the |vSLJM> basis
+// --------------------------------------------------------------------------------------------------------------- //
+void chanlam_mumat(int n, int q, sMat<double> &mu, orbital e_l)
+{
+   bool df=false;
+   if(e_l==D) df = true;
+   else if(e_l==F) df = false;
+   else { std::cerr << "racah_mumat(): Only d- and f- configurations are implemented.\n"; }
+   fconf conf(n,e_l);
+   int num_states = (int)conf.states.size();
+   int i,j,ns,k,j2min,j2max,L2,L2p,S2,S2p;
+   std::vector<int> index, J2, Jz2;
+   std::vector< std::vector< sMat<double> > > mJmat;
+   std::vector< sMat<double> > mJmat_row;
+   int v,vp; 
+
+   // Determines the L S J values for each matrix elements and the index of each J-J' block
+   ns = 0;
+   for(i=0; i<num_states; i++)
+   {
+      j2min = abs(abs(conf.states[i].L)*2-conf.states[i].S2); j2max = abs(conf.states[i].L)*2+conf.states[i].S2;
+      for(j=j2min; j<=j2max; j+=2)
+         for(k=-j; k<=j; k+=2) { Jz2.push_back(k); J2.push_back(j); index.push_back(i); ns++; }
+   }
+
+   mu.zero(ns,ns);
+
+   double M,J,denom,f,fp,g; double g_s = 2.0023193043622; // electronic g-factor
+   // Calculates the matrix for the operator L+gS for a particular q (q=0 is z, q=+/-1 is linear combination of x or y)
+   for(i=0; i<ns; i++)
+      for(j=0; j<ns; j++)
+      {
+         L2 = abs(conf.states[index[i]].L)*2; L2p = abs(conf.states[index[j]].L)*2; S2 = conf.states[index[i]].S2; S2p = conf.states[index[j]].S2;
+         v = conf.states[index[i]].v; vp = conf.states[index[j]].v; if(!df) { if(conf.states[index[i]].U != conf.states[index[j]].U) continue; }
+
+         if(S2!=S2p || L2!=L2p || v!=vp) continue;
+      
+         J = J2[i]/2.; M=Jz2[i]/2.; denom = (J*J*(2*J+1.)*(2*J-1.));
+         if(fabs(denom)<DBL_EPSILON) f=0.; else f = sqrt( ((S2+L2+2*J)/2.+1)*((S2+L2-2*J)/2.+1)*((S2+2*J-L2)/2.)*((L2+2*J-S2)/2.) / denom );
+         denom = ((J+1)*(J+1)*(2*(J+1)+1)*(2*(J+1)-1));
+         if(fabs(denom)<DBL_EPSILON) fp=0.; else fp = sqrt( ((S2+L2)/2.+(J+1)+1)*((S2+L2)/2.-(J+1)+1)*((S2-L2)/2.+(J+1))*((L2-S2)/2.+(J+1)) / denom );
+	 if (J2[i]!=0) g = 1 + (g_s-1) * (J*(J+1) - (L2/2.)*((L2/2.)+1) + (S2/2.)*((S2/2.)+1)) / (2*J*(J+1)); else g = 0;
+
+         if(J2[i]==J2[j])
+         {
+           if (Jz2[i]==Jz2[j] && q==3)
+             mu(i,j) = M*g;                                           // mu_z
+           else if(Jz2[j]==(Jz2[i]+2))
+           {
+             if(q==1)      mu(i,j) = sqrt( (J+M+1)*(J-M) ) * g/2;     // mu_x 
+             else if(q==2) mu(i,j) = sqrt(/*-*/(J+M+1)*(J-M) ) * g/2; // mu_y
+           }
+           else if(Jz2[j]==(Jz2[i]-2))
+           {
+             if(q==1)      mu(i,j) = sqrt( (J-M+1)*(J+M) ) * g/2;
+             else if(q==2) mu(i,j) =-sqrt(/*-*/(J-M+1)*(J+M) ) * g/2;
+           }
+         }
+         else if(J2[j]==(J2[i]-2))
+         {
+           if(Jz2[i]==Jz2[j] && q==3)
+             mu(i,j) = (g_s-1) * sqrt(J*J-M*M) * f/2;
+           else if(Jz2[j]==(Jz2[i]+2))
+           {
+             if(q==1)      mu(i,j) = (g_s-1) * sqrt( (J-M-1)*(J-M) ) * f/4;
+             else if(q==2) mu(i,j) = (g_s-1) * sqrt(/*-*/(J-M-1)*(J-M) ) * f/4;
+           }
+           else if(Jz2[j]==(Jz2[i]-2))
+           {
+             if(q==1)      mu(i,j) =-(g_s-1) * sqrt( (J+M-1)*(J+M) ) * f/4;
+             else if(q==2) mu(i,j) = (g_s-1) * sqrt(/*-*/(J+M-1)*(J+M) ) * f/4;
+           }
+         }
+         else if(J2[j]==(J2[i]+2))
+         {
+           if(Jz2[i]==Jz2[j] && q==3)
+             mu(i,j) = (g_s-1) * sqrt( (J+M+1)*(J-M+1) ) * fp/2;
+           else if(Jz2[j]==(Jz2[i]+2))
+           {
+             if(q==1)      mu(i,j) =-(g_s-1) * sqrt( (J+M+1)*(J+M+2) ) * fp/4;
+             else if(q==2) mu(i,j) =-(g_s-1) * sqrt(/*-*/(J+M+1)*(J+M+2) ) * fp/4;
+           }
+           else if(Jz2[j]==(Jz2[i]-2))
+           {
+             if(q==1)      mu(i,j) = (g_s-1) * sqrt( (J-M+1)*(J-M+2) ) * fp/4;
+             else if(q==2) mu(i,j) =-(g_s-1) * sqrt(/*-*/(J-M+1)*(J-M+2) ) * fp/4;
+           }
+         }
+      }
 }
 
 // --------------------------------------------------------------------------------------------------------------- //

@@ -114,7 +114,8 @@ class icpars
       bool save_matrices;                    // Flag to indicate if matrices for CF, etc. should be saved and reloaded
     //bool bflag;                            // Flag to show if a field norm= or nostevfact is given
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
-      double chanlam;                        // Fraction of matrix to keep, for matrix truncation.
+      double truncate_level;                 // Fraction of matrix to keep, for matrix truncation.
+      int num_eigv;                          // Number of eigenvectors to print in output
       std::string density;                   // Flag to output expectation values of spin/orbital density operator.
       std::string basis;                     // Name of basis to output eigenvectors, supported: "JmJ" and "mSmL"
       double Bx,By,Bz;                       // For magnetic field for Zeeman term

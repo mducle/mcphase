@@ -52,7 +52,7 @@ ifdef CYGWIN
 CYGFLAGS = -DCYGWIN
 endif 
 
-CFLAGS  = -c $(CCOPTS) $(INCLDIRS) $(CYGFLAGS)
+CFLAGS  = -c $(CCOPTS) $(INCLDIRS) $(CYGFLAGS) -U_FORTIFY_SOURCE
 
 # PGPLLIBS =       -L$(PGPLOT_DIR)  -lcpgplot -lpgplot
 ifdef LINUX

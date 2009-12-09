@@ -215,7 +215,7 @@ icpars::icpars()
    xT=0.; xHa=0.; xHb=0.; xHc=0.; xMin=0.; xStep=0.; xMax=0.;
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
    Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ"); save_matrices = false;
-   perturb = false; partial = false; arnoldi = false; spectrelevels = -1; chanlam = 1;
+   perturb = false; partial = false; arnoldi = false; spectrelevels = -1; truncate_level = 1; num_eigv = 4;
 }
 // --------------------------------------------------------------------------------------------------------------- //
 // Overloaded operators for icpars:: class
@@ -701,6 +701,27 @@ icmfmat::icmfmat(int n, orbital l, int num_op, bool save_matrices, std::string d
    J[4] = mm_gin(Sfilestr); J[5] = mm_gin(Lfilestr);                               // Sz and Lz
    if(J[4].isempty() || J[5].isempty()) { 
       racah_mumat(n,0,J[5],J[4],l); rmzeros(J[4]); rmzeros(J[5]); mm_gout(J[4],Sfilestr); mm_gout(J[5],Lfilestr); }
+
+   // Checks the moment operator matrices against those given by Chan and Lam.
+   int ii,jj=0; sMat<double> mu; double g_s = 2.0023193043622; // electronic g-factor
+/* chanlam_mumat(n,1,mu,l); for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+      if(fabs(-mu(ii,jj)-J[1](ii,jj)-g_s*J[0](ii,jj))>10*DBL_EPSILON) { std::cerr << "icmfmat: Magnetic moment operator x does not agree.\n"; break; }
+      if(ii==mu.nr() && jj==mu.nc()) std::cerr << "icmfmat: Magnetic moment operator x agrees.\n";
+   chanlam_mumat(n,2,mu,l); for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+      if(fabs(-mu(ii,jj)-J[3](ii,jj)-g_s*J[2](ii,jj))>10*DBL_EPSILON) { std::cerr << "icmfmat: Magnetic moment operator y does not agree.\n"; break; }
+      if(ii==mu.nr() && jj==mu.nc()) std::cerr << "icmfmat: Magnetic moment operator y agrees.\n";
+   chanlam_mumat(n,3,mu,l); for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+      if(fabs(-mu(ii,jj)-J[5](ii,jj)-g_s*J[4](ii,jj))>10*DBL_EPSILON) { std::cerr << "icmfmat: Magnetic moment operator z does not agree.\n"; break; }
+      if(ii==mu.nr() && jj==mu.nc()) std::cerr << "icmfmat: Magnetic moment operator z agrees.\n"; */
+   double sumcheck;
+   chanlam_mumat(n,1,mu,l); sumcheck = 0.; for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+//    std::cout << -mu(ii,jj) << "\t" << J[1](ii,jj)+g_s*J[0](ii,jj)  << "\t" << fabs(-mu(ii,jj)-J[1](ii,jj)-g_s*J[0](ii,jj)) << "\n";
+      sumcheck += fabs(-mu(ii,jj)-J[1](ii,jj)-g_s*J[0](ii,jj)); std::cout << "Moment Matrix Check: sum(-mu_x(ChanLam) - (Lx+gSx)) = " << sumcheck << "\n";
+   chanlam_mumat(n,2,mu,l); sumcheck = 0.; for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+//    std::cout << -mu(ii,jj) << "\t" << J[3](ii,jj)+g_s*J[2](ii,jj)  << "\t" << fabs(-mu(ii,jj)-J[3](ii,jj)-g_s*J[2](ii,jj)) << "\n";
+      sumcheck += fabs(-mu(ii,jj)-J[3](ii,jj)-g_s*J[2](ii,jj)); std::cout << "Moment Matrix Check: sum(-mu_y(ChanLam) - (Ly+gSy)) = " << sumcheck << "\n";
+   chanlam_mumat(n,3,mu,l); sumcheck = 0.; for(ii=0; ii<mu.nr(); ii++) for(jj=0; jj<mu.nc(); jj++) 
+      sumcheck += fabs(-mu(ii,jj)-J[5](ii,jj)-g_s*J[4](ii,jj)); std::cout << "Moment Matrix Check: sum(-mu_z(ChanLam) - (Lz+gSz)) = " << sumcheck << "\n";
 }
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the mean field matrix sum_i (H_i*J_i)
@@ -977,7 +998,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
    for(iJ=0; iJ<sz; iJ++)
    {
 //    if(k[iJ]%2==1) { if(VE.iscomplex()) { zij[iJ].r=0.; zij[iJ].i=0.; } else mij[iJ]=0.; continue; }
-      if(iJ>6)
+      if(iJ>=6)
       {
          NSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[iJ],abs(q[iJ]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
@@ -991,7 +1012,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
       if(!VE.iscomplex() && iflag[iJ]==0)
       {
          vt = (double*)malloc(Hsz*sizeof(double)); 
-         double *fJmat; if(iJ>6) fJmat=Upq.f_array(); else fJmat=J[iJ].f_array();
+         double *fJmat; if(iJ>=6) fJmat=Upq.f_array(); else fJmat=J[iJ].f_array();
          F77NAME(dsymv)(&uplo, &Hsz, &alpha, fJmat, &Hsz, VE.V(j), &incx, &beta, vt, &incx);
 #ifdef _G77 
          F77NAME(ddot)(mij[iJ], &Hsz, VE.V(i), &incx, vt, &incx); zij[iJ].r = mij[iJ];
