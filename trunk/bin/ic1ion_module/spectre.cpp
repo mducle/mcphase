@@ -18,6 +18,7 @@
 #include "ic1ion.hpp"
 #include "vector.h"          // MatPack vector class
 #include <fstream>
+#include <ctime>
 
 #ifndef _WINDOWS
 #include <unistd.h>
@@ -282,17 +283,29 @@ std::vector<double> spectre_expJ(icpars &pars, ComplexMatrix &est, int parvalsiz
 // --------------------------------------------------------------------------------------------------------------- //
 void truncate_hmltn(icpars &pars, ComplexMatrix &est, sMat<double> &Hic, sMat<double> &iHic, int JHi, int JLo)
 {
-#ifndef _WINDOWS
    std::cout << "mcalc(): Calculating rotated matrix for truncation. Setting up eigenvector mmaped matrix... " << std::flush;
    clock_t start,end; start = clock();
    int i,Hsz=est.Chi(); size_t filesize = Hsz*Hsz*sizeof(complexdouble);
    // Creates a file for memory mapping.
+#ifndef _WINDOWS
    int fd = open("results/ic1ion.trunc", O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); if(fd==-1) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
    int result = lseek(fd, filesize, SEEK_SET); if (result == -1) { close(fd); std::cerr << "mcalc(): Can't 'stretch' mmap\n"; exit(EXIT_FAILURE); }
    result = write(fd, "", 1); if (result==-1) { close(fd); std::cerr << "mcalc(): Can't write last byte\n"; exit(EXIT_FAILURE); }
    complexdouble *Vf; double *Ef; Ef = new double[Hsz]; 
    Vf = (complexdouble*)mmap(0, filesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
    if (Vf == MAP_FAILED) { close(fd); std::cerr << "mcalc(): Truncation failed to mmapp the file\n"; exit(EXIT_FAILURE); }
+#else
+   HANDLE fd = CreateFile("results/ic1ion.trunc",GENERIC_WRITE|GENERIC_READ,FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_TEMPORARY,NULL);
+   if(fd==(HANDLE)INVALID_HANDLE_VALUE) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
+   /* Warning the size value in Windows is expected to be a DWORD (a 32-bit number). This is ok on 32-bit systems, as size_t is also 32-bit.
+    * On 64-bit systems, however, size_t is a 64-bit unsigned integer... However the size of our matrices _should_ not exceed 32-bit so we
+    * _should_ be ok... Or we could use the high/low order dword facility (high is set to zero at present)... but this is too much effort ;) */
+   HANDLE hMap = CreateFileMapping(fd,NULL,PAGE_READWRITE,0,filesize,NULL);
+   if(hMap==(HANDLE)INVALID_HANDLE_VALUE) { CloseHandle(fd); std::cerr << "mcalc(): Failed to mmapp the file.\n"; exit(EXIT_FAILURE); }
+   complexdouble *Vf; double *Ef; Ef = new double[Hsz]; 
+   Vf = (complexdouble*)MapViewOfFile(hMap,FILE_MAP_ALL_ACCESS,0,0,0); 
+   if(Vf==NULL) { CloseHandle(fd); std::cerr << "mcalc(): Could not create view of the mmap.\n"; exit(EXIT_FAILURE); }
+#endif
    // Calculates the eigenvectors and puts it into the memory mapped file
    std::cout << "Done.\nmcalc(): Starting single ion matrix diagonalisation... " << std::flush;
    i = ic_diag(Hic,iHic,Vf,Ef); delete[]Ef; 
@@ -300,12 +313,19 @@ void truncate_hmltn(icpars &pars, ComplexMatrix &est, sMat<double> &Hic, sMat<do
       if(fabs(Vf[ii*Hsz+jj].r)<DBL_EPSILON) Vf[ii*Hsz+jj].r=0.; if(fabs(Vf[ii*Hsz+jj].i)<DBL_EPSILON) Vf[ii*Hsz+jj].i=0.; } 
    std::cout << "Finished.";
    // Calculates the rotated operators for the mean field terms
-   char nstr[6]; char filename[255]; char basename[255]; char mapname[255]; char mapbasename[255]; int dirstat=0; struct stat status;
+   char nstr[6]; char filename[255]; char basename[255]; char mapname[255]; char mapbasename[255];
    if(pars.save_matrices) {
-   stat("results/mms/",&status); if(!S_ISDIR(status.st_mode)) dirstat = mkdir("results/mms",0777); strcpy(basename,"results/mms");
+   #ifndef _WINDOWS
+   struct stat status; int dirstat=0; stat("results/mms/",&status); if(!S_ISDIR(status.st_mode)) dirstat = mkdir("results/mms",0777);
    if(dirstat!=0) { std::cerr << "mcalc(): " << errno << "\n"; exit(EXIT_FAILURE); }
+   strcpy(mapbasename,"results/"); 
+   #else
+   DWORD drAttr = GetFileAttributes("results\\mms"); if(drAttr==0xffffffff || !(drAttr&FILE_ATTRIBUTE_DIRECTORY)) 
+   if (!CreateDirectory("results\\mms", NULL)) std::cerr << "icmfmat::Jmat(): Cannot create mms directory\n";
+   strcpy(mapbasename,"results\\"); 
+   #endif
    nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
-   strcat(basename,nstr); strcat(basename,"_"); strcat(mapbasename,"results/"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;  
+   strcpy(basename,"results/mms"); strcat(basename,nstr); strcat(basename,"_"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;  
    } else { strcpy(mapbasename,"nodir/"); strcpy(basename,"nodir/"); }
    #define NSTR(K,Q) nstr[1] = K+48; nstr[2] = Q+48; nstr[3] = 0
    #define MSTR(K,Q) nstr[1] = K+48; nstr[2] = 109;  nstr[3] = Q+48; nstr[4] = 0
@@ -338,20 +358,36 @@ void truncate_hmltn(icpars &pars, ComplexMatrix &est, sMat<double> &Hic, sMat<do
          if(q[iJ]<0) { MSTR(k[iJ],abs(q[iJ])); strcat(mapname,nstr); } else { NSTR(k[iJ],abs(q[iJ])); strcat(mapname,nstr); }
       }
       strcat(mapname,".mmap");
+#ifndef _WINDOWS
       int fd2 = open(mapname, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600); if(fd2==-1) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
       result = lseek(fd2, filesize2, SEEK_SET); if (result==-1) { close(fd2); std::cerr << "mcalc(): Can't 'stretch' mmap\n"; exit(EXIT_FAILURE); }
       result = write(fd2, "", 1); if (result==-1) { close(fd2); std::cerr << "mcalc(): Can't write last byte\n"; exit(EXIT_FAILURE); }
       Hrot = (complexdouble*)mmap(0, filesize2, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0);
       if (Vf == MAP_FAILED) { close(fd2); std::cerr << "mcalc(): Truncation failed to mmapp the file\n"; exit(EXIT_FAILURE); }
+#else
+      HANDLE fd2 = CreateFile((const char*)mapname,GENERIC_WRITE|GENERIC_READ,FILE_SHARE_WRITE,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_TEMPORARY,NULL);
+      if(fd2==(HANDLE)INVALID_HANDLE_VALUE) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
+//    DWORD dwError = GetLastError(); char buf[255]; FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, dwError, 0, buf, sizeof(buf), 0); std::cerr << buf << "\n";
+      HANDLE hMap2 = CreateFileMapping(fd2,NULL,PAGE_READWRITE,0,filesize2,NULL);
+      if(hMap2==(HANDLE)INVALID_HANDLE_VALUE) { CloseHandle(fd2); std::cerr << "mcalc(): Failed to mmapp the file.\n"; exit(EXIT_FAILURE); }
+      Hrot = (complexdouble*)MapViewOfFile(hMap2,FILE_MAP_ALL_ACCESS,0,0,0); 
+      if(Vf==NULL) { CloseHandle(fd2); std::cerr << "mcalc(): Could not create view of the mmap.\n"; exit(EXIT_FAILURE); }
+#endif
       F77NAME(zhemm)(&side,&uplo,&Hsz,&cb,&zalpha,zJmat,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
       F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hsz,&zalpha,Vf,&Hsz,zmt,&Hsz,&zbeta,Hrot,&cb); free(zJmat);
       for(int ii=0; ii<cb; ii++) for(int jj=0; jj<cb; jj++) { 
          if(fabs(Hrot[ii*cb+jj].r)<DBL_EPSILON) Hrot[ii*cb+jj].r=0.; if(fabs(Hrot[ii*cb+jj].i)<DBL_EPSILON) Hrot[ii*cb+jj].i=0.; } 
+#ifndef _WINDOWS
       if (munmap(Hrot,filesize2)==-1) { close(fd2); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd2);
    }
-   if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd); delete[]zmt;
-   end = clock(); std::cout << "Done. Time to mmap files = " << (double)(end-start)/CLOCKS_PER_SEC << "s." << std::endl;
+   if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd);
+#else
+      if (UnmapViewOfFile(Hrot)==0) { CloseHandle(fd2); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } CloseHandle(fd2);
+   }
+   if (UnmapViewOfFile(Vf)==0) { CloseHandle(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } CloseHandle(fd);
 #endif
+   delete[]zmt;
+   end = clock(); std::cout << "Done. Time to mmap files = " << (double)(end-start)/CLOCKS_PER_SEC << "s." << std::endl;
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -359,20 +395,32 @@ void truncate_hmltn(icpars &pars, ComplexMatrix &est, sMat<double> &Hic, sMat<do
 // --------------------------------------------------------------------------------------------------------------- //
 void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, double T, double *lnZ, double *U, complexdouble *Jm)
 {
-#ifndef _WINDOWS
    int Hsz=est.Chi();
    size_t filesize = Hsz*Hsz*sizeof(complexdouble); char notranspose='N',transpose='C',uplo='U',side='L'; complexdouble *Vf, zme;
    int Esz, incx=1; std::vector<double> E, me, eb;
    complexdouble zalpha; zalpha.r=1; zalpha.i=0; complexdouble zbeta; zbeta.r=0; zbeta.i=0;
    // Opens the memory mapped file
+#ifndef _WINDOWS
    int fd = open("results/ic1ion.trunc", O_RDONLY); if (fd == -1) { std::cerr << "mcalc(): Can't open mmapped file\n"; exit(EXIT_FAILURE); }
    Vf = (complexdouble*)mmap(0,filesize,PROT_READ,MAP_SHARED,fd,0); 
    if(Vf==MAP_FAILED) { close(fd); std::cerr << "mcalc(): Can't mmapp file\n"; exit(EXIT_FAILURE); }
+#else
+   HANDLE fd = CreateFile("results/ic1ion.trunc",GENERIC_READ,FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_TEMPORARY,NULL);
+   if(fd==(HANDLE)INVALID_HANDLE_VALUE) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
+   HANDLE hMap = CreateFileMapping(fd,NULL,PAGE_READONLY,0,filesize,NULL);
+   if(hMap==(HANDLE)INVALID_HANDLE_VALUE) { CloseHandle(fd); std::cerr << "mcalc(): Can't mmapp file\n"; exit(EXIT_FAILURE); }
+   Vf = (complexdouble*)MapViewOfFile(hMap,FILE_MAP_READ,0,0,0); 
+   if(Vf==NULL) { CloseHandle(fd); std::cerr << "mcalc(): Could not create view of the mmap.\n"; exit(EXIT_FAILURE); }
+#endif
    int cb = (int)(pars.truncate_level*Hsz); complexdouble *Hrot,*zmt; zmt = new complexdouble[Hsz*cb]; Hrot = new complexdouble[cb*cb]; 
    F77NAME(zhemm)(&side,&uplo,&Hsz,&cb,&zalpha,Jm,&Hsz,Vf,&Hsz,&zbeta,zmt,&Hsz);
    F77NAME(zgemm)(&transpose,&notranspose,&cb,&cb,&Hsz,&zalpha,Vf,&Hsz,zmt,&Hsz,&zbeta,Hrot,&cb); free(Jm); delete[]zmt;
-   if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Truncation failed to un-mmapp the file\n"; exit(EXIT_FAILURE); }
-   close(fd); iceig VE; VE.calc(cb,Hrot); delete[]Hrot;
+#ifndef _WINDOWS
+   if (munmap(Vf,filesize)==-1) { close(fd); std::cerr << "mcalc(): Truncation failed to un-mmapp the file\n"; exit(EXIT_FAILURE); } close(fd);
+#else
+   if (UnmapViewOfFile(Vf)==0) { CloseHandle(fd); std::cerr << "mcalc(): Truncation failed to un-mmapp the file\n"; exit(EXIT_FAILURE); } CloseHandle(fd);
+#endif
+   iceig VE; VE.calc(cb,Hrot); delete[]Hrot;
    for(int ii=0; ii<cb; ii++) for(int jj=0; jj<cb; jj++) { 
       if(fabs(VE.zV(ii,jj).r)<DBL_EPSILON) VE.zV(ii,jj).r=0.; if(fabs(VE.zV(ii,jj).i)<DBL_EPSILON) VE.zV(ii,jj).i=0.; } 
    // Sets energy levels relative to lowest level, and determines the maximum energy level needed.
@@ -380,7 +428,11 @@ void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, d
    // Calculates the rotated operators for the mean field terms
    char nstr[6]; char mapname[255]; char mapbasename[255];
    nstr[0] = (pars.l==F?102:100); if(pars.n<10) { nstr[1] = pars.n+48; nstr[2] = 0; } else { nstr[1] = 49; nstr[2] = pars.n+38; nstr[3] = 0; }
+#ifndef _WINDOWS
    strcpy(mapbasename,"results/"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;
+#else
+   strcpy(mapbasename,"results\\"); strcat(mapbasename,nstr); strcat(mapbasename,"_"); nstr[0] = 85;
+#endif
    // Indices 6-10 are k=2 quadrupoles; 11-17:k=3; 18-26:k=4; 27-37:k=5; 38-50:k=6
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
@@ -391,9 +443,18 @@ void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, d
       if(iJ<6) { nstr[1]=49; nstr[2]=iJ+49; nstr[3]=0; strcat(mapname,nstr); }
       else { if(q[iJ]<0) { MSTR(k[iJ],abs(q[iJ])); strcat(mapname,nstr); } else { NSTR(k[iJ],abs(q[iJ])); strcat(mapname,nstr); } }
       strcat(mapname,".mmap");
+#ifndef _WINDOWS
       fd = open(mapname, O_RDONLY); if (fd == -1) { std::cerr << "mcalc(): Can't open mmapped file\n"; exit(EXIT_FAILURE); }
       zJmat = (complexdouble*)mmap(0,filesize,PROT_READ,MAP_SHARED,fd,0); 
       if(zJmat==MAP_FAILED) { close(fd); std::cerr << "mcalc(): Can't mmapp file\n"; exit(EXIT_FAILURE); }
+#else
+      HANDLE fd = CreateFile((const char*)mapname,GENERIC_READ,FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_TEMPORARY,NULL);
+      if(fd==(HANDLE)INVALID_HANDLE_VALUE) { std::cerr<<"mcalc(): Can't open mmap\n"; exit(EXIT_FAILURE); }
+      HANDLE hMap = CreateFileMapping(fd,NULL,PAGE_READONLY,0,filesize,NULL);
+      if(hMap==(HANDLE)INVALID_HANDLE_VALUE) { CloseHandle(fd); std::cerr << "mcalc(): Failed to mmapp the file.\n"; exit(EXIT_FAILURE); }
+      zJmat = (complexdouble*)MapViewOfFile(hMap,FILE_MAP_READ,0,0,0); 
+      if(Vf==NULL) { CloseHandle(fd); std::cerr << "mcalc(): Could not create view of the mmap.\n"; exit(EXIT_FAILURE); }
+#endif
       zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble)); J[iJ+1]=0.; 
       for(int ind_j=0; ind_j<Esz; ind_j++)
       {  // Calculates the matrix elements <Vi|J.H|Vi>
@@ -408,8 +469,11 @@ void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, d
          J[iJ+1]+=me[ind_j]*eb[ind_j];
       }
       free(zt); J[iJ+1]/=Z; if(iJ==(J.Lo()-1)) *U/=Z;
+#ifndef _WINDOWS
       if(munmap(zJmat,filesize)==-1) { close(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } close(fd);
+#else
+      if(UnmapViewOfFile(zJmat)==0) { CloseHandle(fd); std::cerr << "mcalc(): Can't un-mmapp\n"; exit(EXIT_FAILURE); } CloseHandle(fd);
+#endif
    }
    *lnZ = log(Z)-VE.E(0)/(KB*T);
-#endif
 }

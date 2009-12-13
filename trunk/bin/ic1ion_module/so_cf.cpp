@@ -117,13 +117,17 @@ sMat<double> racah_Umat(int n, int k, orbital e_l)
             if(df) cfpsj = racah_parents(n,conf.states[j].v,conf.states[j].S2,conf.states[j].L); else
             cfpsj = racah_parents(n,conf.states[j].v,conf.states[j].U,conf.states[j].S2,conf.states[j].L);
             sumcfp = 0.; 
-            noncfpprod = pow(-1.,-(double)e_l-abs(conf.states[j].L)) * sqrt( (2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.) );
+//          noncfpprod = pow(-1.,-(double)e_l-abs(conf.states[j].L)) * sqrt( (2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.) );
+            noncfpprod =                                               sqrt( (2.*abs(conf.states[i].L)+1.)*(2.*abs(conf.states[j].L)+1.) );
             isz = (int)cfpsi.size(); jsz = (int)cfpsj.size();
             for(ii=0; ii<isz; ii++)
                for(jj=0; jj<jsz; jj++)
                   if(cfpsi[ii].ind==cfpsj[jj].ind)
-                     sumcfp += racahW(e_l*2,abs(conf.states[i].L)*2,e_l*2,abs(conf.states[j].L)*2,abs(confp.states[cfpsi[ii].ind].L)*2,k*2)
-                               * cfpsi[ii].cfp * cfpsj[jj].cfp * pow(-1.,(double)abs(confp.states[cfpsi[ii].ind].L)+k) * noncfpprod;
+//                   sumcfp += racahW(e_l*2,abs(conf.states[i].L)*2,e_l*2,abs(conf.states[j].L)*2,abs(confp.states[cfpsi[ii].ind].L)*2,k*2)
+//                             * cfpsi[ii].cfp * cfpsj[jj].cfp * pow(-1.,(double)abs(confp.states[cfpsi[ii].ind].L)+k) * noncfpprod;
+                     sumcfp += pow(-1.,(double)abs(confp.states[cfpsi[ii].ind].L)+abs(conf.states[i].L)+k+e_l)
+                               * sixj(2*abs(conf.states[j].L),2*k,2*abs(conf.states[i].L),2*e_l,2*abs(confp.states[cfpsi[ii].ind].L),2*e_l)
+                               * cfpsi[ii].cfp * cfpsj[jj].cfp * noncfpprod;
             if(fabs(sumcfp)!=0.) 
             {
              //if(n>(2*e_l+1)) sumcfp = -sumcfp; // Phase difference: [4l+2-n] = -(-1)^K [n] 
@@ -175,9 +179,11 @@ sMat<double> racah_ukq(int n, int k, int q, orbital e_l)
       for(j=0; j<ns; j++)
          if(S2[i]==S2[j])
          {
-            rm = pow(-1.,(S2[i]-L2[i]-J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) * racahW(L2[i],J2[i],L2[j],J2[j],S2[i],2*k) * redmat(irm[i],irm[j]);
+//          rm = pow(-1.,(S2[i]-L2[i]-J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) * racahW(L2[i],J2[i],L2[j],J2[j],S2[i],2*k) * redmat(irm[i],irm[j]);
+            rm = pow(-1.,(S2[i]+L2[i]+J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) *   sixj(J2[j],2*k,J2[i],L2[i],S2[i],L2[j]) * redmat(irm[i],irm[j]);
           //if(nn>(2*e_l+1)) rm = -rm;
-            Ukq(i,j) = pow(-1.,(J2[i]+Jz2[i])/2.+k+q) * rm * wigner(J2[i],J2[j],0-Jz2[i],Jz2[j],2*k,-2*q) / sqrt(2.*k+1.);
+//          Ukq(i,j) = pow(-1.,(J2[i]+Jz2[i])/2.+k+q) * rm * wigner(J2[i],J2[j],0-Jz2[i],Jz2[j],2*k,-2*q) / sqrt(2.*k+1.);
+            Ukq(i,j) = pow(-1.,(J2[i]-Jz2[i])/2.-q) * threej(J2[j],2*k,J2[i],-Jz2[i],2*q,Jz2[j]) * rm;
          // if(i!=j) Ukq(j,i) = Ukq(i,j) * pow(-1.,(L2[i]-S2[i]-L2[j]+S2[j])/2.);
          }
 
