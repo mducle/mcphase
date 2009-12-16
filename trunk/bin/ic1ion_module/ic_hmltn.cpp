@@ -289,7 +289,8 @@ sMat<double> ic_hmltn(sMat<double> &H_cfi, icpars &pars)
                }
                if(q<0)
                 /*if(nn>(2*e_l+1)) H_cfi-= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
-                  else*/ H_cfi+= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]);
+                  else   H_cfi+= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); changed MR 15.12.09 */
+                         H_cfi-= (Upq - Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]);
                else
                 /*if(nn>(2*e_l+1)) H_cf -= (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 
                   else*/ H_cf += (Upq + Umq*pow(-1.,q)) * (pars.B(k,q)/icfact[k]); 

@@ -22,6 +22,7 @@
 #include<vector>
 #include<iostream>
 #include<sstream>
+#include<iomanip>
 #include<string>
 #include<map>
 #include<cfloat>       // For definition of EPSILON etc.
@@ -413,7 +414,7 @@ template <class T> std::string sMat<T>::display_full() const            // Print
             if( (mr>_r || mr<0) || (mc>_c || mc<0) )
                retval << "0\t";
             else
-               retval << _ls.find(_ind(r,c))->second << "\t";
+               retval << std::setprecision(16) << _ls.find(_ind(r,c))->second << "\t";
          }
       }
       if(_ls.find(_ind(r,c))==_ls.end())
@@ -425,7 +426,7 @@ template <class T> std::string sMat<T>::display_full() const            // Print
          if( (mr>_r || mr<0) || (mc>_c || mc<0) )
             retval << "0;\n";
          else
-            retval << _ls.find(_ind(r,c))->second << ";\n";
+            retval << std::setprecision(16) << _ls.find(_ind(r,c))->second << ";\n";
       }
    }
    for (c=0; c<(_c-1); c++)
@@ -439,7 +440,7 @@ template <class T> std::string sMat<T>::display_full() const            // Print
          if( (mr>_r || mr<0) || (mc>_c || mc<0) )
             retval << "0\t";
          else
-            retval << _ls.find(_ind(r,c))->second << "\t";
+            retval << std::setprecision(16) << _ls.find(_ind(r,c))->second << "\t";
       }
    }
    if(_ls.find(_ind(r,c))==_ls.end())
@@ -451,7 +452,7 @@ template <class T> std::string sMat<T>::display_full() const            // Print
       if( (mr>_r || mr<0) || (mc>_c || mc<0) )
          retval << "0];\n";
       else
-         retval << _ls.find(_ind(r,c))->second << "];\n";
+         retval << std::setprecision(16) << _ls.find(_ind(r,c))->second << "];\n";
    }
    return retval.str();
 }

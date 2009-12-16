@@ -705,7 +705,7 @@ void ic_cmag(const char *filename, icpars &pars)
 
    for(i=0; i<nH; i++)
    {
-      for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUB*(Hmin+i*Hstep)); 
+      for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUBc*(Hmin+i*Hstep)); 
       mfmat.Jmat(J,iJ,gjmbHmeV,pars.save_matrices);
       if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
          else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
@@ -766,6 +766,9 @@ int main(int argc, char *argv[])
       if(fabs(pars.Bz)>DBL_EPSILON) { gjmbH[5]=-MUBc*pars.Bz; gjmbH[4]=GS*gjmbH[5]; }
       sMat<double> J,iJ; icmfmat mfmat(pars.n,pars.l,6,pars.save_matrices); mfmat.Jmat(J,iJ,gjmbH,pars.save_matrices); Hic+=J; iHic+=iJ;
    }
+
+   std::cout << std::setprecision(16) << "Hic=" << Hic.display_full() << "; Hic=Hic./" << MEV2CM << ";\n";
+   std::cout << std::setprecision(16) << "iHic=" << iHic.display_full() << "; iHic=iHic./" << MEV2CM << ";\n";
 
    end = clock(); std::cerr << "Time to calculate Hic = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
 
