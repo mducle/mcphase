@@ -48,8 +48,8 @@ printf("#****************************************************\n");
                                      results/spins*.eps (postscript), results/spins*.fst (fp_studio), \n \
                                      results/spins.out (ascii) and results/spins*.jvx (javaview)\n\n \
                 the graphics output format can be fine tuned in .sps and .qev input files\n \
-                by setting the variables show_abc_unitcell, show_primitive_crystal_unitcell, \n \
-                show_magnetic_unitcell, show_atoms, scale_view_1,scale_view_2, scale_view_3. \n\n \
+                by show_abc_unitcell, show_primitive_crystal_unitcell, spins_scale_moment\n \
+                show_magnetic_unitcell, show_atoms, scale_view_1,scale_view_2, scale_view_3 ...\n\n \
                 jvx files can be viewed by: java javaview results/spins.jvx \n \
                                             java javaview \"model=results/spins.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n \
                \n");
@@ -64,7 +64,7 @@ printf("#****************************************************\n");
  fout = fopen_errchk ("./results/spins.out", "w");
 
 
-double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0;
+double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0,spins_scale_moment=1.0;
 abc=0;
  // input file header ------------------------------------------------------------------
   instr[0]='#';
@@ -84,6 +84,7 @@ abc=0;
    extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
    extract(instr,"show_magnetic_unitcell",show_magnetic_unitcell);
    extract(instr,"show_atoms",show_atoms);
+   extract(instr,"spins_scale_moment",spins_scale_moment);
    extract(instr,"scale_view_1",scale_view_1);
    extract(instr,"scale_view_2",scale_view_2);
    extract(instr,"scale_view_3",scale_view_3);
@@ -188,18 +189,18 @@ abc=0;
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins.jvx", "w");
      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0);
+                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,0.0);
     fclose (fin_coq);
 
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins_prim.jvx", "w");
      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0);
+                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,0.0);
     fclose (fin_coq);
 
 if (argc>=9){// try a spinwave picture
              double h,k,l,E,ddh,ddk,ddl,ddE;
-             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_direction_of_static_moment=1.0; 
+             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_static_moment_direction=1; 
              fin_coq = fopen_errchk ("./results/mcdisp.qev", "rb");
              // input file header ------------------------------------------------------------------
              instr[0]='#';
@@ -213,7 +214,7 @@ if (argc>=9){// try a spinwave picture
                // load evs and check which one is nearest -------------------------------   
                extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
                extract(instr,"spins_show_ellipses",spins_show_ellipses);
-               extract(instr,"spins_show_direction_of_static_moment",spins_show_direction_of_static_moment);
+               extract(instr,"spins_show_static_moment_direction",spins_show_static_moment_direction);
               }
                j=fseek(fin_coq,pos,SEEK_SET); 
                if (j!=0){fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
@@ -259,12 +260,12 @@ if (argc>=9){// try a spinwave picture
                sprintf(filename,"./results/spins.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
+                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,spins_show_static_moment_direction);
                fclose (fin_coq);
                sprintf(filename,"./results/spins_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment);
+                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,spins_show_static_moment_direction);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);  

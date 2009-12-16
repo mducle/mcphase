@@ -751,7 +751,7 @@ return mindist;
 void spincf::jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
                  double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
                  int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
-                 double spins_show_ellipses,double spins_show_direction_of_static_moment) 
+                 double spins_show_ellipses,double spins_scale_static_moment,double spins_show_static_moment_direction) 
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
 {char *cffilenames[0];
@@ -759,14 +759,14 @@ void spincf::jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float
                  show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,
                  show_atoms,scale_view_1,scale_view_2,scale_view_3,
                  showprim,phase,savev_real,savev_imag,amplitude,hkl,
-                 spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,0.0,1.0);
+                 spins_show_ellipses,spins_scale_static_moment,cffilenames,0.0,spins_show_static_moment_direction);
 }
 
 
 void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
                  double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
                  int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
-                 double spins_show_ellipses,double spins_show_direction_of_static_moment,char ** cffilenames,double show_chargedensity,double show_spin_oscillation)
+                 double spins_show_ellipses,double spins_scale_static_moment,char ** cffilenames,double show_chargedensity,double show_static_moment_direction)
 { int i,j,k,l,ctr=0,maxm,m;int i1,j1,k1;
  // some checks
  if(nofatoms!=savev_real.nofatoms||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
@@ -782,7 +782,7 @@ void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,fl
   calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,abc,scale_view_1,scale_view_2,scale_view_3);
    if(showprim==1){ijkmin(1)=1;ijkmin(2)=1;ijkmin(3)=1;ijkmax(1)=-2+(int)(scale_view_1);ijkmax(2)=-2+(int)(scale_view_2);ijkmax(3)=-2+(int)(scale_view_3);} // show only primitive magnetic unit cell
   max_min=maxv-minv;    
-  double scale=0,d,mindist=1e10;
+  double d;
 
 fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n"); 
 fprintf(fout,"<jvx-model>\n"); 
@@ -920,8 +920,7 @@ fprintf(fout,"        <points>\n");
 	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
             dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
-            {// determine scale factor of moments
-               c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
+            {
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));                                                                                                                              
      ++ctr;
 	     }
@@ -940,8 +939,7 @@ fprintf(fout,"        <colors type=\"rgb\">\n");
 	    if((dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
             dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)||showprim==1&&scale_view_1>(double)(i1*nofa+i)/nofa&&scale_view_2>(double)(j1*nofb+j)/nofb&&scale_view_3>(double)(k1*nofc+k)/nofc)
-            {// determine scale factor of moments
-               c=magmom(i,j,k,l,gJ);if ((d=Norm(c))>scale)scale=d;      
+            {
 fprintf(fout,"          <c>  %i       %i       %i </c>\n",(int)(255*show_atoms),(int)(show_atoms*((l*97)%256)),0);
 	     }
 	  }
@@ -951,13 +949,7 @@ fprintf(fout,"        </colors>\n");
 fprintf(fout,"      </pointSet>\n"); 
 fprintf(fout,"    </geometry>\n"); 
 
-  // plot magnetic moments
-         for(l=1;l<=nofatoms;++l) // determine mindistance to neighbors
-	 {dd0(1)=x[l];dd0(2)=y[l];dd0(3)=z[l];dd=abc_in_ijk*dd0;
-          if(mindist>(d=nndist(x,y,z,abc,p,dd)))mindist=d;
-         }
-         scale=0.4*mindist/(scale+0.001); // get a good scale factor 
-if(show_spin_oscillation>0){
+if(spins_scale_static_moment>0){
 fprintf(fout,"    <geometry name=\"magnetic moments\">\n"); 
 fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"show\">\n"); 
 fprintf(fout,"        <points>\n"); 
@@ -981,8 +973,8 @@ fprintf(fout,"        <points>\n");
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
-//fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)-xyz(1)*scale,dd(2)-xyz(2)*scale,dd(3)-xyz(3)*scale); 
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+//fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)-xyz(1)*spins_scale_static_moment,dd(2)-xyz(2)*spins_scale_static_moment,dd(3)-xyz(3)*spins_scale_static_moment); 
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*spins_scale_static_moment,dd(2)+xyz(2)*spins_scale_static_moment,dd(3)+xyz(3)*spins_scale_static_moment);                                                                                                                              
 	     ++ctr;
 
 	     }
@@ -1002,7 +994,7 @@ fprintf(fout,"      </lineSet>\n");
 fprintf(fout,"    </geometry>\n"); 
                      }
 
-if(spins_show_direction_of_static_moment>0)
+if(show_static_moment_direction>0)
  {
 // plot a line along static magnetic moments for comparison
 fprintf(fout,"    <geometry name=\"static magnetic moments\">\n"); 
@@ -1025,7 +1017,7 @@ fprintf(fout,"        <points>\n");
              QR*=2*PI;
                           xyz=magmom(i,j,k,l,gJ);
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3)); 
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*spins_scale_static_moment,dd(2)+xyz(2)*spins_scale_static_moment,dd(3)+xyz(3)*spins_scale_static_moment);                                                                                                                              
 	     ++ctr;
 
 	     }
@@ -1038,7 +1030,7 @@ fprintf(fout,"      </pointSet>\n");
 fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n"); 
 fprintf(fout,"        <lines>\n"); 
   for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1); 
-fprintf(fout,"          <thickness>%g</thickness>\n",spins_show_direction_of_static_moment); 
+fprintf(fout,"          <thickness>%g</thickness>\n",spins_scale_static_moment); 
 fprintf(fout,"        </lines>\n"); 
 fprintf(fout,"      </lineSet>\n"); 
 fprintf(fout,"    </geometry>\n"); 
@@ -1071,7 +1063,7 @@ fprintf(fout,"        <points>\n");
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*scale,dd(2)+xyz(2)*scale,dd(3)+xyz(3)*scale);                                                                                                                              
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*spins_scale_static_moment,dd(2)+xyz(2)*spins_scale_static_moment,dd(3)+xyz(3)*spins_scale_static_moment);                                                                                                                              
 	     }++ctr;
 
 	     }

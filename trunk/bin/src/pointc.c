@@ -134,7 +134,7 @@ float invalues[100];invalues[0]=99;
   fclose(sipf_file);
  }
  else
- {printf ("#!cfield\n#<!--mcphase.sipf-->\n");
+ {printf ("#!MODULE=cfield\n#<!--mcphase.sipf-->\n");
   printf("#*********************=*************************************************\n");
   printf("# program pointc - crystal field parameters by the pointcharge model\n");
   printf("# Martin Rotter, %s\n",MCPHASVERSION);

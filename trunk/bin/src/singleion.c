@@ -71,14 +71,14 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
   printf("%3i %13g ",i,T); // printout ion number and temperature
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %10g ",h(j)); // printout meanfield as requested
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %4g ",m(j));  // printout corresponding moments 
-
+ double TT=fabs(T);
    (*inputpars.jjj[i]).transitionnumber=-1;
-   nt=(*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*est)); // get nt = number of transitions, mind: here we use est, 
+   nt=(*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*est)); // get nt = number of transitions, mind: here we use est,
                                                    //because (*inputpars.jjj[i]).est might have been changed by the mcalc call above
 
   for(j=1;j<=nt&&j<=nmax;++j)
   {(*inputpars.jjj[i]).transitionnumber=-j;
-  (*inputpars.jjj[i]).dmcalc(T,h,Mijkl,d,(*est));
+  (*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*est));
   printf(" %4g ",d);
   }
   if(nmax<nt){printf("...");}

@@ -183,7 +183,7 @@ sMat<double> racah_ukq(int n, int k, int q, orbital e_l)
             rm = pow(-1.,(S2[i]+L2[i]+J2[j])/2.+k) * sqrt((J2[i]+1.)*(J2[j]+1.)) *   sixj(J2[j],2*k,J2[i],L2[i],S2[i],L2[j]) * redmat(irm[i],irm[j]);
           //if(nn>(2*e_l+1)) rm = -rm;
 //          Ukq(i,j) = pow(-1.,(J2[i]+Jz2[i])/2.+k+q) * rm * wigner(J2[i],J2[j],0-Jz2[i],Jz2[j],2*k,-2*q) / sqrt(2.*k+1.);
-            Ukq(i,j) = pow(-1.,(J2[i]-Jz2[i])/2.-q) * threej(J2[j],2*k,J2[i],-Jz2[i],2*q,Jz2[j]) * rm;
+            Ukq(i,j) = pow(-1.,(J2[i]-Jz2[i])/2.-q) * threej(J2[j],2*k,J2[j],-Jz2[i],2*q,Jz2[i]) * rm;
          // if(i!=j) Ukq(j,i) = Ukq(i,j) * pow(-1.,(L2[i]-S2[i]-L2[j]+S2[j])/2.);
          }
 

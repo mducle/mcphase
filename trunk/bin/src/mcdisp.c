@@ -276,12 +276,12 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
       (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
-//             myPrintComplexMatrix(stdout,Mijkl); 
-
+       //      myPrintComplexMatrix(stdout,Mijkl);
+      
        // here we if required calculate the higher dimension matrix used to do the
        // extension of chi to higher value of (uncoupled) nofcomponents in intcalc_approx ... needed for chargedensityfluctuations, extended eigenvectors ...
              (*inputpars.jjj[l]).dmcalc(ini.T,extmf,extMijkl,d,md.est(i,j,k,l));
-
+      
         (* inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
        j1=md.baseindex(i,j,k,l,jmin); 
@@ -291,8 +291,8 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
          exit(EXIT_FAILURE);}
        md.delta(i,j,k)(j1)=nn[6]; // set delta
      // diagonalizeMs to get unitary transformation matrix Us
-     myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter);myEigenSystemHermitean (extMijkl,extgamma,extUijkl,sort=1,maxiter); 
-	// conjugate:note the eigensystemhgermitean returns eigenvectors as column vectors, but
+      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter);myEigenSystemHermitean (extMijkl,extgamma,extUijkl,sort=1,maxiter);
+      // conjugate:note the eigensystemhgermitean returns eigenvectors as column vectors, but
 	// the components need to be complex conjugated 
 
          // treat correctly case for neutron energy loss
@@ -379,7 +379,7 @@ if (do_jqfile==0)
    fprintf(foutqev,"#*********************************************************************\n");
           fprintf (foutqev, "#!spins_wave_amplitude=1.0\n");
           fprintf (foutqev, "#!spins_show_ellipses=1.0\n");
-          fprintf (foutqev, "#!spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqev, "#!spins_show_static_moment_direction=1.0\n");
           fprintf (foutqev, "#!dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 
   foutqee = fopen_errchk ("./results/mcdisp.qee",filemode);
@@ -393,7 +393,7 @@ if (do_jqfile==0)
    fprintf(foutqee,"#*********************************************************************\n");
           fprintf (foutqee, "#!spins_wave_amplitude=1.0\n");
           fprintf (foutqee, "#!spins_show_ellipses=1.0\n");
-          fprintf (foutqee, "#!spins_show_direction_of_static_moment=1.0\n");
+          fprintf (foutqev, "#!spins_show_static_moment_direction=1.0\n");
           fprintf (foutqee, "#!extended_eigenvector_dimension=%i\n",ini.extended_eigenvector_dimension); 
           fprintf (foutqee, "#!dispersion displayytext=E(meV)\n#Ha[T] Hb[T] Hc[T] T[K] h k l Q[A^-1] energy[meV] int_dipapprFF) [barn/sr/f.u.] int_beyonddipappr [barn/sr/f.u.]  f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
 

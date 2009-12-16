@@ -156,11 +156,11 @@ fclose(cf_file);
 
   for(i=1;i<=dim;++i)s.m(1,1,1)(i)=moments(i);
   double show_atoms=1;
-  double show_spindensity=1;
+  double spins_scale_static_moment=1;
   fout = fopen_errchk ("results/chrgplt.jvx", "w");
    s.jvx_cd(fout,text,abc,r,x,y,z,gJJ,0,0,0,show_atoms,1.0,1.0,1.0,
-            1,0.0,ev_real,ev_imag,0.0,hkl,0.0,0.0,
-            cffilenames,1.0,show_spindensity);
+            1,0.0,ev_real,ev_imag,0.0,hkl,0.0,spins_scale_static_moment,
+            cffilenames,1.0,0.0);
   fclose (fout);
   fout = fopen_errchk ("results/chrgplti.grid", "w");
   s.cd(fout,abc,r,x,y,z,cffilenames,1,1,200,200,1.0,1.0,1.0,ev_real,ev_imag,0.0,0.0,hkl);

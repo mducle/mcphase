@@ -72,7 +72,7 @@ if (argc==6)
 
 
 double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0;
-double show_chargedensity=1.0,show_spindensity=1.0;
+double show_chargedensity=1.0,spins_scale_moment=1.0;
 abc=0;char *token;
  // input file header ------------------------------------------------------------------
   instr[0]='#';
@@ -92,7 +92,7 @@ abc=0;char *token;
    extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
    extract(instr,"show_magnetic_unitcell",show_magnetic_unitcell);
    extract(instr,"show_atoms",show_atoms);
-   extract(instr,"show_spindensity",show_spindensity);
+   extract(instr,"spins_scale_moment",spins_scale_moment);
    extract(instr,"show_chargedensity",show_chargedensity);
 
    extract(instr,"scale_view_1",scale_view_1);
@@ -240,19 +240,19 @@ fclose(fout);
 
   fout = fopen_errchk ("./results/charges.jvx", "w");
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0,cffilenames,show_chargedensity,show_spindensity);
+                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges_prim.jvx", "w");
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,0.0,cffilenames,show_chargedensity,show_spindensity);
+                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0);
     fclose (fout);
 
 
 if (argc>=9){// try a spinwave picture
              double h,k,l,E,ddh,ddk,ddl,ddE;
              int extended_eigenvector_dimension;
-             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_direction_of_static_moment=1.0; 
+             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_oscillation=1.0; 
              fin_coq = fopen_errchk ("./results/mcdisp.qee", "rb");
              // input file header ------------------------------------------------------------------
              instr[0]='#';
@@ -266,7 +266,7 @@ if (argc>=9){// try a spinwave picture
                // load evs and check which one is nearest -------------------------------   
                extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
                extract(instr,"spins_show_ellipses",spins_show_ellipses);
-               extract(instr,"spins_show_direction_of_static_moment",spins_show_direction_of_static_moment);
+               extract(instr,"spins_show_oscillation",spins_show_oscillation);
                extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
               }
 //               if(extended_eigenvector_dimension!=48){fprintf(stderr,"Error program charges - extended_eigenvector_dimension in results/mcdisp.qee not equal to 48\n");exit(1);}
@@ -319,12 +319,12 @@ if (argc>=9){// try a spinwave picture
                sprintf(filename,"./results/charges.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,show_chargedensity,show_spindensity);
+                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation);
                fclose (fin_coq);
                sprintf(filename,"./results/charges_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_show_direction_of_static_moment,cffilenames,show_chargedensity,show_spindensity);
+                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);
