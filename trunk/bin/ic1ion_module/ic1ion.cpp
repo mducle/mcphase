@@ -343,6 +343,10 @@ void ic_parseinput(const char *filename, icpars &pars)
       }
       else if(varname.find("perturb")!=std::string::npos)
          pars.perturb = true;
+      else if(varname.find("partial_standalone")!=std::string::npos)
+         pars.partial_standalone = true;
+      else if(varname.find("arnoldi_standalone")!=std::string::npos)
+         pars.arnoldi_standalone = true;
       else if(varname.find("partial")!=std::string::npos)
          pars.partial = true;
       else if(varname.find("arnoldi")!=std::string::npos)
@@ -611,6 +615,7 @@ void ic_showoutput(const char *filename,                        // Output file n
    double *V=0; complexdouble *zV=0; if(VE.iscomplex()) zV = new complexdouble[num_states]; else V = new double[num_states];
    for(iE=0; iE<num_states; iE++)
    {
+      if(VE.E(iE)==0.) if(iE<(num_states-1) && VE.E(iE+1)==0.) break; 
       FILEOUT << (VE.E(iE)-VE.E(0))*conv << "\t\t";
       for(ii=0; ii<(int)num_states; ii++) isV[ii]=ii;
       i=1; j=2;
@@ -767,13 +772,16 @@ int main(int argc, char *argv[])
       sMat<double> J,iJ; icmfmat mfmat(pars.n,pars.l,6,pars.save_matrices); mfmat.Jmat(J,iJ,gjmbH,pars.save_matrices); Hic+=J; iHic+=iJ;
    }
 
-   std::cout << std::setprecision(16) << "Hic=" << Hic.display_full() << "; Hic=Hic./" << MEV2CM << ";\n";
-   std::cout << std::setprecision(16) << "iHic=" << iHic.display_full() << "; iHic=iHic./" << MEV2CM << ";\n";
+// std::cout << std::setprecision(16) << "Hic=" << Hic.display_full() << "; Hic=Hic./" << MEV2CM << ";\n";
+// std::cout << std::setprecision(16) << "iHic=" << iHic.display_full() << "; iHic=iHic./" << MEV2CM << ";\n";
 
    end = clock(); std::cerr << "Time to calculate Hic = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";
 
    // Fully diagonalise IC Hamilton matrix and saves results to <outfile>
-   iceig VE; if(iHic.isempty()) VE.calc(Hic); else VE.calc(Hic,iHic);
+   iceig VE; 
+   if(pars.partial_standalone)      if(iHic.isempty()) VE.lcalc(pars,Hic); else VE.lcalc(pars,Hic,iHic);
+   else if(pars.arnoldi_standalone) if(iHic.isempty()) VE.acalc(pars,Hic); else VE.acalc(pars,Hic,iHic);
+   else                             if(iHic.isempty()) VE.calc(Hic); else VE.calc(Hic,iHic);
    start = clock(); std::cerr << "Time to diagonalise = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
 // iceig VE; VE.lcalc(pars,Hic,iHic); int i; for(i=0; i<6; i++) std::cout << (VE.E(i)-VE.E(0))/MEV2CM << " "; std::cout << "\n";
    ic_showoutput(outfile,pars,VE);

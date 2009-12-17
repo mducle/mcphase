@@ -216,6 +216,7 @@ icpars::icpars()
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
    Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ"); save_matrices = false;
    perturb = false; partial = false; arnoldi = false; spectrelevels = -1; truncate_level = 1; num_eigv = 4;
+   partial_standalone = false; arnoldi_standalone = false;
 }
 // --------------------------------------------------------------------------------------------------------------- //
 // Overloaded operators for icpars:: class
@@ -590,6 +591,29 @@ void iceig::pcalc(icpars &pars, complexdouble *zV, sMat<double> &J, sMat<double>
    }
    complexdouble *zJmat = zmat2f(J,iJ); int info = ic_peig(_Hsz, zJmat, zV, _zV, _E, nev); free(zJmat);
    if(info!=0) { std::cerr << "iceig::pcalc() - Error\n"; }
+}
+void iceig::acalc(icpars &pars, sMat<double>&H)
+{
+   if(_E!=0) { delete[]_E; _E=0; } if(_V!=0) { delete[]_V; _V=0; } if(_zV!=0) { delete[]_zV; _zV=0; }
+   _Hsz = H.nc(); _E = new double[_Hsz]; _V = new double[_Hsz*_Hsz]; 
+   memset(_E,0,_Hsz*sizeof(double)); memset(_V,0,_Hsz*_Hsz*sizeof(double));
+   sMat<double> Hcso = ic_Hcso(pars); rmzeros(Hcso); eigVE<double> VEcso = eig(Hcso); 
+   fconf conf(pars.n,0,pars.l); int i,j,imax=0,nev=0; double vel,vmax;
+   for(i=0; i<Hcso.nr(); i++) 
+   { 
+      vmax = 0; for(j=0; j<Hcso.nr(); j++) { vel = fabs(VEcso.V(j,i)); if(vel>vmax) { vmax=vel; imax=j; } }
+      nev += conf.states[imax].J2+1; if(exp(-(VEcso.E[i]-VEcso.E[0])/(208.510704))<DBL_EPSILON) break;   // 208.5==300K in 1/cm
+   }
+   if(nev>=_Hsz)   // We want all eigenvalues - better not to use the Arnoldi method
+   {
+      int info = ic_diag(H,_V,_E); 
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_V; _V=0; }
+   }
+   else
+   {
+      double *dH = H.f_array(); int info = ic_arpackeig(_Hsz,dH,_V,_E,nev); free(dH);
+      if(info!=0) { std::cerr << "iceig(H,iH) - Error diagonalising, info==" << info << "\n"; delete[]_E; _E=0; delete[]_V; _V=0; }
+   }
 }
 void iceig::acalc(icpars &pars, sMat<double>&H, sMat<double>&iH)
 {

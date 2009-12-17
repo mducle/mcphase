@@ -111,6 +111,8 @@ class icpars
       bool perturb;                          // Flag to indicate if perturbation routine should be used to calculate M
       bool partial;                          // Flag to indicate if partial diagonalisation should be used
       bool arnoldi;                          // Flag to indicate if the Arnoldi method should be use to diagonalise H
+      bool partial_standalone;               // Flag to indicate if partial diag. should be used for ic1ion.out
+      bool arnoldi_standalone;               // Flag to indicate if the Arnoldi method should be use for ic1ion.out
       bool save_matrices;                    // Flag to indicate if matrices for CF, etc. should be saved and reloaded
     //bool bflag;                            // Flag to show if a field norm= or nostevfact is given
       int spectrelevels;                     // If using the spectre method, number of LS levels to keep. -1 means all
@@ -164,6 +166,7 @@ class iceig
       void pcalc(icpars &pars, complexdouble *zV,  // Calculates a partial set of eigenstates using
                  sMat<double>&J, sMat<double>&iJ); //    perturbation theory
       void acalc(icpars &pars, complexdouble *H);  // Calculates a partial set using the Arnoldi method (ARPACK)
+      void acalc(icpars &pars, sMat<double> &J);
       void acalc(icpars &pars, sMat<double> &J, sMat<double> &iJ);
       bool iscomplex() { return _zV!=0; }          // Determines of eigenvalues are complex
       int Hsz() { return _Hsz; }

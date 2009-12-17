@@ -139,6 +139,13 @@ extern "C"
 		      int *lwork, double *rwork, int *lrwork, int *iwork, int *liwork, int *info);
 
   // Double precision real ARPACK routines.
+  void F77NAME(dnaupd)(int *ido, char *bmat, int *Hsz, char *whichp, int *nev, double *tol,
+                      double *resid, int *ncv, double *v, int *ldv, int *iparam, int *ipntr,
+                      double *workd, double *workl, int *lworkl, int *info);
+  void F77NAME(dneupd)(int *rvec, char *howmny, int *select, double *dr, double *di, double *z, int *ldz, 
+                      double *sigmar, double *sigmai, double *workev, char *bmat, int *n, char *whichp,
+                      int *nev, double *tol, double *resid, int *ncv, double *v, int *ldv, int *iparam,
+                      int *ipntr, double *workd, double *workl, int *lworkl, int *info);
   void F77NAME(dsaupd)(int *ido, char *bmat, int *Hsz, char *whichp, int *nev, double *tol,
                       double *resid, int *ncv, double *v, int *ldv, int *iparam, int *ipntr,
                       double *workd, double *workl, int *lworkl, int *info);
