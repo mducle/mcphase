@@ -36,30 +36,6 @@ extern "C" int dncalc(int &tn, double &th, double &ph, double &J0, double &J2, d
 #endif
 
 // --------------------------------------------------------------------------------------------------------------- //
-// Calculates the number of allowed states from the number of electrons and l
-// --------------------------------------------------------------------------------------------------------------- //
-int getdim(int n, orbital l)                                    // Number of states = ^{4l+2}C_{n}
-{
-   //      4l+2       N        N!          (N-k+1).(N-k+2)...N
-   // ns =     C   ==  C  = ---------  =  ---------------------   with N=4l+2, k=n
-   //           n       k    k!(N-k)!         1.2.3...k
-   //
-   int i,j=1,nn=(n>(2*abs(l)+1))?(4*abs(l)+2-n):n;              // Use n<2l+1 equivalents only to avoid overflow
-   long int ns=1;
-   for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i;        // Computes (4l+2-n+1).(4l+2-n+1)...(4l+2)
-   for(i=nn; i>1; i--) j*=i; ns/=j;                             // Computes n.(n-1)...1
-   return ns;
-/* // Wikipedia Algorithm
-   int k=4*abs(l)+2;
-   if (n > k)   return 0;
-   if (n > k/2) n = k-n;                                        // Take advantage of symmetry
-   long double accum = 1;
-   for (int i = 1; i <= n; i++)
-      accum *= ( (k-n+i) / i );
-   return (int) (accum + 0.5);                                  // avoid rounding error */
-}
-
-// --------------------------------------------------------------------------------------------------------------- //
 // Looks up values of Slater and spin orbit radial integrals from published spectroscopic data
 // --------------------------------------------------------------------------------------------------------------- //
 void getfromionname(std::string &ionname, icpars &pars)
@@ -514,10 +490,10 @@ void ic_conv_basis(icpars &pars, iceig &VE, fconf &conf)
                if(CFS[i].L==CJS[j].L && CFS[i].S2==CJS[j].S2 && CFS[i].U==CJS[j].U && CFS[i].v==CJS[j].v)
                {
                   L2=2*abs(CFS[i].L); S2=CFS[i].S2; J2=CJS[j].J2; mL2=CFS[i].J2; mS2=CFS[i].mJ2; mJ2=CJS[j].mJ2;
-                  convmat(i,j) = sqrt(J2+1.) * threej(L2,S2,J2,mL2,mS2,-mJ2); if((L2-S2+mJ2)%4==2) convmat(i,j)=-convmat(i,j);
+                  convmat(i,j) = sqrt(J2+1.) * threej(L2,S2,J2,mL2,mS2,mJ2); if((L2-S2+mJ2)%4==2) convmat(i,j)=-convmat(i,j);
                }
             }
-         mm_gout(convmat,filename);
+	 rmzeros(convmat); mm_gout(convmat,filename);
       }
       char /*transpose = 'C',*/ notranspose = 'N';
       if(VE.iscomplex())
@@ -680,13 +656,13 @@ void ic_cmag(const char *filename, icpars &pars)
               else { Tmin = pars.yMin; Tstep = pars.yStep; Tmax = pars.yMax; Hmin = pars.xMin; Hstep = pars.xStep; Hmax = pars.xMax; }
 
    if(pars.xT!=0.) FILEOUT << "# T(K)\tHa(T)\tHb(T)\tHc(T)\t"; else FILEOUT << "# Ha(T)\tHb(T)\tHc(T)\tT(K)\t";
-   if(pars.mag_units==0) FILEOUT << "Magnetisation(uB/atom)\n";
-   else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\n";
-   else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\n";
+   if(pars.mag_units==0) FILEOUT << "Magnetisation(uB/atom)\tMa\tMb\tMc\n";
+   else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\tMa\tMb\tMc\n";
+   else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\tMa\tMb\tMc\n";
    int i,j,k; double Hm=0.,dt,Z;
    int nT = (int)ceil((Tmax-Tmin)/Tstep), nH = (int)ceil((Hmax-Hmin)/Hstep) + 1;
    std::vector<double> T(nT,0.); for(i=0; i<nT; i++) T[i] = Tmin+i*Tstep;
-   std::vector<double> mag(nT,0.);
+   std::vector<double> mag(nT,0.),ma(nT,0.),mb(nT,0.),mc(nT,0.);
 
    if((pars.xHa!=0. && pars.yHa!=0.) || (pars.xHb!=0. && pars.yHb!=0.) || (pars.xHc!=0. && pars.yHc!=0.))
    {
@@ -719,21 +695,29 @@ void ic_cmag(const char *filename, icpars &pars)
          for(j=0; j<6; j++) ex[k] += gjmbH[j]*matel[j][k];
       for(j=0; j<nT; j++) 
       {
-         mag[j] = 0.; Z = 0.;
-         for(k=0; k<(int)matel[0].size(); k++) { dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt; mag[j]+=ex[k]*dt; } 
-         mag[j]/=Z;
+         mag[j] = 0.; ma[j] = 0.; mb[j] = 0.; mc[j] = 0.;  Z = 0.;
+         for(k=0; k<(int)matel[0].size(); k++) 
+         { 
+            dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt; mag[j]+=ex[k]*dt; 
+            ma[j] += (gjmbH[0]*matel[0][k]+gjmbH[1]*matel[1][k]) * dt;        // Need to sum Sx and Lx 
+            mb[j] += (gjmbH[2]*matel[2][k]+gjmbH[3]*matel[3][k]) * dt;        // Need to sum Sy and Ly 
+            mc[j] += (gjmbH[4]*matel[4][k]+gjmbH[5]*matel[5][k]) * dt;        // Need to sum Sz and Lz 
+         } 
+         mag[j]/=Z; ma[j]/=Z; mb[j]/=Z; mc[j]/=Z;
       }
       if(pars.xT!=0.)
       {
          Hm = (Hmin+i*Hstep)/ynorm;
          for(j=0; j<nT; j++) 
-            FILEOUT << T[j] << "\t" << Hm*pars.yHa << "\t" << Hm*pars.yHb << "\t" << Hm*pars.yHc << "\t" << mag[j]*convfact << "\n";
+            FILEOUT << T[j] << "\t" << Hm*pars.yHa << "\t" << Hm*pars.yHb << "\t" << Hm*pars.yHc << "\t" << mag[j]*convfact << "   \t\t"
+                    << ma[j]*convfact << "\t" << mb[j]*convfact << "\t" << mc[j]*convfact << "\n";
       }
       else
       {
          Hm = (Hmin+i*Hstep)/xnorm;
          for(j=0; j<nT; j++) 
-            FILEOUT << Hm*pars.xHa << "\t" << Hm*pars.xHb << "\t" << Hm*pars.xHc << "\t" << T[j] << "\t" << mag[j]*convfact << "\n"; 
+            FILEOUT << Hm*pars.xHa << "\t" << Hm*pars.xHb << "\t" << Hm*pars.xHc << "\t" << T[j] << "\t" << mag[j]*convfact << "   \t\t"
+                    << ma[j]*convfact << "\t" << mb[j]*convfact << "\t" << mc[j]*convfact << "\n";
       }
    }
    if(pars.perturb) delete[]zV;

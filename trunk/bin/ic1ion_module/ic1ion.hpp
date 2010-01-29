@@ -136,6 +136,7 @@ std::vector<double> ic_mag(sMat<double> &Hic, sMat<double> &iHic,         // Cal
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in icpars.cpp
 // --------------------------------------------------------------------------------------------------------------- //
+int  getdim(int n, orbital l);                                            // Number of states = ^{4l+2}C_{n}
 void strtolower(std::string &instring);                                   // Converts a string to lower case
 void conv_e_units(icpars &flags, std::string &newunits);                  // Converts 1-ion pars to diff. energy units
 std::vector<double> stev_thetak(int n, orbital l);                        // Calculates the Stevens factors.
@@ -160,7 +161,6 @@ int ic_peig(sMat<double>&Hic, double *V, double *E);                      // Dia
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in ic1ion.cpp
 // --------------------------------------------------------------------------------------------------------------- //
-int  getdim(int n, orbital l);                                            // Number of states = ^{4l+2}C_{n}
 void getfromionname(std::string &ion, icpars &flags);                     // Gets free ion parameters from tables
 void ic_parsecfpars(std::string &n, std::string &v, icpars &p, int l=1);  // Parses CF parameter for k and q
 void ic_parseinput(const char *file, icpars &flags);                      // Parses file for 1-ion pars & phys prop.

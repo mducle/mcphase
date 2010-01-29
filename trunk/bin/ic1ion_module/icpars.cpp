@@ -29,6 +29,30 @@
 		     // transition, energy the matrix Mijkl contains wn-wn' or wn/kT
 
 // --------------------------------------------------------------------------------------------------------------- //
+// Calculates the number of allowed states from the number of electrons and l
+// --------------------------------------------------------------------------------------------------------------- //
+int getdim(int n, orbital l)                                    // Number of states = ^{4l+2}C_{n}
+{
+   //      4l+2       N        N!          (N-k+1).(N-k+2)...N
+   // ns =     C   ==  C  = ---------  =  ---------------------   with N=4l+2, k=n
+   //           n       k    k!(N-k)!         1.2.3...k
+   //
+   int i,j=1,nn=(n>(2*abs(l)+1))?(4*abs(l)+2-n):n;              // Use n<2l+1 equivalents only to avoid overflow
+   long int ns=1;
+   for(i=(4*abs(l)+2-nn+1); i<=(4*abs(l)+2); i++) ns*=i;        // Computes (4l+2-n+1).(4l+2-n+1)...(4l+2)
+   for(i=nn; i>1; i--) j*=i; ns/=j;                             // Computes n.(n-1)...1
+   return ns;
+/* // Wikipedia Algorithm
+   int k=4*abs(l)+2;
+   if (n > k)   return 0;
+   if (n > k/2) n = k-n;                                        // Take advantage of symmetry
+   long double accum = 1;
+   for (int i = 1; i <= n; i++)
+      accum *= ( (k-n+i) / i );
+   return (int) (accum + 0.5);                                  // avoid rounding error */
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
 // Looks up conversion factor for Wybourne to Stevens...
 // --------------------------------------------------------------------------------------------------------------- //
 //double wy2stev(int i)
