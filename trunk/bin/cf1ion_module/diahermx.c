@@ -300,8 +300,8 @@ SETUP *create_setup(setup)  /* setupfile erzeugen */
  
  
 t01=" ______________________________________________________________ \n";
-t02="|                                                              |\n";
-t03="|                      CFIELD - SETUP - FILE                   |\n";
+t02="|                  C F I E L D / S O 1 I O N                   |\n";
+t03="|                        SETUP - FILE                          |\n";
 t04="|                                                              |\n";
 t05=" ______________________________________________________________ \n";
 t06="\n";
@@ -398,7 +398,7 @@ fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
  
 t01=" -------------------------------------------------------------- \n";
 t02="|                                                              |\n";
-t03="|                           C F I E L D                        |\n";
+t03="|                  C F I E L D / S O 1 I O N                   |\n";
 t04="|                                                              |\n";
 t05="|                    A Crystal field program                   |\n";
 t06="|                                                              |\n";
@@ -439,7 +439,7 @@ fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
  
 t01="#-------------------------------------------------------------- \n";
 t02="#                                                              |\n";
-t03="#                           C F I E L D                        |\n";
+t03="#                  C F I E L D / S O 1 I O N                   |\n";
 t04="#                                                              |\n";
 t05="#                    A crystal field program                   |\n";
 t06="#                                                              |\n";

@@ -63,7 +63,7 @@ INCLDIRS =      -I. \
 
 
 
-all : cfieldrout.o cfield.so cfield module.o
+all : cfieldrout.o cfield.so cfield so1ion module.o
 
 VECOBJS= matpack.o sortdbl.o sort2dbl.o sort3dbl.o ivector.o \
 		imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o \
@@ -71,11 +71,13 @@ VECOBJS= matpack.o sortdbl.o sort2dbl.o sort3dbl.o ivector.o \
 		cludcomp.o tred.o imtql.o imtql2.o rseigen.o cheigen.o \
 		chgeigen.o matlapl.o moment.o matexph.o matsqth.o magicsquare.o
 
-CFOBJS= cfield.o diahermx.o eingabe.o intensit.o komplex.o matrix.o mb11a.o minima.o \
+CFOBJS=  diahermx.o eingabe.o intensit.o komplex.o matrix.o mb11a.o minima.o \
 	       ortho.o spline.o stevens.o theta.o va05a.o
 
 
 ${CFOBJS}: types.c
+cfield.o: types.c main.c
+so1ion.o: types.c main.c
 
 # used for internal module in mcphas and mcdisp
 cfieldrout.o: cfieldrout.c $(VECOBJS) $(CFOBJS) 
@@ -83,11 +85,14 @@ cfieldrout.o: cfieldrout.c $(VECOBJS) $(CFOBJS)
 #	$(CC) -o cfieldrout.o cfieldrout.c  $(INCLDIRS)
 
 
-cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS)
+cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS) 
 	$(CCC) $(CCOPTS) -Wall -o cfield.so $^ -shared $(LDFLAGS)
 
 cfield: cfield.o  $(VECOBJS) $(CFOBJS)
 	$(CCC) $(CCOPTS) -Wall -o ../cfield $^ $(LDFLAGS)
+
+so1ion: so1ion.o  $(VECOBJS) $(CFOBJS)
+	$(CCC) $(CCOPTS) -Wall -o ../so1ion $^ $(LDFLAGS)
 
 module.o: module.c 
 	$(CCC) $(CCOPTS) -Wall -c module.c $(INCLDIRS) $(LDFLAGS)

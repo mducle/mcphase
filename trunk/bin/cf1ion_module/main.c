@@ -3,7 +3,7 @@
                          H A U P T P R O G R A M M
  
                                  CFIELD C
- 
+                                 SO1ION C
 -------------------------------------------------------------------------------
 Literatur :
 -----------
@@ -109,12 +109,6 @@ extern DOUBLE beta_J[];  /* definiert in theta.c */
 extern DOUBLE gamma_J[]; /* definiert in theta.c */
  
 extern IONEN IONENIMP[]; /* definiert in theta.c*/ 
- 
-/*----------------------------------------------------------------------------
-                                Programmname
------------------------------------------------------------------------------*/
- 
-#define PROGRAMMNAME "Cfield"
  
 /*----------------------------------------------------------------------------
 Globale Arrays und deren defines
