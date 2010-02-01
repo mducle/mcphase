@@ -1,0 +1,69 @@
+#!cfield
+#<!--mcphase.sipf-->
+#***************************************************************
+# Single Ion Parameter File for Module Cfield for
+# mcphas version 3.0
+# - program to calculate static magnetic properties
+# reference: M. Rotter JMMM 272-276 (2004) 481
+# mcdisp version 3.0
+# - program to calculate the dispersion of magnetic excitations
+# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+# mcdiff version 3.0
+# - program to calculate neutron and magnetic xray diffraction
+# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
+#***************************************************************
+#
+
+#-----------
+IONTYPE=Eu3+
+#-----------
+
+#----------------
+# Stevens Factors
+#----------------
+ALPHA=0E-02
+BETA=0E-04
+GAMMA=  0E-06
+
+#---------------------------------------------------------
+# Radial Matrix Elements (e.g. Abragam Bleaney 1971 p 399)
+#---------------------------------------------------------
+#<r^2> in units of a0^2 a0=0.5292 Angstroem
+R2= 0.917
+#<r^4> in units of a0^4 a0=0.5292 Angstroem
+R4=2.020
+#<r^6> in units of a0^6 a0=0.5292 Angstroem
+R6=9.039
+
+#----------------
+# Lande factor gJ
+#----------------
+GJ=0
+
+#Neutron magnetic form factor coefficients
+FFj0A= 0.0204 FFj0a=25.3078 FFj0B= 0.3010 FFj0b=11.4744 FFj0C= 0.7005 FFj0c= 3.9420 FFj0D=-0.0220
+FFj2A= 0.3985 FFj2a=18.4514 FFj2B= 1.3307 FFj2b= 6.9556 FFj2C= 0.9603 FFj2c= 2.3780 FFj2D= 0.0197
+FFj4A=-0.4095 FFj4a=10.2113 FFj4B= 0.1485 FFj4b= 5.1755 FFj4C= 0.2720 FFj4c= 1.2374 FFj4D= 0.0131
+FFj6A=-0.0817 FFj6a= 6.0389 FFj6B=-0.0596 FFj6b= 2.1198 FFj6C= 0.1243 FFj6c= 0.7639 FFj6D=-0.0001
+
+#---------------------------------------------------------------------------------------------
+# radial wave function parameters, for transition metal ions the the values are tabulated in
+# Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave
+# function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# O. Sovers, J. Phys. Chem. Solids Vol 28 (1966) 1073
+#---------------------------------------------------------------------------------------------
+N1=4 C1=0.199921452641728 XI1=12.095 
+N2=4 C2=0.442774838257159 XI2=6.800 
+N3=4 C3=0.369164986193438 XI3=4.533 
+N4=4 C4=0.180338231177065 XI4=2.489 
+
+
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=0.722
+SCATTERINGLENGTHIMAG=-0.126
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+

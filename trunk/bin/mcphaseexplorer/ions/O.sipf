@@ -1,0 +1,25 @@
+#!brillouin
+#<!--mcphase.sipf-->
+# single ion property file for
+J=0
+CHARGE=-2
+# neutron scattering length (10^-12 cm) (can be complex)
+ SCATTERINGLENGTHREAL= 0.5803
+ SCATTERINGLENGTHIMAG= 0 
+# Lande Factor
+gJ=2
+ 
+
+# Debye-Waller Factor = EXP(-2 * DWF *s*s) (depends on compound) ... DWF [A^2]
+DWF=0
+
+#------------------------------------------------------------------------------------------------------
+# radial wave function parameters R_Np,XIp(r)= r^(Np-1) . exp(-xi r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# values tabulated in clementi & roetti Atomic data and nuclear data tables 14 (1974) 177-478
+# O  - looking at page 186 of Clemente & Roetti
+# the 2P radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)
+#------------------------------------------------------------------------------------------------------
+N1=2 XI1=1.14394 C1=0.16922
+N2=2 XI2=1.81730 C2=0.57974
+N3=2 XI3=3.44986 C3=0.32352
+N4=2 XI4=7.56484 C4=0.01660

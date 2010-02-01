@@ -1,0 +1,27 @@
+#Neutron magnetic form factor coefficients
+FFj0A= 0.0755 FFj0a=25.2960 FFj0B= 0.3001 FFj0b=11.5993 FFj0C= 0.6438 FFj0c= 4.0252 FFj0D=-0.0196
+FFj2A= 0.8970 FFj2a=18.4429 FFj2B= 1.3769 FFj2b= 7.0054 FFj2C= 0.9060 FFj2c= 2.4213 FFj2D= 0.0190
+FFj4A=-0.4145 FFj4a=10.1930 FFj4B= 0.2447 FFj4b= 5.1644 FFj4C= 0.2661 FFj4c= 1.2054 FFj4D= 0.0065
+FFj6A=-0.1252 FFj6a= 6.0485 FFj6B= 0.0507 FFj6b= 2.0852 FFj6C= 0.0572 FFj6c= 0.6460 FFj6D= 0.0132
+
+#---------------------------------------------------------------------------------------------
+# radial wave function parameters, for transition metal ions the the values are tabulated in
+# Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave
+# function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# Freeman and Watson PR 127 (1962) 2058
+#---------------------------------------------------------------------------------------------
+N1=4 C1=0.211076290429889 XI1=11.764 
+N2=4 C2=0.433518342841335 XI2=6.603 
+N3=4 C3=0.344928793400018 XI3=4.402 
+N4=4 C4=0.220599345632426 XI4=2.416 
+
+
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=0.722
+SCATTERINGLENGTHIMAG=-0.126
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+

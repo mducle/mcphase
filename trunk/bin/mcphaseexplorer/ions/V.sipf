@@ -1,0 +1,15 @@
+#Neutron magnetic form factor coefficients
+FFj0A= 0.4086 FFj0a=28.8109 FFj0B= 0.6077 FFj0b= 8.5437 FFj0C=-0.0295 FFj0c= 0.2768 FFj0D= 0.0123
+FFj2A= 3.7600 FFj2a=21.8313 FFj2B= 2.4026 FFj2b= 7.5458 FFj2C= 0.4464 FFj2c= 2.6628 FFj2D= 0.0017
+FFj4A=-0.9633 FFj4a=15.2729 FFj4B= 0.9274 FFj4b= 7.7315 FFj4C= 0.3891 FFj4c= 2.0530 FFj4D= 0.0063
+
+
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=-0.03824
+SCATTERINGLENGTHIMAG=0
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+

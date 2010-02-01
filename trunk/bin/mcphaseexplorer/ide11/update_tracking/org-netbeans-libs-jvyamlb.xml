@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module codename="org.netbeans.libs.jvyamlb/1">
+    <module_version install_time="1248323070988" last="true" origin="installer" specification_version="0.3.1.023">
+        <file crc="2671765396" name="config/Modules/org-netbeans-libs-jvyamlb.xml"/>
+        <file crc="1242614678" name="modules/ext/jvyamlb-0.2.3.jar"/>
+        <file crc="4084251155" name="modules/org-netbeans-libs-jvyamlb.jar"/>
+    </module_version>
+</module>

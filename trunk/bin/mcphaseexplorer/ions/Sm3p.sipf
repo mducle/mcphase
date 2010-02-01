@@ -1,0 +1,76 @@
+#!cfield
+#<!--mcphase.sipf-->
+#***************************************************************
+# Single Ion Parameter File for Module Cfield for
+# mcphas version 3.0
+# - program to calculate static magnetic properties
+# reference: M. Rotter JMMM 272-276 (2004) 481
+# mcdisp version 3.0
+# - program to calculate the dispersion of magnetic excitations
+# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+# mcdiff version 3.0
+# - program to calculate neutron and magnetic xray diffraction
+# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
+#***************************************************************
+#
+
+#-----------
+IONTYPE=Sm3+
+#-----------
+
+#----------------
+# Stevens Factors
+#----------------
+ALPHA=4.1270E-02
+BETA=25.0120E-04
+GAMMA=  0E-06
+
+#---------------------------------------------------------
+# Radial Matrix Elements (e.g. Abragam Bleaney 1971 p 399)
+#---------------------------------------------------------
+#<r^2> in units of a0^2 a0=0.5292 Angstroem
+R2= 0.974
+#<r^4> in units of a0^4 a0=0.5292 Angstroem
+R4=2.260
+#<r^6> in units of a0^6 a0=0.5292 Angstroem
+R6=10.550
+
+#----------------
+# Lande factor gJ
+#----------------
+GJ=0.285714
+
+#Neutron magnetic form factor coefficients
+FFj0A= 0.0288 FFj0a=25.2068 FFj0B= 0.2973 FFj0b=11.8311 FFj0C= 0.6954 FFj0c= 4.2117 FFj0D=-0.0213
+FFj2A= 0.4707 FFj2a=18.4301 FFj2B= 1.4261 FFj2b= 7.0336 FFj2C= 0.9574 FFj2c= 2.4387 FFj2D= 0.0182
+FFj4A=-0.4288 FFj4a=10.0525 FFj4B= 0.1782 FFj4b= 5.0191 FFj4C= 0.2833 FFj4c= 1.2364 FFj4D= 0.0088
+FFj6A=-0.0944 FFj6a= 6.0299 FFj6B=-0.0498 FFj6b= 2.0743 FFj6C= 0.1372 FFj6c= 0.6451 FFj6D=-0.0132
+
+Coefficients of Z(K')
+#
+Z1c0=0.35714286 Z1c2=1.93650794
+Z3c2=0.04614109 Z3c4=0.06291966
+Z5c4=-0.00426341 Z5c6=0.00335243
+Z7c6=0
+
+#---------------------------------------------------------------------------------------------
+# radial wave function parameters, for transition metal ions the the values are tabulated in
+# Clementi & Roetti Atomic data and nuclear data tables 14 (1974) 177-478, the radial wave
+# function is expanded as R(r)=sum_p Cp r^(Np-1) . exp(-XIp r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# Freeman and Watson PR 127 (1962) 2058
+#---------------------------------------------------------------------------------------------
+N1=4 C1=0.206075733599357 XI1=11.639 
+N2=4 C2=0.437021738897375 XI2=6.557 
+N3=4 C3=0.373674669674386 XI3=4.371 
+N4=4 C4=0.175381682381758 XI4=2.398 
+
+
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=0.08
+SCATTERINGLENGTHIMAG=-0.165
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+

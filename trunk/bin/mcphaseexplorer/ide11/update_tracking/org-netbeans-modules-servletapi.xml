@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module codename="org.netbeans.modules.servletapi/1">
+    <module_version install_time="1248323114089" last="true" origin="installer" specification_version="1.14.1">
+        <file crc="724892164" name="config/Modules/org-netbeans-modules-servletapi.xml"/>
+        <file crc="2746932137" name="modules/ext/servlet-2.2.jar"/>
+        <file crc="4176576331" name="modules/org-netbeans-modules-servletapi.jar"/>
+    </module_version>
+</module>

@@ -1,0 +1,28 @@
+#Neutron magnetic form factor coefficients
+FFj0A= 0.3972 FFj0a=13.2442 FFj0B= 0.6295 FFj0b= 4.9034 FFj0C=-0.0314 FFj0c= 0.3496 FFj0D= 0.0044
+FFj2A= 1.3602 FFj2a=11.9976 FFj2B= 1.5188 FFj2b= 5.0025 FFj2C= 0.4705 FFj2c= 1.9914 FFj2D= 0.0038
+FFj4A=-0.5507 FFj4a=11.4929 FFj4B= 0.2153 FFj4b= 4.9063 FFj4C= 0.3468 FFj4c= 1.5230 FFj4D= 0.0095
+
+#------------------------------------------------------------------------------------------------------
+# radial wave function parameters R_Np,XIp(r)= r^(Np-1) . exp(-xi r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# values tabulated in clementi & roetti Atomic data and nuclear data tables 14 (1974) 177-478
+# Fe3+ is isoelectronic to Mn2+,Cr+ looking at page 417 of Clemente & Roetti
+# the 3D5 radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)
+#------------------------------------------------------------------------------------------------------
+N1=3 XI1=3.65374 C1=0.45214
+N2=3 XI2=11.5000 C2=0.03091.02707
+N3=3 XI3=6.09290 C3=0.29862
+N4=3 XI4=2.35365 C4=0.33661
+N5=3 XI5=1.40000 C5=0.00050
+
+
+
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=0.945
+SCATTERINGLENGTHIMAG=0
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+
