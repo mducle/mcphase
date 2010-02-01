@@ -75,7 +75,7 @@ fprintf(stderr,"****************************************************************
 inputpars.save_sipfs("./results/_");
 
 //determine saturation momentum (used for scaling the plots, generation of qvectors)
-T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).eigenstates(h1,T); // initialize eigenstate matrix
+T=1.0;for(l=1;l<=inputpars.nofatoms;++l){h1=0;(*inputpars.jjj[l]).blank_eigenstates(h1,T); // initialize eigenstate matrix
       for (im=1;im<=inputpars.nofcomponents;++im){h1=0;
                             if((*inputpars.jjj[l]).gJ!=0){h1(im)=10*MU_B*(*inputpars.jjj[l]).gJ;}
                             else                         {h1(im)=20*MU_B;} //just put some high field

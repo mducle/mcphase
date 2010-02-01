@@ -270,7 +270,7 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);    //mf ... mean field vector of atom s
         extmf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);}
 
-      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
+      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k); fflush(stdout);
       if(nn[6]<SMALL){fprintf(stdout,"#-");}else{fprintf(stdout,"#+");}
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j

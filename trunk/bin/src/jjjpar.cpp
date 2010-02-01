@@ -56,6 +56,19 @@ int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delt
   }
 }
 
+/****************************************************************************/
+// returns eigenvalues, boltzmann population and eigenstates matrix parameters of ion
+/****************************************************************************/
+ComplexMatrix & jjjpar::blank_eigenstates (Vector & gjmbheff,double & T)
+{double tgJ=-1.0;
+ switch (module_type)
+  {case 0:  if(estates!=NULL){(*estates)(&est,&gjmbheff,&tgJ,&T,&ABC,&cffilename);}
+            return est;break;
+   case 2:  est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
+   default: est=0;return est;
+  }
+}
+
 
 /****************************************************************************/
 // returns eigenvalues, boltzmann population and eigenstates matrix parameters of ion

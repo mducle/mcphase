@@ -212,6 +212,12 @@ mcdiff.o: mcdiff.c jjjpar.hpp martin.h myev.h
 myev.o: myev.c
 	$(CCC) $(CFLAGS) $<
 
+mf2fe.o: mf2fe.c
+	$(CCC) $(CFLAGS) $<
+
+fediff.o: fediff.c
+	$(CCC) $(CFLAGS) $<
+
 ifdef LINUX
 
 inimenu.o: inimenu.c
@@ -284,6 +290,13 @@ mcdiff: mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) 
 	@echo Linking ../mcdiff
 	@$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
+mf2fe: mf2fe.o martin.o jjjpar.o inipar.o par.o ionpars.o chargedensity.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+	@echo Linking ../mf2fe
+	@$(LINKER)  -Wall  -o ../mf2fe $^  $(LFLAGS)
+
+fediff: fediff.o martin.o jjjpar.o inipar.o par.o ionpars.o chargedensity.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+	@echo Linking ../fediff
+	@$(LINKER)  -Wall  -o ../fediff $^  $(LFLAGS)
 
 ifdef LINUX
 

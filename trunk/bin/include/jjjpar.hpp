@@ -46,6 +46,7 @@ class jjjpar
    ComplexMatrix est; // eigenstates 
    // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
    ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
+   ComplexMatrix & blank_eigenstates (Vector & gjmbheff, double & T);
 
   char * cffilename; // single ion parameter filename
   double SLR,SLI; // scattering length

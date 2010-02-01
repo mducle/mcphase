@@ -112,12 +112,13 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
     //constructed from q vector set testqs, j>0 means test spinconfigurations from
     //set testspins
     //j=0;  //uncomment this for debugging purposes
+    j = -testqs.nofqs()-1;
     
  for (k= -testqs.nofqs();k<=testspins.n;++k)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
   for (tryrandom=0;tryrandom<=ini.nofrndtries&&j!=0;++tryrandom)
    {if (j>0){sps=(*testspins.configurations[j]);// take test-spinconfiguration
-	     if (tryrandom==0&&verbose==1) printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc());
+	     if (tryrandom==0&&verbose==1) { printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc()); fflush(stdout); }
             }
     else     // take q vector and choose phase and mom dir randomly
             {q=testqs.q(-j);  
@@ -138,7 +139,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	     sps.spinfromq(testqs.na(-j),testqs.nb(-j),testqs.nc(-j),
 	                   q,nettom,momentq0,phi);
              hkl=inputpars.rez.Transpose()*q;  
-   	     if (tryrandom==0&&verbose==1) printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc());
+   	     if (tryrandom==0&&verbose==1) { printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); fflush(stdout); }
 	    }	 
     if (tryrandom>0){nr=(int)(rint(rnd(1.0)*(sps.n()*inputpars.nofatoms-1)))+1;
 	             for (i=1;i<=nr;++i) //MonteCarlo randomize nr spins

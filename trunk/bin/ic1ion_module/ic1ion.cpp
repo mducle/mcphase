@@ -248,11 +248,18 @@ void ic_parseinput(const char *filename, icpars &pars)
          varname = varname.substr(0,varname.find_first_of(" \t"));
          strtolower(varname);
          varval = strline.substr(equal_sym_pos+1);
-         varval = varval.substr(varval.find_first_not_of(" \t"),varval.find_last_not_of(" \t")+1);
-         first_num_pos = varval.find_first_of("-0123456789.");
-         last_num_pos = varval.find_first_not_of("-0123456789.",first_num_pos);
-         if(first_num_pos!=std::string::npos)
-            iss.str(varval.substr(first_num_pos,last_num_pos));
+         size_t subfirst = varval.find_first_not_of(" \t"); 
+         size_t sublast  = varval.find_last_not_of(" \t")+1; 
+         if(subfirst!=std::string::npos)
+         {
+            varval = varval.substr(subfirst,sublast);
+            first_num_pos = varval.find_first_of("-0123456789.");
+            last_num_pos = varval.find_first_not_of("-0123456789.",first_num_pos);
+            if(first_num_pos!=std::string::npos)
+               iss.str(varval.substr(first_num_pos,last_num_pos));
+            else
+               iss.str(varval);
+         }
          else
             iss.str(varval);
       }

@@ -8,6 +8,8 @@
  *   int dmcalc(int &tn, double &T, Vector &gjmbH, double &g_J, Vector &ABC,       // Calculates the transition
  *                 char **sipffilename, ComplexMatrix &mat, float &delta,          //   matrix elements
  *                 ComplexMatrix &est)                                             //
+ *   void mcalc_parameter_storage_matrix_init(ComplexMatrix *est,Vector &gjmbheff  // initialises parameter storage matrix 
+ *                 double *g_J,double &T,Vector &ABC,char **sipffilename)          // for mcalc
  *   void estates(ComplexMatrix *est, Vector &gjmbheff, double *g_J, double &T,    // Calculates the energy and wavefunctions
  *                 Vector &ABC, char **sipffilename)                               //   "estates" matrix
  *   bool get_Qq(std::vector< sMat<double> > &Qq, int q, int n, orbital l,         // Calculates/loads the Q_q operators
@@ -261,6 +263,34 @@ __declspec(dllexport)
          mat(i,j) = complex<double> (Mab(i,j), iMab(i,j));
 
    return Hsz*(Hsz-1)/2;
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Routine to initialise the storage matrix "est" for mcalc
+// --------------------------------------------------------------------------------------------------------------- //
+extern "C"
+#ifdef _WINDOWS
+__declspec(dllexport)
+#endif
+          void mcalc_parameter_storage_matrix_init(
+                      ComplexMatrix *est, // Output Eigenstates matrix (row 0: real==Eigenvalues;imag==population)
+                      Vector &gjmbheff,   // Input  Effective mean fields (meV)
+ /* Not Used */       double *g_J,        // Input  Lande g-factor
+                      double &T,          // Input  temperature
+ /* Not Used */       Vector &ABC,        // Input  Vector of parameters from single ion property file
+                      char **sipffilename)// Input  Single ion properties filename
+{
+   // Parses the input file for parameters
+   icpars pars;
+   const char *filename = sipffilename[0];
+   ic_parseinput(filename,pars);
+
+   // If we just want a blank estates matrix for later use (e.g. in mcalc)
+   int Hsz = getdim(pars.n,pars.l); 
+   (*est) = ComplexMatrix(0,Hsz,0,Hsz);
+   // Stores the number of electrons and the orbital number in element (0,0)
+   (*est)(0,0) = complex<double> (pars.n, pars.l);
+
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
