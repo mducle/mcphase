@@ -20,6 +20,7 @@ public class display extends Panel implements Runnable {
  static String [] legend; 
  static String xText = "";
  static String yText = "";
+ static FileInputStream ff;
  
  public void start(){ myThread = new Thread (this); myThread.start();}
 
@@ -39,9 +40,9 @@ public class display extends Panel implements Runnable {
       ds.getData().removeAllElements();
 
  fileIni = new File(file[i]);
-
+ ff = new FileInputStream(fileIni);
     //ffnen der Datei
-    DataInputStream inStream = new DataInputStream(new FileInputStream(fileIni));
+    DataInputStream inStream = new DataInputStream(ff);
     String strLine;
     String sx;
     String sy;
@@ -127,7 +128,8 @@ public class display extends Panel implements Runnable {
       Datum d = new Datum(p.parseDouble(sx),p.parseDouble(sy),null);
       ds.addDatum(d);}
       catch(NumberFormatException e){;}
-    }   
+    }
+    ff.close();
     //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
     }
 // double[] myDatax = {1, 3, 2, 3,33};
