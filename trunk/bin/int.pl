@@ -7,7 +7,7 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >1) 
 
-{print " program int  used to integrate columnx vs columny in data file, the result is displayed\n";
+{print " program int  used to integrate columnx vs columny in data file\n";
 
  print " integration is done point by point\n";
 
@@ -32,7 +32,8 @@ $coly=$ARGV[0];shift @ARGV;
    unless (open (Fin, $file)){die "\n error:unable to open $file\n";}   
    print "<".$file;
 
-  $integral=0;
+  $integral=0;$j=0;
+    open (Fout, ">range.out");
 
    while($line=<Fin>)
 
@@ -42,8 +43,8 @@ $coly=$ARGV[0];shift @ARGV;
 
        else{$line=~s/D/E/g;@numbers=split(" ",$line);
 
-            if (!@numbers1){@numbers1=@numbers;}
-
+            if ($j==0){@numbers1=@numbers;}
+            ++$j;
                  unless(0==($numbers[$colx-1]-$numbers1[$colx-1]))
 
 		  {@numout=@numbers;
@@ -53,13 +54,36 @@ $coly=$ARGV[0];shift @ARGV;
 		  } 
 
 	    @numbers1=@numbers;
-
+            $i=0;
+            foreach (@numbers)
+		  {++$i;
+		  if ($i!=$coly){print Fout $numbers[$i-1]." ";}else{print Fout $integral." ";}
+		  }     
+            print Fout "\n";
            }
 
       }
 
       close Fin;
 
+      close Fout;
+
+       unless (rename "range.out",$file)
+
+      {unless(open (Fout, ">$file"))     
+
+      {die "\n error:unable to write to $file\n";}
+
+      open (Fin, "range.out");
+
+      while($line=<Fin>){ print Fout $line;}
+
+      close Fin;
+
+      close Fout;
+
+      system "del range.out";  }
+ 
    print " x=col".$colx." y=f(x)=col".$coly." integral=".$integral.">\n";
 
    }

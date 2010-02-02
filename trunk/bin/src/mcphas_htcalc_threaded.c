@@ -145,7 +145,7 @@ DWORD WINAPI htcalc_iteration(void *input)
 	     {for(i=1;i<=(*myinput->inputpars).nofatoms;++i)
 	      {for(ii=1;ii<=(*myinput->inputpars).nofcomponents;++ii)
 	        {iii=(*myinput->inputpars).nofcomponents*(i-1)+ii;h1=0;h1(ii)=10*MU_B;
-                 (*(*myinput->inputpars).jjj[i]).mcalc(mmom,thrdat.T,h1,lnz,u,(*(*myinput->inputpars).jjj[i]).est);
+                 (*(*myinput->inputpars).jjj[i]).mcalc(mmom,thrdat.T,h1,lnz,u,(*(*myinput->inputpars).jjj[i]).mcalc_parstorage);
 		 nettom(iii)=mmom(ii)*rnd(1);
 	         momentq0(iii)=rnd(1);
 	         phi(iii)=rnd(1)*3.1415;
@@ -805,11 +805,11 @@ double fecalc(Vector  Hex,double T,par & inputpars,
  sdim=sps.in(sps.na(),sps.nb(),sps.nc()); // dimension of spinconfigurations
  Vector  * lnzi; lnzi=new Vector [sdim+2];for(i=0;i<=sdim+1;++i){lnzi[i]=Vector(1,inputpars.nofatoms);} // partition sum for every atom
  Vector  * ui; ui=new Vector [sdim+2];for(i=0;i<=sdim+1;++i){ui[i]=Vector(1,inputpars.nofatoms);} // magnetic energy for every atom
- ComplexMatrix ** ests;ests=new ComplexMatrix*[inputpars.nofatoms*sdim+2];
+ ComplexMatrix ** mcalcpars;mcalcpars=new ComplexMatrix*[inputpars.nofatoms*sdim+2];
  for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
  {for (l=1;l<=inputpars.nofatoms;++l){
-  ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).est.Rlo(),(*inputpars.jjj[l]).est.Rhi(),(*inputpars.jjj[l]).est.Clo(),(*inputpars.jjj[l]).est.Chi());
-  (*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1])=(*inputpars.jjj[l]).est;
+  mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]=new ComplexMatrix((*inputpars.jjj[l]).mcalc_parstorage.Rlo(),(*inputpars.jjj[l]).mcalc_parstorage.Rhi(),(*inputpars.jjj[l]).mcalc_parstorage.Clo(),(*inputpars.jjj[l]).mcalc_parstorage.Chi());
+  (*mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1])=(*inputpars.jjj[l]).mcalc_parstorage;
   }}}}
  int diagonalexchange=1;
  FILE * fin_coq;
@@ -896,8 +896,8 @@ for (r=1;sta>ini.maxstamf;++r)
     {delete []jj;delete []lnzi;delete []ui;
      for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
-     }}}} delete []ests;
+      delete mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
+     }}}} delete []mcalcpars;
 
      if (verbose==1) fprintf(stderr,"feDIV!MAXlooP");
      return 20000;}
@@ -905,8 +905,8 @@ for (r=1;sta>ini.maxstamf;++r)
     {delete []jj;delete []lnzi;delete []ui;
           for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
-      delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
-     }}}} delete []ests;
+      delete mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
+     }}}} delete []mcalcpars;
      if (verbose==1) fprintf(stderr,"feDIV!MAXspinchangE");
      return 20001;}
 
@@ -966,7 +966,7 @@ for (r=1;sta>ini.maxstamf;++r)
    lm1m3=inputpars.nofcomponents*(l-1);
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {d1[m1]=mf.mf(i,j,k)[lm1m3+m1];}
-   (*inputpars.jjj[l]).mcalc(moment,T,d1,lnzi[s][l],ui[s][l],(*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
+   (*inputpars.jjj[l]).mcalc(moment,T,d1,lnzi[s][l],ui[s][l],(*mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1]));
    for(m1=1;m1<=inputpars.nofcomponents;++m1)
    {sps.m(i,j,k)(lm1m3+m1)=moment[m1];}
   }
@@ -1054,8 +1054,8 @@ if (ini.displayall==1)
  delete []jj;delete []lnzi;delete []ui;
      for (i=1;i<=sps.na();++i){for(j=1;j<=sps.nb();++j){for(k=1;k<=sps.nc();++k)
      {for (l=1;l<=inputpars.nofatoms;++l){
- delete ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
-     }}}} delete []ests;
+ delete mcalcpars[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1];
+     }}}} delete []mcalcpars;
 ++successrate;
 return fe;     
 }

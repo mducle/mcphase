@@ -60,7 +60,7 @@ printf("#*****************************************************\n");
    T=1;
    h=0;for(i=1;i<=inputpars.nofcomponents;++i)h(i)=0.1;
   for(i=1;i<=inputpars.nofatoms;++i)
-  {(*inputpars.jjj[i]).mcalc(moment,T,h,lnz,u,(*inputpars.jjj[i]).eigenstates(h,T));
+  {(*inputpars.jjj[i]).mcalc(moment,T,h,lnz,u,(*inputpars.jjj[i]).mcalc_parameter_storage_init(h,T));
    for(j=1;j<=inputpars.nofcomponents;++j){nettom(j+(i-1)*inputpars.nofcomponents)=moment(j);
                                           // set phases according to atomic position phi=2*pi*q*r
                                            phi(j+(i-1)*inputpars.nofcomponents)=qvector*(*inputpars.jjj[i]).xyz*2.0*PI;                                        

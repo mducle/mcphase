@@ -178,7 +178,8 @@ abc=0;char *token;
 // 1.a: the mcphas.j has to be used to determine the structure + single ione properties (copy something from singleion.c)
 // 1.b: mcalc has to be used to calculate all the <Olm>.
 hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
-{(*inputpars.jjj[ii]).eigenstates(hh,T);} // initialize eigenstate matrices
+{//(*inputpars.jjj[ii]).eigenstates(hh,T);} // initialize eigenstate matrices
+ (*inputpars.jjj[ii]).mcalc_parameter_storage_init(hh,T);} // initialize mcalc module parameter storage
 
  for (i=1;i<=savmf.na();++i){for(j=1;j<=savmf.nb();++j){for(k=1;k<=savmf.nc();++k)
  {
@@ -190,7 +191,7 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
     h=0;
    for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
             if((*inputpars.jjj[ii]).module_type!=1&&(*inputpars.jjj[ii]).module_type!=3)
-            {(*inputpars.jjj[ii]).mcalc(moments,T,h,lnz,u,(*inputpars.jjj[ii]).est); // here we trigger single ion
+            {(*inputpars.jjj[ii]).mcalc(moments,T,h,lnz,u,(*inputpars.jjj[ii]).mcalc_parstorage); // here we trigger single ion
                                                            // module to calculate all 48 (ext_nof_components)
                                                            // higher order moments 
             }
@@ -217,9 +218,6 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
                       for(nt=1;nt<=savmf.nofcomponents;++nt)  // printout meanfields
                         {fprintf(fout," %4.4f",h(nt));}
                          fprintf(fout,"\n");
-                             
-//	                 myPrintComplexMatrix(fout,(*inputpars.jjj[ii]).eigenstates(h));      
-							   // ... and the eigenvalues + eigenvectors !
 
   }}}}
 

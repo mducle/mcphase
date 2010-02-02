@@ -67,7 +67,7 @@ printf("***********************************************************\n");
   if(jjjps.module_type==0) 
   {dim=51;} // external module
   else  
-  {if(jjjps.module_type==2) {dim=48;} // cfield
+  {if(jjjps.module_type==2||jjjps.module_type==4) {dim=48;} // cfield
    else {fprintf(stderr,"ERROR chrgplt: calculation not possible for this single ion module\n");exit(EXIT_FAILURE);}
   }
   Vector h(1,dim);
@@ -75,12 +75,12 @@ printf("***********************************************************\n");
   h=0;
 
   if(jjjps.module_type==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;} 
-  if(jjjps.module_type==2){ h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
+  if(jjjps.module_type==2||jjjps.module_type==4){ h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
   //int dj=(int)(2.0*(*iops).J+1);
- // ComplexMatrix ests(0,dj,1,dj);
-  jjjps.eigenstates(h,T);
+
+  jjjps.mcalc_parameter_storage_init(h,T);
   printf("calculating expectation values ....\n");
-  jjjps.mcalc(moments,T,h,lnz,u,jjjps.est);
+  jjjps.mcalc(moments,T,h,lnz,u,jjjps.mcalc_parstorage);
 //  cfield  has to be used to calculate all the <Olm>.
 //  printf("Stevens factors: alpha beta gamma = %4g %4g %4g \n",(*iops).alpha,(*iops).beta,(*iops).gamma);
 //  printf("Lande Factor: gJ = %4g\n",(*iops).gJ);
@@ -94,7 +94,7 @@ printf("#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f
                        if (dim==48) strncpy(lm4,lm+(i-1)*4,4);
                        if (dim==51) strncpy(lm4,lme+(i-1)*4,4);
                        factor=0;
-                       if(jjjps.module_type==2){if(i>3){l=lm4[1]-48;m=lm4[2]-48;
+                       if(jjjps.module_type==2||jjjps.module_type==4){if(i>3){l=lm4[1]-48;m=lm4[2]-48;
                                                         factor=jjjps.tetan()(l)*jjjps.cnst(l,m);
                                                         }
                                                } // these are prefactors in case of module cfield (stevens parameters tetan and zlm prefactors)
@@ -107,7 +107,7 @@ printf("#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f
 printf("\n");
 
  char text[1000];
- if(jjjps.module_type==0){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
+ if(jjjps.module_type==0||jjjps.module_type==4){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
  if(jjjps.module_type==2){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=cab</title>\n", T, ha, hb, hc);}
 
  char * cffilenames[MAXNOFATOMS];
@@ -128,12 +128,12 @@ if(jjjps.calcmagdensity==0)
  float par[100];par[0]=99;
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){;}
 while(pchere>3)
-{if(jjjps.module_type==0){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=abc\n",par[1],par[2],par[3],par[4]);}
+{if(jjjps.module_type==0||jjjps.module_type==4){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=abc\n",par[1],par[2],par[3],par[4]);}
  if(jjjps.module_type==2){printf("pointcharge %g |e| at xyz=%g %g %g mind: xyz=cab\n",par[1],par[2],par[3],par[4]);}
  ++nofpc;if(nofpc>MAXNOFATOMS){fprintf(stderr,"Error chrgplt - too many pointcharges");exit(1);}
   cffilenames[1+nofpc]=new char[MAXNOFCHARINLINE];
   sprintf(cffilenames[1+nofpc],"pointcharge radius=%g",0.529177*copysign(1.0,par[1])*pow(fabs(par[1]),0.3333));
-  if(jjjps.module_type==0){
+  if(jjjps.module_type==0||jjjps.module_type==4){
   x[nofpc+1]=par[2]/abc(1)+x[1];// these are the positions in Angstroem
   y[nofpc+1]=par[3]/abc(2)+y[1];// however in order to be in line with the cfield xyz=cab
   z[nofpc+1]=par[4]/abc(3)+z[1];// and ic1ion xyz=abc we have to set these parameters

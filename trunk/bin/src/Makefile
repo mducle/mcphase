@@ -23,7 +23,7 @@ vpath %.o  ./ ./vector ../cf1ion_module ./functions
 #  Operating system
 OSTYPE=$(shell uname)
 #  (linux windows)
-ifeq ($(OSTYPE),Linux)
+ifneq (,$(findstring $(OSTYPE),Linux))
  LINUX = linux
 else
  WINDOWS = windows

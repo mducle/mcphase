@@ -89,8 +89,8 @@ ifeq (,$(findstring CYGWIN,$(shell uname)))
 LDFLAGS += -lpthread
 endif
 else
-LDFLAGS = -larpack -llapack -lblas
-#LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
+#LDFLAGS = -larpack -llapack -lblas
+LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 #LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/cygwin32_penryn/lib -lf77blas -latlas -lgfortran
 endif
 endif

@@ -8,10 +8,10 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >0) 
 
-{print " program to remove every nth line (n>2) in output.txt
+{print " program to remove every nth line (n>2) in file
 \n";
 
- print " usage: nth_rm n input.txt > output.txt\n";
+ print " usage: delnthline n *.*\n";
 
  exit 0;}
 

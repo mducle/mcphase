@@ -5,19 +5,20 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
-use Math::Trig;
+unless ($#ARGV >1) 
 
-unless ($#ARGV >0) 
+{print " program potcol  used to potentiate  a  column with a constant exponent - col^const \n";
 
-{print " program acos  used to calculate arccosine of a column\n";
-
- print " usage: acos col *.*   \n col=column\n *.* .. filenname\n";
+ print " usage: potcol col const  *.*   \n col=column, const=constant \n *.* .. filenname\n";
 
  exit 0;}
 
  
 
 $column=$ARGV[0];shift @ARGV;
+
+$const=$ARGV[0];shift @ARGV;
+
 
 
   foreach (@ARGV)
@@ -45,7 +46,7 @@ $column=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]=acos($numbers[$i-1]);}
+		  if ($i==$column) {$numbers[$i-1]**=$const;}
 
 		  print Fout $numbers[$i-1]." ";}     
 

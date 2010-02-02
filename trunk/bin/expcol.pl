@@ -5,19 +5,18 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
-use Math::Trig;
-
 unless ($#ARGV >0) 
 
-{print " program sin  used to calculate sinus of a column in radians\n";
+{print " program expcol  used to calculate exp(col) from  a  column \n";
 
- print " usage: sin col *.*   \n col=column\n *.* .. filenname\n";
+ print " usage: expcol col   *.*   \n col=column \n *.* .. filenname\n";
 
  exit 0;}
 
  
 
 $column=$ARGV[0];shift @ARGV;
+
 
 
   foreach (@ARGV)
@@ -45,7 +44,7 @@ $column=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]=sin($numbers[$i-1]);}
+		  if ($i==$column) {$numbers[$i-1]=exp($numbers[$i-1]);}
 
 		  print Fout $numbers[$i-1]." ";}     
 

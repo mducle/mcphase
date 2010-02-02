@@ -5,24 +5,19 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
-unless ($#ARGV >1) 
+use Math::Trig;
 
-{print " program addc  used to addm columnx to columny in data file, the result goes to coly\n";
+unless ($#ARGV >0) 
 
- print " usage: addc colx coly  *.*   \n colx=columnx, coly=columny \n *.* .. filenname\n";
+{print " program atancol  used to calculate arctangens of a column\n";
+
+ print " usage: atancol col *.*   \n col=column\n *.* .. filenname\n";
 
  exit 0;}
 
-
-
-$command="#addc";foreach $d(@ARGV){$command.= " ".$d;}; $command.="\n";
-
  
 
-$colx=$ARGV[0];shift @ARGV;
-
-$coly=$ARGV[0];shift @ARGV;
-
+$column=$ARGV[0];shift @ARGV;
 
 
   foreach (@ARGV)
@@ -34,7 +29,6 @@ $coly=$ARGV[0];shift @ARGV;
    unless (open (Fin, $file)){die "\n error:unable to open $file\n";}   
    print "<".$file;
 
-
    open (Fout, ">range.out");
 
    while($line=<Fin>)
@@ -45,11 +39,15 @@ $coly=$ARGV[0];shift @ARGV;
 
        else{$line=~s/D/E/g;@numbers=split(" ",$line);
 
-           	  $i=0;$numbers[$coly-1]+=$numbers[$colx-1];
+           	  $i=0;++$j;
 
 		  foreach (@numbers)
 
-		  {++$i;print Fout $numbers[$i-1]." ";}     
+		  {++$i;
+
+		  if ($i==$column) {$numbers[$i-1]=atan($numbers[$i-1]);}
+
+		  print Fout $numbers[$i-1]." ";}     
 
             print Fout "\n";
 
@@ -59,13 +57,11 @@ $coly=$ARGV[0];shift @ARGV;
 
       close Fin;
 
-#      print Fout $command;
-
       close Fout;
 
        unless (rename "range.out",$file)
 
-     {unless(open (Fout, ">$file"))     
+          {unless(open (Fout, ">$file"))     
 
       {die "\n error:unable to write to $file\n";}
 
@@ -81,6 +77,8 @@ $coly=$ARGV[0];shift @ARGV;
 
      }
 
+
+
    print ">\n";
 
    }
@@ -88,4 +86,3 @@ $coly=$ARGV[0];shift @ARGV;
 
 
 #\end{verbatim} 
-

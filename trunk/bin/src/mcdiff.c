@@ -1064,10 +1064,11 @@ fprintf(fout,"\n");
                               if ((*jjjpars[i]).gJ==0)
  			      {J[i]=-3;fprintf(stderr,"mcdiff: gJ=0 - going beyond dipolar approximation for intermediate coupling");
    			             (*jjjpars[i]).eigenstates(heff,T); // calculate eigenstates
+                                     (*jjjpars[i]).mcalc_parameter_storage_init(heff,T);// initialise parameter storage for mcalc
                                // do some consistency checks
-                               ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
-                                             est=(*jjjpars[i]).est;
-                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,est);
+                               ComplexMatrix mcalcpars((*jjjpars[i]).mcalc_parstorage.Rlo(),(*jjjpars[i]).mcalc_parstorage.Rhi(),(*jjjpars[i]).mcalc_parstorage.Clo(),(*jjjpars[i]).mcalc_parstorage.Chi());
+                                             mcalcpars=(*jjjpars[i]).mcalc_parstorage;
+                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,mcalcpars);
                                for(k=1;k<=j;++k){if (fabs((*jjjpars[i]).mom(k+3)-moment(k))>0.001){fprintf(stderr,"Warning mcdiff: meanfields and <J> read from input file not consistent for atom %i - using values calculated from meanfield\n",i);}
                                                   (*jjjpars[i]).mom(3+k)=moment(k);//printf("m(%i)=%g ",k,moment(k));
                                                  }
@@ -1078,10 +1079,11 @@ fprintf(fout,"\n");
 			      else
 			      {// beyond formalism for rare earth		    
                                (*jjjpars[i]).eigenstates(heff,T); //calculate some eigenstates
-                               // do some consistency checks
-                               ComplexMatrix est((*jjjpars[i]).est.Rlo(),(*jjjpars[i]).est.Rhi(),(*jjjpars[i]).est.Clo(),(*jjjpars[i]).est.Chi());
-                                             est=(*jjjpars[i]).est;
-                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,est);
+                               (*jjjpars[i]).mcalc_parameter_storage_init(heff,T);// initialise parameter storage for mcalc
+                                     // do some consistency checks
+                               ComplexMatrix mcalcpars((*jjjpars[i]).mcalc_parstorage.Rlo(),(*jjjpars[i]).mcalc_parstorage.Rhi(),(*jjjpars[i]).mcalc_parstorage.Clo(),(*jjjpars[i]).mcalc_parstorage.Chi());
+                                             mcalcpars=(*jjjpars[i]).mcalc_parstorage;
+                               Vector moment(1,j);(*jjjpars[i]).mcalc(moment,T,heff,lnZ,U,mcalcpars);
                                if (fabs((*jjjpars[i]).mom(1)-(*jjjpars[i]).gJ*moment(1))>0.001){fprintf(stderr,"Warning mcdiff: a-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(2)-(*jjjpars[i]).gJ*moment(2))>0.001){fprintf(stderr,"Warning mcdiff: b-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}
                                if (fabs((*jjjpars[i]).mom(3)-(*jjjpars[i]).gJ*moment(3))>0.001){fprintf(stderr,"Warning mcdiff: c-component meanfields and moments not consistent for atom %i - using values calculated from meanfield\n",i);}

@@ -5,20 +5,19 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
-unless ($#ARGV >1) 
+use Math::Trig;
 
-{print " program fact  used to multiply a  column with a constant\n";
+unless ($#ARGV >0) 
 
- print " usage: fact col const  *.*   \n col=column, const=constant \n *.* .. filenname\n";
+{print " program tancol  used to calculate tangens of a column in radians\n";
+
+ print " usage: tancol col *.*   \n col=column\n *.* .. filenname\n";
 
  exit 0;}
 
  
 
 $column=$ARGV[0];shift @ARGV;
-
-$const=$ARGV[0];shift @ARGV;
-
 
 
   foreach (@ARGV)
@@ -27,8 +26,7 @@ $const=$ARGV[0];shift @ARGV;
 
    $file=$_;
 
-   unless (open (Fin, $file)){die "\n error:unable to open $file\n";}
-
+   unless (open (Fin, $file)){die "\n error:unable to open $file\n";}   
    print "<".$file;
 
    open (Fout, ">range.out");
@@ -47,7 +45,7 @@ $const=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]*=$const;}
+		  if ($i==$column) {$numbers[$i-1]=tan($numbers[$i-1]);}
 
 		  print Fout $numbers[$i-1]." ";}     
 

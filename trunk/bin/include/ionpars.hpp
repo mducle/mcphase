@@ -16,8 +16,11 @@ class ionpars
    void MQM(ComplexMatrix & MQXM,ComplexMatrix & MQYM,ComplexMatrix & MQZM, double th, double ph,double J0,double J2,double J4,double J6, Vector & Zc);
   int calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
                         // of chargedensiy in chrgplt,charges ...
-
+  
  public:
+   int so1ion; // switch to identify the coordinate system orientation with respect to the axes abc
+              // 0 ...  cfield xyz||cab
+              // 1 .... so1ion xyz||abc
    char * iontype; // description string
    double J;// momentum quantum number
    double gJ; // Lande factor

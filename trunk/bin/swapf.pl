@@ -87,9 +87,9 @@ $file2=$ARGV[0];shift @ARGV;
 
        unless (rename "swapf1.out",$file1)
 
-          {unless(open (Fout, ">$file"))     
+          {unless(open (Fout, ">$file1"))     
 
-      {die "\n error:unable to write to $file\n";}
+      {die "\n error:unable to write to $file1\n";}
 
       open (Fin, "swapf1.out");
 
@@ -107,9 +107,9 @@ $file2=$ARGV[0];shift @ARGV;
 
        unless (rename "swapf2.out",$file2)
 
-         {unless(open (Fout, ">$file"))     
+         {unless(open (Fout, ">$file2"))     
 
-      {die "\n error:unable to write to $file\n";}
+      {die "\n error:unable to write to $file2\n";}
 
       open (Fin, "swapf2.out");
 

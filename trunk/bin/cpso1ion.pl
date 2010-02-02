@@ -11,13 +11,13 @@ $deltaT=$ARGV[2];
 
 unless($#ARGV>=2)
 
-  {print "Program cpcalc - calculates specific heat from output file results/cfield.out\n";
+  {print "Program cpso1ion - calculates specific heat from output file results/so1ion.out\n";
 
-   print "             use as :  cpcalc tmin tmax deltat [-option]\n"; 
+   print "             use as :  cpso1ion tmin tmax deltat [-option]\n";
 
    print "             alternatively \n";
 
-   print "             use as: cpcalc col1 col2 datafile [-option]\n";
+   print "             use as: cpso1ion col1 col2 datafile [-option]\n";
 
    print "                     (take cp-data from datafile and calculate\n";
 
@@ -51,21 +51,21 @@ unless($#ARGV>=2)
 
 
 
-unless (open (Fin,"results/cfield.out")) {unless (open (Fin,"cfield.out")){print "ERROR cpcalc: file results/cfield.out not found\n";exit(1);}else{print "#reading cfield.out\n"; }}
+unless (open (Fin,"results/so1ion.out")) {unless (open (Fin,"so1ion.out")){print "ERROR cpso1ion: file results/so1ion.out not found\n";exit(1);}else{print "#reading so1ion.out\n"; }}
 
-else {print "#reading results/cfield.out\n";}
+else {print "#reading results/so1ion.out\n";}
 
 
 
 $noflevels=1; # initialize noflevels
 
-# read energies from cfield.out
+# read energies from so1ion.out
 
   while($line=<Fin>)
 
   {if($line=~/^.*\QEnergy Eigenvalues are in\E/){unless ($line=~/^.*\QEnergy Eigenvalues are in  meV\E/) 
 
-                                                        {print "ERROR cpcalc: energies in cfield.out must be in meV ! - ".$line."\n";exit(1);}
+                                                        {print "ERROR cpso1ion: energies in so1ion.out must be in meV ! - ".$line."\n";exit(1);}
 
                                                 }
 

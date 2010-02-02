@@ -663,9 +663,9 @@ void ic_cmag(const char *filename, icpars &pars)
               else { Tmin = pars.yMin; Tstep = pars.yStep; Tmax = pars.yMax; Hmin = pars.xMin; Hstep = pars.xStep; Hmax = pars.xMax; }
 
    if(pars.xT!=0.) FILEOUT << "# T(K)\tHa(T)\tHb(T)\tHc(T)\t"; else FILEOUT << "# Ha(T)\tHb(T)\tHc(T)\tT(K)\t";
-   if(pars.mag_units==0) FILEOUT << "Magnetisation(uB/atom)\tMa\tMb\tMc\n";
-   else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\tMa\tMb\tMc\n";
-   else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\tMa\tMb\tMc\n";
+   if(pars.mag_units==0) FILEOUT << "Magnetisation(uB/atom)\tMa\tMb\tMc\tM_parallel\n";
+   else if(pars.mag_units==1) FILEOUT << "Magnetisation(emu/mol)\tMa\tMb\tMc\tM_parallel\n";
+   else if(pars.mag_units==2) FILEOUT << "Magnetisation(Am^2/mol)\tMa\tMb\tMc\tM_parallel\n";
    int i,j,k; double Hm=0.,dt,Z;
    int nT = (int)ceil((Tmax-Tmin)/Tstep), nH = (int)ceil((Hmax-Hmin)/Hstep) + 1;
    std::vector<double> T(nT,0.); for(i=0; i<nT; i++) T[i] = Tmin+i*Tstep;
@@ -675,21 +675,21 @@ void ic_cmag(const char *filename, icpars &pars)
    {
       std::cerr << "ic_showphysprop(): You may only specify magnetic field on either x- and y-axis - not both.\n"; return;
    }
-   double xnorm = sqrt(pars.xHa*pars.xHa+pars.xHb*pars.xHb+pars.xHc*pars.xHc);
-   double ynorm = sqrt(pars.yHa*pars.yHa+pars.yHb*pars.yHb+pars.yHc*pars.yHc);
+   double xnorm = sqrt(pars.xHa*pars.xHa+pars.xHb*pars.xHb+pars.xHc*pars.xHc); if(xnorm==0) xnorm=1.;
+   double ynorm = sqrt(pars.yHa*pars.yHa+pars.yHb*pars.yHb+pars.yHc*pars.yHc); if(ynorm==0) ynorm=1.;
    std::vector<double> gjmbH(6,0.), gjmbHmeV(6,0.); 
    if(pars.xT==0.) gjmbH[1]=pars.xHa/xnorm; else gjmbH[1]=pars.yHa/ynorm; gjmbH[0]=GS*gjmbH[1];
    if(pars.xT==0.) gjmbH[3]=pars.xHb/xnorm; else gjmbH[3]=pars.yHb/ynorm; gjmbH[2]=GS*gjmbH[3];
    if(pars.xT==0.) gjmbH[5]=pars.xHc/xnorm; else gjmbH[5]=pars.yHc/ynorm; gjmbH[4]=GS*gjmbH[5];
 
    iceig VE;
-   std::vector<double> ex; std::vector< std::vector<double> > matel;
+   std::vector<double> ex; std::vector< std::vector<double> > matel, exj;
    sMat<double> J,iJ,H,iH; H = ic_hmltn(iH,pars); H/=MEV2CM; iH/=MEV2CM;
    complexdouble *zV=0;
    if(pars.perturb) { VE.calc(H,iH); zV = new complexdouble[(H.nr()+1)*(H.nc()+1)];
       for(i=0; i<H.nr(); i++) zV[i].r = VE.E(i); memcpy(&zV[H.nr()+1],VE.zV(0),H.nr()*H.nc()*sizeof(complexdouble)); }
 
-   double convfact=1; if(pars.mag_units==1) convfact = NAMUB*1e3; else if(pars.mag_units==2) convfact = NAMUB;
+   double convfact=1; if(pars.mag_units==1) convfact = NAMUB*1e3; else if(pars.mag_units==2) convfact = NAMUB;  // 1==cgs, 2==SI
 
    for(i=0; i<nH; i++)
    {
@@ -697,34 +697,35 @@ void ic_cmag(const char *filename, icpars &pars)
       mfmat.Jmat(J,iJ,gjmbHmeV,pars.save_matrices);
       if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
          else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
-      ex = mfmat.expJ(VE,Tmax,matel,pars.save_matrices); ex.assign(matel[0].size(),0.);
+      ex = mfmat.expJ(VE,Tmax,matel,pars.save_matrices); ex.assign(matel[0].size(),0.); for(j=0; j<6; j+=2) exj.push_back(ex);
       for(k=0; k<(int)matel[0].size(); k++)
-         for(j=0; j<6; j++) ex[k] += gjmbH[j]*matel[j][k];
+         for(j=0; j<6; j+=2) ex[k] += (GS*matel[j][k] + matel[j+1][k]) * (GS*matel[j][k] + matel[j+1][k]);
       for(j=0; j<nT; j++) 
       {
          mag[j] = 0.; ma[j] = 0.; mb[j] = 0.; mc[j] = 0.;  Z = 0.;
          for(k=0; k<(int)matel[0].size(); k++) 
          { 
+            if(j==0) { ex[k]=sqrt(ex[k]); for(int ii=0; ii<6; ii+=2) exj[ii/2][k] = GS*matel[ii][k]+matel[ii+1][k]; }
             dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt; mag[j]+=ex[k]*dt; 
-            ma[j] += (gjmbH[0]*matel[0][k]+gjmbH[1]*matel[1][k]) * dt;        // Need to sum Sx and Lx 
-            mb[j] += (gjmbH[2]*matel[2][k]+gjmbH[3]*matel[3][k]) * dt;        // Need to sum Sy and Ly 
-            mc[j] += (gjmbH[4]*matel[4][k]+gjmbH[5]*matel[5][k]) * dt;        // Need to sum Sz and Lz 
-         } 
-         mag[j]/=Z; ma[j]/=Z; mb[j]/=Z; mc[j]/=Z;
+            ma[j] += exj[0][k] * dt; mb[j] += exj[1][k] * dt; mc[j] += exj[2][k] * dt;
+         }
+         mag[j]/=Z; ma[j]/=Z; mb[j]/=Z; mc[j]/=Z; if(pars.xT==0.) mag[j]/=xnorm; else mag[j]/=ynorm;
       }
       if(pars.xT!=0.)
       {
          Hm = (Hmin+i*Hstep)/ynorm;
          for(j=0; j<nT; j++) 
-            FILEOUT << T[j] << "\t" << Hm*pars.yHa << "\t" << Hm*pars.yHb << "\t" << Hm*pars.yHc << "\t" << mag[j]*convfact << "   \t\t"
-                    << ma[j]*convfact << "\t" << mb[j]*convfact << "\t" << mc[j]*convfact << "\n";
+            FILEOUT << T[j] << "\t" << Hm*pars.yHa << "\t" << Hm*pars.yHb << "\t" << Hm*pars.yHc << "\t" << mag[j]*convfact
+                    << "   \t" << ma[j]*convfact << "   \t" << mb[j]*convfact << "   \t" << mc[j]*convfact << "   \t"
+                    << (ma[j]*gjmbH[1] + mb[j]*gjmbH[3] + mc[j]*gjmbH[5])*convfact << "\n";
       }
       else
       {
          Hm = (Hmin+i*Hstep)/xnorm;
          for(j=0; j<nT; j++) 
-            FILEOUT << Hm*pars.xHa << "\t" << Hm*pars.xHb << "\t" << Hm*pars.xHc << "\t" << T[j] << "\t" << mag[j]*convfact << "   \t\t"
-                    << ma[j]*convfact << "\t" << mb[j]*convfact << "\t" << mc[j]*convfact << "\n";
+            FILEOUT << Hm*pars.xHa << "\t" << Hm*pars.xHb << "\t" << Hm*pars.xHc << "\t" << T[j] << "\t" << mag[j]*convfact
+                    << "   \t" << ma[j]*convfact << "   \t" << mb[j]*convfact << "   \t" << mc[j]*convfact << "   \t" 
+                    << (ma[j]*gjmbH[1] + mb[j]*gjmbH[3] + mc[j]*gjmbH[5])*convfact << "\n";
       }
    }
    if(pars.perturb) delete[]zV;

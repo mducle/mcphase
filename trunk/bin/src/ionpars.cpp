@@ -1,4 +1,4 @@
-// ionpars: class to load and store matrices for internal module cfield
+// ionpars: class to load and store matrices for internal module cfield and so1ion
 
 #include "ionpars.hpp"
 #include "martin.h"
@@ -31,7 +31,7 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
 
 
  ionpars::ionpars (const ionpars & p) //copy constructor
- {J=p.J;
+ {J=p.J;so1ion=p.so1ion;
   Ja=p.Ja; Jb=p.Jb; Jc=p.Jc;Hcf=p.Hcf;
   Jaa=p.Jaa; Jbb=p.Jbb; Jcc=p.Jcc;
   gJ=p.gJ;
@@ -68,7 +68,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
   Jbb=ComplexMatrix(1,dimj,1,dimj);
   Jcc=ComplexMatrix(1,dimj,1,dimj);
    calcmagdensity=0;
-
+   so1ion=0;
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
@@ -94,6 +94,8 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
   getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
    iontype = new char [strlen(ion)+1];
    strcpy(iontype,ion);
+   calcmagdensity=0;
+   so1ion=0;
 
   J=((double)dimj-1)/2;
   Ja=Matrix(1,dimj,1,dimj);
@@ -142,17 +144,27 @@ ionpars::ionpars(FILE * cf_file)
 
   char instr[MAXNOFCHARINLINE];
   iontype= new char[MAXNOFCHARINLINE];
-  
+  char  moduletype[MAXNOFCHARINLINE];
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
-   calcmagdensity=0;
+   calcmagdensity=0;so1ion=0;strcpy(moduletype,"cfield");
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;gJ=0;
   fgets_errchk (instr, MAXNOFCHARINLINE, cf_file);
   // strip /r (dos line feed) from line if necessary
   char *token;  
   while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}  
-   if(!(strncmp(instr,"#!MODULE=cfield ",9)==0||strncmp(instr,"#!MODULE=cfield\n",9)==0||
-        strncmp(instr,"#!cfield ",9)==0||strncmp(instr,"#!cfield\n",9)==0)){fprintf(stderr,"ERROR class ionpars - file does not start with #!cfield\n");exit(EXIT_FAILURE);}   
+   if(!(strncmp(instr,"#!MODULE=cfield ",16)==0||
+        strncmp(instr,"#!MODULE=cfield\n",16)==0||
+        strncmp(instr,"#!cfield ",9)==0||
+        strncmp(instr,"#!cfield\n",9)==0))
+        {so1ion=1;strcpy(moduletype,"so1ion");
+         if(!(strncmp(instr,"#!MODULE=so1ion ",16)==0||
+              strncmp(instr,"#!MODULE=so1ion\n",16)==0||
+              strncmp(instr,"#!so1ion ",9)==0||
+              strncmp(instr,"#!so1ion\n",9)==0)){
+         fprintf(stderr,"ERROR class ionpars - file does not start with #!MODULE=cfield or #!MODULE=so1ion\n");exit(EXIT_FAILURE);
+         }
+        }
   
 // read in lines and get IONTYPE=  and CF parameters Blm
    while(feof(cf_file)==false)
@@ -442,7 +454,7 @@ ionpars::ionpars(FILE * cf_file)
     }
      
 
-if (pr==1) {printf("#using cfield ...\n");
+if (pr==1) {printf("#using %s ...\n",moduletype);
             switch(calcmagdensity)
                {case 1: printf("# - calculating magnetization density in x direction\n"); break;
                 case 2: printf("# - calculating magnetization density in y direction\n"); break;
@@ -451,7 +463,7 @@ if (pr==1) {printf("#using cfield ...\n");
                }
            }
   
-  fprintf(stderr,"# module cfield ... for ion %s\n",iontype);
+  fprintf(stderr,"# module %s ... for ion %s\n",moduletype,iontype);
   cfield_mcphasnew(iontype,Jxr,Jxi,  Jyr, Jyi, Jzr, Jzi,
   mo22sr,mo22si,
   mo21sr,mo21si,
@@ -505,15 +517,15 @@ if (pr==1) {printf("#using cfield ...\n");
 
   &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6);
 
-if(fabs(alphar-alpha)/fabs(alphar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (alpha=%g) different from input file (alpha=%g), using internal value\n",alpha,alphar);}
-if(fabs(betar-beta)/fabs(betar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (beta=%g) different from input file (beta=%g), using internal value\n",beta,betar);}
-if(fabs(gammar-gamma)/fabs(gammar+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Stevens Parameter (gamma=%g) different from input file (gamma=%g), using internal value\n",gamma,gammar);}
-if(fabs(gJr-gJ)/fabs(gJr+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for Lande Factor (gJ=%g) different from input file (gJ=%g), using internal value\n",gJ,gJr);}
-if(fabs(r2r-r2)/fabs(r2r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r2>=%g) different from input file (<r2>=%g), using internal value\n",r2,r2r);}
-if(fabs(r4r-r4)/fabs(r4r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r4>=%g) different from input file (<r4>=%g), using internal value\n",r4,r4r);}
-if(fabs(r6r-r6)/fabs(r6r+1)>SMALL) {fprintf(stderr,"Warning module cfield internal value for radial Matrix element (<r6>=%g) different from input file (<r6>=%g), using internal value\n",r6,r6r);}
+if(fabs(alphar-alpha)/fabs(alphar+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Stevens Parameter (alpha=%g) different from input file (alpha=%g), using internal value\n",moduletype,alpha,alphar);}
+if(fabs(betar-beta)/fabs(betar+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Stevens Parameter (beta=%g) different from input file (beta=%g), using internal value\n",moduletype,beta,betar);}
+if(fabs(gammar-gamma)/fabs(gammar+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Stevens Parameter (gamma=%g) different from input file (gamma=%g), using internal value\n",moduletype,gamma,gammar);}
+if(fabs(gJr-gJ)/fabs(gJr+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Lande Factor (gJ=%g) different from input file (gJ=%g), using internal value\n",moduletype,gJ,gJr);}
+if(fabs(r2r-r2)/fabs(r2r+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for radial Matrix element (<r2>=%g) different from input file (<r2>=%g), using internal value\n",moduletype,r2,r2r);}
+if(fabs(r4r-r4)/fabs(r4r+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for radial Matrix element (<r4>=%g) different from input file (<r4>=%g), using internal value\n",moduletype,r4,r4r);}
+if(fabs(r6r-r6)/fabs(r6r+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for radial Matrix element (<r6>=%g) different from input file (<r6>=%g), using internal value\n",moduletype,r6,r6r);}
 
-if (pr==1) printf("#end using cfield\n");
+if (pr==1) printf("#end using %s\n",moduletype);
 
    J=((double)dimj-1)/2; //momentum quantum number
 
@@ -794,10 +806,10 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
    const char lm[]="B22SB21SB20 B21 B22 B33SB32SB31SB30 B31 B32 B33 B44SB43SB42SB41SB40 B41 B42 B43 B44 B55SB54SB53SB52SB51SB50 B51 B52 B53 B54 B55 B66SB65SB64SB63SB62SB61SB60 B61 B62 B63 B64 B65 B66 ";
    char lm4[5];lm4[4]='\0';
    for(i=1;i<=45;++i){strncpy(lm4,lm+(i-1)*4,4);l=lm4[1]-48;m=lm4[2]-48;if(lm4[3]=='S'){m=-m;}
-                     if(Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module cfield: wybourne parameter %s is not implemented\n",lm4);
+                     if(Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module %s: wybourne parameter %s is not implemented\n",moduletype,lm4);
                                                   exit(EXIT_FAILURE);}
                                   double Blmcalc=Llm(i)*cnst(l,m)*sqrt(4.0*PI/(2*l+1))*thetaJ(l);if(m!=0){Blmcalc*=sqrt(2.0);}
-                                  if(Blm(i)!=0&fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001){fprintf(stderr,"Warning internal module cfield - reading %s=%12.6g meV is ignored, because Wybourne Parameter is different: \n",lm4,Blm(i));}
+                                  if(Blm(i)!=0&fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001){fprintf(stderr,"Warning internal module %s - reading %s=%12.6g meV is ignored, because Wybourne Parameter Llm=%12.6g meV does not correspond ! \npresse enter to continue\n",moduletype,lm4,Blm(i),Llm(i));getchar();}
                                   Blm(i)=Blmcalc;// here set the Blm as calculated from the Llm
                                   }
                      if(Blm(i)!=0){fprintf(stderr," %s=%12.6g meV ",lm4,Blm(i));
@@ -821,8 +833,9 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
 //		                }
                   }
    }
-   
- //ATTENTION FOR NDCU2 the AXES xyz are parallel to cab
+
+if(so1ion==0)
+ {//ATTENTION FOR cfield the AXES xyz are parallel to cab
  Matrix dummy(1,dimj,1,dimj);
  dummy=Jb;Jb=Jc;Jc=Ja;Ja=dummy;
  ComplexMatrix dummyc(1,dimj,1,dimj);
@@ -848,7 +861,30 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
  printf("# etc ... 45 moments up to l<=6\n");
  printf("#\n");
              }
-
+ }
+ else
+ {//ATTENTION FOR so1ion the AXES xyz are parallel to abc
+ if (pr==1) {printf("#Axis Convention using so1ion as a module:  a||x b||y  c||z\n");
+ printf("#xyz .... Coordinate system of the crystal field parameters used in so1ion\n");
+ printf("#abc .... Crystal axes\n");
+ printf("#The interactions are described by the  PKQ Operators defined in so1ion\n");
+ printf("#O11(s) .... Ja=Jx\n");
+ printf("#O10(c) .... Jb=Jy\n");
+ printf("#O11(c) .... Jc=Jz\n");
+ printf("#O22(s) .... Jd\n");
+ printf("#O21(s) .... Je\n");
+ printf("#O20(c) .... Jf\n");
+ printf("#O21(c) .... Jg\n");
+ printf("#O22(c) .... Jh\n");
+ printf("#O33(s) .... Ji\n");
+ printf("#O32(s) .... Jj\n");
+ printf("#O31(s) .... Jk\n");
+ printf("#O30(c) .... Jl\n");
+ printf("#O31(c) .... Jm\n");
+ printf("# etc ... 45 moments up to l<=6\n");
+ printf("#\n");
+             }
+ }
 pr=0;
 }
 
@@ -859,12 +895,20 @@ void ionpars::save(FILE * file) // save ion parameters to file
 
 
   if(abs(Blm)>1e-10) {fprintf(file,"#--------------------------------------------------------------------------\n");
+                      if(so1ion==0){
                       fprintf(file,"# Crystal Field parameters in Stevens Notation (coordinate system yzx||abc)\n");
+                      }else{
+                      fprintf(file,"# Crystal Field parameters in Stevens Notation (coordinate system xyz||abc)\n");
+                      }
                       fprintf(file,"#--------------------------------------------------------------------------\n");
                       savBlm(file);fprintf(file,"\n");
                      }
   if(abs(Llm)>1e-10) {fprintf(file,"#---------------------------------------------------------------------------\n");
+                       if(so1ion==0){
                       fprintf(file,"# Crystal Field parameters in Wybourne Notation (coordinate system yzx||abc)\n");
+                      }else{
+                      fprintf(file,"# Crystal Field parameters in Wybourne Notation (coordinate system xyz||abc)\n");
+                      }
                       fprintf(file,"#---------------------------------------------------------------------------\n");
                       savLlm(file);fprintf(file,"\n");
                      }
@@ -1351,7 +1395,7 @@ for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
 // 2. set delta
 delta=En(j)-En(i);
 
-if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dmcalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
+if (delta<-0.000001){fprintf(stderr,"ERROR module so1ion or cfield.so - dmcalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
 if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
 
 // 3. set mat
@@ -1390,7 +1434,7 @@ int ionpars::cfielddn(int & tn,double & th,double & ph,double & J0,double & J2,d
     tn      ... number of transition to be computed 
     sign(tn)... 1... without printout, -1 with extensive printout
     est		matrix with eigenstates, eigenvalues [meV], population numbers
-    th ph  .... polar angles of the scattering vector with respect to xyz=cab coordinate system  
+    th ph  .... polar angles of the scattering vector with respect to xyz=cab coordinate system (cfield) or xyz=abc (so1ion)
 on output    
     int   	total number of transitions
     N(i,j)	<-|Q|+><+|Q|-> (n+-n-),  n+,n-
@@ -1411,7 +1455,7 @@ for(i=1;i<=dj;++i){for(j=i;j<=dj;++j)
 // 2. set delta
 delta=real(est(0,j))-real(est(0,i));
 
-if (delta<-0.000001){fprintf(stderr,"ERROR module cfield.so - dncalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
+if (delta<-0.000001){fprintf(stderr,"ERROR module so1ion/cfield.so - dncalc: energy gain delta gets negative\n");exit(EXIT_FAILURE);}
 if(j==i)delta=-SMALL; //if transition within the same level: take negative delta !!- this is needed in routine intcalc
 
 	 ComplexMatrix * MQMi[4];

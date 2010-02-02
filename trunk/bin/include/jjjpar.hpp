@@ -44,9 +44,11 @@ class jjjpar
    ComplexVector Mq;
 
    ComplexMatrix est; // eigenstates 
+   ComplexMatrix mcalc_parstorage; // paramter storage for mcalc
    // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
    ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
-   ComplexMatrix & blank_eigenstates (Vector & gjmbheff, double & T);
+   // initialisis parameter storage for mcalc parameters (if possible)
+   ComplexMatrix & mcalc_parameter_storage_init (Vector & gjmbheff,double & T);
 
   char * cffilename; // single ion parameter filename
   double SLR,SLI; // scattering length
@@ -141,6 +143,7 @@ class jjjpar
   void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
   
   void (*estates)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
+  void (*mcalc_parameter_storage)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
   
 #ifdef __linux__
   void *handle;

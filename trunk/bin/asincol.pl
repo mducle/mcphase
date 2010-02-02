@@ -5,20 +5,19 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 
 
-unless ($#ARGV >1) 
+use Math::Trig;
 
-{print " program pot  used to potentiate  a  column with a constant exponent - col^const \n";
+unless ($#ARGV >0) 
 
- print " usage: pot col const  *.*   \n col=column, const=constant \n *.* .. filenname\n";
+{print " program asincol  used to calculate arcsine of a column\n";
+
+ print " usage: asincol col *.*   \n col=column\n *.* .. filenname\n";
 
  exit 0;}
 
  
 
 $column=$ARGV[0];shift @ARGV;
-
-$const=$ARGV[0];shift @ARGV;
-
 
 
   foreach (@ARGV)
@@ -46,7 +45,7 @@ $const=$ARGV[0];shift @ARGV;
 
 		  {++$i;
 
-		  if ($i==$column) {$numbers[$i-1]**=$const;}
+		  if ($i==$column) {$numbers[$i-1]=asin($numbers[$i-1]);}
 
 		  print Fout $numbers[$i-1]." ";}     
 

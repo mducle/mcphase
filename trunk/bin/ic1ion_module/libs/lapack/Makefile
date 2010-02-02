@@ -57,7 +57,7 @@ DOBJ  = dgeqr2.o dlabad.o dlacon.o dlacpy.o dladiv.o dlae2.o dlaev2.o\
 	dgesvd.o dgeqrf.o dorgbr.o dorglq.o dorgl2.o dgebrd.o dlabrd.o\
 	dgebd2.o dbdsqr.o dlasv2.o dlas2.o  dlasq1.o dlasq2.o dlazq3.o\
 	dlazq4.o dlasq5.o dlasq6.o dgelqf.o dgelq2.o dormbr.o dormqr.o\
-	dormlq.o dorml2.o\
+	dormlq.o dorml2.o dlacn2.o \
 	dlaebz.o dlagtf.o dlagts.o dlaneg.o dlarra.o dlarrb.o dlarrc.o\
 	dlarrd.o dlarre.o dlarrf.o dlarrj.o dlarrk.o dlarrr.o dstebz.o\
 	dlar1v.o dlarrv.o dorm2l.o dormql.o dormtr.o dstein.o dstemr.o

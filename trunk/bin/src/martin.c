@@ -112,7 +112,7 @@ char * fgets_errchk (char * instr,int size, FILE * file)
 // returns nof numbers read and
 // 0 if no numbers have been read (e.g. empty line or line is comment line starting with # or EOF)
 
-#define maxnofcharinline  1024
+#define maxnofcharinline  7024
 
 
 char * mystrtok (char * s, char * delimiters)

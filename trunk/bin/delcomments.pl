@@ -9,9 +9,9 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >=0) 
 
-{print " program com_rm  used to remove all comment lines (starting with #) in a file\n";
+{print " program delcomments  used to remove all comment lines (starting with #) in a file, removed comments are printed to screen (stdout)\n";
 
- print " usage: com_rm *.*  \n *.* .. filenname\n";
+ print " usage: delcomments *.*  \n *.* .. filenname\n";
 
  exit 0;}
 
@@ -37,7 +37,7 @@ unless ($#ARGV >=0)
 
      {
 
-       if ($line=~/^\s*#/) {}
+       if ($line=~/^\s*#/) {print $line;}
 
        else{print Fout $line;}
 

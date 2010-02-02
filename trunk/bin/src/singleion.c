@@ -61,29 +61,24 @@ for(j=1;j<=inputpars.nofcomponents;++j)printf(" <J%c> ",'a'-1+j);
 
   for(i=1;i<=inputpars.nofatoms;++i)
 {
-
-   ComplexMatrix * est;(*inputpars.jjj[i]).eigenstates(h,T);
-   est= new ComplexMatrix((*inputpars.jjj[i]).est.Rlo(),(*inputpars.jjj[i]).est.Rhi(),(*inputpars.jjj[i]).est.Clo(),(*inputpars.jjj[i]).est.Chi()); 
-   (*est)=(*inputpars.jjj[i]).est;
-   (*inputpars.jjj[i]).mcalc(m,T,h,lnz,u,(*inputpars.jjj[i]).est); // here calculate magnetic moment, mind (*inputpars.jjj[i]).est
-                                                                   //can be changed as user wishes in ext singleion module
-
+   (*inputpars.jjj[i]).mcalc(m,T,h,lnz,u,(*inputpars.jjj[i]).mcalc_parameter_storage_init(h,T));
+                                                                   // here calculate magnetic moment
   printf("%3i %13g ",i,T); // printout ion number and temperature
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %10g ",h(j)); // printout meanfield as requested
   for(j=1;j<=inputpars.nofcomponents;++j)printf(" %4g ",m(j));  // printout corresponding moments 
  double TT=fabs(T);
-   (*inputpars.jjj[i]).transitionnumber=-1;
-   nt=(*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*est)); // get nt = number of transitions, mind: here we use est,
-                                                   //because (*inputpars.jjj[i]).est might have been changed by the mcalc call above
-
-  for(j=1;j<=nt&&j<=nmax;++j)
-  {(*inputpars.jjj[i]).transitionnumber=-j;
-  (*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*est));
-  printf(" %4g ",d);
+ if(nt>0)
+  {(*inputpars.jjj[i]).transitionnumber=-1;
+   nt=(*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*inputpars.jjj[i]).eigenstates(h,T));
+          // get nt = number of transitions
+   for(j=1;j<=nt&&j<=nmax;++j)
+   {(*inputpars.jjj[i]).transitionnumber=-j;
+   (*inputpars.jjj[i]).dmcalc(TT,h,Mijkl,d,(*inputpars.jjj[i]).est);
+   printf(" %4g ",d);
+   }
+   if(nmax<nt){printf("...");}
   }
-  if(nmax<nt){printf("...");}
-  printf("\n");
- delete est;
+ printf("\n");
 }
 
 

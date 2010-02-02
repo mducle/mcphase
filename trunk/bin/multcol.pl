@@ -7,9 +7,9 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >1) 
 
-{print " program multc  used to multiply columnx with columny in data file, the result goes to coly\n";
+{print " program multcol  used to multiply columnx with columny in data file, the result goes to coly\n";
 
- print " usage: multc colx coly  *.*   \n colx=columnx, coly=columny \n *.* .. filenname\n";
+ print " usage: multcol colx coly  *.*   \n colx=columnx, coly=columny \n *.* .. filenname\n";
 
  exit 0;}
 

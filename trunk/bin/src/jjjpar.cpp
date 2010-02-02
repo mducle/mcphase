@@ -9,8 +9,8 @@
 #include "jjjpar.hpp"
 #include "../../version"
 
-#define MAXNOFNUMBERSINLINE 200
-#define MAXNOFCHARINLINE 1024
+#define MAXNOFNUMBERSINLINE 2500
+#define MAXNOFCHARINLINE 7024
 
 #define MU_B 0.05788
 #define K_B  0.0862
@@ -30,12 +30,13 @@
 // keep this routine as efficient as possible
 // at the moment we do only groundstate doublet
 /****************************************************************************/
-void jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests)
+void jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & parstorage)
 {switch (module_type)
   {case 1: kramer(mom,T,gjmbH,lnZ,U);break;
-   case 2: (*iops).cfieldJJ(mom,T,gjmbH,lnZ,U,ests);break;
+   case 2:
+   case 4: (*iops).cfieldJJ(mom,T,gjmbH,lnZ,U,parstorage);break;
    case 3: brillouin(mom,T,gjmbH,lnZ,U);break;
-   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&ests);
+   default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&parstorage);
   }
 }
 
@@ -50,22 +51,10 @@ int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delt
            else return 0;
            break;
    case 1: return kramerdm(transitionnumber,T,gjmbheff,mat,delta);break;
-   case 2: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta,ests);break;
+   case 2:
+   case 4: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta,ests);break;
    case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
    default: return 0;
-  }
-}
-
-/****************************************************************************/
-// returns eigenvalues, boltzmann population and eigenstates matrix parameters of ion
-/****************************************************************************/
-ComplexMatrix & jjjpar::blank_eigenstates (Vector & gjmbheff,double & T)
-{double tgJ=-1.0;
- switch (module_type)
-  {case 0:  if(estates!=NULL){(*estates)(&est,&gjmbheff,&tgJ,&T,&ABC,&cffilename);}
-            return est;break;
-   case 2:  est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
-   default: est=0;return est;
   }
 }
 
@@ -77,11 +66,24 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
 {switch (module_type)
   {case 0:  if(estates!=NULL){(*estates)(&est,&gjmbheff,&gJ,&T,&ABC,&cffilename);}
             return est;break;
-   case 2:  est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
+   case 2:
+   case 4: est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
    default: est=0;return est;
   }
 }
 
+/****************************************************************************/
+// returns eigenvalues, boltzmann population and eigenstates matrix parameters of ion
+/****************************************************************************/
+ComplexMatrix & jjjpar::mcalc_parameter_storage_init (Vector & gjmbheff,double & T)
+{switch (module_type)
+  {case 0:  if(mcalc_parameter_storage!=NULL){(*mcalc_parameter_storage)(&mcalc_parstorage,&gjmbheff,&gJ,&T,&ABC,&cffilename);}
+            return mcalc_parstorage;break;
+   case 2:
+   case 4: mcalc_parstorage=(*iops).cfeigenstates(gjmbheff,T);return mcalc_parstorage;break;
+   default: mcalc_parstorage=0;return mcalc_parstorage;
+  }
+}
 
 /****************************************************************************/
 // returns transition element matrix N(Q) in order to be able to go beyond 
@@ -122,8 +124,10 @@ int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix &
    case 0:if (ddnn!=NULL){getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph);
                           return (*ddnn)(&transitionnumber,&th,&ph,&J0,&J2,&J4,&J6,&ests,&T,&nat);break;}
           else {return 0;}
-   case 2: getpolar(Qvec(3),Qvec(1),Qvec(2),Q,th,ph); // for internal module cfield xyz||cba and we have to give cfielddn polar angles with respect to xyz
-           return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
+   case 2:  getpolar(Qvec(3),Qvec(1),Qvec(2),Q,th,ph); // for internal module cfield xyz||cba and we have to give cfielddn polar angles with respect to xyz
+            return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
+   case 4:  getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph); // for internal module so1ion xyz||abc and we have to give cfielddn polar angles with respect to xyz
+            return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
    default: if(washere==0){fprintf(stderr,"Warning in scattering operator function dncalc - for ion %s \ngoing beyond dipolar approximation is not implemented\n",cffilename);
                            washere=1;}
             return 0;
@@ -162,6 +166,12 @@ switch (module_type)
             return Mq;break;
    case 2:  getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph); // internal module cfield does not need transformation
             return (*iops).MQ(th,ph,J0,J2,J4,J6,Zc,est);break;
+   case 4:  getpolar(Qvec(2),Qvec(3),Qvec(1),Q,th,ph); // for so1ion we muyst th and ph with respect to abc coordinate system
+            Mq=(*iops).MQ(th,ph,J0,J2,J4,J6,Zc,est);
+             // so1ion module provide Mq(123)=Mq(abc)
+             // we must transform this to mcdiff internal xyz||cab coordinate system
+            dummy=Mq(3);Mq(3)=Mq(2);Mq(2)=Mq(1);Mq(1)=dummy;
+            return Mq;break;
    default: fprintf(stderr,"ERROR in scattering operator function M(Q) for ion %s \nM(Q) is currently only implemented for internal module cfield:\n",cffilename);exit(EXIT_FAILURE);
   }
 }
@@ -218,7 +228,8 @@ double jjjpar::J()
 {
  switch (module_type)
   {
-   case 2: return (*iops).J;break;
+   case 2:
+   case 4: return (*iops).J;break;
    case 3:  return ABC[1];break;
    default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate stevens parameters alpha beta gamma \n"); 
             exit (EXIT_FAILURE);
@@ -233,7 +244,8 @@ Vector & jjjpar::tetan ()
  tt=0;
  switch (module_type)
   {
-   case 2: tt(2)=(*iops).alpha;tt(4)=(*iops).beta;tt(6)=(*iops).gamma;
+   case 2:
+   case 4: tt(2)=(*iops).alpha;tt(4)=(*iops).beta;tt(6)=(*iops).gamma;
             return tt;break;
    default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate stevens parameters alpha beta gamma \n"); 
             exit (EXIT_FAILURE);
@@ -336,7 +348,7 @@ cfi = cos(fi);
   Vector tetan(1,6);
  int offset=0; // for cfield module
  if(module_type==0){offset=3;} // for external modules this is to treat ic1ion correctly
- if(module_type==2){
+ if(module_type==2||module_type==4){
                     tetan(2)=(*iops).alpha;// Stevens factors
                     tetan(4)=(*iops).beta;
                     tetan(6)=(*iops).gamma;
@@ -381,8 +393,8 @@ a(6, 6)=moments(offset+48);
 rr=radial_wavefunction(R);
 rr=rr*rr;// then the chargedensity will be in units of 1/A^3
 
-if(module_type==2){for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=tetan(l)*cnst(l,m)*cnst(l,m);}}
-         } // these are prefactors in case of module cfield (stevens parameters tetan and zlm prefactors)
+if(module_type==2||module_type==4){for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){a(l,m)*=tetan(l)*cnst(l,m)*cnst(l,m);}}
+         } // these are prefactors in case of module cfield and so1ion(stevens parameters tetan and zlm prefactors)
 else     {for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){if(m!=0){a(l,m)*=cnst(l,m)*sqrt((2.0*l+1)/8/PI);}else{a(l,m)*=cnst(l,m)*sqrt((2.0*l+1)/4/PI);}}}
          } // in case
            // of module ic1ion we just take the prefactors of the Zlm ... ??? what should we take here ???
@@ -680,7 +692,22 @@ void jjjpar::save_sipf(const char * path)
            fprintf(fout,"#\n# single ion parameterized by Brillouin function\n");
            fprintf(fout,"# BJ(x) with angular momentum number J=S,\n# no crystal field\n#\n");
            fprintf(fout,"J = %g\n\n",ABC(1));
-
+          break;
+   case 4: fprintf(fout,"#!MODULE=so1ion\n#<!--mcphase.sipf-->\n");
+           fprintf(fout,"#***************************************************************\n");
+           fprintf(fout,"# Single Ion Parameter File for Module So1ion for  \n");
+           fprintf(fout,"# %s\n",MCPHASVERSION);
+           fprintf(fout,"# - program to calculate static magnetic properties\n");
+           fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+           fprintf(fout,"# %s\n",MCDISPVERSION);
+           fprintf(fout,"# - program to calculate the dispersion of magnetic excitations\n");
+           fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+           fprintf(fout,"# %s\n",MCDIFFVERSION);
+           fprintf(fout,"# - program to calculate neutron and magnetic xray diffraction\n");
+           fprintf(fout,"# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+           fprintf(fout,"#***************************************************************\n#\n");
+           fprintf(fout,"#\n# crystal field paramerized in Stevens formalism\n#\n");
+           (*iops).save(fout);
           break;
    default: // in case of external single ion module just save a copy of the input file 
            char *token;
@@ -798,6 +825,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
       // now we have the numbers corresponding to the vector ABC() in nn[]
       fprintf(stderr," ... kramers doublet with A=<+|Ja|->=%g B=<+-|Jb|+->=+-%g C=<+|Jc|->/i=%g\n",ABC(1),ABC(2),ABC(3));
       est=ComplexMatrix(0,2,1,2); // not used, just initialize to prevent errors
+      mcalc_parstorage=ComplexMatrix(0,2,1,2); // not used, just initialize to prevent errors
     }
   else
     {if(strcmp(modulefilename,"brillouin")==0)
@@ -813,8 +841,8 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
               fprintf(stderr,"\n#!brillouin\n#comment lines ..\n# Quantum number  J\nJ=3.5\n\n");exit(EXIT_FAILURE);}
       // now we have the numbers corresponding to the vector ABC() in nn[]
       fprintf(stderr," ... Brillouin function with J=S=%g\n",ABC(1));
-      est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
-      est=0;
+      est=ComplexMatrix(0,2,1,2);est=0;// not used, just initialize to prevent errors
+      mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
      }
      else 
      {if(strcmp(modulefilename,"cfield")==0)
@@ -823,11 +851,23 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
       iops=new ionpars(cf_file);  
       int dj;dj=(int)(2*J()+1);
       est=ComplexMatrix(0,dj,1,dj);
-     // get 1ion parameters - operator matrices
+      mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
+      // get 1ion parameters - operator matrices
      
      }
      else
-     {fprintf (stderr,"#[external]\n");
+     {if(strcmp(modulefilename,"so1ion")==0)
+     {module_type=4;fprintf (stderr,"#[internal]\n");
+      fclose(cf_file);cf_file = fopen_errchk (sipffilename, "rb"); // reopen file
+      iops=new ionpars(cf_file);  
+      int dj;dj=(int)(2*J()+1);
+      est=ComplexMatrix(0,dj,1,dj);
+      mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
+      // get 1ion parameters - operator matrices
+     
+     }
+     else
+      {fprintf (stderr,"#[external]\n");
       i=0;
       while(feof(cf_file)==false)
       {fgets(instr, MAXNOFCHARINLINE, cf_file);
@@ -869,10 +909,12 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
   mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))dlsym(handle,"mq");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mq=NULL;}
   estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"estates");
-  
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);estates=NULL;
-                                est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
-                                est=0;
+                                est=ComplexMatrix(0,2,1,2);est=0;// not used, just initialize to prevent errors
+                               }
+  mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"mcalc_parameter_storage_matrix_init");
+  if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mcalc_parameter_storage=NULL;
+                                mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
                                }
 
   ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))dlsym(handle,"dncalc");
@@ -897,12 +939,16 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
                                 est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
                                 est=0;
                                }
+    mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
+    if (mcalc_parameter_storage==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mcalc_parameter_storage_matrix_init not possible - continuing\n",GetLastError(),modulefilename);
+                                  mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
+                                  }
 
   ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
      if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",GetLastError(),modulefilename);}
   
 #endif
-
+     }
     }
    }
   }
@@ -987,6 +1033,8 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
 // check gJ
 if(module_type==2&&fabs(gJ-(*iops).gJ)>0.00001)
 {fprintf(stderr,"Error internal module cfield : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",sipffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
+if(module_type==4&&fabs(gJ-(*iops).gJ)>0.00001)
+{fprintf(stderr,"Error internal module so1ion : Lande Factor read from %s (gJ=%g) does not conform to internal module value gJ=%g\n",sipffilename,gJ,(*iops).gJ);exit(EXIT_FAILURE);}
 if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering intermediate coupling mode by assigning Ja=Sa Jb=La Jc=Sb Jd=Lb Je=Sc Jf=Lc (S... Spin, L... angular momentum)\n",sipffilename);
            if (module_type==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (module_type==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
@@ -1173,9 +1221,10 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==2)  {iops=new ionpars((int)(2*(*p.iops).J+1));iops=p.iops;
+  if (p.module_type==2||p.module_type==4)  {iops=new ionpars((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
+                           mcalc_parstorage=ComplexMatrix(0,dj,1,dj);mcalc_parstorage=p.mcalc_parstorage;
                            }
 //  if (module_type==2)  iops=new ionpars(4);iops=p.iops;
 //  if (module_type==2)  iops=p.iops;
@@ -1195,6 +1244,7 @@ jjjpar::jjjpar (const jjjpar & p)
    mq=p.mq;
    ddnn=p.ddnn;
    estates=p.estates;
+   mcalc_parameter_storage=p.mcalc_parameter_storage;
 /*  }*/
 #endif
   magFFj0=Vector(1,7);magFFj0=p.magFFj0;
@@ -1222,7 +1272,7 @@ jjjpar::~jjjpar ()
   //delete []dn;  // will not work in linux
   //delete []sublattice;
   //delete []cffilename;// will not work in linux
-  if (module_type==2) delete iops;
+  if (module_type==2||module_type==4) delete iops;
 #ifdef __linux__
    if (module_type==0)dlclose(handle);
 #endif

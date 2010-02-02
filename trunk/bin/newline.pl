@@ -7,16 +7,16 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >0) 
 
-{print " program exp  used to calculate exp(col) from  a  column \n";
+{print " program newline  used to create a new line  number n containing text in a data file\n";
 
- print " usage: exp col   *.*   \n col=column \n *.* .. filenname\n";
+ print " usage: newline n text  *.*   \n n=linennumber \n text= text in new line \n *.* .. filenname(s)\n";
 
  exit 0;}
 
  
 
-$column=$ARGV[0];shift @ARGV;
-
+$line=$ARGV[0];shift @ARGV;
+$text=$ARGV[0];shift @ARGV;
 
 
   foreach (@ARGV)
@@ -30,29 +30,16 @@ $column=$ARGV[0];shift @ARGV;
 
    open (Fout, ">range.out");
 
+   $j=0;
+   if ($j==0){print Fout $text."\n";}
    while($line=<Fin>)
 
-     {
-
-       if ($line=~/^\s*#/) {print Fout $line;}
-
-       else{$line=~s/D/E/g;@numbers=split(" ",$line);
-
-           	  $i=0;++$j;
-
-		  foreach (@numbers)
-
-		  {++$i;
-
-		  if ($i==$column) {$numbers[$i-1]=exp($numbers[$i-1]);}
-
-		  print Fout $numbers[$i-1]." ";}     
-
-            print Fout "\n";
-
-           }
+     {++$j;
+      if ($j==$n){print Fout $text."\n";}
+      print Fout $line;
 
       }
+      if($n>$j){print Fout $text."\n";}
 
       close Fin;
 
@@ -85,3 +72,4 @@ $column=$ARGV[0];shift @ARGV;
 
 
 #\end{verbatim} 
+
