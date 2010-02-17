@@ -112,9 +112,9 @@ par::par(const par & p)
    strcpy(rems[i],p.rems[i]);}
 
   jjj=new jjjpar * [nofatoms+1];
-  for (i=1;i<=nofatoms;++i)
-    {jjj[i]=new jjjpar();
-     jjj[i]=p.jjj[i];}
+  for (i=1;i<=nofatoms;++i) jjj[i] = new jjjpar(*p.jjj[i]);
+//  {jjj[i]=new jjjpar();
+//   jjj[i]=p.jjj[i];}
 }
 
 //destruktor

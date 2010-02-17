@@ -28,20 +28,20 @@ class mdcf
   public:
  // array of spins 
     int nofatoms,nofcomponents;
-    int in(int i,int j, int k); // indexing functions
+    int in(int i,int j, int k) const; // indexing functions
     int ind(int i,int j, int k,int l); 
    
     ComplexMatrix & M(int i,int j,int k); // returns pointer to  matrix M(ijk) 
     ComplexMatrix & Mi(int in); // returns pointer to matrix M(i)
-    ComplexMatrix & U(int i,int j,int k); // returns pointer to eigenvector matrix (ijk) 
+    ComplexMatrix & U(int i,int j,int k) const; // returns pointer to eigenvector matrix (ijk) 
     ComplexMatrix & Ui(int in); // returns pointer to eigenvector matrix i
-    ComplexMatrix & sqrt_gamma(int i,int j,int k); // returns pointer to eigenvaluematrix (ijk) 
+    ComplexMatrix & sqrt_gamma(int i,int j,int k) const; // returns pointer to eigenvaluematrix (ijk) 
     ComplexMatrix & sqrt_gammai(int in); // returns pointer to eigenvalue matrix i
     ComplexMatrix & N(int i,int j,int k); // returns pointer to  matrix M(ijk) 
     ComplexMatrix & Ni(int in); // returns pointer to matrix M(i)
-    ComplexMatrix & V(int i,int j,int k); // returns pointer to eigenvector matrix (ijk) 
+    ComplexMatrix & V(int i,int j,int k) const; // returns pointer to eigenvector matrix (ijk) 
     ComplexMatrix & Vi(int in); // returns pointer to eigenvector matrix i
-    ComplexMatrix & sqrt_Gamma(int i,int j,int k); // returns pointer to eigenvaluematrix (ijk) 
+    ComplexMatrix & sqrt_Gamma(int i,int j,int k) const; // returns pointer to eigenvaluematrix (ijk) 
     ComplexMatrix & sqrt_Gammai(int in); // returns pointer to eigenvalue matrix i
     ComplexMatrix & est(int i, int j, int k, int l); // returns pointer to eigenstate matrix for atom ijkl
     void est_ini(int i, int j, int k, int l,ComplexMatrix & M); // initialize est
@@ -54,10 +54,10 @@ class mdcf
     int na(); // returns number of spins
     int nb(); // returns number of spins
     int nc(); // returns number of spins
-    int baseindex (int i, int j, int k, int l, int tn); // returns base index for atom l and transition tn
+    int baseindex (int i, int j, int k, int l, int tn) const; // returns base index for atom l and transition tn
                                                        // which is needed for  setting up matrix U,M, sqrt_gamma and Vector D
-    int baseindex_max(int i, int j, int k);
-    int noft(int i, int j, int k, int l); // returns number of transitions of ion l in cryst unit ijk
+    int baseindex_max(int i, int j, int k) const;
+    int noft(int i, int j, int k, int l) const; // returns number of transitions of ion l in cryst unit ijk
 //    mdcf & operator= (const mdcf & op2); // zuweisung
 
    
@@ -66,7 +66,7 @@ mdcf (int n1,int n2,int n3,int n,int nc);	//konstruktor
 // initialisierung 
     void set_noftransitions (int i, int j, int k, IntVector & notr);
 
-//   mdcf (const mdcf & spins);	// kopier-konstruktor
+     mdcf (const mdcf & spins);	// kopier-konstruktor
    
 ~mdcf ();		//destruktor
 

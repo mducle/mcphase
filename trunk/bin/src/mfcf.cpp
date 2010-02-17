@@ -42,16 +42,16 @@ int mfcf::mod(int n1,int n2)
 }
 
 // return number of spins
-int mfcf::n()
+int mfcf::n() const
 {return (nofa*nofb*nofc);
 }
-int mfcf::na()
+int mfcf::na() const
 {return nofa;
 }
-int mfcf::nb()
+int mfcf::nb() const
 {return nofb;
 }
-int mfcf::nc()
+int mfcf::nc() const
 {return nofc;
 }
 

@@ -113,8 +113,41 @@ int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,V
 }
 
 //**************************************************************************/
-double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf & eev_real,mfcf & eev_imag,ComplexMatrix & Ec,int dimA, ComplexMatrix Tau, int level,double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double & QQ)
+#ifdef _THREADS
+#ifdef __linux__
+void *intcalc_approx(void *input)
+#else
+DWORD WINAPI intcalc_approx(void *input)
+#endif
+#else
+double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,ComplexMatrix & S,ComplexMatrix & Sbey,Matrix & pol,Matrix & polICIC,Matrix & polICn,Matrix & polnIC, double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf & eev_real,mfcf & eev_imag,ComplexMatrix & Ec,int dimA, const ComplexMatrix &Tau, int level,double en, const inimcdis & ini,const par & inputpars,Vector & hkl,const mdcf & md,int do_verbose,double & QQ)
+#endif
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
+
+#ifdef _THREADS
+   intcalcapr_input *myinput; myinput = (intcalcapr_input *)input;
+   int thread_id = myinput->thread_id;
+   double intensitybey = myinput->intensitybey;
+   #define chi (*thrdat.chi[thread_id])
+   #define chibey (*thrdat.chibey[thread_id])
+   #define S (*thrdat.S[thread_id])
+   #define Sbey (*thrdat.Sbey[thread_id])
+   Matrix pol = *thrdat.pol[thread_id];        Matrix polICIC = *thrdat.polICIC[thread_id]; 
+   Matrix polICn = *thrdat.polICn[thread_id];  Matrix polnIC = *thrdat.polnIC[thread_id];
+   #define ev_real (*thrdat.ev_real[thread_id])
+   #define ev_imag (*thrdat.ev_imag[thread_id])
+   #define eev_real (*thrdat.eev_real[thread_id])
+   #define eev_imag (*thrdat.eev_imag[thread_id])
+   #define Ec (*thrdat.Ec[thread_id])
+   int dimA = myinput->dimA, level =  myinput->level, do_verbose = myinput->do_verbose;
+   #define Tau (*thrdat.Tau[thread_id])
+   double en = myinput->En; 
+   #define ini (*thrdat.ini[thread_id])
+   #define inputpars (*thrdat.inputpars[thread_id])
+   Vector hkl = thrdat.hkl;
+   #define md (*thrdat.md[thread_id])
+   double QQ;
+#endif
 
  int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
  double intensity=1.2; 
@@ -132,11 +165,6 @@ double intcalc_approx(double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf &
  // init eigenvector to zero
   ev_real.clear();ev_imag.clear();
   eev_real.clear();eev_imag.clear();
-
- // determine chi
-
-   ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
-   ComplexMatrix chibey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
 
 // determine chi
     
@@ -190,8 +218,6 @@ if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
 //myPrintComplexMatrix(stdout,Tau); 
 
    complex<double> im(0,1.0);
-   ComplexMatrix S(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
-   ComplexMatrix Sbey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
    double bose;
    if (fabs(en)>SMALL*0.1)
    {bose=1.0/(1.0-exp(-en*(1.0/KB/ini.T)));
@@ -211,16 +237,12 @@ if(intensitybey>0)  Sbey=bose*2*chibey;
  // polarization factor
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
 // higher components in the polarization factor !!!
- Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
     pol=0;
     for(i=1;i<=3;++i){pol(i,i)=1.0;
     for(j=1;j<=3;++j){pol(i,j)-=qabc(i)*qabc(j)/(qabc*qabc);
     }}
 // yes and for intermediate coupling we need another polarization factor
 // because neutrons sense the first 6x6 part of S
- Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);
- Matrix polICn(1,md.nofcomponents,1,md.nofcomponents);
- Matrix polnIC(1,md.nofcomponents,1,md.nofcomponents);
  polICIC=0;polICn=0;polnIC=0;
     for(i=1;i<=6&&i<=md.nofcomponents;++i){
     for(j=1;j<=6&&j<=md.nofcomponents;++j){polICIC(i,j)=pol((i+1)/2,(j+1)/2);
@@ -354,13 +376,41 @@ else
  }
 }
 
-
+#ifdef _THREADS
+myinput->intensity=intensity;
+myinput->intensitybey=intensitybey;
+myinput->QQ=QQ;
+#undef md
+#undef Tau
+#undef ini
+#undef inputpars
+#undef chi
+#undef chibey
+#undef S
+#undef Sbey
+#undef ev_real
+#undef ev_imag
+#undef eev_real
+#undef eev_imag
+#undef Ec
+MUTEX_LOCK(&mutex_loop);
+thrdat.thread_id = thread_id;
+EVENT_SIG(checkfinish);
+MUTEX_UNLOCK(&mutex_loop);
+#ifdef __linux__
+pthread_exit(NULL);
+#else
+return 0;
+#endif
+#else
 return intensity;	
+#endif
 }
 
 
 
 
+//**************************************************************************/
 double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double epsilon)
 {int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,bmax,bbmax,b,bb;
  double intensity=1.2;

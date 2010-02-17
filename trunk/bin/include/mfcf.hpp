@@ -31,10 +31,10 @@ class mfcf
     Vector & mi(int in); // returns pointer to mean field i
     int * ijk(int in);  // returns mf indizes (ijk)(in): in=0,...,n(=na*nb*nc)
     
-    int n(); // returns total number of spins
-    int na(); // returns number of spins
-    int nb(); // returns number of spins
-    int nc(); // returns number of spins
+    int n() const; // returns total number of spins
+    int na() const; // returns number of spins
+    int nb() const; // returns number of spins
+    int nc() const; // returns number of spins
     void invert();// inverts all spins
 
     void print(FILE * fout);

@@ -1221,7 +1221,7 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==2||p.module_type==4)  {iops=new ionpars((int)(2*(*p.iops).J+1));iops=p.iops;
+  if (p.module_type==2||p.module_type==4)  {iops=new ionpars(*p.iops);//((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
                            mcalc_parstorage=ComplexMatrix(0,dj,1,dj);mcalc_parstorage=p.mcalc_parstorage;

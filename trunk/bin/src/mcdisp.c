@@ -20,9 +20,68 @@
 #include <mcdisp.h>
 #include "../../version"
 #include "myev.c"
+
+#ifdef _THREADS
+// ----------------------------------------------------------------------------------- //
+// Defines to ease interchange between linux and windows thread codes...
+// ----------------------------------------------------------------------------------- //
+#ifdef __linux__
+#include <pthread.h>
+#define MUTEX_LOCK    pthread_mutex_lock
+#define MUTEX_UNLOCK  pthread_mutex_unlock
+#define MUTEX_TYPE    pthread_mutex_t
+#define MUTEX_INIT(m) pthread_mutex_init (&m, NULL)
+#define EVENT_TYPE    pthread_cond_t
+#define EVENT_INIT(e) pthread_cond_init (&e, NULL)    
+#define EVENT_SIG(e)  pthread_cond_signal (&e)
+#else
+#include <windows.h>
+#define MUTEX_LOCK    EnterCriticalSection
+#define MUTEX_UNLOCK  LeaveCriticalSection
+#define MUTEX_TYPE    CRITICAL_SECTION
+#define MUTEX_INIT(m) InitializeCriticalSection (&m)
+#define EVENT_TYPE    HANDLE
+#define EVENT_INIT(e) e = CreateEvent (NULL, TRUE, FALSE, NULL)
+#define EVENT_SIG(e)  SetEvent(e)
+#endif
+#define NUM_THREADS 2
+
+// ----------------------------------------------------------------------------------- //
+// Declares a struct to store all the information needed for each disp_calc iteration
+// ----------------------------------------------------------------------------------- //
+typedef struct{
+   ComplexMatrix **chi, **chibey, **S, **Sbey, **Ec;
+   Matrix **pol, **polICIC, **polICn, **polnIC;
+   mfcf **ev_real, **ev_imag, **eev_real, **eev_imag;
+   ComplexMatrix **Tau;
+   Vector hkl;
+   inimcdis **ini;
+   par **inputpars;
+   mdcf **md;
+   int thread_id;
+} intcalcapr_thread_data;
+class intcalcapr_input { public:
+   Vector hkl;
+   int thread_id;
+   int dimA, level, do_verbose;
+   double En, intensity, intensitybey, QQ;
+   intcalcapr_input(int _dimA, int _tid, int _level, int _doverb, double _En, par *pars_in, inimcdis *ini_in) 
+   { 
+      thread_id = _tid; dimA = _dimA; level = _level; do_verbose = _doverb; En = _En;
+   }
+};
+// ----------------------------------------------------------------------------------- //
+// Declares these variables global, so all threads can see them
+// ----------------------------------------------------------------------------------- //
+intcalcapr_thread_data thrdat;
+MUTEX_TYPE mutex_loop;
+MUTEX_TYPE mutex_index;
+EVENT_TYPE checkfinish;
+#endif // if _THREADS
+
 #include "mcdisp_intcalc.c"
 
-int index_s(int i,int j,int k,int l, int t, mdcf & md,inimcdis & ini)
+int index_s(int i,int j,int k,int l, int t, const mdcf & md, const inimcdis & ini)
 {int s=0,i1,j1,k1;
 // calculates the index of the Matrix A given 
 // ijk ... index of crystallographic unit cell in magnetic unit cell
@@ -270,7 +329,7 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);    //mf ... mean field vector of atom s
         extmf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);}
 
-      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k); fflush(stdout);
+      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
       if(nn[6]<SMALL){fprintf(stdout,"#-");}else{fprintf(stdout,"#+");}
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
@@ -528,7 +587,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 //          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
           // sum up 
            ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
-           jsss=0;
+//         jsss=0;
         
 	  sl=(*inputpars.jjj[ll]).sublattice[l]; // the whole loop has also to be done 
                                                  // for all the other transitions of sublattice sl
@@ -544,7 +603,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
                                               }                                 } // but orbitons should be treated correctly by extending 3 to n !!
 	                                         }} 
 // increase Js,ss(q) taking into account the phase factors for the distance l-ll
-          J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d));
+          jsss*=exp(ipi*(double)sd*(q*d)); J.mati(s,ss)+=jsss;
 
           ++nofneighbours; // count neighbours summed up
 	 }}}
@@ -706,18 +765,127 @@ if (do_jqfile==1){
    // calculate and printout intensities [the energies have already
    // been printed out above, so any refinement of energies during intcalc
    // is not included in the output file]
+#ifndef _THREADS  
   double QQ; mfcf ev_real(ini.mf),ev_imag(ini.mf);
              mfcf eev_real(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
              mfcf eev_imag(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
+#endif
   double diffint=0,diffintbey=0;
   if(do_verbose==1){fprintf(stdout,"\n#calculating  intensities approximately ...\n");}
                   fprintf (fout, " > ");
 diffint=0;diffintbey=0;
                   if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
-         Vector dd(1,dim),dd_int(1,dim);  dd+=100000.0;dd_int+=100000.0;
+                  Vector dd(1,dim),dd_int(1,dim);  dd+=100000.0;dd_int+=100000.0;
+#ifndef _THREADS  
+                     ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     ComplexMatrix chibey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     ComplexMatrix S(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     ComplexMatrix Sbey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
+                     Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);
+                     Matrix polICn(1,md.nofcomponents,1,md.nofcomponents);
+                     Matrix polnIC(1,md.nofcomponents,1,md.nofcomponents);
+#else
+                  // Populates the thread data structure
+                  intcalcapr_input *tin[NUM_THREADS]; //thrdat.ini = &ini; thrdat.inputpars = &inputpars; thrdat.md = &md;
+                  thrdat.ini      = new inimcdis*[NUM_THREADS];      thrdat.inputpars= new par*[NUM_THREADS];
+                  thrdat.ev_real  = new mfcf*[NUM_THREADS];          thrdat.ev_imag  = new mfcf*[NUM_THREADS];
+                  thrdat.eev_real = new mfcf*[NUM_THREADS];          thrdat.eev_imag = new mfcf*[NUM_THREADS];
+                  thrdat.chi      = new ComplexMatrix*[NUM_THREADS]; thrdat.chibey   = new ComplexMatrix*[NUM_THREADS];
+                  thrdat.S        = new ComplexMatrix*[NUM_THREADS]; thrdat.Sbey     = new ComplexMatrix*[NUM_THREADS];
+                  thrdat.pol      = new Matrix*[NUM_THREADS];        thrdat.polICIC  = new Matrix*[NUM_THREADS];
+                  thrdat.polICn   = new Matrix*[NUM_THREADS];        thrdat.polnIC   = new Matrix*[NUM_THREADS];
+                  thrdat.Ec       = new ComplexMatrix*[NUM_THREADS]; thrdat.md       = new mdcf*[NUM_THREADS];
+                  thrdat.Tau      = new ComplexMatrix*[NUM_THREADS]; thrdat.hkl = hkl; thrdat.thread_id = -1;
+                  for (int ithread=0; ithread<NUM_THREADS; ithread++) 
+                  {
+                     tin[ithread] = new intcalcapr_input(dimA,ithread,1,do_verbose,En,&inputpars,&ini);
+                     thrdat.chi[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     thrdat.chibey[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     thrdat.S[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     thrdat.Sbey[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
+                     thrdat.pol[ithread] = new Matrix(1,md.nofcomponents,1,md.nofcomponents);
+                     thrdat.polICIC[ithread] = new Matrix(1,md.nofcomponents,1,md.nofcomponents);
+                     thrdat.polICn[ithread] = new Matrix(1,md.nofcomponents,1,md.nofcomponents);
+                     thrdat.polnIC[ithread] = new Matrix(1,md.nofcomponents,1,md.nofcomponents);
+                     thrdat.ev_real[ithread] = new mfcf(ini.mf); thrdat.ev_imag[ithread] = new mfcf(ini.mf);
+                     thrdat.eev_real[ithread] = new mfcf(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
+                     thrdat.eev_imag[ithread] = new mfcf(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
+                     thrdat.Ec[ithread] = new ComplexMatrix(1,dimA,1,ini.extended_eigenvector_dimension); *thrdat.Ec[ithread]=Ec;
+                     thrdat.Tau[ithread] = new ComplexMatrix(1,dimA,1,dimA); *thrdat.Tau[ithread]=Tau;
+                     thrdat.md[ithread] = new mdcf(md); thrdat.ini[ithread] = new inimcdis(ini); thrdat.inputpars[ithread] = new par(inputpars);
+                  }
+                  // Initialises mutual exclusions and threads
+                  MUTEX_INIT(mutex_loop);
+                  MUTEX_INIT(mutex_index);
+                  EVENT_INIT(checkfinish);
+                  #ifdef __linux__
+                  pthread_t threads[NUM_THREADS]; int rc; void *status;
+                  pthread_attr_t attr;
+                  pthread_attr_init(&attr);
+                  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+                  #else
+                  HANDLE threads[NUM_THREADS];
+                  DWORD tid[NUM_THREADS], dwError;
+                  #endif
+                  bool all_threads_started = false; int ithread=0,oldi=-1; double QQ; Vector vQQ(1,dimA);
+#endif
                   for (i=1;i<=dimA;++i)
 		  {  if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
-                     ints(i)=intcalc_approx(intsbey(i),ev_real,ev_imag,eev_real,eev_imag,Ec,dimA,Tau,i,En(i),ini,inputpars,J,q,hkl,md,do_verbose,QQ);
+#ifdef _THREADS  
+                     // Runs threads until all are running - but wait until they are completed in order before printing output.
+                     //  This is to ensure that the output is exactly the same as for a single thread (otherwise it would be out of order).
+                     tin[ithread]->En=En(i); tin[ithread]->intensitybey=intsbey(i); tin[ithread]->level = i;
+                     #ifdef __linux__
+                     rc = pthread_create(&threads[ithread], &attr, intcalc_approx, (void *) tin[ithread]);
+                     if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+                     #else
+                     threads[ithread] = CreateThread(NULL, 0, intcalc_approx, (void *) tin[ithread], 0, &tid[ithread]);
+                     if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+                     #endif
+                     ithread++;
+                     if(ithread%NUM_THREADS==0 || all_threads_started)
+                     {
+                         all_threads_started = true;
+                         #ifdef __linux__
+                         pthread_mutex_lock (&mutex_loop);
+                         while(thrdat.thread_id==-1) pthread_cond_wait(&checkfinish, &mutex_loop);
+                         ithread = thrdat.thread_id;
+                         thrdat.thread_id=-1;
+                         pthread_mutex_unlock (&mutex_loop);
+                         #else
+                         WaitForSingleObject(checkfinish,INFINITE);
+                         ithread = thrdat.thread_id;
+                         thrdat.thread_id=-1;
+                         ResetEvent(checkfinish);
+                         #endif
+                         ints(tin[ithread]->level) = tin[ithread]->intensity; vQQ(tin[ithread]->level) = tin[ithread]->QQ;
+                         QQ = vQQ(tin[ithread]->level); intsbey(tin[ithread]->level) = tin[ithread]->intensitybey;
+//                   else { continue; }
+                     } }
+                     // All threads started and one has just finished...
+//                   oldi *= i; i = tin[ithread]->level;
+                     // Wait for all threads to finish, before moving on to calculate physical properties!
+                     for(int th=0; th<(all_threads_started?NUM_THREADS:ithread); th++)
+                     {
+                        #ifdef __linux__
+                        rc = pthread_join(threads[th], &status);
+                        if(rc) { printf("Error return code %i from joining thread %i\n",rc,th+1); exit(EXIT_FAILURE); }
+                        #else
+                        if(WaitForSingleObject(threads[th],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",th+1); exit(EXIT_FAILURE); }
+                        #endif
+                        ints(tin[th]->level) = tin[th]->intensity; vQQ(tin[th]->level) = tin[th]->QQ;
+                        QQ = vQQ(tin[th]->level); intsbey(tin[th]->level) = tin[th]->intensitybey;
+                     }
+                     #define ev_real (*thrdat.ev_real[ithread])
+                     #define ev_imag (*thrdat.ev_imag[ithread])
+                     #define eev_real (*thrdat.eev_real[ithread])
+                     #define eev_imag (*thrdat.eev_imag[ithread])
+                  for (i=1;i<=dimA;++i) {
+#else
+                     ints(i)=intcalc_approx(chi,chibey,S,Sbey,pol,polICIC,polICn,polnIC,
+                                            intsbey(i),ev_real,ev_imag,eev_real,eev_imag,Ec,dimA,Tau,i,En(i),ini,inputpars,hkl,md,do_verbose,QQ);
+#endif
                      if (ini.hkllist==1)
 	             {double test; // add to sta distance to nearest measured peak squared
 	              for (j1=1;j1<=ini.hkls[counter][0]-3;++j1)
@@ -747,6 +915,24 @@ diffint=0;diffintbey=0;
                  if(do_verbose==1){fprintf(stdout, "#IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
 		   }
+#ifdef _THREADS
+                  #undef ev_real
+                  #undef ev_imag
+                  #undef eev_real
+                  #undef eev_imag
+                  for (ithread=0; ithread<NUM_THREADS; ithread++) 
+                  {
+                     delete thrdat.chi[ithread]; delete thrdat.chibey[ithread]; delete thrdat.S[ithread]; delete thrdat.Sbey[ithread];
+                     delete thrdat.pol[ithread]; delete thrdat.polICIC[ithread]; delete thrdat.polICn[ithread]; delete thrdat.polnIC[ithread];
+                     delete thrdat.ev_real[ithread]; delete thrdat.ev_imag[ithread]; delete thrdat.eev_real[ithread]; delete thrdat.eev_imag[ithread];
+                     delete thrdat.Ec[ithread]; delete thrdat.Tau[ithread]; delete tin[ithread]; 
+                     delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread];
+                  }
+                  delete thrdat.Ec; delete thrdat.Tau; delete thrdat.md; delete thrdat.ini; delete thrdat.inputpars; //delete tin;
+                  delete thrdat.chi; delete thrdat.chibey; delete thrdat.S; delete thrdat.Sbey;
+                  delete thrdat.pol; delete thrdat.polICIC; delete thrdat.polICn; delete thrdat.polnIC;
+                  delete thrdat.ev_real; delete thrdat.ev_imag; delete thrdat.eev_real; delete thrdat.eev_imag; 
+#endif
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
     sta+=dd*dd;sta_int+=dd_int*dd_int;
 
