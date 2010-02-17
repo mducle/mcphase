@@ -20,7 +20,7 @@
 #define EVENT_INIT(e) e = CreateEvent (NULL, TRUE, FALSE, NULL)
 #define EVENT_SIG(e)  SetEvent(e)
 #endif
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 
 // ----------------------------------------------------------------------------------- //
 // Declares a struct to store all the information needed for each htcalc iteration

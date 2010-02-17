@@ -33,7 +33,8 @@ endif
 # Checks whether we support the -march=native target
 ifdef fast
 ifdef GCC42
-ARCHFLAG=-O2 -march=native 
+#ARCHFLAG=-O2 -march=native 
+ARCHFLAG=-O2 -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
 else
 ARCHFLAG=-O2
 endif
