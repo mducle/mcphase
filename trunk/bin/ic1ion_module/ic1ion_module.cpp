@@ -609,7 +609,7 @@ __declspec(dllexport)
    
    for(a=1; a<=6; a++){iQalphaj(a) = complex<double> (zij[a].r,zij[a].i);if(a%2==1){iQalphaj(a)*=0.5;}} 
                                                                          // divide spin part by 2
-   mat = ComplexMatrix(1,6,1,6);
+   mat = 0;
    for(a=1; a<=6; a++)
       for(b=1; b<=6; b++)
          mat(a,b) = iQalphaj(a)*conj(iQalphaj(b));

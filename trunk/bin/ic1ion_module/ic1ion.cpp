@@ -698,18 +698,16 @@ void ic_cmag(const char *filename, icpars &pars)
       if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
          else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
       ex = mfmat.expJ(VE,Tmax,matel,pars.save_matrices); ex.assign(matel[0].size(),0.); for(j=0; j<6; j+=2) exj.push_back(ex);
-      for(k=0; k<(int)matel[0].size(); k++)
-         for(j=0; j<6; j+=2) ex[k] += (GS*matel[j][k] + matel[j+1][k]) * (GS*matel[j][k] + matel[j+1][k]);
       for(j=0; j<nT; j++) 
       {
-         mag[j] = 0.; ma[j] = 0.; mb[j] = 0.; mc[j] = 0.;  Z = 0.;
+         ma[j] = 0.; mb[j] = 0.; mc[j] = 0.;  Z = 0.;
          for(k=0; k<(int)matel[0].size(); k++) 
          { 
-            if(j==0) { ex[k]=sqrt(ex[k]); for(int ii=0; ii<6; ii+=2) exj[ii/2][k] = GS*matel[ii][k]+matel[ii+1][k]; }
-            dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt; mag[j]+=ex[k]*dt; 
+            if(j==0) for(int ii=0; ii<6; ii+=2) exj[ii/2][k] = GS*matel[ii][k]+matel[ii+1][k]; 
+            dt = exp(-(VE.E(k)-VE.E(0))/(KB*T[j])); Z+=dt;
             ma[j] += exj[0][k] * dt; mb[j] += exj[1][k] * dt; mc[j] += exj[2][k] * dt;
          }
-         mag[j]/=Z; ma[j]/=Z; mb[j]/=Z; mc[j]/=Z; if(pars.xT==0.) mag[j]/=xnorm; else mag[j]/=ynorm;
+         ma[j]/=Z; mb[j]/=Z; mc[j]/=Z; mag[j] = sqrt(ma[j]*ma[j]+mb[j]*mb[j]+mc[j]*mc[j]);
       }
       if(pars.xT!=0.)
       {

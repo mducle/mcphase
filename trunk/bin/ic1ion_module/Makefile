@@ -70,9 +70,14 @@ endif
 #------------------------------    FAST    --------------------------------------#
 ifdef fast
 ifdef GCC42
-CFLAGS+= -O2 -march=native -pipe -fomit-frame-pointer
+CFLAGS+= -O2 -march=native -pipe
 else
-CFLAGS+= -O2 -pipe -fomit-frame-pointer
+CFLAGS+= -O2 -pipe
+endif
+ifdef profile
+CFLAGS+= -pg
+else
+CFLAGS+= -fomit-frame-pointer
 endif
 endif
 #------------------------------   LINKER   --------------------------------------#
@@ -92,7 +97,15 @@ else
 #LDFLAGS = -larpack -llapack -lblas
 LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 #LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/cygwin32_penryn/lib -lf77blas -latlas -lgfortran
+ifdef MSYS
+ifdef GCC4
+LDFLAGS+= -static
 endif
+endif
+endif
+endif
+ifdef profile
+LDFLAGS+= -pg
 endif
 #------------------------------  32/64bit  --------------------------------------#
 ifdef b32
