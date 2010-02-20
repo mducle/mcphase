@@ -61,61 +61,21 @@ void checkini(testspincf & testspins,qvectors & testqs)
     }
 }
 
-
-int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
-             testspincf & testspins, physproperties & physprops)
-{/* calculates magnetic structure at a given HT- point  
-  on input: 
-    T	Temperature[K]
-    H	Vector of External Magnetic Field [T]
-    inputpars	Input parameters (exchange constants etc...)
-    testqs	Set of propagation vectors to be tested 
-    testspins	Set of Spinconfigurations to be tested
-  on return:
-    physprops	physical properties at (HT) point (i.e. magnetic structure
-		neutron intensities, thermal expansion ...)	
- // returns 0 if successfull
- // returns 1 if too maxnofspinconfigurations is exceeded 
- // returns 2 if no spinconfiguration has been found at ht point
- */
- int i,ii,iii,j,k,tryrandom,nr,rr,ri,is;
+int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, par &inputpars, qvectors &testqs, testspincf &testspins, physproperties &physprops)
+{
+ int i,ii,iii,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
  Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms);
  Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
  Vector mmom(1,inputpars.nofcomponents);
  Vector h1(1,inputpars.nofcomponents),hkl(1,3);
- double femin=10000;char text[100];
+ char text[100];
  spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
- spincf  spsmin(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
  mfcf * mf;
  FILE * felog; // logfile for q dependence of fe
  FILE * fin_coq;
 
-if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check mcphas.ini !");exit(EXIT_FAILURE);}
-
- srand(time(0)); // initialize random number generator
- checkini(testspins,testqs); // check if user pressed a button
- if (ini.logfevsQ==1) {felog=fopen_errchk("./results/mcphas.log","a");
-               fprintf(felog,"#Logging of h k l fe[meV] spinconf_nr n1xn2xn3 T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
-               fclose(felog);
-	      }
- if (verbose==1)
- { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
-   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(%%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
-   fclose(fin_coq);	      
-   printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
- }
-
- j=-testqs.nofqs()+(int)rint(rnd(testspins.n+testqs.nofqs())); 
-    //begin with j a random number, j<0 means test spinconfigurations 
-    //constructed from q vector set testqs, j>0 means test spinconfigurations from
-    //set testspins
-    //j=0;  //uncomment this for debugging purposes
-    j = -testqs.nofqs()-1;
-    
- for (k= -testqs.nofqs();k<=testspins.n;++k)
- {++j; if (j>testspins.n) j=-testqs.nofqs();
   for (tryrandom=0;tryrandom<=ini.nofrndtries&&j!=0;++tryrandom)
    {if (j>0){sps=(*testspins.configurations[j]);// take test-spinconfiguration
 	     if (tryrandom==0&&verbose==1) { printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc()); fflush(stdout); }
@@ -164,7 +124,6 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
                    mf=new mfcf(sps1.na(),sps1.nb(),sps1.nc(),inputpars.nofatoms,inputpars.nofcomponents);
                if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs))<=fe+0.00001)sps=sps1;
                    delete mf;
-	       spsmin=sps;	   
                  // display spinstructure
                 if (verbose==1)
                 {Vector abc(1,3);
@@ -198,7 +157,7 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	        {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
                  testspins.save(filemode);testqs.save(filemode); 
 		 return 1;}
-	     femin=fe;	  
+	     femin=fe; spsmin=sps;	   
             //printout fe
 	    if (verbose==1) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,physprops.j,j);
 	     }
@@ -268,6 +227,61 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
                  }
 
       }
+      return 1;
+}
+
+int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
+             testspincf & testspins, physproperties & physprops)
+{/* calculates magnetic structure at a given HT- point  
+  on input: 
+    T	Temperature[K]
+    H	Vector of External Magnetic Field [T]
+    inputpars	Input parameters (exchange constants etc...)
+    testqs	Set of propagation vectors to be tested 
+    testspins	Set of Spinconfigurations to be tested
+  on return:
+    physprops	physical properties at (HT) point (i.e. magnetic structure
+		neutron intensities, thermal expansion ...)	
+ // returns 0 if successfull
+ // returns 1 if too maxnofspinconfigurations is exceeded 
+ // returns 2 if no spinconfiguration has been found at ht point
+ */
+ int i,j,k,is;
+ Vector momentq0(1,inputpars.nofcomponents*inputpars.nofatoms),phi(1,inputpars.nofcomponents*inputpars.nofatoms);
+ Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
+ Vector h1(1,inputpars.nofcomponents),hkl(1,3);
+ double femin=10000;char text[100];
+ spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
+ spincf  spsmin(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
+ mfcf * mf;
+ FILE * felog; // logfile for q dependence of fe
+ FILE * fin_coq;
+
+if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check mcphas.ini !");exit(EXIT_FAILURE);}
+
+ srand(time(0)); // initialize random number generator
+ checkini(testspins,testqs); // check if user pressed a button
+ if (ini.logfevsQ==1) {felog=fopen_errchk("./results/mcphas.log","a");
+               fprintf(felog,"#Logging of h k l fe[meV] spinconf_nr n1xn2xn3 T=%g Ha=%g Hb=%g Hc=%g\n",T,H(1),H(2),H(3));
+               fclose(felog);
+	      }
+ if (verbose==1)
+ { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
+   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(%%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
+   fclose(fin_coq);	      
+   printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
+ }
+
+ j=-testqs.nofqs()+(int)rint(rnd(testspins.n+testqs.nofqs())); 
+    //begin with j a random number, j<0 means test spinconfigurations 
+    //constructed from q vector set testqs, j>0 means test spinconfigurations from
+    //set testspins
+    //j=0;  //uncomment this for debugging purposes
+    j = -testqs.nofqs()-1;
+    
+ for (k= -testqs.nofqs();k<=testspins.n;++k)
+ {++j; if (j>testspins.n) j=-testqs.nofqs();
+       htcalc_iteration(j, femin, spsmin, H, T, inputpars, testqs, testspins, physprops);
   }
 
 if (femin>=10000) // did we find a stable structure ??
