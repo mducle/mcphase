@@ -2,6 +2,75 @@
 // htcalc.c
 #include "myev.h"
 
+#ifdef _THREADS
+#ifdef __linux__
+#include <pthread.h>
+#define MUTEX_LOCK     pthread_mutex_lock
+#define MUTEX_UNLOCK   pthread_mutex_unlock
+#define MUTEX_TYPE     pthread_mutex_t
+#define MUTEX_INIT(m)  pthread_mutex_init (&m, NULL)
+#define EVENT_TYPE     pthread_cond_t
+#define EVENT_INIT(e)  pthread_cond_init (&e, NULL)    
+#define EVENT_SIG(e)   pthread_cond_signal (&e)
+#define THRLC_TYPE     pthread_key_t
+#define THRLC_INIT(k)  pthread_key_create(&k, dataDestructor)
+#define THRLC_FREE(k)  pthread_key_delete(k)
+#define THRLC_SET(k,v) pthread_setspecific (k,v)
+#define THRLC_GET(v)   pthread_getspecific (v)
+#define THRLC_GET_FAIL NULL
+void dataDestructor(void *data) { }
+#else
+#include <windows.h>
+#define MUTEX_LOCK     EnterCriticalSection
+#define MUTEX_UNLOCK   LeaveCriticalSection
+#define MUTEX_TYPE     CRITICAL_SECTION
+#define MUTEX_INIT(m)  InitializeCriticalSection (&m)
+#define EVENT_TYPE     HANDLE
+#define EVENT_INIT(e)  e = CreateEvent (NULL, TRUE, FALSE, NULL)
+#define EVENT_SIG(e)   SetEvent(e)
+#define THRLC_TYPE     DWORD
+#define THRLC_INIT(k)  k = TlsAlloc()
+#define THRLC_FREE(k)  TlsFree(k)
+#define THRLC_SET(k,v) TlsSetValue (k,v)
+#define THRLC_GET(v)   TlsGetValue (v)
+#define THRLC_GET_FAIL 0
+#endif
+#define NUM_THREADS 2
+
+// ----------------------------------------------------------------------------------- //
+// Declares a struct to store all the information needed for each htcalc iteration
+// ----------------------------------------------------------------------------------- //
+typedef struct{
+   Vector H;
+   double T;
+   qvectors * testqs;  
+   testspincf * testspins;
+   physproperties * physprops; 
+   double femin;
+   spincf spsmin;
+   int thread_id;
+} htcalc_thread_data;
+class htcalc_input { public:
+   int j;
+   int thread_id;
+   par *inputpars;
+   htcalc_input(int _j, int _tid, par *pars_in) 
+   { 
+      thread_id = _tid; j = _j; inputpars = new par(*pars_in);
+   }
+};
+// ----------------------------------------------------------------------------------- //
+// Declares these variables global, so all threads can see them
+// ----------------------------------------------------------------------------------- //
+htcalc_thread_data thrdat;
+MUTEX_TYPE mutex_loop;
+MUTEX_TYPE mutex_tests;
+MUTEX_TYPE mutex_min;
+EVENT_TYPE checkfinish;
+THRLC_TYPE threadSpecificKey;
+
+#endif // def _THREADS
+
 void checkini(testspincf & testspins,qvectors & testqs)
 {struct stat filestatus;
  static time_t last_modify_time;
@@ -61,8 +130,26 @@ void checkini(testspincf & testspins,qvectors & testqs)
     }
 }
 
+#ifdef _THREADS
+#ifdef __linux__
+void *htcalc_iteration(void *input)
+#else
+DWORD WINAPI htcalc_iteration(void *input)
+#endif
+#define inputpars (*myinput->inputpars)
+#define testqs (*thrdat.testqs)
+#define testspins (*thrdat.testspins)
+#define T thrdat.T
+#define femin thrdat.femin
+#else
 int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, par &inputpars, qvectors &testqs, testspincf &testspins, physproperties &physprops)
+#endif
 {
+ fflush(stderr); fflush(stdout);
+ #ifdef _THREADS
+ htcalc_input *myinput; myinput = (htcalc_input *) input; int j = myinput->j, thread_id = myinput->thread_id; Vector H(1,3); H = thrdat.H;
+ THRLC_SET(threadSpecificKey, myinput);
+ #endif 
  int i,ii,iii,tryrandom,nr,rr,ri,is;
  double fe,fered;
  double u,lnz; // free- and magnetic energy per ion [meV]
@@ -78,7 +165,9 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
 
   for (tryrandom=0;tryrandom<=ini.nofrndtries&&j!=0;++tryrandom)
    {if (j>0){sps=(*testspins.configurations[j]);// take test-spinconfiguration
+             #ifndef _THREADS
 	     if (tryrandom==0&&verbose==1) { printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc()); fflush(stdout); }
+             #endif 
             }
     else     // take q vector and choose phase and mom dir randomly
             {q=testqs.q(-j);  
@@ -99,7 +188,9 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
 	     sps.spinfromq(testqs.na(-j),testqs.nb(-j),testqs.nc(-j),
 	                   q,nettom,momentq0,phi);
              hkl=inputpars.rez.Transpose()*q;  
+             #ifndef _THREADS
    	     if (tryrandom==0&&verbose==1) { printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); fflush(stdout); }
+             #endif 
 	    }	 
     if (tryrandom>0){nr=(int)(rint(rnd(1.0)*(sps.n()*inputpars.nofatoms-1)))+1;
 	             for (i=1;i<=nr;++i) //MonteCarlo randomize nr spins
@@ -153,6 +244,7 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
 
 	           
                            // see if spinconfiguration is already stored
+             #ifndef _THREADS
 	     if (0==checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,physprops))//0 means error in checkspincf/addspincf
 	        {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
                  testspins.save(filemode);testqs.save(filemode); 
@@ -160,7 +252,23 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
 	     femin=fe; spsmin=sps;	   
             //printout fe
 	    if (verbose==1) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,physprops.j,j);
+             #else
+             MUTEX_LOCK(&mutex_tests); 
+             int checksret = checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,(*thrdat.physprops)); //0 means error in checkspincf/addspincf
+             MUTEX_UNLOCK(&mutex_tests); 
+	     if (checksret==0) {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
+                 testspins.save(filemode);testqs.save(filemode); 
+		 goto ret;}
+             MUTEX_LOCK (&mutex_min); femin=fe; thrdat.spsmin=sps; MUTEX_UNLOCK (&mutex_min);
+             #endif
 	     }
+            //printout fe
+            #ifdef _THREADS
+	    if (verbose==1) {
+	       if (tryrandom==0) { if(j>0) printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc());
+   	                           else      printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); }
+               if(fe==femin) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,j); }
+            #endif
             if (tryrandom==ini.nofrndtries&&verbose==1){printf("\n");}
 	    
 	    
@@ -227,7 +335,25 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
                  }
 
       }
+      #ifndef _THREADS
       return 1;
+      #else
+      ret:;
+      MUTEX_LOCK(&mutex_loop);
+      thrdat.thread_id = thread_id;
+      EVENT_SIG(checkfinish);
+      MUTEX_UNLOCK(&mutex_loop);
+      #undef inputpars
+      #undef testqs
+      #undef testspins
+      #undef T
+      #undef femin
+      #ifdef __linux__
+      pthread_exit(NULL);
+      #else
+      return 0;
+      #endif	     
+      #endif // def _THREADS
 }
 
 int  htcalc (Vector H,double T,par & inputpars,qvectors & testqs,
@@ -267,7 +393,11 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
 	      }
  if (verbose==1)
  { fin_coq= fopen_errchk ("./results/.fe_status.dat","w");
+   #ifndef _THREADS
    fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:log(iterations) 3:log(sta) 4:spinchange 5:stepratio 6:successrate(%%)\n#time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
+   #else
+   fprintf(fin_coq,"#displayxtext=time(s)\n#displaytitle=2:threadId 3:log(iterations) 4:log(sta) 5:spinchange 6:stepratio 7:successrate(%%)\n#thread_id time(s) log(iteration) log(sta) spinchange stepratio  successrate=(nof stabilised structures)/(nof initial spinconfigs)\n");
+   #endif
    fclose(fin_coq);	      
    printf("\n starting T=%g Ha=%g Hb=%g Hc=%g with \n %i spinconfigurations read from mcphas.tst and table \nand\n %i spinconfigurations created from hkl's\n\n",T,H(1),H(2),H(3),testspins.n,testqs.nofqs());
  }
@@ -279,10 +409,92 @@ if (T<=0.01){fprintf(stderr," ERROR htcalc - temperature too low - please check 
     //j=0;  //uncomment this for debugging purposes
     j = -testqs.nofqs()-1;
     
+#ifdef _THREADS
+// ----------------------------------------------------------------------------------- //
+// Populates the thread data structure
+// ----------------------------------------------------------------------------------- //
+   thrdat.H = H;
+   thrdat.T = T;
+   thrdat.testqs = &testqs;
+   thrdat.testspins = &testspins;
+   thrdat.physprops = &physprops;
+   thrdat.femin = femin;
+   thrdat.spsmin = spsmin; 
+   thrdat.thread_id = -1;
+   htcalc_input *tin[NUM_THREADS];
+   for (int ithread=0; ithread<NUM_THREADS; ithread++) tin[ithread] = new htcalc_input(0,ithread,&inputpars);
+ 
+ MUTEX_INIT(mutex_loop);
+ MUTEX_INIT(mutex_tests);
+ MUTEX_INIT(mutex_min);
+ EVENT_INIT(checkfinish);
+ THRLC_INIT(threadSpecificKey);
+ #ifdef __linux__
+ pthread_t threads[NUM_THREADS]; int rc; void *status;
+ pthread_attr_t attr;
+ pthread_attr_init(&attr);
+ pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+ #else
+ HANDLE threads[NUM_THREADS];
+ DWORD tid[NUM_THREADS], dwError;
+ #endif
+
+ bool all_threads_started = false; int ithread=0;
+#endif
  for (k= -testqs.nofqs();k<=testspins.n;++k)
  {++j; if (j>testspins.n) j=-testqs.nofqs();
+#ifndef _THREADS
        htcalc_iteration(j, femin, spsmin, H, T, inputpars, testqs, testspins, physprops);
+#else
+       (*tin[ithread]).j = j;
+       #ifdef __linux__
+       rc = pthread_create(&threads[ithread], &attr, htcalc_iteration, (void *) tin[ithread]);
+       if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+       #else
+       threads[ithread] = CreateThread(NULL, 0, htcalc_iteration, (void *) tin[ithread], 0, &tid[ithread]);
+       if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+       #endif
+       ithread++;
+       if(ithread%NUM_THREADS==0 || all_threads_started)
+       {
+          all_threads_started = true;
+          #ifdef __linux__
+          pthread_mutex_lock (&mutex_loop); 
+          while(thrdat.thread_id==-1) pthread_cond_wait(&checkfinish, &mutex_loop);
+          ithread = thrdat.thread_id;
+          thrdat.thread_id=-1; 
+          pthread_mutex_unlock (&mutex_loop); 
+          #else
+          WaitForSingleObject(checkfinish,INFINITE);
+          ithread = thrdat.thread_id;
+          thrdat.thread_id=-1; 
+          ResetEvent(checkfinish);
+          #endif
+       }
+#endif
+    }
+#ifdef _THREADS
+// Wait for all threads to finish, before moving on to calculate physical properties!
+  for(int th=0; th<(all_threads_started?NUM_THREADS:ithread); th++)
+  {
+     #ifdef __linux__
+     rc = pthread_join(threads[th], &status); 
+     if(rc) { printf("Error return code %i from joining thread %i\n",rc,th+1); exit(EXIT_FAILURE); }
+     #else
+     if(WaitForSingleObject(threads[th],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",th+1); exit(EXIT_FAILURE); }
+     #endif
   }
+
+  femin = thrdat.femin;
+
+ #ifdef __linux__
+ pthread_attr_destroy(&attr);
+ pthread_mutex_destroy(&mutex_loop);
+ pthread_mutex_destroy(&mutex_tests);
+ pthread_mutex_destroy(&mutex_min);
+ #endif
+ THRLC_FREE(threadSpecificKey);
+#endif
 
 if (femin>=10000) // did we find a stable structure ??
  {fprintf(stderr,"Warning propcalc: femin positive ... no stable structure found at  T= %g K / H= %g T\n",
@@ -317,7 +529,11 @@ else // if yes ... then
 		      testqs.phi(-physprops.j));
 	      }
 
+     #ifndef _THREADS
      sps=spsmin;//take spinconfiguration which gave minimum free energy as starting value
+     #else
+     sps=thrdat.spsmin;//take spinconfiguration which gave minimum free energy as starting value
+     #endif
      if (H*sps.nettomagmom(inputpars.gJ)<0)   //see if nettomoment positiv
         {sps.invert();} //if not - invert spinconfiguration
   // now really calculate the physical properties
@@ -356,6 +572,9 @@ else // if yes ... then
  }
 
 return 0; // ok we are done with this (HT) point- return ok
+ #if defined __linux__ && defined _THREADS
+ pthread_exit(NULL);
+ #endif
 }
 
 
@@ -831,7 +1050,13 @@ for (r=1;sta>ini.maxstamf;++r)
   }}}
 
   //treat program interrupts 
+  #ifdef _THREADS
+  MUTEX_LOCK (&mutex_tests); 
+  #endif
   checkini(testspins,testqs); 
+  #ifdef _THREADS
+  MUTEX_UNLOCK (&mutex_tests); 
+  #endif
 if (ini.displayall==1)  // if all should be displayed - write sps picture to file .spins.eps
  {
       fin_coq = fopen_errchk ("./results/.spins.eps", "w");
@@ -845,7 +1070,13 @@ if (ini.displayall==1)  // if all should be displayed - write sps picture to fil
  {if (time(0)-time_of_last_output>2)
   {time_of_last_output=time(0);
    fin_coq= fopen_errchk ("./results/.fe_status.dat","a");
+   #ifndef _THREADS
    fprintf(fin_coq,"%i %g %g %g %g %g\n",(int)time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio,100*(double)successrate/nofcalls);
+   #else
+   htcalc_input *tin; int thrid; 
+   if ((tin=(htcalc_input*)THRLC_GET(threadSpecificKey))==THRLC_GET_FAIL) thrid = 0; else thrid = tin->thread_id+1;
+   fprintf(fin_coq,"%i %i %g %g %g %g %g\n",thrid,(int)time(0),log((double)r)/log(10.0),log(sta)/log(10.0),spinchange,stepratio,100*(double)successrate/nofcalls); 
+   #endif
    fclose(fin_coq);
   }
  }

@@ -18,11 +18,7 @@ int verbose=0;
 const char * filemode="w";
 
 #include "mcphas_htcalc.h"
-#ifdef _THREADS
-#include "mcphas_htcalc_threaded.c"
-#else
 #include "mcphas_htcalc.c"
-#endif
 
 // main program
 int main (int argc, char **argv)

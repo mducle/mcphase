@@ -177,13 +177,8 @@ physprop.o: physprop.cpp physprop.hpp spincf.hpp vector.h mfcf.hpp martin.h par.
 qvectors.o: qvectors.cpp qvectors.hpp spincf.hpp martin.h vector.h inipar.hpp myev.c
 	$(CCC) $(CFLAGS) $<
 
-ifdef threads
-mcphas.o: mcphas.c $(INCL) mcphas_htcalc_threaded.c 
-	$(CCC) $(CFLAGS) $(THREADFLAG) $<
-else
 mcphas.o: mcphas.c $(INCL) mcphas_htcalc.c 
-	$(CCC) $(CFLAGS) $<
-endif
+	$(CCC) $(CFLAGS) $(THREADFLAG) $<
 
 mcdisp.o: mcdisp.c  myev.c mcdisp_intcalc.c jq.hpp mdcf.hpp $(INCL)
 	$(CCC) $(CFLAGS) $(THREADFLAG) $<
