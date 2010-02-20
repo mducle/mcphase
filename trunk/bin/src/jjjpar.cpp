@@ -1221,6 +1221,11 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
+  if (p.module_type==0) 
+  {
+     mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage);//.rl,p.mcalc_parstorage.rh,p.mcalc_parstorage.cl,p.mcalc_parstorage.ch);
+     mcalc_parstorage = p.mcalc_parstorage;
+  }
   if (p.module_type==2||p.module_type==4)  {iops=new ionpars(*p.iops);//((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
@@ -1229,7 +1234,7 @@ jjjpar::jjjpar (const jjjpar & p)
 //  if (module_type==2)  iops=new ionpars(4);iops=p.iops;
 //  if (module_type==2)  iops=p.iops;
   
-#ifdef __linux__
+//#ifdef __linux__
 /*  if (module_type==0)
   {char * error;
    handle=dlopen (cffilename,RTLD_NOW | RTLD_GLOBAL);
@@ -1246,7 +1251,7 @@ jjjpar::jjjpar (const jjjpar & p)
    estates=p.estates;
    mcalc_parameter_storage=p.mcalc_parameter_storage;
 /*  }*/
-#endif
+//#endif
   magFFj0=Vector(1,7);magFFj0=p.magFFj0;
   magFFj2=Vector(1,7);magFFj2=p.magFFj2;
   magFFj4=Vector(1,7);magFFj4=p.magFFj4;

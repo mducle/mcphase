@@ -203,7 +203,11 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
    fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
    fprintf(fout,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(fout,"#*********************************************************************\n");
-          fprintf (fout, "#i j k ionnr transnr energy |gamma_s|\n");
+   fprintf(fout,"#(*)The unpolarized powder average neutron cross section sigma for each transition \n");
+   fprintf(fout,"#   is calculated neglectingthe formfactor, the Debye Wallerfactor, factor k'/k.\n");
+   fprintf(fout,"# T= %g K\n",ini.T);
+   fprintf(fout,"#*********************************************************************\n");
+          fprintf (fout, "#i j k ionnr transnr energy |gamma_s|  sigma [barn](*)\n");
  
   for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   for(l=1;l<=inputpars.nofatoms;++l){
@@ -215,7 +219,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
    md.est_ini(i,j,k,l,(*inputpars.jjj[l]).eigenstates(mf,ini.T)); 
    (*inputpars.jjj[l]).transitionnumber=1;
    fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-   i1=(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l)); 
+   d=1e10;i1=(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
 
       // here Mijkl is a nxn matrix n ... numberofcomponents
    noftransitions(l)=0;
@@ -224,12 +228,21 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      fprintf(stdout," .... transition not stored because out of interval [minE,maxE]=[%g,%g]meV\n",minE,maxE);
      ++(*inputpars.jjj[l]).transitionnumber;
      fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-     (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
+     d=1e10;(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
      if((*inputpars.jjj[l]).transitionnumber>i1){fprintf(stderr,"ERROR mcdisp.par: no transition found within energy in range [minE,maxE]=[%g,%g] found\n (within first crystallographic unit of magnetic unit cell)\n please increase energy range in option -maxE and -minE\n",minE,maxE);
                             exit(EXIT_FAILURE);}
      }
- 
- 
+     // calculate powder neutron intensities
+     double intensityp=0, intensitym=0;int k1;
+     if ((*inputpars.jjj[l]).gJ!=0)
+     { for(k1=1;k1<=3;++k1){intensityp+=(*inputpars.jjj[l]).gJ*(*inputpars.jjj[l]).gJ*real(Mijkl(k1,k1));}}
+     else
+     { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1));}}
+     intensityp*=0.61072561;intensitym=intensityp;// prefactor for intensity in barn is 4*PI*2/3*0.54*0.54/4= 0.61072561
+     if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}}
+                                  else{intensityp=intensityp*ini.T*KB;intensitym=intensityp;}
+                
+
    jmin=(*inputpars.jjj[l]).transitionnumber;
 //  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
 //                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
@@ -237,10 +250,10 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
      if(minE<d&&d<maxE)
-    { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,jmin,d,gamma(ini.nofcomponents));
+    { fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,jmin,d,gamma(ini.nofcomponents),intensityp);
      ++noftransitions(l);}
     if(d>=0&&minE<-d&&-d<maxE) // do not print negative energy transition if d<0 (d<0 means transiton to the same level)
-    { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,jmin,-d,gamma(ini.nofcomponents));
+    { fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,jmin,-d,gamma(ini.nofcomponents),intensitym);
     ++noftransitions(l);}
 
    for(j1=jmin+1;j1<=i1;++j1) 
@@ -253,20 +266,30 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       
         (*inputpars.jjj[l]).transitionnumber=j1; // try calculation for transition  j
       fprintf(stdout,"transition number %i: ",(*inputpars.jjj[l]).transitionnumber);
-      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
+      d=maxE;(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
         (*inputpars.jjj[l]).transitionnumber=jmin; // put back transition number for 1st transition
    //printf("noftransitions read by mcdisp: %i",i1);
       
       if ((minE<d&&d<maxE)||(minE<-d&&-d<maxE)) //only consider transition if it is in interval emin/emax
      { 
-     // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
+      // calculate powder neutron intensities
+     intensityp=0; intensitym=0;
+     if ((*inputpars.jjj[l]).gJ!=0)
+     { for(k1=1;k1<=3;++k1){intensityp+=(*inputpars.jjj[l]).gJ*(*inputpars.jjj[l]).gJ*real(Mijkl(k1,k1));}}
+     else
+     { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1));}}
+     intensityp*=0.61072561;intensitym=intensityp;// prefactor for intensity in barn is 4*PI*2/3*0.54*0.54/4= 0.61072561
+      if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}}
+                                  else{intensityp=intensityp*ini.T*KB;intensitym=intensityp;}
+               
+      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
      if(minE<d&&d<maxE)
-     { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents));
+     { fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents),intensityp);
       ++noftransitions(l);}
      if(d>=0&&minE<-d&&-d<maxE)// do not print negative energy transition if d<0 (d<0 means transiton to the same level)
-     { fprintf(fout,"%i %i %i %i %i  %g %g\n",i,j,k,l,j1,-d,gamma(ini.nofcomponents));
-     ++noftransitions(l);}
+     {fprintf(fout,"%i %i %i   %i     %i     %g  %g  %g\n",i,j,k,l,j1,-d,gamma(ini.nofcomponents),intensitym);
+      ++noftransitions(l);}
      }else
      {fprintf(stdout," .... transition not stored because  out of interval [minE,maxE]=[%g,%g]meV\n",minE,maxE);
      }
@@ -329,17 +352,17 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
        {mf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);    //mf ... mean field vector of atom s
         extmf(ll)=ini.mf.mf(i,j,k)(ini.nofcomponents*(l-1)+ll);}
 
-      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k); fflush(stdout);
+      fprintf(stdout,"#transition %i of ion %i of cryst. unit cell at pos  %i %i %i in mag unit cell:\n",tn,l,i,j,k);
       if(nn[6]<SMALL){fprintf(stdout,"#-");}else{fprintf(stdout,"#+");}
       
         j1=(*inputpars.jjj[l]).transitionnumber; // try calculation for transition  j
         (*inputpars.jjj[l]).transitionnumber=tn; // try calculation for transition  j
-      (*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
+      d=1e10;(*inputpars.jjj[l]).dmcalc(ini.T,mf,Mijkl,d,md.est(i,j,k,l));
        //      myPrintComplexMatrix(stdout,Mijkl);
       
        // here we if required calculate the higher dimension matrix used to do the
        // extension of chi to higher value of (uncoupled) nofcomponents in intcalc_approx ... needed for chargedensityfluctuations, extended eigenvectors ...
-             (*inputpars.jjj[l]).dmcalc(ini.T,extmf,extMijkl,d,md.est(i,j,k,l));
+             d=1e10;(*inputpars.jjj[l]).dmcalc(ini.T,extmf,extMijkl,d,md.est(i,j,k,l));
       
         (* inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
@@ -603,8 +626,8 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
                                               }                                 } // but orbitons should be treated correctly by extending 3 to n !!
 	                                         }} 
 // increase Js,ss(q) taking into account the phase factors for the distance l-ll
+          // J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d)); // changed
           jsss*=exp(ipi*(double)sd*(q*d)); J.mati(s,ss)+=jsss;
-
           ++nofneighbours; // count neighbours summed up
 	 }}}
       

@@ -71,6 +71,7 @@ endif
 ifdef fast
 ifdef GCC42
 CFLAGS+= -O2 -march=native -pipe
+#CFLAGS+= -O2 -pipe -fomit-frame-pointer -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
 else
 CFLAGS+= -O2 -pipe
 endif

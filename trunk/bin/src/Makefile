@@ -42,7 +42,7 @@ endif
 
 INCLDIRS =      -I. \
 		-I../include \
-		-I/usr/include/readline \
+#		-I/usr/include/readline \
 		-I/local/lib  \
 		-I/usr/X11R6/include
 
@@ -61,10 +61,10 @@ XLIBS= -ldl
 #EZLIB=           -ljpeg -ldl
 endif
 ifdef OMP
-LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
+LFLAGS +=          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
 else
 #LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm
-LFLAGS =          $(XLIBS) $(EZLIB) -lstdc++ -lm ${LBLAS}
+LFLAGS +=          $(XLIBS) $(EZLIB) -lstdc++ -lm ${LBLAS}
 endif
 
 ifdef threads
@@ -177,8 +177,13 @@ physprop.o: physprop.cpp physprop.hpp spincf.hpp vector.h mfcf.hpp martin.h par.
 qvectors.o: qvectors.cpp qvectors.hpp spincf.hpp martin.h vector.h inipar.hpp myev.c
 	$(CCC) $(CFLAGS) $<
 
-mcphas.o: mcphas.c $(INCL) mcphas_htcalc.c 
+ifdef threads
+mcphas.o: mcphas.c $(INCL) mcphas_htcalc_threaded.c 
 	$(CCC) $(CFLAGS) $(THREADFLAG) $<
+else
+mcphas.o: mcphas.c $(INCL) mcphas_htcalc.c 
+	$(CCC) $(CFLAGS) $<
+endif
 
 mcdisp.o: mcdisp.c  myev.c mcdisp_intcalc.c jq.hpp mdcf.hpp $(INCL)
 	$(CCC) $(CFLAGS) $(THREADFLAG) $<

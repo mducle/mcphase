@@ -239,29 +239,34 @@ __declspec(dllexport)
    // check if printout should be done and make tn positive
    int pr=1; if (tn<0) { pr=0; tn*=-1; }
 
-   // Parses the input file for parameters
-   icpars pars; const char *filename = sipffilename[0];
-   ic_parseinput(filename,pars);
-
-   // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-   int num_op = gjmbH.Hi()-gjmbH.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6),pars.save_matrices);
-
    // Copies the already calculated energy levels / wavefunctions from *est
    if(est.Rows()!=est.Cols()) { std::cerr << "dmcalc(): Input rows and columns of eigenstates matrix don't match.\n"; return 0; }
-   int Hsz = est.Rows()-1; double *en = new double[Hsz]; for(i=0; i<Hsz; i++) en[i] = est[0][i+1].real();
-   iceig VE(Hsz,en,(complexdouble*)&est[1][0],1);
+   int Hsz = est.Rows()-1;
+   j=0; k=0; for(i=0; i<Hsz; ++i) { for(j=i; j<Hsz; ++j) { ++k; if(k==tn) break; } if(k==tn) break; }
+   if(est[0][j+1].real()-est[0][i+1].real()<delta)
+   {
+      double *en = new double[Hsz]; for(k=0; k<Hsz; k++) en[k] = est[0][k+1].real();
+
+      // Parses the input file for parameters
+      icpars pars; const char *filename = sipffilename[0];
+      ic_parseinput(filename,pars);
+
+      // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
+      int num_op = gjmbH.Hi()-gjmbH.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6),pars.save_matrices);
+
+      iceig VE(Hsz,en,(complexdouble*)&est[1][0],1);
  
-   // Calculates the transition matrix elements:
-   //    M_ab = <i|Ja|j><j|Jb|i> * (exp(-Ei/kT)-exp(-Ej/kT)) / Z    if delta > small
-   //    M_ab = <i|Ja|j><j|Jb|i> * (exp(-Ei/kT)) / kTZ              if delta < small (quasielastic scattering)
-   //    See file icpars.cpp, function mfmat::Mab() to see the actual code to calculate this.
-   j=0;k=0; for(i=0; i<Hsz; ++i){ for(j=i; j<Hsz; ++j) { ++k; if(k==tn) break; } if(k==tn) break; }
-   sMat<double> Mab, iMab; mfmat.Mab(Mab,iMab,VE,T,i,j,pr,delta,pars.save_matrices);
+      // Calculates the transition matrix elements:
+      //    M_ab = <i|Ja|j><j|Jb|i> * (exp(-Ei/kT)-exp(-Ej/kT)) / Z    if delta > small
+      //    M_ab = <i|Ja|j><j|Jb|i> * (exp(-Ei/kT)) / kTZ              if delta < small (quasielastic scattering)
+      //    See file icpars.cpp, function mfmat::Mab() to see the actual code to calculate this.
+  
+      sMat<double> Mab, iMab; mfmat.Mab(Mab,iMab,VE,T,i,j,pr,delta,pars.save_matrices);
 
-   for(i=1; i<=(num_op>6?num_op:6); i++)
-      for(j=1; j<=(num_op>6?num_op:6); j++)
-         mat(i,j) = complex<double> (Mab(i,j), iMab(i,j));
-
+      for(i=1; i<=(num_op>6?num_op:6); i++)
+         for(j=1; j<=(num_op>6?num_op:6); j++)
+            mat(i,j) = complex<double> (Mab(i,j), iMab(i,j));
+   }
    return Hsz*(Hsz-1)/2;
 }
 

@@ -28,13 +28,14 @@
 # Checks to see if the gcc compiler is newer than 4.2
 ifneq ($(shell gcc --version|grep " 4.[2345]"),)
 GCC42=1
+LFLAGS=-static-libgcc
 endif
 
 # Checks whether we support the -march=native target
 ifdef fast
 ifdef GCC42
-#ARCHFLAG=-O2 -march=native 
-ARCHFLAG=-O2 -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
+ARCHFLAG=-O2 -march=native 
+#ARCHFLAG=-O2 -march=core2 -msse4 -msse4.1 -msse4.2 -mcx16 -msahf
 else
 ARCHFLAG=-O2
 endif
@@ -61,7 +62,7 @@ COPTS= -DDEBUG
 COPTS=-ansi $(LINOPTS)
 ifdef profile
 COPTS=-pg $(LINOPTS)
-LDFLAGS=-pg 
+LFLAGS=-pg 
 endif
 
 # C++ compiler ##########################################################
@@ -103,7 +104,7 @@ endif
 ifeq ($(CC),icc)
 CCOPTS= -openmp -fPIC# -D "__sync_fetch_and_add(ptr,addend)=_InterlockedExchangeAdd(const_cast<void*>(reinterpret_cast<volatile void*>(ptr)), addend)"
 COPTS=$(CCOPTS)
-LDFLAGS= -openmp -lstdc++
+LFLAGS= -openmp -lstdc++
 endif
 
 ifdef blas
