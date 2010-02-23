@@ -855,61 +855,49 @@ diffint=0;diffintbey=0;
                   HANDLE threads[NUM_THREADS];
                   DWORD tid[NUM_THREADS], dwError;
                   #endif
-                  bool all_threads_started = false; int ithread=0,oldi=-1; double QQ; Vector vQQ(1,dimA);
+                  int ithread=0,oldi=-1,num_threads_started=-1; double QQ; Vector vQQ(1,dimA);
 #endif
-                  for (i=1;i<=dimA;++i)
-		  {  if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
 #ifdef _THREADS  
+                  for (i=1;i<=dimA;i+=NUM_THREADS)
+#else
+                  for (i=1;i<=dimA;++i)
+#endif
+                  {
+#ifdef _THREADS  
+                     oldi=i;
                      // Runs threads until all are running - but wait until they are completed in order before printing output.
                      //  This is to ensure that the output is exactly the same as for a single thread (otherwise it would be out of order).
-                     tin[ithread]->En=En(i); tin[ithread]->intensitybey=intsbey(i); tin[ithread]->level = i;
-                     #ifdef __linux__
-                     rc = pthread_create(&threads[ithread], &attr, intcalc_approx, (void *) tin[ithread]);
-                     if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
-                     #else
-                     threads[ithread] = CreateThread(NULL, 0, intcalc_approx, (void *) tin[ithread], 0, &tid[ithread]);
-                     if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
-                     #endif
-                     ithread++;
-                     if(ithread%NUM_THREADS==0 || all_threads_started)
+                     for(ithread=0; ithread<NUM_THREADS; ithread++)
                      {
-                         all_threads_started = true;
-                         #ifdef __linux__
-                         pthread_mutex_lock (&mutex_loop);
-                         while(thrdat.thread_id==-1) pthread_cond_wait(&checkfinish, &mutex_loop);
-                         ithread = thrdat.thread_id;
-                         thrdat.thread_id=-1;
-                         pthread_mutex_unlock (&mutex_loop);
-                         #else
-                         WaitForSingleObject(checkfinish,INFINITE);
-                         ithread = thrdat.thread_id;
-                         thrdat.thread_id=-1;
-                         ResetEvent(checkfinish);
-                         #endif
-                         ints(tin[ithread]->level) = tin[ithread]->intensity; vQQ(tin[ithread]->level) = tin[ithread]->QQ;
-                         QQ = vQQ(tin[ithread]->level); intsbey(tin[ithread]->level) = tin[ithread]->intensitybey;
-//                   else { continue; }
-                     } }
-                     // All threads started and one has just finished...
-//                   oldi *= i; i = tin[ithread]->level;
-                     // Wait for all threads to finish, before moving on to calculate physical properties!
-                     for(int th=0; th<(all_threads_started?NUM_THREADS:ithread); th++)
-                     {
+                        i+=ithread; if(i>dimA) break;
+                        if(do_gobeyond==0) intsbey(i)=-1.1; else intsbey(i)=+1.1;
+                        tin[ithread]->En=En(i); tin[ithread]->intensitybey=intsbey(i); tin[ithread]->level = i;
+                        #ifdef __linux__
+                        rc = pthread_create(&threads[ithread], &attr, intcalc_approx, (void *) tin[ithread]);
+                        if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+                        #else
+                        threads[ithread] = CreateThread(NULL, 0, intcalc_approx, (void *) tin[ithread], 0, &tid[ithread]);
+                        if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+                        #endif
+                        num_threads_started = ithread+1;
+                     }
+                     for(int th=0; th<num_threads_started; th++)
                         #ifdef __linux__
                         rc = pthread_join(threads[th], &status);
-                        if(rc) { printf("Error return code %i from joining thread %i\n",rc,th+1); exit(EXIT_FAILURE); }
                         #else
-                        if(WaitForSingleObject(threads[th],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",th+1); exit(EXIT_FAILURE); }
+                        WaitForSingleObject(threads[th],INFINITE);
                         #endif
-                        ints(tin[th]->level) = tin[th]->intensity; vQQ(tin[th]->level) = tin[th]->QQ;
-                        QQ = vQQ(tin[th]->level); intsbey(tin[th]->level) = tin[th]->intensitybey;
-                     }
                      #define ev_real (*thrdat.ev_real[ithread])
                      #define ev_imag (*thrdat.ev_imag[ithread])
                      #define eev_real (*thrdat.eev_real[ithread])
                      #define eev_imag (*thrdat.eev_imag[ithread])
-                  for (i=1;i<=dimA;++i) {
+                     for(ithread=0; ithread<num_threads_started; ithread++)
+                     {
+                        ints(tin[ithread]->level) = tin[ithread]->intensity; vQQ(tin[ithread]->level) = tin[ithread]->QQ;
+                        QQ = vQQ(tin[ithread]->level); intsbey(tin[ithread]->level) = tin[ithread]->intensitybey;
+                        i = tin[ithread]->level;
 #else
+                     if(do_gobeyond==0){intsbey(i)=-1.1;}else{intsbey(i)=+1.1;}
                      ints(i)=intcalc_approx(chi,chibey,S,Sbey,pol,polICIC,polICn,polnIC,
                                             intsbey(i),ev_real,ev_imag,eev_real,eev_imag,Ec,dimA,Tau,i,En(i),ini,inputpars,hkl,md,do_verbose,QQ);
 #endif
@@ -941,6 +929,10 @@ diffint=0;diffintbey=0;
                      fprintf (foutqee, "#\n");
                  if(do_verbose==1){fprintf(stdout, "#IdipFF= %4.4g Ibeyonddip=%4.4g\n",ints(i),intsbey(i));}
                      if(En(i)>=ini.emin&&En(i)<=ini.emax){diffint+=ints(i);diffintbey+=intsbey(i);}
+#ifdef _THREADS
+                     }
+                   i=oldi;
+#endif
 		   }
 #ifdef _THREADS
                   #undef ev_real
