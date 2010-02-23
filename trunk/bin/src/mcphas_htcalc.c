@@ -131,16 +131,16 @@ void checkini(testspincf & testspins,qvectors & testqs)
 }
 
 #ifdef _THREADS
-#ifdef __linux__
-void *htcalc_iteration(void *input)
-#else
-DWORD WINAPI htcalc_iteration(void *input)
-#endif
 #define inputpars (*myinput->inputpars)
 #define testqs (*thrdat.testqs)
 #define testspins (*thrdat.testspins)
 #define T thrdat.T
 #define femin thrdat.femin
+#ifdef __linux__
+void *htcalc_iteration(void *input)
+#else
+DWORD WINAPI htcalc_iteration(void *input)
+#endif
 #else
 int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, par &inputpars, qvectors &testqs, testspincf &testspins, physproperties &physprops)
 #endif
@@ -148,7 +148,7 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
  fflush(stderr); fflush(stdout);
  #ifdef _THREADS
  htcalc_input *myinput; myinput = (htcalc_input *) input; int j = myinput->j, thread_id = myinput->thread_id; Vector H(1,3); H = thrdat.H;
- THRLC_SET(threadSpecificKey, myinput);
+ THRLC_SET(threadSpecificKey, myinput); double tlsfemin=1e10;  // Thread local variable to judge whether to print output
  #endif 
  int i,ii,iii,tryrandom,nr,rr,ri,is;
  double fe,fered;
@@ -259,15 +259,15 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
 	     if (checksret==0) {fprintf(stderr,"Error htcalc: too many spinconfigurations created");
                  testspins.save(filemode);testqs.save(filemode); 
 		 goto ret;}
-             MUTEX_LOCK (&mutex_min); femin=fe; thrdat.spsmin=sps; MUTEX_UNLOCK (&mutex_min);
+             MUTEX_LOCK (&mutex_min); if(fe<femin) { femin=fe; thrdat.spsmin=sps; } MUTEX_UNLOCK (&mutex_min); tlsfemin=femin;
              #endif
 	     }
             //printout fe
             #ifdef _THREADS
-	    if (verbose==1) {
-	       if (tryrandom==0) { if(j>0) printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc());
-   	                           else      printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); }
-               if(fe==femin) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,j); }
+	    if (tryrandom==ini.nofrndtries && verbose==1) {
+	       if(j>0) printf ( "conf. no %i (%ix%ix%i spins)"  ,j,sps.na(),sps.nb(),sps.nc());
+               else    printf ( "(hkl)=(%g %g %g)..(%ix%ix%i primitive unit cells) ",hkl(1),hkl(2),hkl(3),sps.na(),sps.nb(),sps.nc()); 
+               if(tlsfemin==femin) printf("fe=%gmeV, struc no %i in struct-table (initial values from struct %i)",fe,(*thrdat.physprops).j,j); }
             #endif
             if (tryrandom==ini.nofrndtries&&verbose==1){printf("\n");}
 	    

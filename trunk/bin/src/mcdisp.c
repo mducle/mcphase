@@ -285,10 +285,10 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
       // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
      myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
      if(minE<d&&d<maxE)
-     { fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents),intensityp);
+     {fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents),intensityp);
       ++noftransitions(l);}
      if(d>=0&&minE<-d&&-d<maxE)// do not print negative energy transition if d<0 (d<0 means transiton to the same level)
-     {fprintf(fout,"%i %i %i   %i     %i     %g  %g  %g\n",i,j,k,l,j1,-d,gamma(ini.nofcomponents),intensitym);
+     {fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,j1,-d,gamma(ini.nofcomponents),intensitym);
       ++noftransitions(l);}
      }else
      {fprintf(stdout," .... transition not stored because  out of interval [minE,maxE]=[%g,%g]meV\n",minE,maxE);
@@ -378,7 +378,11 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
 	// the components need to be complex conjugated 
 
          // treat correctly case for neutron energy loss
-	 if (nn[6]>=0){Uijkl=Uijkl.Conjugate();extUijkl=extUijkl.Conjugate();}
+	 if (nn[6]>=0)
+	 {
+	    for(int ii=Uijkl.Rlo(); ii<Uijkl.Rhi(); ii++)       for(int jj=Uijkl.Clo(); jj<Uijkl.Chi(); jj++)       Uijkl[ii][jj]=conj(Uijkl[ii][jj]);
+	    for(int ii=extUijkl.Rlo(); ii<extUijkl.Rhi(); ii++) for(int jj=extUijkl.Clo(); jj<extUijkl.Chi(); jj++) extUijkl[ii][jj]=conj(extUijkl[ii][jj]);
+	 }
         // here we should also go for complex conjugate for the vector
          complex <double> extgammas;
      if (gamma(ini.nofcomponents)>=0&&fabs(gamma(ini.nofcomponents-1))<SMALL) 
@@ -951,10 +955,10 @@ diffint=0;diffintbey=0;
                      delete thrdat.Ec[ithread]; delete thrdat.Tau[ithread]; delete tin[ithread]; 
                      delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread];
                   }
-                  delete thrdat.Ec; delete thrdat.Tau; delete thrdat.md; delete thrdat.ini; delete thrdat.inputpars; //delete tin;
-                  delete thrdat.chi; delete thrdat.chibey; delete thrdat.S; delete thrdat.Sbey;
-                  delete thrdat.pol; delete thrdat.polICIC; delete thrdat.polICn; delete thrdat.polnIC;
-                  delete thrdat.ev_real; delete thrdat.ev_imag; delete thrdat.eev_real; delete thrdat.eev_imag; 
+                  delete[] thrdat.Ec; delete[] thrdat.Tau; delete[] thrdat.md; delete[] thrdat.ini; delete[] thrdat.inputpars; //delete tin;
+                  delete[] thrdat.chi; delete[] thrdat.chibey; delete[] thrdat.S; delete[] thrdat.Sbey;
+                  delete[] thrdat.pol; delete[] thrdat.polICIC; delete[] thrdat.polICn; delete[] thrdat.polnIC;
+                  delete[] thrdat.ev_real; delete[] thrdat.ev_imag; delete[] thrdat.eev_real; delete[] thrdat.eev_imag; 
 #endif
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
     sta+=dd*dd;sta_int+=dd_int*dd_int;

@@ -224,7 +224,7 @@ Vector::~Vector (void)
     // decrease the reference count and delete if neccessary
     if (D) {
 	if ( (--(D->count) == 0 && temporary == 0) || D->count < 0) {
-	    delete (V + cl);
+	    delete[] (V + cl);
 	    delete D;
 	    D = 0;   // this is crucial !!
 	    V = 0;

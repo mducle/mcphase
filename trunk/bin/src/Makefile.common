@@ -91,13 +91,16 @@ endif
 #                       Optimizer or ANSI standard?
 ifdef DEBUG
 CCOPTS  =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG -fpermissive $(LINOPTS)
+COPTS   =  -g  -fomit-frame-pointer -fforce-addr -DDEBUG $(LINOPTS)
 #CFLAGS  =       -c -g  -DDEBUG -Wall $(INCLDIRS)
 else
 #CCOPTS=  -fomit-frame-pointer -fforce-addr -march=pentium -fpermissive  -O3
 ifdef profile 
 CCOPTS  = -g -pg -fforce-addr -fpermissive $(LINOPTS)
+COPTS   = -g -pg -fforce-addr $(LINOPTS)
 else
 CCOPTS  = -g -fforce-addr -fpermissive $(LINOPTS) #-fomit-frame-pointer
+COPTS   = -g -fforce-addr $(LINOPTS) #-fomit-frame-pointer
 endif
 endif
 

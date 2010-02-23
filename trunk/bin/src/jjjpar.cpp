@@ -1221,11 +1221,6 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==0) 
-  {
-     mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage);//.rl,p.mcalc_parstorage.rh,p.mcalc_parstorage.cl,p.mcalc_parstorage.ch);
-     mcalc_parstorage = p.mcalc_parstorage;
-  }
   if (p.module_type==2||p.module_type==4)  {iops=new ionpars(*p.iops);//((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
@@ -1273,13 +1268,13 @@ int i1;
 
 //destruktor
 jjjpar::~jjjpar ()
-{ //delete []jij; //will not work in linux 
-  //delete []dn;  // will not work in linux
-  //delete []sublattice;
-  //delete []cffilename;// will not work in linux
+{ delete []jij; //will not work in linux 
+  delete []dn;  // will not work in linux
+  delete []sublattice;
+  delete []cffilename;// will not work in linux
   if (module_type==2||module_type==4) delete iops;
 #ifdef __linux__
-   if (module_type==0)dlclose(handle);
+// if (module_type==0)dlclose(handle);
 #endif
 }
 

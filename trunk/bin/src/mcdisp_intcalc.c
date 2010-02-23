@@ -132,30 +132,31 @@ double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,ComplexMatrix &
    #define chibey (*thrdat.chibey[thread_id])
    #define S (*thrdat.S[thread_id])
    #define Sbey (*thrdat.Sbey[thread_id])
-   Matrix pol = *thrdat.pol[thread_id];        Matrix polICIC = *thrdat.polICIC[thread_id]; 
-   Matrix polICn = *thrdat.polICn[thread_id];  Matrix polnIC = *thrdat.polnIC[thread_id];
+   #define pol (*thrdat.pol[thread_id])
+   #define polICIC (*thrdat.polICIC[thread_id])
+   #define polICn (*thrdat.polICn[thread_id])
+   #define polnIC (*thrdat.polnIC[thread_id])
    #define ev_real (*thrdat.ev_real[thread_id])
    #define ev_imag (*thrdat.ev_imag[thread_id])
    #define eev_real (*thrdat.eev_real[thread_id])
    #define eev_imag (*thrdat.eev_imag[thread_id])
    #define Ec (*thrdat.Ec[thread_id])
-   int dimA = myinput->dimA, level =  myinput->level, do_verbose = myinput->do_verbose;
+   int level =  myinput->level;//, dimA = myinput->dimA, do_verbose = myinput->do_verbose;
    #define Tau (*thrdat.Tau[thread_id])
    double en = myinput->En; 
    #define ini (*thrdat.ini[thread_id])
    #define inputpars (*thrdat.inputpars[thread_id])
-   Vector hkl = thrdat.hkl;
+   #define hkl thrdat.hkl
    #define md (*thrdat.md[thread_id])
    double QQ;
 #endif
 
- int m,n,tn,i,j,k,l,ll,jmin,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,stau,sstau,b,bb,pm;
+ int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,b,bb;
  double intensity=1.2; 
  double ki,kf;
  complex <double> sumS;
  complex <double> chileft;
  complex <double> chileftbey;
- float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
  Vector qabc(1,3);
     qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
     qabc(2)=hkl(2)*2*PI/inputpars.b;
@@ -381,6 +382,7 @@ myinput->intensity=intensity;
 myinput->intensitybey=intensitybey;
 myinput->QQ=QQ;
 #undef md
+#undef hkl
 #undef Tau
 #undef ini
 #undef inputpars
@@ -388,6 +390,10 @@ myinput->QQ=QQ;
 #undef chibey
 #undef S
 #undef Sbey
+#undef pol
+#undef polICIC
+#undef polICn
+#undef polnIC
 #undef ev_real
 #undef ev_imag
 #undef eev_real

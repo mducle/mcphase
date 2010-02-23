@@ -2017,8 +2017,6 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
  
     printf("Reading file %s ....\n",name);
     string   = STRING_ALLOC(buffer_size);
-     printf("Reading file %s ....\n",name);
-    string   = STRING_ALLOC(buffer_size);
  
     if( (fp=fopen(name,"rb"))==(FILE*)0 )  read_error(2,fp,name);
     line=fgets( string , buffer_size , fp );
