@@ -75,11 +75,14 @@ CFLAGS+= -O2 -march=native -pipe
 else
 CFLAGS+= -O2 -pipe
 endif
-ifdef profile
-CFLAGS+= -pg
-else
+ifndef profile
 CFLAGS+= -fomit-frame-pointer
 endif
+endif
+#----------------------------  GNU Profiler  ------------------------------------#
+ifdef profile
+CFLAGS+= -pg
+LDFLAGS+= -pg
 endif
 #------------------------------   LINKER   --------------------------------------#
 ifdef matlab
@@ -104,9 +107,6 @@ LDFLAGS+= -static
 endif
 endif
 endif
-endif
-ifdef profile
-LDFLAGS+= -pg
 endif
 #------------------------------  32/64bit  --------------------------------------#
 ifdef b32

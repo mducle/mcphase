@@ -869,7 +869,7 @@ diffint=0;diffintbey=0;
                      //  This is to ensure that the output is exactly the same as for a single thread (otherwise it would be out of order).
                      for(ithread=0; ithread<NUM_THREADS; ithread++)
                      {
-                        i+=ithread; if(i>dimA) break;
+                        i=oldi+ithread; if(i>dimA) break;
                         if(do_gobeyond==0) intsbey(i)=-1.1; else intsbey(i)=+1.1;
                         tin[ithread]->En=En(i); tin[ithread]->intensitybey=intsbey(i); tin[ithread]->level = i;
                         #ifdef __linux__
@@ -881,12 +881,12 @@ diffint=0;diffintbey=0;
                         #endif
                         num_threads_started = ithread+1;
                      }
+                     #ifdef __linux__
                      for(int th=0; th<num_threads_started; th++)
-                        #ifdef __linux__
                         rc = pthread_join(threads[th], &status);
-                        #else
-                        WaitForSingleObject(threads[th],INFINITE);
-                        #endif
+                     #else
+                     WaitForMultipleObjects(num_threads_started,threads,TRUE,INFINITE);
+                     #endif
                      #define ev_real (*thrdat.ev_real[ithread])
                      #define ev_imag (*thrdat.ev_imag[ithread])
                      #define eev_real (*thrdat.eev_real[ithread])
