@@ -2,7 +2,7 @@
 
 unless ($#ARGV >0) 
 {print " program simannfit used to perform simulating annealing\n";
- print " usage: simannfit  10 * \n  10 .. initial temperature \n * .. filename(s) of paramter file(s)\n";
+ print " usage: simannfit 10 [options] * \n  10 .. initial temperature \n * .. filename(s) of paramter file(s)\n";
  print " ... there must exist a program calcsta.bat, the output of which\n";
  print " contains 'sta = 249' - this program is called from this output\n";
  print " at every iteration step and  the standard sta deviation is minimzed\n";
@@ -40,6 +40,7 @@ sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i]
   $starttime=time;$maxtim=1e10;$maxstep=1e24;
   if ($ARGV[0]=~"-t") {shift @ARGV; $maxtim=$ARGV[0]; shift @ARGV;}
   if ($ARGV[0]=~"-s") {shift @ARGV; $maxstep=$ARGV[0]; shift @ARGV;}
+
  while(!open(Fout,">results/simannfit.status")){print "Error opening file results/simannfit.status\n";<STDIN>;}
    print Fout "parameter[value,      min,           max,           variation,     stepwidth]\n";
   foreach (@ARGV)

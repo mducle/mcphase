@@ -26,7 +26,7 @@ public class displaymag extends Panel implements Runnable {
     try{Thread.sleep(500);
        }catch(Exception ignored){}
        // here do something
-
+ String sT="";
  File fileIni;
  try{
  for (int i=0;i<file.length;++i)
@@ -44,6 +44,7 @@ ff = new FileInputStream(fileIni);
     String sy;
     int clx = colx[i];
     int cly = coly[i];   
+    int clT=3;
 
 //    displaymag app = new displaymag();
 //    app.setSize(640, 640);
@@ -67,8 +68,10 @@ ff = new FileInputStream(fileIni);
       // select colx and coly
       sx=TrimString(strLine);
       sy=TrimString(strLine);
+      sT=TrimString(strLine);
       int cx =clx-1;
       int cy =cly-1;      
+      int cT =clT-1;
 
       while (cx>0)
       {--cx;
@@ -91,10 +94,25 @@ ff = new FileInputStream(fileIni);
        sy=sy.substring(iPos);
        sy=TrimString(sy); 
       }
+
+      while (cT>0)
+      {--cT;
+       int iPos = sT.indexOf(" ");
+       if (iPos < 0)
+       {
+         continue;
+       }
+       sT=sT.substring(iPos);
+       sT=TrimString(sT);
+      }
+
+
        cx=sx.indexOf(" ");
        cy=sy.indexOf(" ");
+       cT=sT.indexOf(" ");
        if (cx>0) {sx=sx.substring(0,cx);}
        if (cy>0) {sy=sy.substring(0,cy);}
+       if (cT>0) {sT=sT.substring(0,cT);}
 
       Double p = new Double(0.0);
 //      System.out.println(sx+" "+sy);
@@ -113,7 +131,7 @@ ff = new FileInputStream(fileIni);
 // double[] myDatax = {1, 3, 2, 3,33};
 // double[] myDatay = {123, 432, 223, 345,33};
 
- 
+   chart.getBackground().setTitleString("T="+sT);
 // app.setVisible(true);
 //  repaint();
 
@@ -146,7 +164,13 @@ ff = new FileInputStream(fileIni);
  protected void initChart(){ 
     chart.setLineVisible(false);
     chart.setLegendVisible(true);
-    String s="abcdefghijkl";
+    chart.getXAxis().setTitleString("Magnetic Field (T)");
+    chart.getYAxis().setTitleString("M[mb/T/ion]");
+    chart.getXAxis().setMinTickVis(true);
+    chart.getXAxis().setNumMinTicks(5);
+    chart.getYAxis().setMinTickVis(true);
+    chart.getYAxis().setNumMinTicks(5);
+String s="abcdefghijkl";
  for (int i=0;i<file.length;++i)
    {//char ii=i;   
     chart.addDataset(s.substring(i,i+1),vals,vals);
@@ -215,6 +239,7 @@ ff = new FileInputStream(fileIni);
        myFrame.pack();
  myFrame.add(myPanel);
  myFrame.setSize(400,400);
+ myFrame.setLocation(0,400);
  myFrame.setVisible(true);
  myPanel.start();	
  }

@@ -154,11 +154,8 @@ void myEigenSystemHermiteanGeneral (ComplexMatrix& a, ComplexMatrix& b, Vector &
     myPrintComplexMatrix(stderr,a);
     getchar();
    }
-   double normfrob = NormFro(b-b.Conjugate().Transpose());
-   if (normfrob>VERYSMALL)
-   {fprintf(stderr,"myEigenSystemHermiteanGeneral: ERROR-matrix b not hermitian. normfrob=%f\n",normfrob);
-// if (NormFro(b-b.Conjugate().Transpose())>VERYSMALL)
-// {fprintf(stderr,"myEigenSystemHermiteanGeneral: ERROR-matrix b not hermitian\n");
+   if (NormFro(b-b.Conjugate().Transpose())>VERYSMALL)
+   {fprintf(stderr,"myEigenSystemHermiteanGeneral: ERROR-matrix b not hermitian\n");
     //printout matrix
     myPrintComplexMatrix(stderr,b);
     getchar();

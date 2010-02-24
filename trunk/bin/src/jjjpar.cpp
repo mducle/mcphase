@@ -299,15 +299,21 @@ return R;
     if(pmax==0){fprintf (stderr,"Warning: calculation of <r^%i> failed - continuing with <r^%i>=0\n",k,k);return 0;}
     double rk=0;
     for(p=1;p<=pmax;++p){
-    for(q=1;q<=pmax;++q){
-                         rk+=coeff(p)*coeff(q)*factorial((int)Np(p)+(int)Np(q)+k)/pow(Xip(p)+Xip(q),Np(p)+Np(q)+k+1);
-    }}
-   return rk;
+    for(q=1;q<=pmax;++q){// the following does not work because of large factorials and powers
+                        // rk+=coeff(p)*coeff(q)*factorial((int)Np(p)+(int)Np(q)+k)/pow(Xip(p)+Xip(q),Np(p)+Np(q)+k+1);
+                        // therefore we have to substitute it by  calculating the product "by hand"
+                        double product=1.0;
+                        int nnk=(int)Np(p)+(int)Np(q)+k;
+                        int i;
+                        for(i=1;i<=nnk;++i){product*=i/(Xip(p)+Xip(q));}
+                       rk+=coeff(p)*coeff(q)*product/(Xip(p)+Xip(q));
+                        }}
+     return rk;
    }
 
-   int jjjpar::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);if(module_type==2){(*iops).r2=r2;}}
-   int jjjpar::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);if(module_type==2){(*iops).r4=r4;}}
-   int jjjpar::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);if(module_type==2){(*iops).r6=r6;}}
+   int jjjpar::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);if(module_type==2||module_type==4){(*iops).r2=r2;}}
+   int jjjpar::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);if(module_type==2||module_type==4){(*iops).r4=r4;}}
+   int jjjpar::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);if(module_type==2||module_type==4){(*iops).r6=r6;}}
 
 void jjjpar::save_radial_wavefunction(const char * filename)
    {double r=0.1;
@@ -1039,6 +1045,7 @@ if (gJ==0){printf("# reading gJ=0 in single ion property file %s -> entering int
            if (module_type==1){fprintf(stderr,"Error internal module kramers: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (module_type==2){fprintf(stderr,"Error internal module cfield : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
            if (module_type==3){fprintf(stderr,"Error internal module brillouin: intermediate coupling not supported\n");exit(EXIT_FAILURE);}
+           if (module_type==4){fprintf(stderr,"Error internal module so1ion : intermediate coupling not supported\n");exit(EXIT_FAILURE);}
           }
 
 }

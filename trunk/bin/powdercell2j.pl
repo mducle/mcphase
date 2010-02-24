@@ -120,7 +120,8 @@ Example:
  1     Sr1    0.3644   0.0000   0.2500     1.0962  -4.1497  -2.7991
  ...
 EOF
-
+ my $total = 0;
+($total+=$_) for @nofatoms;
   print Fout "\n";
   print Fout "#\n";
   print Fout "# Lattice Constants (A)\n";
@@ -131,7 +132,7 @@ EOF
   print Fout "#! r1b=   0 r2b= 1 r3b=  0   primitive lattice vectors [a][b][c]\n";
   print Fout "#! r1c=   0 r2c= 0 r3c=  1\n";
   print Fout "#\n";
-  print Fout "#! nofatoms= ".(sum(@nofatoms))."  nofcomponents=6  number of atoms in primitive unit cell/number of components of each spin\n";
+  print Fout "#! nofatoms= $total  nofcomponents=6  number of atoms in primitive unit cell/number of components of each spin\n";
 
 $i=0;$nr=1;
   foreach(@atomtypetempp)

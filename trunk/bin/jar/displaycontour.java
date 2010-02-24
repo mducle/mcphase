@@ -172,7 +172,7 @@ public class displaycontour extends JApplet {
 //    double[] myDatax = {};
  int j=0;
 // title= new String;
- title="";
+ title="displaycontour";
  for(int i=0; i<args.length-1;	i+=4)
  {file[j]=args[i+3];
   Integer pp;
@@ -183,7 +183,7 @@ public class displaycontour extends JApplet {
   ss=args[i+2];zaxistext=ss;
   colz[j]=p.valueOf(ss).intValue();
   ++j; 
-  title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3]+" ";
+  title=title+" "+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3];
  }
  File fileIni;
 

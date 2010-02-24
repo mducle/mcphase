@@ -7,7 +7,7 @@ BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >0) 
 
-{print " program newline  used to create a new line  number n containing text in a data file\n";
+{print " program newline used to create a new line  number n containing text in a data file\n";
 
  print " usage: newline n text  *.*   \n n=linennumber \n text= text in new line \n *.* .. filenname(s)\n";
 
@@ -15,7 +15,7 @@ unless ($#ARGV >0)
 
  
 
-$line=$ARGV[0];shift @ARGV;
+$n=$ARGV[0];shift @ARGV;
 $text=$ARGV[0];shift @ARGV;
 
 
@@ -31,7 +31,7 @@ $text=$ARGV[0];shift @ARGV;
    open (Fout, ">range.out");
 
    $j=0;
-   if ($j==0){print Fout $text."\n";}
+   if ($n==0){print Fout $text."\n";}
    while($line=<Fin>)
 
      {++$j;

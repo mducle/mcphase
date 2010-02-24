@@ -170,7 +170,7 @@ public class displaybubbles extends ApplicationFrame {
        //      p.valueOf(strLine);
        //    double[] myDatax = {};
        int j=0;
-       String title="";
+       String title="displaybubbles";
        for(int i=0; i<args.length-1;	i+=4)
        {file[j]=args[i+3];lastmod[j]=0;
        Integer pp;
@@ -181,7 +181,7 @@ public class displaybubbles extends ApplicationFrame {
        ss=args[i+2];
        colint[j]=p.valueOf(ss).intValue();
        ++j; 
-       title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3]+" ";
+       title=title+" "+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3];
        }
         displaybubbles demo = new displaybubbles(title);
         demo.pack();

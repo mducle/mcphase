@@ -177,7 +177,11 @@ public class display extends Panel implements Runnable {
  //     chart.getBackground().setTitleFont(new Font("Serif", Font.PLAIN, 24));
  //     chart.getBackground().setTitleString("Comparing Apples and Oranges");
 chart.getXAxis().setTitleString("hallo"); 
-chart.getYAxis().setTitleString(yText); 
+chart.getYAxis().setTitleString(yText);
+chart.getXAxis().setMinTickVis(true);
+chart.getXAxis().setNumMinTicks(5);
+chart.getYAxis().setMinTickVis(true);
+chart.getYAxis().setNumMinTicks(5);
  String s="";
  for (int i=0;i<file.length;++i)
    {
@@ -242,7 +246,7 @@ chart.getYAxis().setTitleString(yText);
 //      p.valueOf(strLine);
 //    double[] myDatax = {};
  int j=0;
- String title="";
+ String title="display";
  for(int i=0; i<args.length-1;	i+=3)
  {file[j]=args[i+2];
   legend[j]="false";
@@ -252,7 +256,7 @@ chart.getYAxis().setTitleString(yText);
   ss=args[i+1];
   coly[j]=p.valueOf(ss).intValue();
   ++j; 
- title=title+args[i]+" "+args[i+1]+" "+args[i+2]+" ";
+ title=title+" "+args[i]+" "+args[i+1]+" "+args[i+2];
 }
 
  display myPanel = new display();

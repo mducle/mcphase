@@ -120,17 +120,17 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
    fprintf(fout,"#**********************************************************\n");
    fprintf (fout, "#note: - for specific heat calculation use unit conversion 1mev/ion=96.48J/mol\n");
    fprintf (fout, "#      - moments and energies are given per ion - not per formula unit !\n");
-   fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc[mb/ion]}\n");
+   fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc m||(projection along H) [mb/ion]}\n");
    fclose(fout);
       }
    if (htfailed!=0){fe=0;u=0;m=0;m[1]=0;m[2]=0;m[3]=0;}
    fout = fopen_errchk ("./results/mcphas.fum","a");
-   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g       %8.8g            %8.8g       %4.4g    %4.4g %4.4g %4.4g\n",
-            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3]);
+   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g       %8.8g            %8.8g       %4.4g    %4.4g %4.4g %4.4g    %4.4g\n",
+            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3],m*H/Norm(H));
    fclose(fout);
    fout = fopen_errchk ("./results/.mcphas.fum","a");
    fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g %8.8g %8.8g  %4.4g %4.4g %4.4g %4.4g\n",
-            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3]);
+            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3],m*H/Norm(H));
    fclose(fout);
    if((fout=fopen("./fit/mcphas.fum","rb"))!=NULL)
     {// some measured data should be fitted

@@ -614,7 +614,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
 //          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
           // sum up 
            ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
-//         jsss=0;
+           jsss=0;
         
 	  sl=(*inputpars.jjj[ll]).sublattice[l]; // the whole loop has also to be done 
                                                  // for all the other transitions of sublattice sl
