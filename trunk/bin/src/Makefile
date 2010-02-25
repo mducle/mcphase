@@ -46,11 +46,11 @@ INCLDIRS =      -I. \
 		-I/local/lib  \
 		-I/usr/X11R6/include
 
-include ./Makefile.common
-
 ifdef CYGWIN
 CYGFLAGS = -DCYGWIN
 endif 
+
+include ./Makefile.common
 
 CFLAGS  = -c $(CCOPTS) $(INCLDIRS) $(CYGFLAGS) -U_FORTIFY_SOURCE
 

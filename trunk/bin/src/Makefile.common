@@ -82,6 +82,7 @@ ARCHFLAG+=-DNOMINMAX
 ifdef cross64
 CC=x86_64-w64-mingw32-gcc -pipe $(ARCHFLAG)
 CCC=x86_64-w64-mingw32-g++ -pipe $(ARCHFLAG)
+CYGFLAGS=
 endif
 endif
 

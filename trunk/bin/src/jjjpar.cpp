@@ -1146,6 +1146,7 @@ jjjpar::jjjpar(FILE * file,int nofcomps)
 // constructor with filename of singleion parameter  used by mcdiff and charges-chargeplot
 jjjpar::jjjpar(double x,double y,double z, char * sipffile)
 {xyz=Vector(1,3);xyz(1)=x;xyz(2)=y;xyz(3)=z;
+  jij=0; dn=0; sublattice=0;
   mom=Vector(1,9); mom=0; 
   Mq=ComplexVector(1,3);
   cffilename= new char [MAXNOFCHARINLINE];
@@ -1228,6 +1229,11 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
+  if (p.module_type==0) 
+  {
+     mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage.Rlo(),p.mcalc_parstorage.Rhi(),p.mcalc_parstorage.Clo(),p.mcalc_parstorage.Chi());
+     mcalc_parstorage = p.mcalc_parstorage;
+  }
   if (p.module_type==2||p.module_type==4)  {iops=new ionpars(*p.iops);//((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
@@ -1275,9 +1281,9 @@ int i1;
 
 //destruktor
 jjjpar::~jjjpar ()
-{ delete []jij; //will not work in linux 
-  delete []dn;  // will not work in linux
-  delete []sublattice;
+{ if(jij!=0)        delete []jij; //will not work in linux 
+  if(dn!=0)         delete []dn;  // will not work in linux
+  if(sublattice!=0) delete []sublattice;
   delete []cffilename;// will not work in linux
   if (module_type==2||module_type==4) delete iops;
 #ifdef __linux__

@@ -693,7 +693,7 @@ void ic_cmag(const char *filename, icpars &pars)
 
    for(i=0; i<nH; i++)
    {
-      for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUBc*(Hmin+i*Hstep)); 
+      for(j=0; j<6; j++) gjmbHmeV[j] = gjmbH[j]*(-MUB*(Hmin+i*Hstep)); 
       mfmat.Jmat(J,iJ,gjmbHmeV,pars.save_matrices);
       if(pars.perturb) VE.pcalc(pars,zV,J,iJ);
          else { J+=H; iJ+=iH; if(pars.partial) VE.lcalc(pars,J,iJ); else if(pars.arnoldi) VE.acalc(pars,J,iJ); else VE.calc(J,iJ); }
