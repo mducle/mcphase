@@ -116,7 +116,7 @@ __declspec(dllexport)
       for(k=2; k<=(2*pars.l); k+=2) for(q=-k; q<=k; q++) parval.push_back(pars.B(k,q)); }
    if(parval.size()%2==1) parval.push_back(0.);
 
-   if(est.Cols()!=(Hsz+1) || est.Rows()!=(Hsz+1)) Hicnotcalc = true;
+   if((est.Cols()!=(Hsz+1) || est.Rows()!=(Hsz+1)) && pars.truncate_level==1) Hicnotcalc = true;
    else if(real(est[0][0])==-0.1 && imag(est[0][0])==-0.1)  // Hic previously calculated
    {
       for(i=0; i<(int)(parval.size()/2); i++) if(real(est[0][i+1])!=parval[2*i] && imag(est[0][i+1])!=parval[2*i+1]) { Hicnotcalc = true; break; }
@@ -128,11 +128,11 @@ __declspec(dllexport)
       {
          sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM; H = zmat2f(Hic,iHic);
 //       est = ComplexMatrix(0,Hsz,0,Hsz); I comment this out - you should not reinitialize est !!!
-         if(est.Rhi()!=Hsz||est.Chi()!=Hsz)
+         if( (est.Rhi()!=Hsz||est.Chi()!=Hsz) && pars.truncate_level==1)
          {
             std::cerr << "ERROR module ic1ion - mcalc: Hsz recalculation does not agree with eigenstates matrix dimension\n"; exit(EXIT_FAILURE);
          }
-         if ((int)(parval.size()/2)>Hsz)
+         if ((int)(parval.size()/2)>Hsz && pars.truncate_level==1)
          {
 //          std::cerr << "ERROR module ic1ion - mcalc: storing Hamiltonian in est matrix not possible - parval size too big\n"; exit(EXIT_FAILURE);
          } 
@@ -141,12 +141,11 @@ __declspec(dllexport)
             est[0][0] = complex<double> (-0.1,-0.1);
             for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
          }
-         for(i=1; i<=Hsz; i++) memcpy(&est[i][1],&H[(i-1)*Hsz],Hsz*sizeof(complexdouble));
-         free(H);
          if(pars.truncate_level!=1)  // Truncates the matrix, and stores the single ion part in a memorymapped array (Linux only)
-         {
             truncate_hmltn(pars, est, Hic, iHic, J.Hi(), J.Lo());
-         }
+         else
+            for(i=1; i<=Hsz; i++) memcpy(&est[i][1],&H[(i-1)*Hsz],Hsz*sizeof(complexdouble));
+         free(H);
       }
       else  // Calculates using the Spectre method...                                       // lvl = 10;     % Number of |LSJ> levels to keep
       {
@@ -186,19 +185,17 @@ __declspec(dllexport)
    }
    if(pars.spectrelevels==-1)
    {
-      // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
-      icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
-      std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
-      sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
-      complex<double> a(1.,0.); int incx = 1;
-      Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
-
-      if(pars.truncate_level!=1)  // Uses the memory mapped eigenvectors of the single ion Hamiltonian to truncate the matrix (Linux only)
-      {
+      if(pars.truncate_level!=1)  // Uses the eigenvectors of the single ion Hamiltonian to truncate the matrix
          truncate_expJ(pars,est,gjmbH,J,*T,lnZ,U,Jm);
-      }
       else
       {
+         // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
+         icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
+         std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+         sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
+         complex<double> a(1.,0.); int incx = 1;
+         Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
+
          // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)
          iceig VE; if(pars.partial) VE.lcalc(pars,Jm); else if(pars.arnoldi) VE.acalc(pars,Jm); else VE.calc(Hsz,Jm); free(Jm);
 
@@ -292,10 +289,18 @@ __declspec(dllexport)
 
    // If we just want a blank estates matrix for later use (e.g. in mcalc)
    int Hsz = getdim(pars.n,pars.l); 
-   (*est) = ComplexMatrix(0,Hsz,0,Hsz);
-   // Stores the number of electrons and the orbital number in element (0,0)
-   (*est)(0,0) = complex<double> (pars.n, pars.l);
-
+   if(pars.truncate_level==1)
+   {
+      (*est) = ComplexMatrix(0,Hsz,0,Hsz);
+      // Stores the number of electrons and the orbital number in element (0,0)
+      (*est)(0,0) = complex<double> (pars.n, pars.l);
+   }
+   else
+   {
+      int Jlo=gjmbheff.Lo(), Jhi=gjmbheff.Hi(), cb = (int)(pars.truncate_level*(double)Hsz), matsize=cb*cb;
+      for (int ii=Jlo; ii<=Jhi; ii++) matsize += (cb*cb);
+      (*est) = ComplexMatrix(0,matsize+100,0,0);
+   }
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
