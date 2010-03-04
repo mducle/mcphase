@@ -54,18 +54,19 @@ typedef struct{
    Matrix **pol, **polICIC, **polICn, **polnIC;
    mfcf **ev_real, **ev_imag, **eev_real, **eev_imag;
    ComplexMatrix **Tau;
-   Vector hkl;
+   Vector hkl, q;
+   jq **J;
    inimcdis **ini;
    par **inputpars;
    mdcf **md;
    int thread_id;
 } intcalcapr_thread_data;
 class intcalcapr_input { public:
-   Vector hkl;
    int thread_id;
    int dimA, level, do_verbose;
    double En, intensity, intensitybey, QQ;
-   intcalcapr_input(int _dimA, int _tid, int _level, int _doverb, double _En, par *pars_in, inimcdis *ini_in) 
+   double epsilon; int iE;
+   intcalcapr_input(int _dimA, int _tid, int _level, int _doverb, double _En)
    { 
       thread_id = _tid; dimA = _dimA; level = _level; do_verbose = _doverb; En = _En;
    }
@@ -77,9 +78,116 @@ intcalcapr_thread_data thrdat;
 MUTEX_TYPE mutex_loop;
 MUTEX_TYPE mutex_index;
 EVENT_TYPE checkfinish;
+
+// ----------------------------------------------------------------------------------- //
+// Routine to calculate the matrix product and sum for threaded calculation of jsss
+// ----------------------------------------------------------------------------------- //
 #endif // if _THREADS
 
 #include "mcdisp_intcalc.c"
+
+#ifdef _THREADS
+#define inputpars (*thrdat.inputpars[thread_id])
+#define ini (*thrdat.ini[thread_id])
+#define md (*thrdat.md[thread_id])
+#define J (*thrdat.J[thread_id])
+#define q thrdat.q
+#ifdef __linux__
+void *jsss_mult(void *input)
+#else
+DWORD WINAPI jsss_mult(void *input)
+#endif
+#else
+void jsss_mult(int ll, long int &nofneighbours, Vector q,  par &inputpars, inimcdis &ini, jq &J, mdcf &md)
+#endif
+{
+#ifdef _THREADS
+    intcalcapr_input *myinput; myinput = (intcalcapr_input *)input;
+    int nofneighbours=myinput->dimA, ll=myinput->level;
+    int thread_id = myinput->thread_id;
+#endif
+    complex<double> ipi(0,2*3.1415926535);
+    int i,j,k,i1,j1,k1,s,ss,sl,tl,tll,m,n;
+    int l;
+    for(l=1;l<=(*inputpars.jjj[ll]).paranz;++l) 
+    {
+         int sd=(*inputpars.jjj[ll]).sublattice[l];
+         Vector d(1,3),d_rint(1,3),xyz(1,3),xyz_rint(1,3);// some vector
+         Vector ij(1,3);
+         xyz=(*inputpars.jjj[ll]).xyz+(*inputpars.jjj[ll]).dn[l]-(*inputpars.jjj[sd]).xyz; // line added 17.6.09 to remove rounding bug in PCSMO calculation
+         d=inputpars.rez*(const Vector&)xyz;
+         for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); // rint d for loop below to determine crystallographic unit ss ...
+
+         xyz=(*inputpars.jjj[ll]).dn[l];
+         d=inputpars.rez*(const Vector&)xyz;// set d to distance for later use to determie phase factor in J(Q) ...
+
+//	  if (do_verbose==1) {printf("#adding neighbor %i (%6.3f %6.3f %6.3f) of atom %i (%6.3f %6.3f %6.3f)- it contributes to J(s,s'):\n",l,xyz(1),xyz(2),xyz(3),ll,(*inputpars.jjj[ll]).xyz[1],(*inputpars.jjj[ll]).xyz[2],(*inputpars.jjj[ll]).xyz[3]);
+//                              } 
+   //2. in order to sum up we must take into account that the magnetic unit cell is
+   //   larger than the crystallographic one - the ll-l neighbor interaction contributes
+   //   to many different components of Js,ss(q) ... note s,ss runs over all the atoms
+   //   in the magnetic supercell
+         for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
+         s=J.in(i1,j1,k1); 
+
+         //next 2 lines special for treatment of assymetry in Rcu2 
+	 // i.e. if j1 is 2n then  say: the neighbour is at -d, this ensures that
+	 // for half of the atoms the interaction is counted at negative distances
+	 // [this makes no error if the lattice is primitive!!!] but for RCu2 it makes
+	 // a difference, because atoms at +-0.5c are not equal ... deleted 17.6.09 because it might give troubles in general !! 
+	 sd=1;//if (inputpars.r[2][1]==0.5&&(double)j1/2.0==integer(1.0*j1/2)) sd=-1;
+  	// if (inputpars.r[2][1]==0.0&&(double)(i1+j1)/2.0==integer(1.0*(i1+j1)/2)) sd=1;
+
+         //calc ss (check in which crystallographic unit ss of the magnetic cell the neighbour l-ll lies)	 
+         i=(int)(i1+sd*d_rint(1)-1); // calculate 
+	 j=(int)(j1+sd*d_rint(2)-1);
+	 k=(int)(k1+sd*d_rint(3)-1);
+	 if (i>=0) ij(1)=integer(1.0*i/ini.mf.na())*ini.mf.na();
+	 else      ij(1)=(integer(1.0*(i+1)/ini.mf.na())-1)*ini.mf.na();
+	 if (j>=0) ij(2)=integer(1.0*j/ini.mf.nb())*ini.mf.nb();
+	 else      ij(2)=(integer(1.0*(j+1)/ini.mf.nb())-1)*ini.mf.nb();
+	 if (k>=0) ij(3)=integer(1.0*k/ini.mf.nc())*ini.mf.nc();
+	 else      ij(3)=(integer(1.0*(k+1)/ini.mf.nc())-1)*ini.mf.nc();
+//	 if (do_verbose==1) {printf("#ijk=%i %i %i  ij()=%6.3f %6.3f %6.3f ",i,j,k,ij(1),ij(2),ij(3));}
+         i=i-(int)ij(1)+1;
+	 j=j-(int)ij(2)+1;
+	 k=k-(int)ij(3)+1;
+	 ss=J.in(i,j,k);
+//          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
+          // sum up 
+           ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
+           jsss=0;
+        
+	  sl=(*inputpars.jjj[ll]).sublattice[l]; // the whole loop has also to be done 
+                                                 // for all the other transitions of sublattice sl
+
+            
+          // therefore calculate offset of the set of transitions
+          for(tl=1;tl<=md.noft(i1,j1,k1,ll);++tl){
+	  for(tll=1;tll<=md.noft(i,j,k,sl);++tll){
+	  
+       
+	     for(m=1;m<=ini.nofcomponents;++m){for(n=1;n<=ini.nofcomponents;++n){ //this should also be ok for nofcomponents > 3 !!! (components 1-3 denote the magnetic moment)
+             jsss(ini.nofcomponents*(md.baseindex(i1,j1,k1,ll,tl)-1)+m,ini.nofcomponents*(md.baseindex(i,j,k,sl,tll)-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
+                                              }                                 } // but orbitons should be treated correctly by extending 3 to n !!
+	                                         }} 
+// increase Js,ss(q) taking into account the phase factors for the distance l-ll
+          // J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d)); // changed
+          jsss*=exp(ipi*(double)sd*(q*d)); J.mati(s,ss)+=jsss;
+          ++nofneighbours; // count neighbours summed up
+	 }}}
+   }
+#ifdef _THREADS
+   myinput->dimA=nofneighbours;
+#endif
+}
+#ifdef _THREADS
+#undef inputpars
+#undef ini
+#undef md
+#undef J
+#undef q
+#endif
 
 int index_s(int i,int j,int k,int l, int t, const mdcf & md, const inimcdis & ini)
 {int s=0,i1,j1,k1;
@@ -551,12 +659,8 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
  jq J(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),md);
  jq Jl(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),md);
 
- Vector d(1,3),d_rint(1,3),xyz(1,3),xyz_rint(1,3);// some vector
- Vector ij(1,3);
 // int signa,signb,signc,sa,sb,sc,
- int sd;
  long int nofneighbours=0;
- complex<double> ipi(0,2*3.1415926535);
  // initialize Js,ss(Q)=0 (see manual for description of this matrix)
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
    s=J.in(i1,j1,k1);
@@ -566,76 +670,79 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
            Jl.mati(s,ss)= 0;// set Js,ss(q)=0 
    }}}
  }}}
+#ifdef _THREADS
+   // Initialises mutual exclusions and threads
+   MUTEX_INIT(mutex_loop);
+   MUTEX_INIT(mutex_index);
+   EVENT_INIT(checkfinish);
+   #ifdef __linux__
+   pthread_t threads[NUM_THREADS]; int rc; void *status;
+   pthread_attr_t attr;
+   pthread_attr_init(&attr);
+   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+   #else
+   HANDLE threads[NUM_THREADS];
+   DWORD tid[NUM_THREADS], dwError;
+   #endif
+   intcalcapr_input *tin[NUM_THREADS];      thrdat.q = q; thrdat.thread_id = -1;
+   thrdat.ini = new inimcdis*[NUM_THREADS]; thrdat.inputpars = new par*[NUM_THREADS];
+   thrdat.md  = new mdcf*[NUM_THREADS];     thrdat.J         = new jq*[NUM_THREADS];
+   for (int ithread=0; ithread<NUM_THREADS; ithread++) 
+   {
+      tin[ithread] = new intcalcapr_input(dimA,ithread,1,do_verbose,0.); thrdat.J[ithread] = new jq(J); tin[ithread]->dimA=0; 
+      thrdat.md[ithread] = new mdcf(md); thrdat.ini[ithread] = new inimcdis(ini); thrdat.inputpars[ithread] = new par(inputpars);
+   }
+   int thrcount=0, ithread=0, num_threads_started=-1;
+#endif
  // calculate Js,ss(Q) summing up contributions from the l=1-paranz parameters
    int sl,sll,sublat;
-   for(ll=1;ll<=inputpars.nofatoms;++ll){for(l=1;l<=(*inputpars.jjj[ll]).paranz;++l)
+   for(ll=1;ll<=inputpars.nofatoms;++ll)
    { //sum up l.th neighbour interaction of crystallographic atom ll
      // 1. transform dn(l) to primitive lattice and round it to integer value
-    sd=(*inputpars.jjj[ll]).sublattice[l];
-    xyz=(*inputpars.jjj[ll]).xyz+(*inputpars.jjj[ll]).dn[l]-(*inputpars.jjj[sd]).xyz; // line added 17.6.09 to remove rounding bug in PCSMO calculation
-    d=inputpars.rez*(const Vector&)xyz;
-    for (i=1;i<=3;++i)d_rint(i)=rint(d(i)); // rint d for loop below to determine crystallographic unit ss ...
-
-    xyz=(*inputpars.jjj[ll]).dn[l];
-    d=inputpars.rez*(const Vector&)xyz;// set d to distance for later use to determie phase factor in J(Q) ...
-
-//	  if (do_verbose==1) {printf("#adding neighbor %i (%6.3f %6.3f %6.3f) of atom %i (%6.3f %6.3f %6.3f)- it contributes to J(s,s'):\n",l,xyz(1),xyz(2),xyz(3),ll,(*inputpars.jjj[ll]).xyz[1],(*inputpars.jjj[ll]).xyz[2],(*inputpars.jjj[ll]).xyz[3]);
-//                              } 
-   //2. in order to sum up we must take into account that the magnetic unit cell is
-   //   larger than the crystallographic one - the ll-l neighbor interaction contributes
-   //   to many different components of Js,ss(q) ... note s,ss runs over all the atoms
-   //   in the magnetic supercell
-         for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
-         s=J.in(i1,j1,k1); 
-
-         //next 2 lines special for treatment of assymetry in Rcu2 
-	 // i.e. if j1 is 2n then  say: the neighbour is at -d, this ensures that
-	 // for half of the atoms the interaction is counted at negative distances
-	 // [this makes no error if the lattice is primitive!!!] but for RCu2 it makes
-	 // a difference, because atoms at +-0.5c are not equal ... deleted 17.6.09 because it might give troubles in general !! 
-	 sd=1;//if (inputpars.r[2][1]==0.5&&(double)j1/2.0==integer(1.0*j1/2)) sd=-1;
-  	// if (inputpars.r[2][1]==0.0&&(double)(i1+j1)/2.0==integer(1.0*(i1+j1)/2)) sd=1;
-
-         //calc ss (check in which crystallographic unit ss of the magnetic cell the neighbour l-ll lies)	 
-         i=(int)(i1+sd*d_rint(1)-1); // calculate 
-	 j=(int)(j1+sd*d_rint(2)-1);
-	 k=(int)(k1+sd*d_rint(3)-1);
-	 if (i>=0) ij(1)=integer(1.0*i/ini.mf.na())*ini.mf.na();
-	 else      ij(1)=(integer(1.0*(i+1)/ini.mf.na())-1)*ini.mf.na();
-	 if (j>=0) ij(2)=integer(1.0*j/ini.mf.nb())*ini.mf.nb();
-	 else      ij(2)=(integer(1.0*(j+1)/ini.mf.nb())-1)*ini.mf.nb();
-	 if (k>=0) ij(3)=integer(1.0*k/ini.mf.nc())*ini.mf.nc();
-	 else      ij(3)=(integer(1.0*(k+1)/ini.mf.nc())-1)*ini.mf.nc();
-//	 if (do_verbose==1) {printf("#ijk=%i %i %i  ij()=%6.3f %6.3f %6.3f ",i,j,k,ij(1),ij(2),ij(3));}
-         i=i-(int)ij(1)+1;
-	 j=j-(int)ij(2)+1;
-	 k=k-(int)ij(3)+1;
-	 ss=J.in(i,j,k);
-//          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
-          // sum up 
-           ComplexMatrix jsss(1,ini.nofcomponents*md.baseindex_max(i1,j1,k1),1,ini.nofcomponents*md.baseindex_max(i,j,k));
-           jsss=0;
-        
-	  sl=(*inputpars.jjj[ll]).sublattice[l]; // the whole loop has also to be done 
-                                                 // for all the other transitions of sublattice sl
-
-            
-          // therefore calculate offset of the set of transitions
-          for(tl=1;tl<=md.noft(i1,j1,k1,ll);++tl){
-	  for(tll=1;tll<=md.noft(i,j,k,sl);++tll){
-	  
-       
-	     for(m=1;m<=ini.nofcomponents;++m){for(n=1;n<=ini.nofcomponents;++n){ //this should also be ok for nofcomponents > 3 !!! (components 1-3 denote the magnetic moment)
-             jsss(ini.nofcomponents*(md.baseindex(i1,j1,k1,ll,tl)-1)+m,ini.nofcomponents*(md.baseindex(i,j,k,sl,tll)-1)+n)=(*inputpars.jjj[ll]).jij[l](m,n);
-                                              }                                 } // but orbitons should be treated correctly by extending 3 to n !!
-	                                         }} 
-// increase Js,ss(q) taking into account the phase factors for the distance l-ll
-          // J.mati(s,ss)+=jsss*exp(ipi*(double)sd*(q*d)); // changed
-          jsss*=exp(ipi*(double)sd*(q*d)); J.mati(s,ss)+=jsss;
-          ++nofneighbours; // count neighbours summed up
-	 }}}
-      
-    }}
+  #ifndef _THREADS
+      jsss_mult(ll,nofneighbours,q,inputpars,ini,J,md);
+  #else
+      thrcount++;
+      tin[ithread]->level=ll;
+      #ifdef __linux__
+      rc = pthread_create(&threads[ithread], &attr, jsss_mult, (void *) tin[ithread]);
+      if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+      #else
+      threads[ithread] = CreateThread(NULL, 0, jsss_mult, (void *) tin[ithread], 0, &tid[ithread]);
+      if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+      #endif
+      num_threads_started = ithread+1;
+      if(thrcount%NUM_THREADS==0)
+      {
+         #ifdef __linux__
+         for(int th=0; th<NUM_THREADS; th++)
+            rc = pthread_join(threads[th], &status);
+         #else
+         WaitForMultipleObjects(NUM_THREADS,threads,TRUE,INFINITE);
+         #endif
+         ithread=0;
+      }
+      else ithread++;
+#endif
+    }
+#ifdef _THREADS
+    #ifdef __linux__
+    for(int th=0; th<ithread; th++)
+       rc = pthread_join(threads[th], &status);
+    #else
+    WaitForMultipleObjects(ithread,threads,TRUE,INFINITE);
+    #endif
+    for(int th=0; th<NUM_THREADS; th++) 
+    {
+       nofneighbours += tin[th]->dimA;
+       for(int i1=1;i1<=ini.mf.na();++i1) for(int j1=1;j1<=ini.mf.nb();++j1) for(int k1=1;k1<=ini.mf.nc();++k1)
+          for(int i2=1;i1<=ini.mf.na();++i1) for(int j2=1;j1<=ini.mf.nb();++j1) for(int k2=1;k1<=ini.mf.nc();++k1)
+             J.mat(i1,j1,k1,i2,j2,k2)+=(*thrdat.J[th]).mat(i1,j1,k1,i2,j2,k2); 
+    }
+    for (ithread=0; ithread<NUM_THREADS; ithread++) {
+       delete thrdat.J[ithread]; delete tin[ithread]; }
+    delete[] thrdat.J; //delete tin;
+#endif
 
 
 if (do_jqfile==1){if (do_verbose==1){fprintf (jqfile, "#q=(%g, %g, %g) ",hkl(1),hkl(2),hkl(3));
@@ -814,19 +921,17 @@ diffint=0;diffintbey=0;
                      Matrix polnIC(1,md.nofcomponents,1,md.nofcomponents);
 #else
                   // Populates the thread data structure
-                  intcalcapr_input *tin[NUM_THREADS]; //thrdat.ini = &ini; thrdat.inputpars = &inputpars; thrdat.md = &md;
-                  thrdat.ini      = new inimcdis*[NUM_THREADS];      thrdat.inputpars= new par*[NUM_THREADS];
                   thrdat.ev_real  = new mfcf*[NUM_THREADS];          thrdat.ev_imag  = new mfcf*[NUM_THREADS];
                   thrdat.eev_real = new mfcf*[NUM_THREADS];          thrdat.eev_imag = new mfcf*[NUM_THREADS];
                   thrdat.chi      = new ComplexMatrix*[NUM_THREADS]; thrdat.chibey   = new ComplexMatrix*[NUM_THREADS];
                   thrdat.S        = new ComplexMatrix*[NUM_THREADS]; thrdat.Sbey     = new ComplexMatrix*[NUM_THREADS];
                   thrdat.pol      = new Matrix*[NUM_THREADS];        thrdat.polICIC  = new Matrix*[NUM_THREADS];
                   thrdat.polICn   = new Matrix*[NUM_THREADS];        thrdat.polnIC   = new Matrix*[NUM_THREADS];
-                  thrdat.Ec       = new ComplexMatrix*[NUM_THREADS]; thrdat.md       = new mdcf*[NUM_THREADS];
-                  thrdat.Tau      = new ComplexMatrix*[NUM_THREADS]; thrdat.hkl = hkl; thrdat.thread_id = -1;
-                  for (int ithread=0; ithread<NUM_THREADS; ithread++) 
+                  thrdat.Ec       = new ComplexMatrix*[NUM_THREADS]; thrdat.Tau      = new ComplexMatrix*[NUM_THREADS]; 
+                  thrdat.hkl = hkl; thrdat.thread_id = -1;
+                  for (ithread=0; ithread<NUM_THREADS; ithread++) 
                   {
-                     tin[ithread] = new intcalcapr_input(dimA,ithread,1,do_verbose,En,&inputpars,&ini);
+                     tin[ithread] = new intcalcapr_input(dimA,ithread,1,do_verbose,En);
                      thrdat.chi[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
                      thrdat.chibey[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
                      thrdat.S[ithread] = new ComplexMatrix(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
@@ -840,22 +945,8 @@ diffint=0;diffintbey=0;
                      thrdat.eev_imag[ithread] = new mfcf(ini.mf.na(),ini.mf.nb(),ini.mf.nc(),ini.mf.nofatoms,ini.extended_eigenvector_dimension);
                      thrdat.Ec[ithread] = new ComplexMatrix(1,dimA,1,ini.extended_eigenvector_dimension); *thrdat.Ec[ithread]=Ec;
                      thrdat.Tau[ithread] = new ComplexMatrix(1,dimA,1,dimA); *thrdat.Tau[ithread]=Tau;
-                     thrdat.md[ithread] = new mdcf(md); thrdat.ini[ithread] = new inimcdis(ini); thrdat.inputpars[ithread] = new par(inputpars);
                   }
-                  // Initialises mutual exclusions and threads
-                  MUTEX_INIT(mutex_loop);
-                  MUTEX_INIT(mutex_index);
-                  EVENT_INIT(checkfinish);
-                  #ifdef __linux__
-                  pthread_t threads[NUM_THREADS]; int rc; void *status;
-                  pthread_attr_t attr;
-                  pthread_attr_init(&attr);
-                  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-                  #else
-                  HANDLE threads[NUM_THREADS];
-                  DWORD tid[NUM_THREADS], dwError;
-                  #endif
-                  int ithread=0,oldi=-1,num_threads_started=-1; double QQ; Vector vQQ(1,dimA);
+                  ithread=0; num_threads_started=-1; int oldi=-1; double QQ; Vector vQQ(1,dimA);
 #endif
 #ifdef _THREADS  
                   for (i=1;i<=dimA;i+=NUM_THREADS)
@@ -945,9 +1036,8 @@ diffint=0;diffintbey=0;
                      delete thrdat.pol[ithread]; delete thrdat.polICIC[ithread]; delete thrdat.polICn[ithread]; delete thrdat.polnIC[ithread];
                      delete thrdat.ev_real[ithread]; delete thrdat.ev_imag[ithread]; delete thrdat.eev_real[ithread]; delete thrdat.eev_imag[ithread];
                      delete thrdat.Ec[ithread]; delete thrdat.Tau[ithread]; delete tin[ithread]; 
-                     delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread];
                   }
-                  delete[] thrdat.Ec; delete[] thrdat.Tau; delete[] thrdat.md; delete[] thrdat.ini; delete[] thrdat.inputpars; //delete tin;
+                  delete[] thrdat.Ec;  delete[] thrdat.Tau;
                   delete[] thrdat.chi; delete[] thrdat.chibey; delete[] thrdat.S; delete[] thrdat.Sbey;
                   delete[] thrdat.pol; delete[] thrdat.polICIC; delete[] thrdat.polICn; delete[] thrdat.polnIC;
                   delete[] thrdat.ev_real; delete[] thrdat.ev_imag; delete[] thrdat.eev_real; delete[] thrdat.eev_imag; 
@@ -1006,18 +1096,86 @@ diffint=0;diffintbey=0;
           fprintf (foutds1, "#{%s ",MCDISPVERSION);
           curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),foutds1);
           fprintf (foutds1, "#Scattering Cross Section \n#Ha[T] Hb[T] Hc[T] T[K] h k l  energy[meV] dsigma/dOmegadE'[barn/mev/sr/f.u.] (dipolar approx for FF) f.u.=crystallogrpaphic unit cell (r1xr2xr3)}\n");
+#ifdef _THREADS
+          thrdat.J = new jq*[NUM_THREADS]; thrdat.hkl = hkl; thrdat.q = q; thrdat.thread_id = -1;
+          for (int ithread=0; ithread<NUM_THREADS; ithread++) 
+          {
+             tin[ithread] = new intcalcapr_input(dimA,ithread,1,do_verbose,0.); tin[ithread]->epsilon=epsilon; thrdat.J[ithread] = new jq(J);
+          }
+          int ithread=0; double oldE=0.;
+          Vector vIntensity(1,(int)((ini.emax-ini.emin)/(epsilon/2)+1)); int iE=1;
+#endif
 		     double intensity;
+#ifdef _THREADS
+                     tin[ithread]->En=ini.emin; tin[ithread]->iE=iE;
+                     #ifdef __linux__
+                     rc = pthread_create(&threads[ithread], &attr, intcalc, (void *) tin[ithread]); rc = pthread_join(threads[ithread], &status); 
+                     if(rc) { printf("Error return code %i from joining thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+                     #else
+                     threads[ithread] = CreateThread(NULL, 0, intcalc, (void *) tin[ithread], 0, &tid[ithread]);
+                     if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+                     if(WaitForSingleObject(threads[ithread],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",ithread+1); exit(EXIT_FAILURE); }
+                     #endif
+                     intensity=tin[ithread]->intensity;
+#else
 		     intensity=intcalc(dimA,ini.emin,ini,inputpars,J,q,hkl,md,do_verbose,epsilon);   
+#endif
                      fprintf (foutds1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 	             fprintf (foutds1, " %4.4g %4.4g \n",ini.emin,intensity);
+#ifdef _THREADS
+                     tin[ithread]->En=ini.emax; tin[ithread]->iE=iE;
+                     #ifdef __linux__
+                     rc = pthread_create(&threads[ithread], &attr, intcalc, (void *) tin[ithread]); rc = pthread_join(threads[ithread], &status); 
+                     if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+                     #else
+                     threads[ithread] = CreateThread(NULL, 0, intcalc, (void *) tin[ithread], 0, &tid[ithread]);
+                     if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+                     if(WaitForSingleObject(threads[ithread],INFINITE)==0xFFFFFFFF) { printf("Error in waiting for thread %i to end\n",ithread+1); exit(EXIT_FAILURE); }
+                     #endif
+                     intensity=tin[ithread]->intensity;
+#else
 		     intensity=intcalc(dimA,ini.emax,ini,inputpars,J,q,hkl,md,do_verbose,epsilon);   
+#endif
                      fprintf (foutds1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 	             fprintf (foutds1, " %4.4g %4.4g \n",ini.emax,intensity);
 	  fclose(foutds1);
+#ifdef _THREADS
+	  for(E=ini.emin;E<=ini.emax;E+=(epsilon/2)*NUM_THREADS)
+#else
 	  for(E=ini.emin;E<=ini.emax;E+=epsilon/2)
+#endif
 	   {
+#ifndef _THREADS
 		     intensity=intcalc(dimA,E,ini,inputpars,J,q,hkl,md,do_verbose,epsilon);   
 		     totint+=intensity*epsilon/2;
+#else
+                     oldE=E;
+                     for(ithread=0; ithread<NUM_THREADS; ithread++)
+                     {
+                        E=oldE+(epsilon/2)*ithread; if(E>ini.emax) break;
+                        tin[ithread]->En=E; tin[ithread]->iE=iE++;
+                        #ifdef __linux__
+                        rc = pthread_create(&threads[ithread], &attr, intcalc, (void *) tin[ithread]);
+                        if(rc) { printf("Error return code %i from thread %i\n",rc,ithread+1); exit(EXIT_FAILURE); }
+                        #else
+                        threads[ithread] = CreateThread(NULL, 0, intcalc, (void *) tin[ithread], 0, &tid[ithread]);
+                        if(threads[ithread]==NULL) { dwError=GetLastError(); printf("Error code %i from thread %i\n",dwError,ithread+1); exit(EXIT_FAILURE); }
+                        #endif
+                        num_threads_started = ithread+1;
+                     }
+                     #ifdef __linux__
+                     for(int th=0; th<num_threads_started; th++)
+                        rc = pthread_join(threads[th], &status);
+                     #else
+                     WaitForMultipleObjects(num_threads_started,threads,TRUE,INFINITE);
+                     #endif
+                     for(ithread=0; ithread<NUM_THREADS; ithread++) vIntensity(tin[ithread]->iE) = tin[ithread]->intensity;
+                     E=oldE;
+	   }
+	  iE=1; for(E=ini.emin;E<=ini.emax;E+=epsilon/2)
+	   {
+                     intensity = vIntensity(iE++); totint+=intensity*epsilon/2;
+#endif
 
           foutds1 = fopen_errchk ("./results/.mcdisp.dsigma","a");
                      fprintf (foutds1, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
@@ -1026,6 +1184,14 @@ diffint=0;diffintbey=0;
                      fprintf (foutds, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 	             fprintf (foutds, " %4.4g %4.4g \n",E,intensity);
 	   }
+
+#ifdef _THREADS
+          for (ithread=0; ithread<NUM_THREADS; ithread++) 
+          {
+             delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread]; delete thrdat.J[ithread]; delete tin[ithread];
+          }
+          delete[] thrdat.md; delete[] thrdat.ini; delete[] thrdat.inputpars; delete[] thrdat.J; //delete tin;
+#endif
 	             fprintf (foutdstot, " %4.4g ",totint);
                      }  
 

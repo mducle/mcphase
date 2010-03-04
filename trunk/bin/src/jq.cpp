@@ -79,10 +79,10 @@ jq::jq (int n1,int n2,int n3,mdcf & m)
  jj[iin(in(i1,j1,k1),in(i2,j2,k2))]= new ComplexMatrix(1,nofcomponents*m.baseindex_max(i1,j1,k1),1,nofcomponents*m.baseindex_max(i2,j2,k2));
  }}}}}} 
 }
-/*
+
 //kopier-konstruktor
 jq::jq (const jq & p)
-{ int i,j;
+{ int i,j,ind;
   nofa=p.nofa;nofb=p.nofb;nofc=p.nofc;
   nofatoms=p.nofatoms;
   nofcomponents=p.nofcomponents;
@@ -90,18 +90,16 @@ jq::jq (const jq & p)
   mx=p.mx;
   
 //dimension arrays
-  jj = new ComplexMatrix[mx*mx+1];
+  jj = new ComplexMatrix* [mx*mx+1];
   if (jj == NULL){fprintf (stderr, "Out of memory\n");exit (EXIT_FAILURE);} 
   //(1,nofcomponents*nofatoms,1,nofcomponents*nofatoms);
 
- for (i=1;i<=in(nofa,nofb,nofc);++i)
-  {for (j=1;j<=in(nofa,nofb,nofc);++j)
-     {jj[iin(i,j)]=p.jj[iin(i,j)];
-    }
-  }           
+ for (int i1=1;i1<=nofa;++i1){ for (int j1=1;j1<=nofb;++j1){ for (int k1=1;k1<=nofc;++k1){
+ for (int i2=1;i2<=nofa;++i2){ for (int j2=1;j2<=nofb;++j2){ for (int k2=1;k2<=nofc;++k2){
+    ind = iin(in(i1,j1,k1),in(i2,j2,k2)); jj[ind]= new ComplexMatrix(1,(*p.jj[ind]).Rhi(),1,(*p.jj[ind]).Chi()); (*jj[ind])=(*p.jj[ind]);
+ }}}}}} 
 
 }
-*/
 
 //destruktor
 jq::~jq ()

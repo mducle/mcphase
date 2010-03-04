@@ -417,10 +417,33 @@ return intensity;
 
 
 //**************************************************************************/
+#ifdef _THREADS
+#ifdef __linux__
+void *intcalc(void *input)
+#else
+DWORD WINAPI intcalc(void *input)
+#endif
+#else
 double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector & q,Vector & hkl,mdcf & md,int do_verbose,double epsilon)
+#endif
 {int i,j,i1,j1,k1,l1,t1,i2,j2,k2,l2,t2,s,ss,bmax,bbmax,b,bb;
  double intensity=1.2;
  double QQ,ki,kf;
+
+#ifdef _THREADS
+   intcalcapr_input *myinput; myinput = (intcalcapr_input *)input;
+   int thread_id = myinput->thread_id;
+   int dimA = myinput->dimA;
+   double en = myinput->En; 
+   #define ini (*thrdat.ini[thread_id])
+   #define inputpars (*thrdat.inputpars[thread_id])
+   #define J (*thrdat.J[thread_id])
+   #define q thrdat.q
+   #define hkl thrdat.hkl
+   #define md (*thrdat.md[thread_id])
+   int do_verbose = myinput->do_verbose;
+   double epsilon = myinput->epsilon; 
+#endif
 
  complex<double> z(en,epsilon);
  complex<double> eps(epsilon/4,0);
@@ -611,6 +634,24 @@ else
 }
 
 
+#ifdef _THREADS
+#undef ini
+#undef inputpars
+#undef J
+#undef q
+#undef hkl
+#undef md
+myinput->intensity=intensity;
+MUTEX_LOCK(&mutex_loop);
+thrdat.thread_id = thread_id;
+EVENT_SIG(checkfinish);
+MUTEX_UNLOCK(&mutex_loop);
+#ifdef __linux__
+pthread_exit(NULL);
+#else
+return 0;
+#endif
+#else
 return intensity;	
+#endif
 }
-
