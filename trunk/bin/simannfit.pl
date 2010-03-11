@@ -3,7 +3,7 @@
 unless ($#ARGV >0) 
 {print " program simannfit used to perform simulating annealing\n";
  print " usage: simannfit 10 [options] * \n  10 .. initial temperature \n * .. filename(s) of paramter file(s)\n";
- print " ... there must exist a program calcsta.bat, the output of which\n";
+ print " ... there must exist a program calcsta.bat (windows) / calcsta (linux), the output of which\n";
  print " contains 'sta = 249' - this program is called from this output\n";
  print " at every iteration step and  the standard sta deviation is minimzed\n";
  print " simannfit gives as a parameter a maximum number for sta - if during the\n";
@@ -172,7 +172,7 @@ sub catch_zap {
 #****************************************************************************** 
 
 
-sub sta {local $SIG{INT}='IGNORE'; 
+sub sta {#local $SIG{INT}='IGNORE';
  #print "#write modified parameterset to files *\n";
  foreach (@ARGV)
  {$file=$_; open (Fin, $file.".forfit");open (Fout1, ">".$file);open (Fout2,">./results/simannfit.par");
@@ -204,13 +204,13 @@ sub sta {local $SIG{INT}='IGNORE';
 				     ++$i;
 				    }
 				    # calculate the expression by a little perl program
-				    open (Foutcc, ">results/ccccccc.ccc");
+				    unless(open (Foutcc, ">./results/ccccccc.ccc")){die "error simannfit: could not open temporary file results/ccccc.ccc/n";}
 				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
 				    close Foutcc;
 				    close Foutcc;$systemcall="perl ./results/ccccccc.ccc > ./results/cccccc1.ccc";
                                     if ($^O=~/MSWin/){$systemcall=~s|\/|\\|g;}
 				    if(system $systemcall){die "error evaluating expression in results/ccccc*";}
-				    open (Fincc,"./results/cccccc1.ccc");
+				    unless(open (Fincc,"./results/cccccc1.ccc")){die "error simannfit: could not open temporary file results/ccccc1.ccc/n";}
 				    $data=<Fincc>; close Fincc;
 				    mydel ("./results/ccccccc.ccc");
                                     mydel ("./results/cccccc1.ccc");

@@ -34,7 +34,7 @@ void myPrintComplexMat(FILE * file,ComplexMatrix & M)
  {J=p.J;so1ion=p.so1ion;
   Ja=p.Ja; Jb=p.Jb; Jc=p.Jc;Hcf=p.Hcf;
   Jaa=p.Jaa; Jbb=p.Jbb; Jcc=p.Jcc;
-  gJ=p.gJ;
+  gJ=p.gJ;nof_electrons=p.nof_electrons;
   alpha=p.alpha;beta=p.beta;gamma=p.gamma;
   r2=p.r2;r4=p.r4;r6=p.r6;
   Blm=p.Blm; // vector of crystal field parameters
@@ -72,7 +72,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
    Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
-   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;
+   alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;nof_electrons=0;
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
    OOlm= new ComplexMatrix * [1+NOF_OLM_MATRICES]; 
@@ -91,7 +91,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
  
 ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices filled with values !)
  {int dimj;
-  getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6 );
+  getpar(ion, &dimj, &alpha, &beta, &gamma, &gJ,&r2, &r4,&r6, &nof_electrons );
    iontype = new char [strlen(ion)+1];
    strcpy(iontype,ion);
    calcmagdensity=0;
@@ -515,7 +515,7 @@ if (pr==1) {printf("#using %s ...\n",moduletype);
   mo65cr,mo65ci,
   mo66cr,mo66ci,
 
-  &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6);
+  &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6, &nof_electrons);
 
 if(fabs(alphar-alpha)/fabs(alphar+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Stevens Parameter (alpha=%g) different from input file (alpha=%g), using internal value\n",moduletype,alpha,alphar);}
 if(fabs(betar-beta)/fabs(betar+1)>SMALL) {fprintf(stderr,"Warning module %s internal value for Stevens Parameter (beta=%g) different from input file (beta=%g), using internal value\n",moduletype,beta,betar);}

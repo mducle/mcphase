@@ -22,6 +22,7 @@ class ionpars
               // 0 ...  cfield xyz||cab
               // 1 .... so1ion xyz||abc
    char * iontype; // description string
+   int nof_electrons; // nof 4f electrons
    double J;// momentum quantum number
    double gJ; // Lande factor
    double alpha;

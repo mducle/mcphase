@@ -72,7 +72,7 @@ abc=0;
   { pos=ftell(fin_coq); 
    if (pos==-1) 
        {fprintf(stderr,"Error: wrong sps file format\n");exit (EXIT_FAILURE);}
-   fgets(instr,MAXNOFCHARINLINE,fin_coq); 
+   fgets_errchk(instr,MAXNOFCHARINLINE,fin_coq);
    // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
    for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
    

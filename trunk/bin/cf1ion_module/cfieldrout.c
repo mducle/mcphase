@@ -421,7 +421,7 @@ DOUBLE omegan6n(n)
  class ionpars
 ------------------------------------------------------------------------------*/
 getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, double * lande,
-       double * rh2, double * rh4,double * rh6 )
+       double * rh2, double * rh4,double * rh6, int * nof_electrons )
 {
     KRISTALLFELD *kristallfeld,*init_iterationnew();
     SETUP        *setup;
@@ -439,6 +439,7 @@ getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, 
     (*rh2)=r2(IONENNUMMER(iteration));
     (*rh4)=r4(IONENNUMMER(iteration));
     (*rh6)=r6(IONENNUMMER(iteration));
+    (*nof_electrons)= IONENIMP[ IONENNUMMER(iteration) ].elektronen_in_vier_f;
    
 }
 
@@ -500,7 +501,7 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
                               int * dj, 
                               double * alpha, double * beta, double * gamma, 
                               double * lande,
-                              double * rh2,double * rh4,double * rh6)
+                              double * rh2,double * rh4,double * rh6, int * nof_electrons)
 {
     KRISTALLFELD *kristallfeld,*init_iterationnew();
     EWPROBLEM    *ewproblem,   *setuphcf();
@@ -533,7 +534,8 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
     (*rh2)=r2(IONENNUMMER(iteration));
     (*rh4)=r4(IONENNUMMER(iteration));
     (*rh6)=r6(IONENNUMMER(iteration));
-    
+    (*nof_electrons)= IONENIMP[ IONENNUMMER(iteration) ].elektronen_in_vier_f;
+
     Bx=-1.0/GJ(iteration)/myB;By=0.0;Bz=0.0;
       HMAG(iteration)=calc_Bmag(DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     for (i=1;i<=DIMJ(iteration);++i)
@@ -2609,8 +2611,8 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
- /*                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
- //                               IT(V21(iter)) = 0.0;                     // results in rotated systems */
+ //                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
+ //                               IT(V21(iter)) = 0.0;                     // results in rotated systems
                  }
                  break;
  

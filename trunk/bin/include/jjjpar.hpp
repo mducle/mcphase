@@ -51,6 +51,7 @@ class jjjpar
    ComplexMatrix & mcalc_parameter_storage_init (Vector & gjmbheff,double & T);
 
   char * cffilename; // single ion parameter filename
+  char * modulefilename; // module name
   double SLR,SLI; // scattering length
   double DWF; // DebeyWallerFactor [A^2] 
   Vector magFFj0; // magnetic formfactor numbers
@@ -131,9 +132,9 @@ class jjjpar
   // integer to tell which module is loaded 0 - external, 1 - kramer, 2- cfield, 3 - brillouin
   int module_type;
   Matrix cnst;// cnst is the Zlm constants - put them into the matrix  
+   int nof_electrons; // no of electrons in d or f shell
  
   private:
-
 
   // external module functions, intern_mcalc=0
   void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);  

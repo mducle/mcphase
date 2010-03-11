@@ -110,7 +110,7 @@ public class displaycontour extends JApplet {
      */
     getContentPane().setLayout(new BorderLayout(0,0));
     setBackground(java.awt.Color.white);
-    setSize(600,550);
+    setSize(600,600);
     JPanel main = new JPanel();
     rpl_ = makeGraph(values,axis1,axis2);
     JPanel button = makeButtonPanel(false);
@@ -329,7 +329,7 @@ public class displaycontour extends JApplet {
     JFrame frame = new JFrame("displaycontour");
     JPanel main = new JPanel();
     main.setLayout(new BorderLayout());
-    frame.setSize(600,500);
+    frame.setSize(600,600);
     frame.getContentPane().setLayout(new BorderLayout());
     /*
      * Listen for windowClosing events and dispose of JFrame
@@ -500,12 +500,14 @@ public class displaycontour extends JApplet {
     /*
      * Resize the graph  and place in the "Center" of the frame.
      */
-    rpl.setSize(new Dimension(600, 400));
+    rpl.setSize(new Dimension(600,500));
+    
     /*
      * Resize the key Pane, both the device size and the physical
      * size. Set the size of the key in physical units and place
      * the key pane at the "South" of the frame.
      */
+    rpl.setLayerSizeP(new Dimension2D(6.0, 6.0));
     rpl.setKeyLayerSizeP(new Dimension2D(6.0, 1.02));
     rpl.setKeyBoundsP(new Rectangle2D.Double(0.01, 1.01, 5.98, 1.0));
 

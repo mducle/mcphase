@@ -759,14 +759,14 @@ void spincf::jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float
                  show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,
                  show_atoms,scale_view_1,scale_view_2,scale_view_3,
                  showprim,phase,savev_real,savev_imag,amplitude,hkl,
-                 spins_show_ellipses,spins_scale_static_moment,cffilenames,0.0,spins_show_static_moment_direction);
+                 spins_show_ellipses,spins_scale_static_moment,cffilenames,0.0,spins_show_static_moment_direction,0);
 }
 
 
 void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
                  double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
                  int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
-                 double spins_show_ellipses,double spins_scale_static_moment,char ** cffilenames,double show_chargedensity,double show_static_moment_direction)
+                 double spins_show_ellipses,double spins_scale_static_moment,char ** cffilenames,double show_chargedensity,double show_static_moment_direction, double threshhold)
 { int i,j,k,l,ctr=0,maxm,m;int i1,j1,k1;
  // some checks
  if(nofatoms!=savev_real.nofatoms||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
@@ -1121,7 +1121,7 @@ for(l=1;l<=nofatoms;++l)
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
  // here we calculate the chargedensity of ion
-   cd.calc_cd_surface(moments,ionpar,0.05);
+   cd.calc_cd_surface(moments,ionpar,threshhold);
    for(ii=1;ii<=cd.nofpoints();++ii)
      {R=cd.rtf(ii)(1);theta=cd.rtf(ii)(2);fi=cd.rtf(ii)(3);
      if(ionpar.module_type==2){// mind abc||yzx in module cfield
@@ -1206,7 +1206,12 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
   extract(cffilenames[l],"radius",radius);
   if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
   {     double rp=abs(radius);
+        // here we should introduce another loop to go around +-1 around the primitive
+   // magnetic unit cell so that we see also atoms at the borders in the density map:
+       int i0,j0,k0;
+       for(i0=-1;i0<=1;++i0){for(j0=-1;j0<=1;++j0){for(k0=-1;k0<=1;++k0){
        for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
+        dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, abc, r,x,y,z);
         // here the ijk range is be more special according to the sphere radius rp
         imax=1+(int)((dd0(1)+rp-minv(1))*nofpointsi/max_min(1)+0.5);
         imin=-1+(int)((dd0(1)-rp-minv(1))*nofpointsi/max_min(1)+0.5);
@@ -1218,8 +1223,12 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
         for (i=imin;i<=imax;++i){for (j=jmin;j<=jmax;++j){for (k=kmin;k<=kmax;++k){
         // set position vector
         rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;
-        dd=pos(i1,j1,k1,l, abc, r,x,y,z)-rijk;
-        if(Norm(dd)<rp)ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+= 1.6110481;  // this is the chargedensity of a homogeneous sphere with 1 electron/(4pi a0^3/3) with a0=0.529177 A
+        dd=p_inverse*rijk;
+        if(dd(1)>0&dd(1)<1&dd(2)>0&dd(2)<1&dd(3)>0&dd(3)<1)
+        {dd=dd0-rijk;
+        if(Norm(dd)<rp)ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+= copysign(1.6110481,radius);  // this is the chargedensity of a homogeneous sphere with 1 electron/(4pi a0^3/3) with a0=0.529177 A
+        }
+        }}}
         }}}
         }}}
   }
@@ -1243,10 +1252,9 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
 //   while(k1r<=0)k1r+=nofc;while(k1r>nofc)k1r-=nofc;
                 for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
    {moments(ndd)=moment(i1r,j1r,k1r,l)(ndd)+amplitude*(cos(-phase+QR)*savev_real.moment(i1r,j1r,k1r,l)(ndd)+sin(phase-QR)*savev_imag.moment(i1r,j1r,k1r,l)(ndd));}
-              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+          // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
-
         // here the ijk range should be more special according to the maximum sphere radius 3A - to get speed up!!!!
         // dd0 is the center of the atom ...
         radius=3.0;// only pixels nearer maxR (A) to the center of an atom will be considered
@@ -1280,8 +1288,8 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
      theta=acos(dd(3)/R);Rxy=sqrt(dd(1)*dd(1)+dd(2)*dd(2));if(Rxy>SMALL){fi=acos(dd(1)/Rxy);}else{fi=0;}
                          if (dd(2)<0)fi=-fi;
                               }
-    // here we calculate the chargedensity of ion
-    ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.rocalc(theta,fi,R,moments);
+    // here we calculate the chargedensity of ion  (negative sign, because rocalc does give positive values)
+    ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]-=ionpar.rocalc(theta,fi,R,moments);
    // printf("%g %g %g %g\n",R,theta,fi,ro);
         }
    } // end if rijk is in primitive magnetic unit cell
@@ -1293,7 +1301,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
 
   // here starts printout density loop
   fprintf(fout,"#density map \n");
-  fprintf(fout,"#ri[A] rj[A] rk[A] density[e/A^3] (or [mb/A^3])\n");
+  fprintf(fout,"#ri[A] rj[A] rk[A] density[|e|/A^3] (or [mb/A^3])\n");
   for (i=1;i<=nofpointsi;++i){for (j=1;j<=nofpointsj;++j){for (k=1;k<=nofpointsk;++k){
   // set position vector
   rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;

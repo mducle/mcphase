@@ -35,9 +35,9 @@ printf("* Reference: M. Rotter PRB 79 (2009) 140405R\n");
 printf("* %s\n",MCPHASVERSION);
 printf("***********************************************************\n");
 // check command line
-  if (argc < 6)
+  if (argc < 7)
     { printf ("\nprogram chrgplt - calculate chargdensity of a single ion\n\n\
-                use as: chrgplt T Ha Hb Hc mcphas.sipf \n\n\
+                use as: chrgplt threshhold T Ha Hb Hc  mcphas.sipf \n\n\
                 given is temperature T[K] and magnetic effective field H[T]\n \
 		and crystal field  parameters Blm should be read from a \n\
 	        standard mcphas single ion property file mcphas.cf \n\
@@ -48,11 +48,12 @@ printf("***********************************************************\n");
       exit (1);
     }
 
-  double T,ha,hb,hc;
-  T=strtod(argv[1],NULL);
-  ha=strtod(argv[2],NULL);
-  hb=strtod(argv[3],NULL);
-  hc=strtod(argv[4],NULL);
+  double T,ha,hb,hc, threshhold;
+  threshhold=strtod(argv[1],NULL);
+  T=strtod(argv[2],NULL);
+  ha=strtod(argv[3],NULL);
+  hb=strtod(argv[4],NULL);
+  hc=strtod(argv[5],NULL);
 
   double dtheta=0.1; //stepwidth to step surface
   double dfi=0.1;
@@ -61,7 +62,7 @@ printf("***********************************************************\n");
  FILE * fout, * cf_file;
 
  // read cf-parameters into class object jjjpar
- jjjpar jjjps(0.0,0.0,0.0,argv[5]);
+ jjjpar jjjps(0.0,0.0,0.0,argv[6]);
   int dim;
   double lnz,u;
   if(jjjps.module_type==0) 
@@ -117,14 +118,14 @@ printf("\n");
 Vector abc(1,3);abc(1)=6.0;abc(2)=6.0;abc(3)=6.0;
 Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
 
- strcpy(cffilenames[1],argv[5]);
+ strcpy(cffilenames[1],argv[6]);
  x[1]=0.5;y[1]=0.5;z[1]=0.5; // put atom in middle of cell
 //printf("hello\n");
 
 if(jjjps.calcmagdensity==0)
 {
 // read pointcharge-parameters 
- cf_file = fopen_errchk (argv[5], "rb");
+ cf_file = fopen_errchk (argv[6], "rb");
  float par[100];par[0]=99;
 while((pchere=inputparline("pointcharge",cf_file,par))==0&&feof(cf_file)==false){;}
 while(pchere>3)
@@ -160,7 +161,7 @@ fclose(cf_file);
   fout = fopen_errchk ("results/chrgplt.jvx", "w");
    s.jvx_cd(fout,text,abc,r,x,y,z,gJJ,0,0,0,show_atoms,1.0,1.0,1.0,
             1,0.0,ev_real,ev_imag,0.0,hkl,0.0,spins_scale_static_moment,
-            cffilenames,1.0,0.0);
+            cffilenames,1.0,0.0,threshhold);
   fclose (fout);
   fout = fopen_errchk ("results/chrgplti.grid", "w");
   s.cd(fout,abc,r,x,y,z,cffilenames,1,1,200,200,1.0,1.0,1.0,ev_real,ev_imag,0.0,0.0,hkl);

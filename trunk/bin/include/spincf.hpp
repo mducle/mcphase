@@ -77,7 +77,7 @@ class spincf
     void jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
                  double show_abc_unitcell,double show_primitive_crystal_unitcell,double show_magnetic_unitcell,double show_atoms,double scale_view_1,double scale_view_2,double scale_view_3,
                  int showprim,double phase,spincf & savev_real,spincf & savev_imag,double amplitude,Vector & hkl,
-                 double spins_show_ellipses,double spins_scale_moment,char ** cffilenames,double show_chargedensity,double spins_show_static_moment_direction);
+                 double spins_show_ellipses,double spins_scale_moment,char ** cffilenames,double show_chargedensity,double spins_show_static_moment_direction, double threshhold);
 
      void cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,char ** cffilenames,int showprim,
                 int nofpointsi, int nofpointsj, int nofpointsk,double scale_view_1,double scale_view_2,double scale_view_3,

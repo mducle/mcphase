@@ -48,11 +48,11 @@ printf("# * Reference: M. Rotter PRB 79 (2009) 140405R\n");
 printf("# * %s\n",MCPHASVERSION);
 printf("# **************************************************\n");
 // check command line
-  if (argc < 5)
+  if (argc < 6)
     { printf (" program charges - display charges at HT point\n\
-                use as: charges T Ha Hb Hc [file.mf]\n \
+                use as: charges threshhold T Ha Hb Hc  [file.mf]\n \
                             (default input file is results/mcphas.mf)\n \
-                    or: charges T Ha Hb Hc h k l E\n \
+                    or: charges threshhold T Ha Hb Hc h k l E \n \
                         (reads from results/mcphas.mf and results/mcdisp.qev\n\n \
                 This program outputs a magnetic/charge structure (and magnetic/orbital excitation)\n \
                 graphic/movie in the output files results/charges*.jvx (javaview)\n\n \
@@ -61,9 +61,10 @@ printf("# **************************************************\n");
                                             java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n\n");
       exit (1);
     }
-
-if (argc==6) 
- { fin_coq = fopen_errchk (argv[5], "rb");}
+double threshhold;
+threshhold=strtod(argv[1],NULL);
+if (argc==7)
+ { fin_coq = fopen_errchk (argv[6], "rb");}
  else
  { fin_coq = fopen_errchk ("./results/mcphas.mf", "rb");}
     
@@ -131,7 +132,6 @@ abc=0;char *token;
   
 // load mfconfigurations and check which one is nearest -------------------------------   
   double T,ha,hb,hc;
-
    j=fseek(fin_coq,pos,SEEK_SET); 
     if (j!=0){fprintf(stderr,"Error: wrong mf file format\n");exit (EXIT_FAILURE);}
    
@@ -141,10 +141,10 @@ abc=0;char *token;
 
     { spincf spins(1,1,1,(int)numbers[9],(int)numbers[10]);
       spins.load(fin_coq);
-      ddT=strtod(argv[1],NULL)-numbers[3];ddT*=ddT;
-      ddHa=strtod(argv[2],NULL)-numbers[5];ddHa*=ddHa;
-      ddHb=strtod(argv[3],NULL)-numbers[6];ddHb*=ddHb;
-      ddHc=strtod(argv[4],NULL)-numbers[7];ddHc*=ddHc;
+      ddT=strtod(argv[2],NULL)-numbers[3];ddT*=ddT;
+      ddHa=strtod(argv[3],NULL)-numbers[5];ddHa*=ddHa;
+      ddHb=strtod(argv[4],NULL)-numbers[6];ddHb*=ddHb;
+      ddHc=strtod(argv[5],NULL)-numbers[7];ddHc*=ddHc;
       dd=sqrt(ddT+ddHa+ddHb+ddHc+0.000001);
       if (dd<delta)
        {delta=dd;
@@ -231,23 +231,33 @@ fclose(fout);
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              
-  fout = fopen_errchk ("./results/charges.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,50,50,50,scale_view_1,scale_view_2,scale_view_3,
+  fout = fopen_errchk ("./results/chargesi.grid", "w");
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,10,100,100,scale_view_1,scale_view_2,scale_view_3,
+                       savev_real,savev_imag,0.0,0.0,hkl);
+    fclose (fout);
+
+  fout = fopen_errchk ("./results/chargesj.grid", "w");
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,100,10,100,scale_view_1,scale_view_2,scale_view_3,
+                       savev_real,savev_imag,0.0,0.0,hkl);
+    fclose (fout);
+
+  fout = fopen_errchk ("./results/chargesk.grid", "w");
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,100,100,10,scale_view_1,scale_view_2,scale_view_3,
                        savev_real,savev_imag,0.0,0.0,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges.jvx", "w");
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0);
+                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0,threshhold);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges_prim.jvx", "w");
      extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0);
+                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0,threshhold);
     fclose (fout);
 
 
-if (argc>=9){// try a spinwave picture
+if (argc>=10){// try a spinwave picture
              double h,k,l,E,ddh,ddk,ddl,ddE;
              int extended_eigenvector_dimension;
              double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_oscillation=1.0; 
@@ -279,14 +289,14 @@ if (argc>=9){// try a spinwave picture
                  spincf ev_real(extendedspincf.na(),extendedspincf.nb(),extendedspincf.nc(),extendedspincf.nofatoms,extended_eigenvector_dimension);
                  spincf ev_imag(extendedspincf.na(),extendedspincf.nb(),extendedspincf.nc(),extendedspincf.nofatoms,extended_eigenvector_dimension);
                  ev_real.load(fin_coq);ev_imag.load(fin_coq);
-                 ddT=strtod(argv[1],NULL)-numbers[4];ddT*=ddT;
-                 ddHa=strtod(argv[2],NULL)-numbers[1];ddHa*=ddHa;
-                 ddHb=strtod(argv[3],NULL)-numbers[2];ddHb*=ddHb;
-                 ddHc=strtod(argv[4],NULL)-numbers[3];ddHc*=ddHc;
-                 ddh=strtod(argv[5],NULL)-numbers[5];ddh*=ddh;
-                 ddk=strtod(argv[6],NULL)-numbers[6];ddk*=ddk;
-                 ddl=strtod(argv[7],NULL)-numbers[7];ddl*=ddl;
-                 ddE=strtod(argv[8],NULL)-numbers[9];ddE*=ddE;
+                 ddT=strtod(argv[2],NULL)-numbers[4];ddT*=ddT;
+                 ddHa=strtod(argv[3],NULL)-numbers[1];ddHa*=ddHa;
+                 ddHb=strtod(argv[4],NULL)-numbers[2];ddHb*=ddHb;
+                 ddHc=strtod(argv[5],NULL)-numbers[3];ddHc*=ddHc;
+                 ddh=strtod(argv[6],NULL)-numbers[5];ddh*=ddh;
+                 ddk=strtod(argv[7],NULL)-numbers[6];ddk*=ddk;
+                 ddl=strtod(argv[8],NULL)-numbers[7];ddl*=ddl;
+                 ddE=strtod(argv[9],NULL)-numbers[9];ddE*=ddE;
                  
                  dd=sqrt(ddT+ddHa+ddHb+ddHc+ddh+ddk+ddl+ddE+0.000001);
                  if (dd<delta)
@@ -317,12 +327,12 @@ if (argc>=9){// try a spinwave picture
                sprintf(filename,"./results/charges.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation);
+                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation,threshhold);
                fclose (fin_coq);
                sprintf(filename,"./results/charges_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                      extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation);
+                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation,threshhold);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);

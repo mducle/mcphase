@@ -582,7 +582,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
       f2sp=abs(z1z2*st+z2z3*ct); if(f2sp*f2sp>IspF2){IspF2=f2sp*f2sp;IspF2a=azimuth*180/PI;}
       f2pp=abs(-ct*ct*(z12*st*st/ct/ct+z32)); if(f2pp*f2pp>IppF2){IppF2=f2pp*f2pp;IppF2a=azimuth*180/PI;}
       if(code==1&&ortho==1)
-       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n",
        hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],
        f1ps*f1ps,azimuth*180/PI,
        f1sp*f1sp,azimuth*180/PI,
@@ -595,12 +595,12 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
 
     if(IspF1+IpsF1+IppF1+IspF2+IpsF2+IppF2+ikern[i]+intmag[i]>0.0001)
       {if(ortho==1)
-       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E        %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f   %8.6f %3.0f %8.6f %3.0f %8.6f %3.0f  %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n",
         hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],
         IspF1,IspF1a,IpsF1,IpsF1a,IppF1,IppF1a,IspF2,IspF2a,IpsF2,IpsF2a,IppF2,IppF2a,
         abs(mx[i]),abs(my[i]),abs(mz[i]),abs(mx2[i]),abs(my2[i]),abs(mz2[i]),abs(mxmy[i]),abs(mxmz[i]),abs(mymz[i]));}
        else
-       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+       {fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E\n",
         hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i]);}
       }
     if(code==1&&ortho==1){fprintf(fout,"#\n");}
@@ -608,7 +608,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    if(code==2)//calculate rpvalue and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs\n");}
-      fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+      fprintf(fout,   "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E %8.4f\n",
       hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]));
      if(real(mx[i])>=0){
                       rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(mx[i])); total+=abs(mx[i]);
@@ -621,7 +621,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    if(code==3)//calculate also rpvalue and chisquared and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs error\n");}
-      fprintf(fout, "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f\n", 
+      fprintf(fout,    "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E %8.4f %8.4f\n",
       hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]),abs(my[i]));
      if(real(mx[i])>=0){
       rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(mx[i])); total+=abs(mx[i]);

@@ -361,7 +361,10 @@ cfi = cos(fi);
                    }
 
 Matrix a(0,6,-6,6);
-a(0, 0) = 1 / sqrt(4.0 * 3.1415);
+ if(nof_electrons==0){fprintf(stderr,"Error: nof_electrons=0 ... perhaps single ion property file %s does not contain the number of electrons in the shell: 'nof_electrons=...'\n",cffilename);
+     exit(EXIT_FAILURE);}
+ a(0, 0) = nof_electrons / sqrt(4.0 * 3.1415); // nofelectrons ???? normalisation ???
+// a(0, 0) = 1 / sqrt(4.0 * 3.1415); // nofelectrons ???? normalisation ???
 if(calcmagdensity>0)a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
 
 a(2,-2)=moments(offset+4);
@@ -817,6 +820,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
   if(strcmp(modulefilename,"kramer")==0)
     {module_type=1;fprintf (stderr,"[internal]\n");
       ABC=Vector(1,3);i=3;
+      nof_electrons=0; // not to be used in module kramer !!
       while(feof(cf_file)==false)
       {fgets(instr, MAXNOFCHARINLINE, cf_file);
        if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
@@ -837,6 +841,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
     {if(strcmp(modulefilename,"brillouin")==0)
      {module_type=3;fprintf (stderr,"[internal]\n");
       ABC=Vector(1,1);i=1;
+     nof_electrons=0; // not to be used in module brillouin !!
       while(feof(cf_file)==false)
       {fgets(instr, MAXNOFCHARINLINE, cf_file);
        if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
@@ -858,6 +863,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
       int dj;dj=(int)(2*J()+1);
       est=ComplexMatrix(0,dj,1,dj);
       mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
+      nof_electrons=(*iops).nof_electrons;
       // get 1ion parameters - operator matrices
      
      }
@@ -866,6 +872,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
      {module_type=4;fprintf (stderr,"#[internal]\n");
       fclose(cf_file);cf_file = fopen_errchk (sipffilename, "rb"); // reopen file
       iops=new ionpars(cf_file);  
+      nof_electrons=(*iops).nof_electrons;
       int dj;dj=(int)(2*J()+1);
       est=ComplexMatrix(0,dj,1,dj);
       mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
@@ -874,7 +881,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
      }
      else
       {fprintf (stderr,"#[external]\n");
-      i=0;
+      i=0;nof_electrons=0;
       while(feof(cf_file)==false)
       {fgets(instr, MAXNOFCHARINLINE, cf_file);
        if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
@@ -886,7 +893,8 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
                                            i-=extract(instr,"MODPAR6",nn[6])-1; 
                                            i-=extract(instr,"MODPAR7",nn[7])-1; 
                                            i-=extract(instr,"MODPAR8",nn[8])-1; 
-                                           i-=extract(instr,"MODPAR9",nn[9])-1; 
+                                           i-=extract(instr,"MODPAR9",nn[9])-1;
+                                              extract(instr,"nof_electrons",nof_electrons);
                                           }
       }
        // input all  lines starting with comments
@@ -1172,7 +1180,7 @@ jjjpar::jjjpar(double x,double y,double z, double slr,double sli, double dwf)
    Cp=Vector(1,9);Cp=0;
    r2=0;r4=0;r6=0;
   calcmagdensity=0;
-
+  nof_electrons=0; // no electorns by default
 }
 //constructor without file
 jjjpar::jjjpar(int n,int diag,int nofmom) 
@@ -1187,6 +1195,7 @@ jjjpar::jjjpar(int n,int diag,int nofmom)
   mom=Vector(1,nofcomponents);
   mom=0;
   calcmagdensity=0;
+  nof_electrons=0;// no electorns by default
 
   dn = new Vector[n+1];for(i1=0;i1<=n;++i1){dn[i1]=Vector(1,3);}
   if (dn == NULL){ fprintf (stderr, "Out of memory\n"); exit (EXIT_FAILURE);}
@@ -1215,6 +1224,7 @@ jjjpar::jjjpar (const jjjpar & p)
   xyz=p.xyz;paranz=p.paranz;
   set_zlm_constants();
   SLR=p.SLR;SLI=p.SLI;
+  nof_electrons=p.nof_electrons;
 
   diagonalexchange=p.diagonalexchange;
   gJ=p.gJ;module_type=p.module_type;
@@ -1229,7 +1239,7 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==0) 
+  if (p.module_type==1||p.module_type==0) 
   {
      mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage.Rlo(),p.mcalc_parstorage.Rhi(),p.mcalc_parstorage.Clo(),p.mcalc_parstorage.Chi());
      mcalc_parstorage = p.mcalc_parstorage;
