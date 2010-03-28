@@ -271,7 +271,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   int do_gobeyond=1;
   double E;
   double sta=0,sta_int=0;
-  double jqsta=-1.0;
+  double jqsta=-1.0e10;
   double jq0=0;
   Vector hkl(1,3),q(1,3);
   Vector mf(1,ini.nofcomponents),extmf(1,ini.extended_eigenvector_dimension);
@@ -736,7 +736,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
     {
        nofneighbours += tin[th]->dimA;
        for(int i1=1;i1<=ini.mf.na();++i1) for(int j1=1;j1<=ini.mf.nb();++j1) for(int k1=1;k1<=ini.mf.nc();++k1)
-          for(int i2=1;i1<=ini.mf.na();++i1) for(int j2=1;j1<=ini.mf.nb();++j1) for(int k2=1;k1<=ini.mf.nc();++k1)
+          for(int i2=1;i2<=ini.mf.na();++i2) for(int j2=1;j2<=ini.mf.nb();++j2) for(int k2=1;k2<=ini.mf.nc();++k2)
              J.mat(i1,j1,k1,i2,j2,k2)+=(*thrdat.J[th]).mat(i1,j1,k1,i2,j2,k2); 
     }
     for (ithread=0; ithread<NUM_THREADS; ithread++) {
@@ -841,7 +841,7 @@ if (do_jqfile==1){
          Vector Tn(1,ini.nofcomponents*ini.mf.n()*inputpars.nofatoms);
          ComplexMatrix eigenvectors(1,ini.nofcomponents*ini.mf.n()*inputpars.nofatoms,1,ini.nofcomponents*ini.mf.n()*inputpars.nofatoms);
          myEigenSystemHermitean (J_Q,Tn,eigenvectors,sort=1,maxiter);
-
+         i2=ini.nofcomponents*ini.mf.n()*inputpars.nofatoms;
        if(do_verbose==1)
        {fprintf(jqfile,"#eigenvalues(highest corresponds to Tn, predicted magstructure)\n");
          myPrintVector(jqfile,Tn); 
@@ -849,7 +849,7 @@ if (do_jqfile==1){
          myPrintComplexMatrix(jqfile,eigenvectors); 
        }
        else
-       {i2=ini.nofcomponents*ini.mf.n()*inputpars.nofatoms;
+       {
         fprintf(jqfile," %g ",Tn(i2));
         for (i1=1;i1<=i2;++i1)
         {fprintf(jqfile," %6.3g ",real(eigenvectors(i1,i2)));
@@ -857,9 +857,11 @@ if (do_jqfile==1){
         }
         fprintf(jqfile,"\n");
        }
-       if (jqsta<-0.5){jq0=Tn(i2);jqsta=0;}
+       if (jqsta<-0.9e10){jq0=Tn(i2);jqsta=-1e9;}
        else           {if(Tn(i2)>jq0)
-                         {jqsta+=(Tn(i2)-jq0)*(Tn(i2)-jq0);}
+                         {if(jqsta<0){jqsta=0;}
+                          jqsta+=(Tn(i2)-jq0)*(Tn(i2)-jq0);}
+                       else{if(jqsta<0&Tn(i2)-jq0>jqsta){jqsta=Tn(i2)-jq0;}}
                       }
  }
  else
@@ -1208,7 +1210,9 @@ diffint=0;diffintbey=0;
       fprintf(jqfile,"#than that of the first q-vector in the list in mcdisp.par - this is usefule\n");
       fprintf(jqfile,"#for obtaining an exchange interaction with maximum at the first q-vector\n");
       fprintf(jqfile,"#in the list in mcdisp.par\n");
-      fprintf(jqfile,"!sta=%g\n",jqsta);fclose(jqfile);}
+      fprintf(jqfile,"# ... if the first q vector has the largest eigenvalue, then sta is negative and contains the\n");
+      fprintf(jqfile,"#distance to the closest eigenvalue\n");
+      fprintf(jqfile,"#!sta=%g\n",jqsta);fclose(jqfile);}
     else
      {
     fprintf(fout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
