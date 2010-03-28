@@ -271,7 +271,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   int do_gobeyond=1;
   double E;
   double sta=0,sta_int=0;
-  double jqsta=-1.0e10;
+  double jqsta=-1.0e10;  double jqsta_int=0;
   double jq0=0;
   Vector hkl(1,3),q(1,3);
   Vector mf(1,ini.nofcomponents),extmf(1,ini.extended_eigenvector_dimension);
@@ -863,6 +863,13 @@ if (do_jqfile==1){
                           jqsta+=(Tn(i2)-jq0)*(Tn(i2)-jq0);}
                        else{if(jqsta<0&Tn(i2)-jq0>jqsta){jqsta=Tn(i2)-jq0;}}
                       }
+       if (ini.hkllist==1)
+	             {double test;
+                      for (j1=1;j1<=ini.hkls[counter][0]-3;++j1)
+	              {test=fabs(Tn(i2+1-j1)-ini.hkls[counter][j1+3]);
+                      jqsta_int+=test*test;}
+	             }
+
  }
  else
  {// no jqfile but excitations to be calculated
@@ -1212,7 +1219,11 @@ diffint=0;diffintbey=0;
       fprintf(jqfile,"#in the list in mcdisp.par\n");
       fprintf(jqfile,"# ... if the first q vector has the largest eigenvalue, then sta is negative and contains the\n");
       fprintf(jqfile,"#distance to the closest eigenvalue\n");
-      fprintf(jqfile,"#!sta=%g\n",jqsta);fclose(jqfile);}
+      fprintf(jqfile,"#!sta=%g\n",jqsta);
+      fprintf(jqfile,"#another standard deviation is given below: calculated as squared sum of differences between\n");
+      fprintf(jqfile,"#the highest eigenvalue of J(Q) and energies in column 4 of mcdisp.par, if column 5 6 etc \n");
+      fprintf(jqfile,"#in mcdisp.par contain values, then these are compared to the other eigenvalues of J(Q)\n");
+      fprintf(jqfile,"#!sta4=%g\n",jqsta_int);fclose(jqfile);}
     else
      {
     fprintf(fout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
