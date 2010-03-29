@@ -64,7 +64,7 @@ par::par (const char *filejjj)
   {jjj[i]=new jjjpar(fin_coq,nofcomponents);  
    gJ(i)=(*jjj[i]).gJ;
   // fgets (instr, MAXNOFCHARINLINE, fin_coq);
-   rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr);
+   //rems[3+i]=new char[strlen(instr)+2];strcpy(rems[3+i],instr); not needed any more (causes memory leak) MR 30.3.10
    
    if(nofcomponents!=(*jjj[i]).nofcomponents)
    {fprintf(stderr,"ERROR reading mcphas.j: nofcomponents (%i) not consistent for atom %i (%i read in fileheader)\n",(*jjj[i]).nofcomponents,i,nofcomponents);exit(EXIT_FAILURE);}
