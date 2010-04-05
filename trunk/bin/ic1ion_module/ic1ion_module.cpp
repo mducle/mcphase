@@ -264,7 +264,10 @@ __declspec(dllexport)
          for(j=1; j<=(num_op>6?num_op:6); j++)
             mat(i,j) = complex<double> (Mab(i,j), iMab(i,j));
    }
-   return Hsz*(Hsz-1)/2;
+   // determine number of thermally reachable states
+   int noft=0;for(i=0;(i<Hsz)&(exp(-(est[0][i+1].real()-est[0][1].real())/(KB*T))>SMALL);++i)noft+=Hsz-i-1;
+   return noft;
+   //return Hsz*(Hsz-1)/2;
 }
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -656,5 +659,8 @@ __declspec(dllexport)
    }
          mat *= therm / Z;
 
-   return Hsz*(Hsz-1)/2;
+   // determine number of thermally reachable states
+   int noft=0;for(i=0;(i<Hsz)&(exp(-(est[0][i+1].real()-est[0][1].real())/(KB*T)))>SMALL;++i)noft+=Hsz-i-1;
+   return noft;
+//   return Hsz*(Hsz-1)/2;
 }

@@ -120,7 +120,7 @@ void *intcalc_approx(void *input)
 DWORD WINAPI intcalc_approx(void *input)
 #endif
 #else
-double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,ComplexMatrix & S,ComplexMatrix & Sbey,Matrix & pol,Matrix & polICIC,Matrix & polICn,Matrix & polnIC, double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf & eev_real,mfcf & eev_imag,ComplexMatrix & Ec,int dimA, const ComplexMatrix &Tau, int level,double en, const inimcdis & ini,const par & inputpars,Vector & hkl,const mdcf & md,int do_verbose,double & QQ)
+double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,Matrix & pol,Matrix & polICIC,Matrix & polICn,Matrix & polnIC, double & intensitybey,mfcf & ev_real,mfcf & ev_imag,mfcf & eev_real,mfcf & eev_imag,ComplexMatrix & Ec,int dimA, const ComplexMatrix &Tau, int level,double en, const inimcdis & ini,const par & inputpars,Vector & hkl,const mdcf & md,int do_verbose,double & QQ)
 #endif
 {//calculates approximate intensity for energylevel i - according to chapter 8.2 mcphas manual
 
@@ -130,8 +130,6 @@ double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,ComplexMatrix &
    double intensitybey = myinput->intensitybey;
    #define chi (*thrdat.chi[thread_id])
    #define chibey (*thrdat.chibey[thread_id])
-   #define S (*thrdat.S[thread_id])
-   #define Sbey (*thrdat.Sbey[thread_id])
    #define pol (*thrdat.pol[thread_id])
    #define polICIC (*thrdat.polICIC[thread_id])
    #define polICn (*thrdat.polICn[thread_id])
@@ -168,7 +166,7 @@ double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,ComplexMatrix &
   eev_real.clear();eev_imag.clear();
 
 // determine chi
-    
+  //  chi=0;chibey=0;
  for(i1=1;i1<=ini.mf.na();++i1){for(j1=1;j1<=ini.mf.nb();++j1){for(k1=1;k1<=ini.mf.nc();++k1){
 
 
@@ -213,27 +211,13 @@ if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
   }}}
  }}}
 
-
+  complex<double> im(0,1.0);
  //  chi'' to  S (bose factor) ... fluctuation dissipation theorem
 //myPrintComplexMatrix(stdout,chi); 
 //myPrintComplexMatrix(stdout,Tau); 
-
-   complex<double> im(0,1.0);
-   double bose;
-   if (fabs(en)>SMALL*0.1)
-   {bose=1.0/(1.0-exp(-en*(1.0/KB/ini.T)));
-   }else{//quasielastic needs special treatment 
-         bose=ini.T*KB/(SMALL*0.1);
-         //(problem: quasielastic intensity depends on value of SMALL !!)
-	 // in principle this SMALL in denominator has to cancel with epsilon 
-	 // in population matrix Mijkl(i.e. gamma) ... therefore we skip it:
-	 // (for small energies delta_s the md.sqrt_gamma has been set = sqr(SMALL*gamma) and this is
-	 // inserted into the calculation of chi above)
-//   bose=ini.T*KB;   
-   }
-  // bose=1.0;
-   S=bose*2*chi;
-if(intensitybey>0)  Sbey=bose*2*chibey;
+//   S=bose*2*chi;                          replaced by putting bose factor to final sumS
+//if(intensitybey>0)  Sbey=bose*2*chibey;   MR 2.4.10
+//S=chi; if(intensitybey>0)  Sbey=chibey; substituted chi for S to safe computation time
 
  // polarization factor
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
@@ -278,55 +262,55 @@ if(intensitybey>0)  Sbey=bose*2*chibey;
 
       //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ==0)
-      {S(s+i,ss+j)*=polICIC(i,j); 
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+      {chi(s+i,ss+j)*=polICIC(i,j);
+       chi(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant
                                                                     // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
-if(intensitybey>0){Sbey(s+i,ss+j)*=polICIC(i,j);
-                   Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ);} //  debey waller factor
-       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+if(intensitybey>0){chibey(s+i,ss+j)*=polICIC(i,j);
+                   chibey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ);} //  debey waller factor
+       if(i==2||i==4||i==6){chi(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{chi(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+       chi(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant
                                                                     // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
-if(intensitybey>0) Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
-       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+if(intensitybey>0) chibey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // debey waller factor
+       if(j==2||j==4||j==6){chi(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{chi(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
       }
       //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ==0&&(*inputpars.jjj[l2]).gJ!=0)
-      {S(s+i,ss+j)*=polICn(i,j); 
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant 
+      {chi(s+i,ss+j)*=polICn(i,j);
+       chi(s+i,ss+j)*=0.5*(*inputpars.jjj[l1]).debyewallerfactor(QQ); // multiply (2S+L) with factor 1/2 to be conformant
                                                                     // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
-if(intensitybey>0){       Sbey(s+i,ss+j)*=polICn(i,j); 
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); }//  debey waller factor
-       if(i==2||i==4||i==6){S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
+if(intensitybey>0){       chibey(s+i,ss+j)*=polICn(i,j);
+       chibey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); }//  debey waller factor
+       if(i==2||i==4||i==6){chi(s+i,ss+j)*=(*inputpars.jjj[l1]).F(-QQ);}else{chi(s+i,ss+j)*=(*inputpars.jjj[l1]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
-       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
-if(intensitybey>0)  Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and debey waller factor
+       chi(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+if(intensitybey>0)  chibey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); // and debey waller factor
       }
       //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ==0)
-      {S(s+i,ss+j)*=polnIC(i,j); 
-       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
-       S(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ);// multiply (2S+L) with factor 1/2 to be conformant 
+      {chi(s+i,ss+j)*=polnIC(i,j);
+       chi(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       chi(s+i,ss+j)*=0.5*(*inputpars.jjj[l2]).debyewallerfactor(QQ);// multiply (2S+L) with factor 1/2 to be conformant
                                                                     // to gj/2F(Q)<J>=M/2F(Q) in case of gj>0 (see below),debye waller factor
-if(intensitybey>0){       Sbey(s+i,ss+j)*=polnIC(i,j); 
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and  + debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// debey waller factor
-       if(j==2||j==4||j==6){S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{S(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
+if(intensitybey>0){       chibey(s+i,ss+j)*=polnIC(i,j);
+       chibey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and  + debey waller factor
+       chibey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// debey waller factor
+       if(j==2||j==4||j==6){chi(s+i,ss+j)*=(*inputpars.jjj[l2]).F(-QQ);}else{chi(s+i,ss+j)*=(*inputpars.jjj[l2]).F(QQ);}
                                // mind here we should use different formfactors for spin and orbital components !!!
                                // formfactor +QQ..spin formfactor (j0), -QQ .. orbital formfactor (j0+j2)
       }
       //--------------------------------------------------------------------------------------------------
       if((*inputpars.jjj[l1]).gJ!=0&&(*inputpars.jjj[l2]).gJ!=0)
-      {S(s+i,ss+j)*=pol(i,j);
-       S(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
-       S(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
-if(intensitybey>0){       Sbey(s+i,ss+j)*=pol(i,j);
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and + debey waller factor
-       Sbey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// and  + debey waller factor
+      {chi(s+i,ss+j)*=pol(i,j);
+       chi(s+i,ss+j)*=(*inputpars.jjj[l1]).gJ/2.0*(*inputpars.jjj[l1]).debyewallerfactor(QQ)*(*inputpars.jjj[l1]).F(QQ); // and formfactor + debey waller factor
+       chi(s+i,ss+j)*=(*inputpars.jjj[l2]).gJ/2.0*(*inputpars.jjj[l2]).debyewallerfactor(QQ)*(*inputpars.jjj[l2]).F(QQ); // and formfactor + debey waller factor
+if(intensitybey>0){       chibey(s+i,ss+j)*=pol(i,j);
+       chibey(s+i,ss+j)*=(*inputpars.jjj[l1]).debyewallerfactor(QQ); // and + debey waller factor
+       chibey(s+i,ss+j)*=(*inputpars.jjj[l2]).debyewallerfactor(QQ); }// and  + debey waller factor
       }
       //--------------------------------------------------------------------------------------------------
     }}   
@@ -340,12 +324,30 @@ if(intensitybey>0){       Sbey(s+i,ss+j)*=pol(i,j);
  // determine dsigma in barns per cryst unit cell !
  //divide by number of crystallographic unit cells  (ini.mf.n()) in magnetic unit cell
 
-sumS=Sum(S)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();
-intensity=fabs(real(sumS)); if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: dipolar approx intensity %g negative\n",real(sumS));exit(1);}
+
+   double bose;
+   if (fabs(en/KB/ini.T)>SMALL*0.1)
+   {bose=1.0/(1.0-exp(-en*(1.0/KB/ini.T)));
+   }else{//quasielastic needs special treatment
+         //if(fabs(en/KB/ini.T)>1e-30){bose=ini.T*KB/en;}
+         //else{bose=1e30;} .... this is no good
+         //(problem: quasielastic intensity depends on value of SMALL !!)
+	 // in principle this SMALL in denominator has to cancel with epsilon
+	 // in population matrix Mijkl(i.e. gamma) ... therefore we skip it:
+	 // (for small energies delta_s the md.sqrt_gamma has been set = sqr(SMALL*gamma) and this is
+	 // inserted into the calculation of chi above)
+         bose=ini.T*KB/(SMALL*0.1);
+//   bose=ini.T*KB;
+   }
+  bose=fabs(bose);// this is to correctly consider omegar/|omegar| in the formula for chi'' ... introduced 2.4.10 MR
+
+sumS=Sum(chi)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();sumS*=2.0*bose;
+intensity=real(sumS);
+                      if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: dipolar approx intensity %g negative,E=%g, bose=%g\n",real(sumS),en,bose);exit(1);}
                       if (fabs(imag(sumS))>0.1){fprintf(stderr,"ERROR mcdisp: dipolar approx intensity %g %+g iimaginary\n",real(sumS),imag(sumS));exit(1);}
-if(intensitybey>0){sumS=Sum(Sbey)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();
-                   intensitybey=fabs(real(sumS)); if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: intensity in beyond dipolar approx formalism %g negative\n",real(sumS));exit(1);}
-                                                  if (fabs(imag(sumS))>0.1){fprintf(stderr,"ERROR mcdisp: intensity  in beyond dipolar approx formalism %g %+g iimaginary\n",real(sumS),imag(sumS));exit(1);}
+if(intensitybey>0){sumS=Sum(chibey)/PI/2.0*3.65/4.0/PI/(double)ini.mf.n();sumS*=2.0*bose;
+                   intensitybey=real(sumS); if (real(sumS)<-0.1){fprintf(stderr,"ERROR mcdisp: intensity in beyond dipolar approx formalism %g negative,E=%g, bose=%g\n\n",real(sumS),en,bose);exit(1);}
+                                                   if (fabs(imag(sumS))>0.1){fprintf(stderr,"ERROR mcdisp: intensity  in beyond dipolar approx formalism %g %+g iimaginary\n",real(sumS),imag(sumS));exit(1);}
                   }
 
 
@@ -388,8 +390,6 @@ myinput->QQ=QQ;
 #undef inputpars
 #undef chi
 #undef chibey
-#undef S
-#undef Sbey
 #undef pol
 #undef polICIC
 #undef polICn
