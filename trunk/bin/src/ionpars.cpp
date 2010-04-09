@@ -1462,10 +1462,10 @@ if(j==i)delta=-SMALL; //if transition within the same level: take negative delta
          MQMi[1]=new ComplexMatrix(1,dj,1,dj);
          MQMi[2]=new ComplexMatrix(1,dj,1,dj);
          MQMi[3]=new ComplexMatrix(1,dj,1,dj);
-         MQM((*MQMi[3]),(*MQMi[1]),(*MQMi[2]),th,ph,J0,J2,J4,J6,Zc);
-        //      x           y         z
-        //      c           a         b
-
+        MQM((*MQMi[1]),(*MQMi[2]),(*MQMi[3]),th,ph,J0,J2,J4,J6,Zc);
+        //      x           y         z   // this has been fixed for module so1ion now 3.4.10 MR
+        //      a           b         c   // ... for module cfield a backtransformation in dncalc has been introduced in jjjpar.cpp
+      
 // 3. set nat
          int K,M,Md;
          ComplexVector Malpha(1,3);Malpha=0;

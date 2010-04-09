@@ -9,17 +9,27 @@ use File::Copy;
 # chdir('../.');
 
 unless ($#ARGV >0) 
-{print " program searchspace used to scan parameter space\n";
- print " usage: searchspace i  * \n";
+{print "***************************************************\n";
+ print " program searchspace used to search parameter space\n\n";
+ print " usage: searchspace i  * \n\n";
  print " i ... level of parameter search (i=0 for first scan, for i>0 a\n";
- print " file searchspace.i with parameter sets must exist)\n";
+ print " file searchspace.i with parameter sets must exist)\n\n";
  print " * .. filename(s) of paramter file(s)\n";
  print " \n... there must exist a program calcsta, the output of which\n";
  print " contains 'sta = 249' - this program is called from this output\n";
- print " at every iteration step and  the standard sta deviation is recorded in file\n";
- print " searchspace.i  i=1,2,3, .... \n";
- print " Note: at each level searchspace covers parameterspace with a more dense net of\n";
- print " points. The minimum distance of these points is taken from the parameter-stepwidths\n";
+ print " at every iteration step and  the standard sta deviation is \n";
+ print " recorded in filesearchspace.i  i=1,2,3, ....\n\n";
+ print " localminima are also recorded (searchspace.i.localminima)\n\n";
+ print " Note: at each level searchspace covers parameterspace\n";
+ print "       with a more dense net of points. The minimum distance\n";
+ print "       of these points is taken from the parameter-stepwidths\n\n";
+ print "***************************************************\n";
+ print " alternative usage:  searchspace -27 results/searchspace.3 * \n\n";
+ print " If used with option -n, the program reads a parameter set \n";
+ print " (line nr 27) from thesearchspace file (e.g. results/searchspace.3)\n";
+ print "  and puts this parameter set to the parameter files *\n";
+ print "  and *.forfit\n\n";
+ print "***************************************************\n";
  print " <Press enter to close>";$in=<STDIN>;
  exit 0;}
 
@@ -46,6 +56,11 @@ sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$ii],$par[$ii],$parmin[$ii],$parmax[
 
  @parnam=();@par=();@parmin=();@parmax=();@parerr=();@parstp=();@parav=();
   $searchlevel=$ARGV[0]; shift @ARGV;
+  if($searchlevel<0){# in this case only read line number -$searchlevel from input file and update parameter files
+                     $inputfile=$ARGV[0]; shift @ARGV;
+                    }
+
+
  while(!open(Fout,">results/searchspace.status")){print "Error opening file results/searchspace.status\n";<STDIN>;}
   print Fout "parameter[value,      min,           max,           (not used)   ,minimum meshwidth]\n";
  foreach (@ARGV)
@@ -73,20 +88,63 @@ sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$ii],$par[$ii],$parmin[$ii],$parmax[
      } close Fin;
  }  
     if ($#par<0) {print "Error searchspace: no parameters found in input files @ARGV\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
-    print ($#par+1);print " parameters found - starting search of level $searchlevel ...\n";close Fout;
+    print ($#par+1);print " parameters found\n"; close Fout;
+
+  if($searchlevel<0){# in this case only read line number -$searchlevel from input file and update parameter files
+                    print "reading points from file $inputfile\n";
+                    open (Fin1,$inputfile);$ii=0;
+                    while($line=<Fin1>)
+                    {if ($line=~/^\s*#/) {;}
+                     else{--$ii;
+                          if($ii==$searchlevel){$line=~s/D/E/g;@numbers=split(" ",$line);
+                                                $i=0;foreach(@par){$par[$i]=$numbers[$i];++$i}
+                                                $sta=$numbers[$i]; #sta at input parameter position
+                                                writefiles();
+                                                # output parameter information to status file and to screen
+                                                open(Fout,">results/searchspace.status");
+                                                print Fout ".......... searchspace stopped...............\n"; 
+                                                print Fout ".............................................\n";
+                                                print Fout "parameter set nr ".(-$searchlevel)." read from $inputfile\n";
+                                                print Fout ".............................................\n";
+                                                print Fout "parameter[value,      min,           max,           (not used)   ,minimum meshwidth]\n";
+                                                $ii=0;foreach(@par){write Fout;++$ii;}
+                                                print Fout "..............................sta=$sta.......\n";
+                                                print Fout "these valueas are stored in parameter files * and *.forfit \n";
+                                                print Fout ".............................................\n";
+                                                close Fout;
+                                                print STDOUT ".......... searchspace stopped...............\n"; 
+                                                print STDOUT ".............................................\n";
+                                                print STDOUT "parameter set nr ".(-$searchlevel)." read from $inputfile\n";
+                                                print STDOUT ".............................................\n";
+                                                print STDOUT "parameter[value,      min,           max,           (not used)   ,minimum meshwidth]\n";
+                                                $ii=0;foreach(@par){write STDOUT;++$ii;}
+                                                print STDOUT ".............................................\n";
+                                                print STDOUT "these valueas are stored in parameter files * and *.forfit \n";
+                                                print STDOUT ".............................sta=$sta........\n";
+                                                exit 0;
+                                                }
+                         }
+                    }
+                   print "Error program searchspace, loading parmeter set in line ".(-$searchlevel)." failed, file too short !\n"; 
+                   print " <Press enter to close>";$in=<STDIN>;exit 1;
+                   }
+
+
 #*******************************************************************************
+print" starting search of level $searchlevel ...\n";
 $minnumber=1;$pointcounter=0;
 $starttime=time;$stamin=1e10;
 # open and initialize output file
 print "storing points in file searchspace.$searchlevel\n";
 open (Foutlevel,">results/searchspace.$searchlevel");
-print Foutlevel "#"; 
-foreach(@parnam){print Foutlevel $_." ";} 
-print Foutlevel "sta\n";
+print Foutlevel "#";foreach(@parnam){print Foutlevel $_." ";}print Foutlevel "sta\n";
+open(Foutlocalmin,">results/searchspace.$searchlevel.localminima");
+print Foutlocalmin "#";foreach(@parnam){print Foutlocalmin $_." ";}print Foutlocalmin "sta\n";
 
 if ($searchlevel==0)
 {$pointstocalculate=($#par+1)*2;
             $i=0;foreach(@par){$par[$i]=$parmin[$i]+($parmax[$i]-$parmin[$i])/2;++$i}
+            @parorigin=@par;
             ($sta)=sta(); #sta at input parameter position
        $staorigin=$sta;$i=0;$minimum=1;
        foreach(@par)
@@ -123,14 +181,15 @@ if ($searchlevel==0)
        }
        if ($pointcounter!=0)
        { if ($minimum==1&&$sta!=0)
-        {#the input parameters are probably a (local) minimum - so save a file
+        {#the input parameters are probably a (local) minimum - so save to file results/searchspace.$searchlevel.localminima
           ($sta)=sta();
 #        last if ($sta==0);
        if ($sta<$stamin){$stamin=$sta; foreach (@ARGV)
                                        {$file=$_; mycopy ($file,$file.".min.".$searchlevel);
                                         mycopy ($file.".forfit ",$file.".forfit.min.$searchlevel");}
 			}
-          foreach (@ARGV){$file=$_; mycopy ($file.".forfit",$file.".$searchlevel.$minnumber");}
+#          foreach (@ARGV){$file=$_; mycopy ($file.".forfit",$file.".$searchlevel.$minnumber");} # do not save these lots of files, this is confusing
+          $ii=0;foreach(@parorigin){$dd=sprintf("%e ",$parorigin[$ii]);print Foutlocalmin $dd;++$ii} print Foutlocalmin $staorigin."\n";
 	  ++$minnumber;
        }
         }
@@ -147,7 +206,7 @@ else
    else{$line=~s/D/E/g;@numbers=split(" ",$line);
             $i=0;foreach(@par){$par[$i]=$numbers[$i];++$i}
             $sta=$numbers[$i]; #sta at input parameter position
-       $staorigin=$sta;$i=0;$minimum=1;
+       $staorigin=$sta;$i=0;$minimum=1;@parorigin=@par;
        foreach(@par)
         {$dpar=($parmax[$i]-$parmin[$i])/2**($searchlevel+2);
          if (abs($dpar)>abs($parstp[$i]))
@@ -190,7 +249,8 @@ else
                                        {$file=$_; mycopy ($file,$file.".min.".$searchlevel);
                                         mycopy ($file.".forfit",$file.".forfit.min.$searchlevel");}
 			}
-          foreach (@ARGV){$file=$_; mycopy ($file.".forfit",$file.".$searchlevel.$minnumber");}
+#          foreach (@ARGV){$file=$_; mycopy ($file.".forfit",$file.".$searchlevel.$minnumber");}
+          $ii=0;foreach(@parorigin){$dd=sprintf("%e ",$parorigin[$ii]);print Foutlocalmin $dd;++$ii} print Foutlocalmin $staorigin."\n";
 	  ++$minnumber;
         }
        }
@@ -200,16 +260,20 @@ else
 }
 $hours=(time-$starttime)/3600;
 $estimate=sprintf("%6.2f",$hours*2*($#par+1));
-print "$pointcounter points calculated in  $hours h.\n Time estimate for next level ".($searchlevel+1).": $estimate h\n";
+print "nofpts=$pointcounter points calculated in  $hours h.\n Time estimate for next level ".($searchlevel+1).": $estimate h\n";
 print Foutlevel "#$pointcounter points calculated in  $hours h.\n# Time estimate for next level ".($searchlevel+1).": $estimate h\n";
-close Foutlevel;
+print Foutlevel "#Mininimal found sta minsta=$stamin\n";
+print Foutlevel "#noflocalminima=".($minnumber-1)." local minima found (see results\searchspace.$searchlevel.localminima)\n";
+print Foutlocalmin "#noflocalminima=".($minnumber-1)." local minima found (see results\searchspace.$searchlevel.localminima)\n";
+close Foutlevel;close Foutlocalmin;
  foreach (@ARGV) {$file=$_; mycopy($file.".min.$searchlevel",$file);}
      open(Fout,">results/searchspace.status");
 print Fout ".......... searchspace stopped...............\n"; 
 print Fout ".............................................\n";
-print Fout "$pointcounter points calculated in  $hours h.\n";
+print Fout "nofpts=$pointcounter points calculated in  $hours h.\n";
 print Fout ".............................................\n";
 print Fout "Mininimal found sta=$stamin\n";
+print Fout "noflocalminima=".($minnumber-1)." local minima found (see results/searchspace.$searchlevel.localminima)\n";
 print Fout ".............................................\n";
 print Fout "Time estimate for next level ".($searchlevel+1).": $estimate h\n";
 print Fout ".............................................\n";
@@ -220,14 +284,34 @@ exit 0;
 #****************************************************************************** 
 
 
-sub sta {local $SIG{INT}='IGNORE'; 
+sub sta {local $SIG{INT}='IGNORE';
+ writefiles();
+ # print "#call routine calcsta to calculate standard deviation\n";
+ if ($^O=~/MSWin/){
+                   if(system ("calcsta.bat 1e10 > results\\searchspace.sta")){print "\n error executing calcsta.bat\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
+                  }
+ else
+                  {
+                   if(system ("./calcsta 1e10 > results/searchspace.sta")){print "\n error executing calcsta.bat\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
+                  }
+
+ open (Fin,"./results/searchspace.sta"); 
+ while($line=<Fin>){
+           if($line=~/^(#!|[^#])*?\bsta\s*=/) {($sta)=($line=~m/(?:#!|[^#])*?\bsta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)/);} 
+                   }
+ close Fin;
+ mydel("./results/searchspace.sta");
+ return $sta;
+}
+  
+sub writefiles {
  #print "#write modified parameterset to files *\n";
  foreach (@ARGV)
  {$file=$_; open (Fin, $file.".forfit");open (Fout1, ">".$file);open (Fout2,">results/searchspace.par");
    while($line=<Fin>)
      {$modline=$line;
       if ($line=~/^(#!|[^#])*?\bpar/) {#here write modified parameter set to line
-                            while ($line=~/^(#!|[^#])*?\bpar\w+\s*\Q[\E/) 
+                            while ($line=~/^(#!|[^#])*?\bpar\w+\s*\Q[\E/)
 			          {my $i=0;#insert a parameter
 				   foreach (@parnam)
 				    {$pnam=$_;
@@ -240,7 +324,7 @@ sub sta {local $SIG{INT}='IGNORE';
 				    }
 				  }
 
-                             while ($line=~/^(?:#!|[^#])*?\bfunction\s*\Q[\E(.*?)\Q]\E/) 
+                             while ($line=~/^(?:#!|[^#])*?\bfunction\s*\Q[\E(.*?)\Q]\E/)
 			          {$expression=" ".$1." ";
 				   #substitute into the expression the paramter values
 				   my $i=0;#insert a function parameter
@@ -252,15 +336,16 @@ sub sta {local $SIG{INT}='IGNORE';
 				     ++$i;
 				    }
 				    # calculate the expression by a little perl program
-				    open (Foutcc, ">./results/ccccccc.ccc");
-				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
-				    close Foutcc;$systemcall="perl ./results/ccccccc.ccc > ./results/cccccc1.ccc";
-                                    if ($^O=~/MSWin/){$systemcall=~s|\/|\\|g;}
-				    if(system $systemcall){print "error evaluating expression in results/ccccc*";print " <Press enter to close>";$in=<STDIN>;exit 1;}
-				    open (Fincc,"results/cccccc1.ccc");
-				    $data=<Fincc>; close Fincc;
-				    mydel("./results/ccccccc.ccc");mydel("./results/cccccc1.ccc");
-				    # $data contains now the result of the mathematical expression
+				    #open (Foutcc, ">./results/ccccccc.ccc");
+				    #printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
+				    #close Foutcc;$systemcall="perl ./results/ccccccc.ccc > ./results/cccccc1.ccc";
+                                    #if ($^O=~/MSWin/){$systemcall=~s|\/|\\|g;}
+				    #if(system $systemcall){print "error evaluating expression in results/ccccc*";print " <Press enter to close>";$in=<STDIN>;exit 1;}
+				    #open (Fincc,"results/cccccc1.ccc");
+				    #$data=<Fincc>; close Fincc;
+				    #mydel("./results/ccccccc.ccc");mydel("./results/cccccc1.ccc");
+				    $data= eval $expression;
+                                    # $data contains now the result of the mathematical expression
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
 
@@ -271,23 +356,7 @@ sub sta {local $SIG{INT}='IGNORE';
      if (mycopy("results/searchspace.par",$file.".forfit"))
      {print "\n error copying results/searchspace.par to  $file.forfit\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
  }
- # print "#call routine calcsta to calculate standard deviation\n";
- if ($^O=~/MSWin/){
-                   if(system ("calcsta.bat > results\\searchspace.sta")){print "\n error executing calcsta.bat\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
-                  }
- else
-                  {
-                   if(system ("./calcsta > results/searchspace.sta")){print "\n error executing calcsta.bat\n";print " <Press enter to close>";$in=<STDIN>;exit 1;}
-                  }
-
- open (Fin,"./results/searchspace.sta"); 
- while($line=<Fin>){
-           if($line=~/^(#!|[^#])*?\bsta\s*=/) {($sta)=($line=~m/(?:#!|[^#])*?\bsta\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)/);} 
-                   }
- close Fin;
- mydel("./results/searchspace.sta");
- return $sta;
-}  
+}
 
 sub mycopy { my ($file1,$file2)=@_;
 

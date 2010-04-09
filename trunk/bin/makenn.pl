@@ -469,15 +469,15 @@ print $l1 "#--------------------------------------------------------------------
     if($alpha!=90||$beta!=90||$gamma!=90)
      {print $l1 "#orthonormal coordinate system ijk is defined with respect to abc as j||b, k||(a x b) and i normal to k and j\n#charge[|e|]  di[A]   dj[A]   dk[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";}
      else
-     {print $l1 "#charge[|e|]  da[A]   db[A]   dc[A]        da[a]    db[b]    dc[c]   distance[A] atomnr\n";}
+     {print $l1 "#charge[|e|]  da[A]     db[A]     dc[A]          da[a]      db[b]      dc[c]     distance[A]   atomnr\n";}
 
  for ($n1=1;$n1<(($rn->dims)[0]);++$n1)
 # the position xyz is relative position (not absolute coordinate of neighbour)
  {print $l sprintf("%4.4g %4.4g %4.4g ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
  $ddd=$an->index($n)->at($n1);
-  print $l1 sprintf("%8s   %+8.4f %+8.4f %+8.4f     ",$charge[$ddd],$in->index($n)->at($n1),$jn->index($n)->at($n1),$kn->index($n)->at($n1));
-  print $l1 sprintf("%+8.4f %+8.4f %+8.4f ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
-  print $l1 sprintf("%+8.4f     %s\n",$rn->index($n)->at($n1),$ddd);
+  print $l1 sprintf("%8s   %+10.6f %+10.6f %+10.6f     ",$charge[$ddd],$in->index($n)->at($n1),$jn->index($n)->at($n1),$kn->index($n)->at($n1));
+  print $l1 sprintf("%+10.6f %+10.6f %+10.6f ",$xn->index($n)->at($n1),$yn->index($n)->at($n1),$zn->index($n)->at($n1));
+  print $l1 sprintf("%+10.6f     %s\n",$rn->index($n)->at($n1),$ddd);
 
   if (($gJ!=0&&$gJ[$ddd]==0)||($gJ==0&&$gJ[$ddd]!=0)){ die "error makenn. mixing of atoms with gJ=0 (intermediate coupling) and gJ>0 not implemented\n";}
 

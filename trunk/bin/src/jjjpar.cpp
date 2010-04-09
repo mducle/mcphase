@@ -108,6 +108,7 @@ int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix &
 
 {double J0,J2,J4,J6;
  double Q,d,s,th,ph;
+ int i;     complex<double>dummy; // introduced 3.4.10 MR
             Q = Norm(Qvec); //dspacing
             d = 2.0 * PI / Q; s=0.5 / d; 
       J0=magFFj0(1)*exp(-magFFj0(2)*s*s)+magFFj0(3)*exp(-magFFj0(4)*s*s)+magFFj0(5)*exp(-magFFj0(6)*s*s)+magFFj0(7);
@@ -125,7 +126,12 @@ int jjjpar::dncalc(Vector & Qvec,double & T, ComplexMatrix & nat,ComplexMatrix &
                           return (*ddnn)(&transitionnumber,&th,&ph,&J0,&J2,&J4,&J6,&ests,&T,&nat);break;}
           else {return 0;}
    case 2:  getpolar(Qvec(3),Qvec(1),Qvec(2),Q,th,ph); // for internal module cfield xyz||cba and we have to give cfielddn polar angles with respect to xyz
-            return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
+            i=(*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);
+            // and we have to switch indices in matrix nat(1..3,1..3) to conform with xyz||cba changed MR 3.4.10
+            dummy=nat(1,1);nat(1,1)=nat(2,2);nat(2,2)=nat(3,3);nat(3,3)=dummy; // changed MR 3.4.10
+            dummy=nat(1,2);nat(1,2)=nat(2,3);nat(2,3)=nat(3,1);nat(3,1)=dummy; // changed MR 3.4.10
+            dummy=nat(1,3);nat(1,3)=nat(2,1);nat(2,1)=nat(3,2);nat(3,2)=dummy; // changed MR 3.4.10
+            return i;break;
    case 4:  getpolar(Qvec(1),Qvec(2),Qvec(3),Q,th,ph); // for internal module so1ion xyz||abc and we have to give cfielddn polar angles with respect to xyz
             return (*iops).cfielddn(transitionnumber,th,ph,J0,J2,J4,J6,Zc,ests,T,nat);break;
    default: if(washere==0){fprintf(stderr,"Warning in scattering operator function dncalc - for ion %s \ngoing beyond dipolar approximation is not implemented\n",cffilename);
@@ -1239,7 +1245,7 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==1||p.module_type==0) 
+  if (p.module_type==1||p.module_type==0 && p.mcalc_parstorage.Cols()>0 && p.mcalc_parstorage.Rows()>0)
   {
      mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage.Rlo(),p.mcalc_parstorage.Rhi(),p.mcalc_parstorage.Clo(),p.mcalc_parstorage.Chi());
      mcalc_parstorage = p.mcalc_parstorage;

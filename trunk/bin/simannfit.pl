@@ -111,7 +111,7 @@ if($sta>0)
  if ($sta>$stasave)
   {if($rnd>exp(-($sta-$stasave)/$stattemp))
      {#recover ol pars and adapt parstep to step not so big in this direction
-      @par=@parsav;$i=0;foreach(@parstp){$parstp[$i]-=$parstp[$i]*0.1*abs($thisparstp[$i]);++$i;}
+      @par=@parsav;$i=0;foreach(@parstp){$parstp[$i]-=0.1*abs($thisparstp[$i]);++$i;}
       $stps*=0.999;$sta=$stasave; 
       if ($stps<0.01){$stps=10;}# if stepwidth decreased too much make large steps again to get out of side minimum !!!
      }
@@ -128,7 +128,7 @@ if($sta>0)
    $parav[$i]=($parav[$i]*$noofupdates + $p)/($noofupdates+1);
    $parerr[$i]=sqrt($parerr[$i]*$parerr[$i]*$noofupdates+
                    ($p-$parav[$i])*($p-$parav[$i]))/($noofupdates+1);     
-   $parstp[$i]+=$parstp[$i]*0.1*abs($thisparstp[$i]); # adapt parstp to be more bold in this direction
+   $parstp[$i]+=0.1*abs($thisparstp[$i]); # adapt parstp to be more bold in this direction
    $hx=int(($p-$parmin[$i])/$parstp0[$i]);
    ++$parhisto[($hx+$perlhistostart[$i])];
    open(Fout,">./results/".$parnam[$i].".hst");
@@ -204,17 +204,18 @@ sub sta {#local $SIG{INT}='IGNORE';
 				     ++$i;
 				    }
 				    # calculate the expression by a little perl program
-				    unless(open (Foutcc, ">./results/ccccccc.ccc")){die "error simannfit: could not open temporary file results/ccccc.ccc/n";}
-				    printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
-				    close Foutcc;
-				    close Foutcc;$systemcall="perl ./results/ccccccc.ccc > ./results/cccccc1.ccc";
-                                    if ($^O=~/MSWin/){$systemcall=~s|\/|\\|g;}
-				    if(system $systemcall){die "error evaluating expression in results/ccccc*";}
-				    unless(open (Fincc,"./results/cccccc1.ccc")){die "error simannfit: could not open temporary file results/ccccc1.ccc/n";}
-				    $data=<Fincc>; close Fincc;
-				    mydel ("./results/ccccccc.ccc");
-                                    mydel ("./results/cccccc1.ccc");
-				    # $data contains now the result of the mathematical expression
+				    #unless(open (Foutcc, ">./results/ccccccc.ccc")){die "error simannfit: could not open temporary file results/ccccc.ccc/n";}
+				    #printf Foutcc "#!/usr/bin/perl\nprint ".$expression.";\n";
+				    #close Foutcc;
+				    #close Foutcc;$systemcall="perl ./results/ccccccc.ccc > ./results/cccccc1.ccc";
+                                    #if ($^O=~/MSWin/){$systemcall=~s|\/|\\|g;}
+				    #if(system $systemcall){die "error evaluating expression in results/ccccc*";}
+				    #unless(open (Fincc,"./results/cccccc1.ccc")){die "error simannfit: could not open temporary file results/ccccc1.ccc/n";}
+				    #$data=<Fincc>; close Fincc;
+				    #mydel ("./results/ccccccc.ccc");
+                                    #mydel ("./results/cccccc1.ccc");
+				    $data=eval $expression;
+                                    # $data contains now the result of the mathematical expression
                                     $line=~s|function\s*\Q[\E.*?\Q]\E|$data |;
 				   }
 

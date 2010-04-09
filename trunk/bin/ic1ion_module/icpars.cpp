@@ -1127,9 +1127,9 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
       therm = exp(-(VE.E(i)-VE.E(0))/(KB*T)) - exp(-(VE.E(j)-VE.E(0))/(KB*T));
       if(pr==1)
       {
-         printf("delta(%i->%i)=%6.3fmeV",i+1,j+1,delta);
-         printf(" |<%i|Ja|%i>|^2=%6.3f |<%i|Jb|%i>|^2=%6.3f |<%i|Jc|%i>|^2=%6.3f",i+1,j+1,Mab(1,1),i+1,j+1,Mab(2,2),i+1,j+1,Mab(3,3));
-         printf(" |<%i|Jd|%i>|^2=%6.3f |<%i|Je|%i>|^2=%6.3f |<%i|Jf|%i>|^2=%6.3f",i+1,j+1,Mab(4,4),i+1,j+1,Mab(5,5),i+1,j+1,Mab(6,6));
+         printf("delta(%i->%i)=%6.3fmeV\n",i+1,j+1,delta);
+         printf(" |<%i|Ja|%i>|^2=%6.3f\n |<%i|Jb|%i>|^2=%6.3f\n |<%i|Jc|%i>|^2=%6.3f\n",i+1,j+1,Mab(1,1),i+1,j+1,Mab(2,2),i+1,j+1,Mab(3,3));
+         printf(" |<%i|Jd|%i>|^2=%6.3f\n |<%i|Je|%i>|^2=%6.3f\n |<%i|Jf|%i>|^2=%6.3f\n",i+1,j+1,Mab(4,4),i+1,j+1,Mab(5,5),i+1,j+1,Mab(6,6));
          printf(" n%i-n%i=%6.3f\n",i,j,therm / Z);
       }
    }
@@ -1138,9 +1138,9 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
       therm = exp(-(VE.E(i)-VE.E(0))/(KB*T))/(KB*T);    // quasielastic scattering has not wi-wj but wj*epsilon/kT
       if(pr==1)
       {
-         printf("delta(%i->%i)=%6.3fmeV",i+1,j+1,delta);
-         printf(" |<%i|Ja-<Ja>|%i>|^2=%6.3f |<%i|Jb-<Jb>|%i>|^2=%6.3f |<%i|Jc-<Jc>|%i>|^2=%6.3f",i+1,j+1,Mab(1,1),i+1,j+1,Mab(2,2),i+1,j+1,Mab(3,3));
-         printf(" |<%i|Jd-<Jd>|%i>|^2=%6.3f |<%i|Je-<Je>|%i>|^2=%6.3f |<%i|Jf-<Jf>|%i>|^2=%6.3f",i+1,j+1,Mab(4,4),i+1,j+1,Mab(5,5),i+1,j+1,Mab(6,6));
+         printf("delta(%i->%i)=%6.3fmeV\n",i+1,j+1,delta);
+         printf(" |<%i|Ja-<Ja>|%i>|^2=%6.3f\n |<%i|Jb-<Jb>|%i>|^2=%6.3f\n |<%i|Jc-<Jc>|%i>|^2=%6.3f\n",i+1,j+1,Mab(1,1),i+1,j+1,Mab(2,2),i+1,j+1,Mab(3,3));
+         printf(" |<%i|Jd-<Jd>|%i>|^2=%6.3f\n |<%i|Je-<Je>|%i>|^2=%6.3f\n |<%i|Jf-<Jf>|%i>|^2=%6.3f\n",i+1,j+1,Mab(4,4),i+1,j+1,Mab(5,5),i+1,j+1,Mab(6,6));
          printf(" n%i=%6.3f\n",i,therm/Z);
       }
    }
