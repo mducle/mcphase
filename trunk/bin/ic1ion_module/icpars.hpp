@@ -97,6 +97,7 @@ class icpars
       friend void conv_e_units(icpars &pars, std::string &newunit);
       friend void ic_parseinput(const char *filename, icpars &pars);
     //friend int ic_peig(icpars &pars, double *Vd, complexdouble *zVd, double *eigval);
+      bool _jijconvalreadycalc;              // Flag to show that the conversion factor for Jij already calculated
    public:
       orbital l;                             // Orbital angular momentum of electrons, defaults to f-electrons (l=3)
       int n;                                 // Number of electrons in lowest configuration.
@@ -125,6 +126,8 @@ class icpars
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram
       double yT,yHa,yHb,yHc;                 // The vector in (H-T) phase space to calculate the y-axis of phase diag
       double yMin,yStep,yMax;                // Start, step and end of y-axis in the phase diagram
+      std::vector<double> jijconv;           // Conversion factor for Jij coupling parameters from Stevens/Wybourne norm.
+      void jijconvcalc();                    // Calculates the conversion factors above.
 
       bool operator==(icpars c) const;       // Operator to determine if parameters are the same
       bool operator!=(icpars c) const;       // Operator to determine if parameters are not the same
@@ -199,6 +202,7 @@ class icmfmat
       void Mab(sMat<double>&M, sMat<double>&iM,    // Calculates the matrix M_ab = <i|Ja|j><j|Jb|i>
         iceig&V, double T, int i, int j, int p,    // * {exp(-beta_i*T)-exp(-beta_j*T)}
 	float&d, bool save_matrices);
+      std::vector<double> jijconv;                 // Conversion from Stevens/Wybourne norm of Jij pars
 };
 
 #endif

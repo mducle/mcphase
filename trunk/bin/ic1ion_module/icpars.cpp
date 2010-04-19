@@ -234,13 +234,36 @@ std::vector<double> rk_int(std::string &ionname)
 // --------------------------------------------------------------------------------------------------------------- //
 icpars::icpars()
 {
-   alpha.assign(3,0.); F.assign(4,0.); xi = 0.; _econv = 1.; _alpha.assign(3,0.); _F.assign(4,0.);
+   alpha.assign(3,0.); F.assign(4,0.); xi = 0.; _econv = 1.; _alpha.assign(3,0.); _F.assign(4,0.); 
+   jijconv.assign(52,1.); _jijconvalreadycalc = false;
    n = 1; l = (orbital)3; e_units.assign("cm^{-1}"); calcphys = 0; mag_units = 0;
    xT=0.; xHa=0.; xHb=0.; xHc=0.; xMin=0.; xStep=0.; xMax=0.;
    yT=0.; yHa=0.; yHb=0.; yHc=0.; yMin=0.; yStep=0.; yMax=0.;
    Bx=0.; By=0.;  Bz=0.; basis.assign("JmJ"); save_matrices = false;
    perturb = false; partial = false; arnoldi = false; spectrelevels = -1; truncate_level = 1; num_eigv = 4;
    partial_standalone = false; arnoldi_standalone = false;
+}
+// --------------------------------------------------------------------------------------------------------------- //
+// Methods functions for the class icpars
+// --------------------------------------------------------------------------------------------------------------- //
+void icpars::jijconvcalc()
+{
+   if(_jijconvalreadycalc) return;
+   int k[] = {0,1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
+   int q[] = {0,0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
+   double pna[]={0,0,0,0,0,0,0,sqrt(15/PI)/4,sqrt(15/PI)/2,sqrt(5/PI)/4,sqrt(15/PI)/2,sqrt(15/PI)/4,
+      sqrt(35./32/PI),sqrt(105./16/PI),sqrt(21./32/PI),sqrt(7./16/PI),sqrt(21./32/PI),sqrt(105./16/PI),sqrt(35./32/PI),
+      3*sqrt(35/PI)/16,3*sqrt(70/PI)/8,3*sqrt(5/PI)/8,3*sqrt(5./2/PI)/4,3./16/sqrt(PI),3*sqrt(5./2/PI)/4,3*sqrt(5/PI)/8,3*sqrt(70/PI)/8,3*sqrt(35/PI)/16,
+      sqrt(693./512/PI),sqrt(3465./256/PI),sqrt(385./512/PI),sqrt(1155./64/PI),sqrt(165./256/PI),sqrt(11./256/PI),sqrt(165./256/PI),sqrt(1155./64/PI),
+         sqrt(385./512/PI),sqrt(3465./256/PI),sqrt(693./512/PI),
+      231*sqrt(26./231/PI)/64,sqrt(9009./512/PI),21*sqrt(13./7/PI)/32,sqrt(2730/PI)/32,sqrt(2730/PI)/64,sqrt(273./4/PI)/8,sqrt(13/PI)/32,sqrt(273./4/PI)/8,
+         sqrt(2730/PI)/64,sqrt(2730/PI)/32,21*sqrt(13./7/PI)/32,sqrt(9009./512/PI),231*sqrt(26./231/PI)/64};
+   for(int iq=7; iq<=51; iq++)
+   {
+      if(q[iq]==0) jijconv[iq]=sqrt((2*k[iq]+1.)/4./PI)/pna[iq]; else jijconv[iq]=sqrt((2*k[iq]+1.)/8./PI)/pna[iq];
+      if(k[iq]==2) jijconv[iq]/=B.alpha(); if(k[iq]==4) jijconv[iq]/=B.beta(); if(k[iq]==6) jijconv[iq]/=B.gamma();
+   }
+   _jijconvalreadycalc = true;
 }
 // --------------------------------------------------------------------------------------------------------------- //
 // Overloaded operators for icpars:: class
@@ -702,6 +725,7 @@ icmfmat::icmfmat()
    sMat<double> t; J.assign(6,t); 
    iflag.assign(6,0); iflag[2]=1; iflag[3]=1;
    _n = 1; _l = S; _num_op = 1;
+   jijconv.assign(1,0);
 }
 icmfmat::icmfmat(int n, orbital l, int num_op, bool save_matrices, std::string density)
 {
@@ -956,6 +980,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
                redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
 //             if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } changed MR 15.12.09
                if(q[iJ]<0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
+               if(jijconv.size()>1) redmat*=jijconv[iJ+1];
                Upq *= redmat; fJmat = Upq.f_array();
             }
             for(ind_j=0; ind_j<Esz; ind_j++)
@@ -989,6 +1014,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
             redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);// * wy2stev(iJ);
 //          if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } changed MR 15.12.09
             if(q[iJ]<0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
+            if(jijconv.size()>1) redmat*=jijconv[iJ+1];
             Upq *= redmat; if(iflag[iJ]==0) zJmat=zmat2f(Upq,zeroes); else zJmat = zmat2f(zeroes,Upq); }
          }
          zt = (complexdouble*)malloc(Hsz*sizeof(complexdouble));
@@ -1055,6 +1081,7 @@ void icmfmat::Mab(sMat<double>&Mab, sMat<double>&iMab, iceig&VE, double T, int i
          Upq = mm_gin(filename); if(Upq.isempty()) { Upq = racah_ukq(n,k[iJ],abs(q[iJ]),_l); rmzeros(Upq); mm_gout(Upq,filename); }
          MSTR(k[iJ],abs(q[iJ])); strcpy(filename,basename); strcat(filename,nstr); strcat(filename,".mm");
          Umq = mm_gin(filename); if(Umq.isempty()) { Umq = racah_ukq(n,k[iJ],-abs(q[iJ]),_l); rmzeros(Umq); mm_gout(Umq,filename); }
+         if(jijconv.size()>1) redmat*=jijconv[iJ];
          redmat = pow(-1.,(double)abs(_l)) * (2*_l+1) * threej(2*_l,2*k[iJ],2*_l,0,0,0);
 //       if(q[iJ]<0) { if((q[iJ]%2)==0) Upq -= Umq; else Upq += Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } changed MR 15.12.09
          if(q[iJ]<0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; } else if(q[iJ]>0) { if((q[iJ]%2)==0) Upq += Umq; else Upq -= Umq; }
