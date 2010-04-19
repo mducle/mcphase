@@ -382,15 +382,10 @@ void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, d
    int k[] = {1,1,1,1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
    int q[] = {0,0,0,0,0,0,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
 
-   std::vector<double> mgjmbH(gjmbH.Hi(),0.);
-   if(pars.B.norm().find("Stevens")!=std::string::npos) {
-      pars.jijconvcalc();
-      for (int iq=gjmbH.Lo(); iq<=gjmbH.Hi(); iq++) mgjmbH[iq] = gjmbH[iq]*pars.jijconv[iq]; }
-
    // Calculates the mean field Hamiltonian = H_singleion + sum_i(gjmbH[i]*Operator[i])
    for(int iJ=1; iJ<=(gjmbH.Hi()-gjmbH.Lo()+1); iJ++)
    {
-      if (q[iJ]<0) a.r = mgjmbH[iJ+gjmbH.Lo()-1]; else a.r = -mgjmbH[iJ+gjmbH.Lo()-1];
+      if (q[iJ]<0) a.r = -gjmbH[iJ+gjmbH.Lo()-1]; else a.r = -gjmbH[iJ+gjmbH.Lo()-1];
       if (fabs(a.r)>DBL_EPSILON) F77NAME(zaxpy)(&szapy,&a,(complexdouble*)&est[iJ*cb*cb+100][0],&incx,Hrot,&incx);
    }
 
