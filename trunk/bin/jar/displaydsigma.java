@@ -18,7 +18,8 @@ public class displaydsigma extends Panel implements Runnable {
  static String [] legend; 
  static String xText = "";
  static String yText = "";
- 
+ static FileInputStream ff;
+
  public void start(){ myThread = new Thread (this); myThread.start();}
 
  public void stop(){myThread = null;}
@@ -36,9 +37,9 @@ public class displaydsigma extends Panel implements Runnable {
       ds.getData().removeAllElements();
 
  fileIni = new File(file[i]);
-
+ ff = new FileInputStream(fileIni);
     //ffnen der Datei
-    DataInputStream inStream = new DataInputStream(new FileInputStream(fileIni));
+    DataInputStream inStream = new DataInputStream(ff);
     String strLine;
     String tit;
     String sx="1";
@@ -130,7 +131,7 @@ public class displaydsigma extends Panel implements Runnable {
 
     }
      
-  
+   ff.close();
     //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
     }
 // double[] myDatax = {1, 3, 2, 3,33};
