@@ -5,11 +5,22 @@
 #ifndef MARTIN_FOPEN_ERRCHK
 #define MARTIN_FOPEN_ERRCHK
 
+#define PI 3.141592654
+#define KB 0.0862     // Boltzmanns constant in mev/K
+#define MU_B  5.788378E-02 // Bohrmagneton in meV/tesla
+
 #if __GNUC__ > 2
 #include <unistd.h>
 #endif
 
+#include<cstdio>
+#include<cerrno>
+#include<cstdlib>
+#include<cstring>
+#include<cmath>
 #include <stdio.h>
+#include<vector.h>
+
 // extract parameter 'parameter'  from string instr (z.B. "blabla dmin=0.2 blabla") -
 // output: var ... value of parameter
 // returns 1 on error and 0 if successful
@@ -63,6 +74,38 @@ extern int factorial(int number);
 //extern double copysign(double a,double b);
 extern int sleep(int a);
 #endif
+
+// some vector functions
+void xproduct(Vector & result,Vector a, Vector b);
+
+// calculate reciprocal lattice rezi from real lattice ri
+void rezcalc(Vector r1,Vector  r2,Vector  r3,Vector  rez1,Vector  rez2,Vector  rez3);
+
+void get_abc_in_ijk(Matrix & abc_in_ijk,Vector & abc);
+ // get lattice vectors in terms of coordinate system ijk
+ //defined by  j||b, k||(a x b) and i normal to k and j
+
+void dadbdc2ijk(Matrix & rijk,Matrix & r, Vector & abc);
+// transforms primitive lattice vector matrix r given in terms of abc
+ // to ijk coordinate system
+
+void dadbdc2ijk(Vector & rijk,Vector & dadbdc, Vector & abc);
+// transforms vector r given in terms of abc
+ // to ijk coordinate system
+
+void ijk2dadbdc(Vector & dadbdc,Vector & rijk, Vector & abc);
+// transforms vector r given in terms of ijk coordinates
+// to da db dc
+
+void hkl2ijk(Vector & qijk,Vector & hkl, Vector & abc);
+// transforms Miller indices (in terms of reciprocal lattice abc*)
+// to Q vector in ijk coordinate system
+
+void nlimits_calc(Vector & nmin, Vector & nmax, double radius, Matrix & a);
+// problem: we want to find all lattice vectors Rn=ni*ai which are within a
+ // sphere of radius r from the origin (ai = column vectors of matrix a)
+ // this routine returns the maximum and minimum values of ni i=1,2,3
+ // by probing the corners of a cube
 
 
 #endif

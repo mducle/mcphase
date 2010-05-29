@@ -6,13 +6,7 @@
 #ifndef JJJPAR
 #define JJJPAR
 
-#include<cstdio>
-#include<cstring>
-#include<cstdlib>
-#include<cerrno>
-#include<ctime>
 #include<martin.h>
-#include<vector.h>
 #include<ionpars.hpp>
 
 #ifdef __linux__
@@ -24,62 +18,12 @@
 
 class jjjpar
 {
-
-  public:
-   
-   // subroutine to calculate momentum <J> from effective field gjmbH [meV]
-   void  mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests);
-
-   // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
-   int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);
-   int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
-
-   // returns transition element matrix N(Q) in order to be able to go beyond 
-   // dipolar approximation in mcdisp - it requires a call to eigenstates first
-   int dncalc(Vector & Qvec, double & T, ComplexMatrix & nat, ComplexMatrix & ests);
-
-   // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
-   // according to stored eigenstate matrix est, requires a call to eigenstates first
-   ComplexVector & MQ(Vector & Qvec);
-   ComplexVector Mq;
-
-   ComplexMatrix est; // eigenstates 
-   ComplexMatrix mcalc_parstorage; // paramter storage for mcalc
-   // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
-   ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
-   // initialisis parameter storage for mcalc parameters (if possible)
-   ComplexMatrix & mcalc_parameter_storage_init (Vector & gjmbheff,double & T);
-
+public:
+//******************************************************88
+// basic parameters
   char * cffilename; // single ion parameter filename
   char * modulefilename; // module name
-  double SLR,SLI; // scattering length
-  double DWF; // DebeyWallerFactor [A^2] 
-  Vector magFFj0; // magnetic formfactor numbers
-  Vector magFFj2; // magnetic formfactor numbers
-  Vector magFFj4; // magnetic formfactor numbers
-  Vector magFFj6; // magnetic formfactor numbers
-  Vector Zc;      // Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
-  int calcmagdensity;  // 0 ... normal mode, 1,2,3 calc <J'i>=gJ/2 (<J1,2,3 * Ji>+<Ji*J1,2,3>) ... gives magnetisationdensity in a b c dir instead
-                        // of chargedensiy in chrgplt,charges ...
-
-
-//  D = 2 * pi / Q
-//  s = 1 / 2 / D: sintheta = lambda * s
-// 'magnetic formfactors
-//  j0 = ff(1) * EXP(-ff(2) * s * s) + ff(3) * EXP(-ff(4) * s * s)
-//  j0 = j0 + ff(5) * EXP(-ff(6) * s * s) + ff(7)
-//  j2 = ff(8) * s * s * EXP(-ff(9) * s * s) + ff(10) * s * s * EXP(-ff(11) * s * s)
-//  j2 = j2 + ff(12) * s * s * EXP(-ff(13) * s * s) + s * s * ff(14)
-//  F = (j0 + j2 * (2 / gJ - 1))  formfactor F(Q)
-//  RETURN TOTAL FORMFACTOR, 
-//    however if gJ=0 and Q>0 return spin form factor FS(Q)=<j0(Q)>
-//            if gJ=0 and Q<0 return angular  form factor FL(Q)=<j0(Q)>+<j2(Q)>
-   double F(double Q);
-
-//   debyewallerfactor = EXP(-2 * DWF *s*s)
-   double debyewallerfactor(double & Q);
-
-   double J(); // returns total angular momentum if possible
+    double J(); // returns total angular momentum if possible
    Vector &  tetan(); //returns stevens parameters if possible
 
   Vector xyz,mom; // atom position, moment
@@ -96,23 +40,6 @@ class jjjpar
                                                         // inserting a new exchange parameters addjjj
 							// into field at position number
 
-   Vector Np,Xip,Cp; // radial wave function parameters
-
-   // evaluate radial wave function // r given in Angstroems, returns R(r) in units of 1/A^1.5
-   double radial_wavefunction(double r);
-   void save_radial_wavefunction(const char * filename);
-
-   //functions to calculate radial matrix elements <r^n> from radial wave function
-   int r2_from_radial_wavefunction();
-   int r4_from_radial_wavefunction();
-   int r6_from_radial_wavefunction();
- 
-   double r2;
-   double r4;  // radial wave function exp values
-   double r6;
- 
-   // calculation of chargedensity
-   double rocalc (double & teta,double & fi,double & R, Vector & moments);
 
 
    void save (FILE *file); // to save the parameters to a filehandle
@@ -129,23 +56,137 @@ class jjjpar
    
   ~jjjpar ();		//destruktor
   
+
+
+
+// BASIC SIPF MODULE FUNCTIONS    *************************************************
+
   // integer to tell which module is loaded 0 - external, 1 - kramer, 2- cfield, 3 - brillouin
   int module_type;
-  Matrix cnst;// cnst is the Zlm constants - put them into the matrix  
+  Matrix cnst;// cnst is the Zlm constants - put them into the matrix
    int nof_electrons; // no of electrons in d or f shell
- 
-  private:
+private:
+  Vector ABC;   // storage for single ion module paramters
+  void getpolar(double x,double y, double z, double & r, double & th, double & ph);// calculates polar coordinates from Vector X(1..3)
+  void get_parameters_from_sipfile(char * sipffilename); // function to read single ion parameter files
 
+
+public:
+
+
+   // subroutine to calculate momentum <J> from effective field gjmbH [meV]
+   void  mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,double & U,ComplexMatrix & ests);
+
+   // returns transition element matrix M  and transition energy delta (to calculate chi0 in mcdisp,see manual)
+   int  dmcalc (double & T,Vector &  gjmbheff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);
+   int transitionnumber; // the transition associated with the ion (important if there are more in the single ion spectrum)
+
+   ComplexMatrix est; // eigenstates
+   ComplexMatrix mcalc_parstorage; // paramter storage for mcalc
+   // returns eigenvalues and eigenstates matrix parameters of ion (if possible)
+   ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
+   // initialisis parameter storage for mcalc parameters (if possible)
+   ComplexMatrix & mcalc_parameter_storage_init (Vector & gjmbheff,double & T);
+
+private:
   // external module functions, intern_mcalc=0
-  void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);  
+  void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);
   int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*);
-  int  (*ddnn)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*);
 
-  void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
-  
   void (*estates)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
   void (*mcalc_parameter_storage)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**);
-  
+
+
+public:
+// OBSERVABLES *******************************************************
+//1 . NEUTRON SCATTERING OPERATOR  --------------------------------------
+   // calculate scattering operator <M(Q)>=-2x<Q>_TH in units of mb
+   // according to stored eigenstate matrix est, requires a call to eigenstates first
+   ComplexVector & MQ(Vector & Qvec);
+   ComplexVector Mq;
+
+  // returns transition element matrix N(Q) in order to be able to go beyond
+   // dipolar approximation in mcdisp - it requires a call to eigenstates first
+   int dncalc(Vector & Qvec, double & T, ComplexMatrix & nat, ComplexMatrix & ests);
+
+private :
+  void (*mq)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*);
+  int  (*ddnn)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*);
+
+
+public:
+  double SLR,SLI; // scattering length
+  double DWF; // DebeyWallerFactor [A^2]
+  Vector magFFj0; // magnetic formfactor numbers
+  Vector magFFj2; // magnetic formfactor numbers
+  Vector magFFj4; // magnetic formfactor numbers
+  Vector magFFj6; // magnetic formfactor numbers
+  Vector Zc;      // Z-factors from Lovesey table 11.1 for Z(K) calc (needed to go beyond dipole approx)
+//  D = 2 * pi / Q
+//  s = 1 / 2 / D: sintheta = lambda * s
+// 'magnetic formfactors
+//  j0 = ff(1) * EXP(-ff(2) * s * s) + ff(3) * EXP(-ff(4) * s * s)
+//  j0 = j0 + ff(5) * EXP(-ff(6) * s * s) + ff(7)
+//  j2 = ff(8) * s * s * EXP(-ff(9) * s * s) + ff(10) * s * s * EXP(-ff(11) * s * s)
+//  j2 = j2 + ff(12) * s * s * EXP(-ff(13) * s * s) + s * s * ff(14)
+//  F = (j0 + j2 * (2 / gJ - 1))  formfactor F(Q)
+//  RETURN TOTAL FORMFACTOR,
+//    however if gJ=0 and Q>0 return spin form factor FS(Q)=<j0(Q)>
+//            if gJ=0 and Q<0 return angular  form factor FL(Q)=<j0(Q)>+<j2(Q)>
+   double F(double Q);
+
+//   debyewallerfactor = EXP(-2 * DWF *s*s)
+   double debyewallerfactor(double & Q);
+
+// 2. charge density ----------------------------------------------------------
+
+   Vector Np,Xip,Cp; // radial wave function parameters
+   // evaluate radial wave function // r given in Angstroems, returns R(r) in units of 1/A^1.5
+   double radial_wavefunction(double r);
+   void save_radial_wavefunction(const char * filename);
+
+   //functions to calculate radial matrix elements <r^n> from radial wave function
+   int r2_from_radial_wavefunction();
+   int r4_from_radial_wavefunction();
+   int r6_from_radial_wavefunction();
+
+   double r2;
+   double r4;  // radial wave function exp values
+   double r6;
+
+   // calculation of chargedensity
+   double rocalc (double & teta,double & fi,double & R, Vector & moments);
+
+// 3. moment density ----------------------------------------------------------
+
+/****************************************************************************/
+// function to calculate coefficients of expansion of spindensity in terms
+// of Zlm R^2(r) at a given temperature T and  effective field H
+/****************************************************************************/
+void spindensity_mcalc (Vector &mom,int xyz, double & T, Vector &  gjmbH, ComplexMatrix & parstorage);
+
+/****************************************************************************/
+// function to calculate coefficients of expansion of orbital moment density in terms
+// of Zlm F(r) at a given temperature T and  effective field H
+/****************************************************************************/
+void orbmomdensity_mcalc (Vector &mom,int xyz, double & T, Vector &  gjmbH, ComplexMatrix & parstorage);
+
+//***********************************************************************
+// sub for calculation of spin density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+double spindensity_calc (double & teta,double & fi,double & R, Vector & moments);
+
+   double Fr(double r); // evaluate F(r)=1/r integral_r^inf dx R^2(x)
+                        // r in units of Angstroems, F(r) in units of 1/A^3
+
+//***********************************************************************
+// sub for calculation of orbital moment density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+double orbmomdensity_calc (double & teta,double & fi,double & R, Vector & moments);
+
+private:
 #ifdef __linux__
   void *handle;
 #else
@@ -153,8 +194,13 @@ class jjjpar
   HINSTANCE__* handle;
 #endif
 
+  void  (*sd_m)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*);
+  void  (*od_m)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*);
+
   double rk_from_radial_wavefunction(int k); // needed for public radial wave function <r^n> calculation
    void set_zlm_constants();
+   // sum over different Zlm using the coefficients a(l,m)
+   double zlmsum(Matrix & a, double & teta, double & fi);
 
 
   // kramers internal module functions, intern_mcalc=1
@@ -171,11 +217,6 @@ class jjjpar
   int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
 
     
-  Vector ABC;   // storage for single ion module paramters
-  void getpolar(double x,double y, double z, double & r, double & th, double & ph);// calculates polar coordinates from Vector X(1..3)
-
-  void get_parameters_from_sipfile(char * sipffilename); // function to read single ion parameter files
-
 
 
 };
