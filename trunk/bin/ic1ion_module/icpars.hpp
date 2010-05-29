@@ -11,6 +11,7 @@
 
 #ifndef ICPARS_H
 #define ICPARS_H
+#define JIJCONV
 
 #define PHYSPROP_MAGBIT 1                  // Defined bit values for the flags.calcphys bit mask
 #define PHYSPROP_SUSBIT 2
@@ -97,7 +98,9 @@ class icpars
       friend void conv_e_units(icpars &pars, std::string &newunit);
       friend void ic_parseinput(const char *filename, icpars &pars);
     //friend int ic_peig(icpars &pars, double *Vd, complexdouble *zVd, double *eigval);
+      #ifdef JIJCONV
       bool _jijconvalreadycalc;              // Flag to show that the conversion factor for Jij already calculated
+      #endif
    public:
       orbital l;                             // Orbital angular momentum of electrons, defaults to f-electrons (l=3)
       int n;                                 // Number of electrons in lowest configuration.
@@ -126,8 +129,10 @@ class icpars
       double xMin,xStep,xMax;                // Start, step and end of x-axis in the phase diagram
       double yT,yHa,yHb,yHc;                 // The vector in (H-T) phase space to calculate the y-axis of phase diag
       double yMin,yStep,yMax;                // Start, step and end of y-axis in the phase diagram
+      #ifdef JIJCONV
       std::vector<double> jijconv;           // Conversion factor for Jij coupling parameters from Stevens/Wybourne norm.
       void jijconvcalc();                    // Calculates the conversion factors above.
+      #endif
 
       bool operator==(icpars c) const;       // Operator to determine if parameters are the same
       bool operator!=(icpars c) const;       // Operator to determine if parameters are not the same
@@ -199,10 +204,20 @@ class icmfmat
       std::vector<double> expJ(iceig&VE, double T, // Calculates the expectation values <V|J|V>exp(-beta*T)
         std::vector<std::vector<double> >&matel,   //   matel is an m*n matrix of the elements <n|Jm|n>
         bool save_matrices);
+      std::vector<double> spindensity_expJ(iceig&VE,//Calculates the expectation values
+        int xyz,double T,                          //   <V|spindensitycoeff_of_Zlm|V>exp(-beta*T)
+        std::vector<std::vector<double> >&matel,   
+        bool save_matrices);
+      std::vector<double> orbmomdensity_expJ(      // Calculates the expectation values
+        iceig&VE,int xyz, double T,                //   <V|orbmomdensitycoeff_of_Zlm|V>exp(-beta*T)
+        std::vector<std::vector<double> >&matel,
+        bool save_matrices);
       void Mab(sMat<double>&M, sMat<double>&iM,    // Calculates the matrix M_ab = <i|Ja|j><j|Jb|i>
         iceig&V, double T, int i, int j, int p,    // * {exp(-beta_i*T)-exp(-beta_j*T)}
 	float&d, bool save_matrices);
+      #ifdef JIJCONV
       std::vector<double> jijconv;                 // Conversion from Stevens/Wybourne norm of Jij pars
+      #endif
 };
 
 #endif

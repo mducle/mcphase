@@ -13,6 +13,7 @@ endif
 ifneq (,$(findstring MINGW,$(shell uname)))
 MSYS=1
 WINDOWS=1
+EXE=.exe
 else
 ifeq ($(shell uname),Linux)
 LINUX = LINUX
@@ -21,6 +22,7 @@ else
 ifneq (,$(findstring CYGWIN,$(shell uname)))
 CYGWIN=1
 WINDOWS=1
+EXE=.exe
 endif                # if CYGWIN
 endif                # if LINUX
 endif                # if MSYS
@@ -128,7 +130,7 @@ HEADER = maths states ic1ion icpars
 .PHONY: default all clean
 
 default: all
-all: ../ic1ion ic1ion.so
+all: ../ic1ion$(EXE) ic1ion.so
 
 # Defines some variables
 OBJ := $(foreach objs,$(OBJECT),$(objs).o)
@@ -146,10 +148,10 @@ libs/libarpack.a:
 	cd libs && make
 
 ifdef integral
-../ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
+../ic1ion$(EXE): checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
 	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
 else
-../ic1ion: checkgcc libs/libarpack.a $(OBJ) ic1ion.o
+../ic1ion$(EXE): checkgcc libs/libarpack.a $(OBJ) ic1ion.o
 	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)
 endif
 

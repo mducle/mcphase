@@ -21,11 +21,15 @@
  *   int dncalc(int &tn, double &th, double &ph, double &J0, double &J2,           // Calculates the transition matrix
  *                 double &J4, double &J6, ComplexMatrix &est, double &T,          //   elements beyond the dipole
  *                 ComplexMatrix &mat)                                             //   approximation.
+ *   void spindensity_mcalc(Vector & mom, int & xyz,double *T, Vector &gjmbH,      // Calc. coeffs. of expansion of spindensity 
+ *                 double *gJ,Vector &ABC, char **sipffile, ComplexMatrix &est)    //   in terms of Zlm R^2(r) at given T / H_eff
+ *   void orbmomdensity_mcalc(Vector & mom,int & xyz, double *T, Vector &gjmbH,    // Calc. coeffs. of expansion of orbital moment density
+ *                 double *gJ,Vector &ABC, char **sipffile, ComplexMatrix &est)    //   in terms of Zlm F(r) at given T / H_eff
  *
  * This file is part of the ic1ionmodule of the McPhase package, calculating the single-ion properties of a rare
  * earth or actinide ion in intermediate coupling.
  *
- * (c) 2008 Duc Le - duc.le@ucl.ac.uk
+ * (c) 2008-2010 Duc Le, Martin Rotter
  * This program is licensed under the GNU General Purpose License, version 2. Please see the COPYING file
  */
 
@@ -107,10 +111,12 @@ __declspec(dllexport)
 
    // Converts the Jij parameters if necessary
    std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); 
+   #ifdef JIJCONV
    if(pars.B.norm().find("Stevens")!=std::string::npos) {
       pars.jijconvcalc();
       for(int i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i]*pars.jijconv[i]; }
    else
+   #endif
       for(int i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
 
    // Calculates the IC Hamiltonian matrix
@@ -163,7 +169,9 @@ __declspec(dllexport)
             std::fstream FH; FH.open("results/ic1ion.spectre", std::fstream::out);
             sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
             icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices); 
+            #ifdef JIJCONV
             if(pars.B.norm().find("Stevens")!=std::string::npos) mfmat.jijconv.assign(pars.jijconv.begin(),pars.jijconv.end());
+            #endif
 	    sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
             int cbbest=1,ibest=1; Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm); 
             double Uref,dbest=DBL_MAX,dnew=DBL_MAX; std::vector<double> vBest,vNew; // double Unew,Ubest;
@@ -200,7 +208,9 @@ __declspec(dllexport)
       {
          // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
          icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
+         #ifdef JIJCONV
          if(pars.B.norm().find("Stevens")!=std::string::npos) mfmat.jijconv.assign(pars.jijconv.begin(),pars.jijconv.end());
+         #endif
        //std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
          sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
          complex<double> a(1.,0.); int incx = 1;
@@ -344,10 +354,12 @@ __declspec(dllexport)
    int num_op = gjmbheff.Hi()-gjmbheff.Lo()+1; icmfmat mfmat(pars.n,pars.l,(num_op>6?num_op:6),pars.save_matrices);
    int i,j,gLo=gjmbheff.Lo(),gHi=gjmbheff.Hi(); std::vector<double> vgjmbH(gHi,0.);
    // Converts the Jij parameters if necessary
+   #ifdef JIJCONV
    if(pars.B.norm().find("Stevens")!=std::string::npos) {
       pars.jijconvcalc(); mfmat.jijconv.assign(pars.jijconv.begin(),pars.jijconv.end());
       for(i=gLo; i<=gHi; i++) vgjmbH[i-1] = -gjmbheff[i]*pars.jijconv[i]; }
    else
+   #endif
       for(i=gLo; i<=gHi; i++) vgjmbH[i-1] = -gjmbheff[i];
    sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices); 
 
@@ -675,7 +687,279 @@ __declspec(dllexport)
          mat *= therm / Z;
 
    // determine number of thermally reachable states
-   int noft=0;for(i=0;(i<Hsz)&((exp(-(est[0][i+1].real()-est[0][1].real())/(KB*T)))>SMALL);++i)noft+=Hsz-i-1;
+   int noft=0;for(i=0;(i<Hsz)&(exp(-(est[0][i+1].real()-est[0][1].real())/(KB*T)))>SMALL;++i)noft+=Hsz-i-1;
    return noft;
 //   return Hsz*(Hsz-1)/2;
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Routine to calculate the coefficients of expansion of spindensity in terms
+// of Zlm R^2(r) at a given temperature T and  effective field H
+// --------------------------------------------------------------------------------------------------------------- //
+extern "C"
+#ifdef _WINDOWS
+__declspec(dllexport)
+#endif
+void spindensity_mcalc(Vector &J,          // Output single ion moments =expectation values of
+                                           // of Zlm R^2(r) at a given temperature T and  effective field H
+                      int & xyz,           // direction 1,2,3 = x,y,z
+                      double *T,          // Input scalar temperature
+                      Vector &gjmbH,      // Input vector of mean fields (meV)
+ /* Not Used */       double *gJ,         // Input Lande g-factor
+ /* Not Used */       Vector &ABC,        // Input vector of parameters from single ion property file
+                      char **sipffilename,// Single ion properties filename
+                      ComplexMatrix &est) // Input/output eigenstate matrix (initialized in parstorage)
+{
+   // Parses the input file for parameters
+   icpars pars;
+   const char *filename = sipffilename[0];
+   ic_parseinput(filename,pars);
+
+   // Prints out single ion parameters and filename.
+// std::cout << "#ic1ion: Single ion parameter file: " << filename << "\n";
+// std::cout << "#ic1ion: Read in parameters (in " << pars.e_units << "): F2=" << pars.F[1] << ",F4=" << pars.F[2];
+// if(pars.l==F) std::cout << ",F6=" << pars.F[3]; std::cout << ",xi=" << pars.xi << "\n";
+// std::cout << "#ic1ion: \t" << pars.B.cfparsout(", ") << "in " << pars.B.units() << "\n";
+
+   // Calculates the IC Hamiltonian matrix
+   int i,k,q,Hsz=getdim(pars.n,pars.l);
+   complexdouble *H=0,*Jm=0; 
+   bool Hicnotcalc = false;
+   std::vector<double> parval; parval.reserve(35);
+   if(pars.n==1) { parval.push_back(pars.xi); for(k=2; k<=(2*pars.l); k+=2) for(q=-k; q<=k; q++) parval.push_back(pars.B(k,q)); }
+   else {
+      for(i=0; i<4; i++) parval.push_back(pars.F[i]); parval.push_back(pars.xi); for(i=0; i<3; i++) parval.push_back(pars.alpha[i]);
+      for(k=2; k<=(2*pars.l); k+=2) for(q=-k; q<=k; q++) parval.push_back(pars.B(k,q)); }
+   if(parval.size()%2==1) parval.push_back(0.);
+
+   if((est.Cols()!=(Hsz+1) || est.Rows()!=(Hsz+1)) && pars.truncate_level==1) Hicnotcalc = true;
+   else if(real(est[0][0])==-0.1 && imag(est[0][0])==-0.1)  // Hic previously calculated
+   {
+      for(i=0; i<(int)(parval.size()/2); i++) if(real(est[0][i+1])!=parval[2*i] && imag(est[0][i+1])!=parval[2*i+1]) { Hicnotcalc = true; break; }
+   }
+   else Hicnotcalc = true;
+   if(Hicnotcalc)
+   {
+      if(pars.spectrelevels==-1)
+      {
+         sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM; H = zmat2f(Hic,iHic);
+//       est = ComplexMatrix(0,Hsz,0,Hsz); I comment this out - you should not reinitialize est !!!
+         if( (est.Rhi()!=Hsz||est.Chi()!=Hsz) && pars.truncate_level==1)
+         {
+            std::cerr << "ERROR module ic1ion - mcalc: Hsz recalculation does not agree with eigenstates matrix dimension\n"; exit(EXIT_FAILURE);
+         }
+         if ((int)(parval.size()/2)>Hsz && pars.truncate_level==1)
+         {
+//          std::cerr << "ERROR module ic1ion - mcalc: storing Hamiltonian in est matrix not possible - parval size too big\n"; exit(EXIT_FAILURE);
+         }
+         else
+         {
+            est[0][0] = complex<double> (-0.1,-0.1);
+            for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
+         }
+         if(pars.truncate_level!=1)  // Truncates the matrix, and stores the single ion part in a memorymapped array (Linux only)
+            truncate_hmltn(pars, est, Hic, iHic, J.Hi(), J.Lo());
+         else
+            for(i=1; i<=Hsz; i++) memcpy(&est[i][1],&H[(i-1)*Hsz],Hsz*sizeof(complexdouble));
+         free(H);
+      }
+      else  // Calculates using the Spectre method...                                       // lvl = 10;     % Number of |LSJ> levels to keep
+      {
+         if(pars.spectrelevels==-2)
+         {
+            std::cerr << "Trying to determine optimal number of levels for spectre... ";
+            std::fstream FH; FH.open("results/ic1ion.spectre", std::fstream::out);
+            sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
+            std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices);
+            int cbbest=1,ibest=1; Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm);
+            double Uref,dbest=DBL_MAX,dnew=DBL_MAX; std::vector<double> vBest,vNew; // double Unew,Ubest;
+            std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel,pars.save_matrices); Uref=vJ[J.Hi()-J.Lo()+2];
+            FH << "\nRef:\t["; for(i=0; i<(int)vJ.size(); i++) FH << vJ[i] << "\t"; FH << "]\n";
+            for(int cb=1; cb<=Hic.nr(); cb++)
+            {
+               pars.spectrelevels=cb; spectre_hmltn(pars,est,parval.size());
+               std::vector<double> vJt = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
+               FH << "cb=" << cb << "\t["; for(i=J.Lo(); i<(int)vJt.size(); i++) FH << vJt[i] << "\t"; FH << "]\n";
+               if(cb==1)
+               {
+                  dbest=0.; for(i=J.Lo(); i<=J.Hi(); i++) dbest+=fabs(vJ[i-J.Lo()]-vJt[i]); vBest=vJt;
+               }
+               else
+               {
+                  vNew = vJt; double dt=0.; for(i=J.Lo(); i<=J.Hi(); i++) dt+=fabs(vJ[i-J.Lo()]-vJt[i]);
+                  dnew = dt; if(dnew<dbest) { vBest=vNew; dbest=dnew; cbbest=cb; }
+                  if(dnew>dbest) ibest++; if(ibest==5) break;
+               }
+            }
+            FH.close();
+            pars.spectrelevels=cbbest; std::cerr << cbbest << " levels seems optimal\n";
+         }
+         spectre_hmltn(pars,est,parval.size());
+         for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
+      }
+   }
+   if(pars.spectrelevels==-1)
+   {
+      if(pars.truncate_level!=1)  // Uses the eigenvectors of the single ion Hamiltonian to truncate the matrix
+         { std::cerr << "spindensity using truncate otion not yet implemented... exiting ";exit(EXIT_FAILURE);}
+//          truncate_expJ(pars,est,gjmbH,J,*T,lnZ,U,Jm);
+      else
+      {
+         // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
+         icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
+         std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+         sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices);
+         complex<double> a(1.,0.); int incx = 1;
+         Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
+
+         // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)
+         iceig VE; if(pars.partial) VE.lcalc(pars,Jm); else if(pars.arnoldi) VE.acalc(pars,Jm); else VE.calc(Hsz,Jm); free(Jm);
+
+         // Calculates the expectation values sum_n{ <n|Ja|n> exp(-En/kT) }
+         std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.spindensity_expJ(VE,xyz,*T,matel,pars.save_matrices);
+         for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i-J.Lo()];
+      }
+   }
+   else
+   {   std::cerr << "spindensity using spectre otion not yet implemented... exiting ";exit(EXIT_FAILURE);
+      //std::vector<double> vJ = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
+      //for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i];
+   }
+}
+
+// --------------------------------------------------------------------------------------------------------------- //
+// Routine to calculate the coefficients of expansion of orbital moment density in terms
+// of Zlm F(r) at a given temperature T and  effective field H
+// --------------------------------------------------------------------------------------------------------------- //
+extern "C"
+#ifdef _WINDOWS
+__declspec(dllexport)
+#endif
+void orbmomdensity_mcalc(Vector &J,          // Output single ion moments =expectation values of
+                                           // of Zlm R^2(r) at a given temperature T and  effective field H
+                      int & xyz,           // direction 1,2,3 = x,y,z
+                      double *T,          // Input scalar temperature
+                      Vector &gjmbH,      // Input vector of mean fields (meV)
+ /* Not Used */       double *gJ,         // Input Lande g-factor
+ /* Not Used */       Vector &ABC,        // Input vector of parameters from single ion property file
+                      char **sipffilename,// Single ion properties filename
+                      ComplexMatrix &est) // Input/output eigenstate matrix (initialized in parstorage)
+{
+   // Parses the input file for parameters
+   icpars pars;
+   const char *filename = sipffilename[0];
+   ic_parseinput(filename,pars);
+
+   // Prints out single ion parameters and filename.
+// std::cout << "#ic1ion: Single ion parameter file: " << filename << "\n";
+// std::cout << "#ic1ion: Read in parameters (in " << pars.e_units << "): F2=" << pars.F[1] << ",F4=" << pars.F[2];
+// if(pars.l==F) std::cout << ",F6=" << pars.F[3]; std::cout << ",xi=" << pars.xi << "\n";
+// std::cout << "#ic1ion: \t" << pars.B.cfparsout(", ") << "in " << pars.B.units() << "\n";
+
+   // Calculates the IC Hamiltonian matrix
+   int i,k,q,Hsz=getdim(pars.n,pars.l);
+   complexdouble *H=0,*Jm=0; 
+   bool Hicnotcalc = false;
+   std::vector<double> parval; parval.reserve(35);
+   if(pars.n==1) { parval.push_back(pars.xi); for(k=2; k<=(2*pars.l); k+=2) for(q=-k; q<=k; q++) parval.push_back(pars.B(k,q)); }
+   else {
+      for(i=0; i<4; i++) parval.push_back(pars.F[i]); parval.push_back(pars.xi); for(i=0; i<3; i++) parval.push_back(pars.alpha[i]);
+      for(k=2; k<=(2*pars.l); k+=2) for(q=-k; q<=k; q++) parval.push_back(pars.B(k,q)); }
+   if(parval.size()%2==1) parval.push_back(0.);
+
+   if((est.Cols()!=(Hsz+1) || est.Rows()!=(Hsz+1)) && pars.truncate_level==1) Hicnotcalc = true;
+   else if(real(est[0][0])==-0.1 && imag(est[0][0])==-0.1)  // Hic previously calculated
+   {
+      for(i=0; i<(int)(parval.size()/2); i++) if(real(est[0][i+1])!=parval[2*i] && imag(est[0][i+1])!=parval[2*i+1]) { Hicnotcalc = true; break; }
+   }
+   else Hicnotcalc = true;
+   if(Hicnotcalc)
+   {
+      if(pars.spectrelevels==-1)
+      {
+         sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM; H = zmat2f(Hic,iHic);
+//       est = ComplexMatrix(0,Hsz,0,Hsz); I comment this out - you should not reinitialize est !!!
+         if( (est.Rhi()!=Hsz||est.Chi()!=Hsz) && pars.truncate_level==1)
+         {
+            std::cerr << "ERROR module ic1ion - mcalc: Hsz recalculation does not agree with eigenstates matrix dimension\n"; exit(EXIT_FAILURE);
+         }
+         if ((int)(parval.size()/2)>Hsz && pars.truncate_level==1)
+         {
+//          std::cerr << "ERROR module ic1ion - mcalc: storing Hamiltonian in est matrix not possible - parval size too big\n"; exit(EXIT_FAILURE);
+         }
+         else
+         {
+            est[0][0] = complex<double> (-0.1,-0.1);
+            for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
+         }
+         if(pars.truncate_level!=1)  // Truncates the matrix, and stores the single ion part in a memorymapped array (Linux only)
+            truncate_hmltn(pars, est, Hic, iHic, J.Hi(), J.Lo());
+         else
+            for(i=1; i<=Hsz; i++) memcpy(&est[i][1],&H[(i-1)*Hsz],Hsz*sizeof(complexdouble));
+         free(H);
+      }
+      else  // Calculates using the Spectre method...                                       // lvl = 10;     % Number of |LSJ> levels to keep
+      {
+         if(pars.spectrelevels==-2)
+         {
+            std::cerr << "Trying to determine optimal number of levels for spectre... ";
+            std::fstream FH; FH.open("results/ic1ion.spectre", std::fstream::out);
+            sMat<double> Hic,iHic; Hic = ic_hmltn(iHic,pars); Hic/=MEV2CM; iHic/=MEV2CM;
+            std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+            icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices); sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices);
+            int cbbest=1,ibest=1; Jmat+=Hic; iJmat+=iHic; Jm = zmat2f(Jmat,iJmat); iceig VE; VE.calc(Hsz,Jm);
+            double Uref,dbest=DBL_MAX,dnew=DBL_MAX; std::vector<double> vBest,vNew; // double Unew,Ubest;
+            std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.expJ(VE,*T,matel,pars.save_matrices); Uref=vJ[J.Hi()-J.Lo()+2];
+            FH << "\nRef:\t["; for(i=0; i<(int)vJ.size(); i++) FH << vJ[i] << "\t"; FH << "]\n";
+            for(int cb=1; cb<=Hic.nr(); cb++)
+            {
+               pars.spectrelevels=cb; spectre_hmltn(pars,est,parval.size());
+               std::vector<double> vJt = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
+               FH << "cb=" << cb << "\t["; for(i=J.Lo(); i<(int)vJt.size(); i++) FH << vJt[i] << "\t"; FH << "]\n";
+               if(cb==1)
+               {
+                  dbest=0.; for(i=J.Lo(); i<=J.Hi(); i++) dbest+=fabs(vJ[i-J.Lo()]-vJt[i]); vBest=vJt;
+               }
+               else
+               {
+                  vNew = vJt; double dt=0.; for(i=J.Lo(); i<=J.Hi(); i++) dt+=fabs(vJ[i-J.Lo()]-vJt[i]);
+                  dnew = dt; if(dnew<dbest) { vBest=vNew; dbest=dnew; cbbest=cb; }
+                  if(dnew>dbest) ibest++; if(ibest==5) break;
+               }
+            }
+            FH.close();
+            pars.spectrelevels=cbbest; std::cerr << cbbest << " levels seems optimal\n";
+         }
+         spectre_hmltn(pars,est,parval.size());
+         for(i=0; i<(int)(parval.size()/2); i++) est[0][i+1] = complex<double> (parval[2*i],parval[2*i+1]);
+      }
+   }
+   if(pars.spectrelevels==-1)
+   {
+      if(pars.truncate_level!=1)  // Uses the eigenvectors of the single ion Hamiltonian to truncate the matrix
+        {  std::cerr << "orbmomdensity using truncate otion not yet implemented... exiting ";exit(EXIT_FAILURE);}
+//          truncate_expJ(pars,est,gjmbH,J,*T,lnZ,U,Jm);
+      else
+      {
+         // Calculates the mean field matrices <Sx>, <Lx>, etc. and the matrix sum_a(gjmbH_a*Ja)
+         icmfmat mfmat(pars.n,pars.l,J.Hi()-J.Lo()+1,pars.save_matrices,pars.density);
+         std::vector<double> vgjmbH((J.Hi()-J.Lo()+1),0.); for(i=J.Lo(); i<=J.Hi(); i++) vgjmbH[i-J.Lo()] = -gjmbH[i];
+         sMat<double> Jmat,iJmat; mfmat.Jmat(Jmat,iJmat,vgjmbH,pars.save_matrices);
+         complex<double> a(1.,0.); int incx = 1;
+         Jm = zmat2f(Jmat,iJmat); for(i=1; i<=Hsz; i++) F77NAME(zaxpy)(&Hsz,(complexdouble*)&a,(complexdouble*)&est[i][1],&incx,&Jm[(i-1)*Hsz],&incx);
+
+         // Diagonalises the Hamiltonian H = Hic + sum_a(gjmbH_a*Ja)
+         iceig VE; if(pars.partial) VE.lcalc(pars,Jm); else if(pars.arnoldi) VE.acalc(pars,Jm); else VE.calc(Hsz,Jm); free(Jm);
+
+         // Calculates the expectation values sum_n{ <n|Ja|n> exp(-En/kT) }
+         std::vector< std::vector<double> > matel; std::vector<double> vJ = mfmat.orbmomdensity_expJ(VE,xyz,*T,matel,pars.save_matrices);
+         for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i-J.Lo()];
+      }
+   }
+   else
+   {         std::cerr << "orbmomdensity using spectre otion not yet implemented... exiting ";exit(EXIT_FAILURE);
+      //std::vector<double> vJ = spectre_expJ(pars,est,parval.size(),gjmbH,J.Lo(),J.Hi(),*T);
+      //for(i=J.Lo(); i<=J.Hi(); i++) J[i] = vJ[i];
+   }
 }

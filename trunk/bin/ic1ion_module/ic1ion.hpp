@@ -119,7 +119,7 @@ void lovesey_Qq(std::vector<sMat<double> >&Q, int q, int n, orbital l,    // Cal
        std::vector<double>&);
 sMat<double> balcar_MSq(int q, int K, int Q, int n, orbital l);           // Calculates the coeff. of the spin density
 sMat<double> balcar_MLq(int q, int K, int Q, int n, orbital l);           // Calculates the coeff. of the orbital dens.
-complexdouble*balcar_Mq(std::string density,int K,int Q,int n,orbital l); // Driver for calculation of density coeff.
+complexdouble*balcar_Mq(int xyz,int K,int Q,int n,orbital l);             // Driver for calculation of density coeff.
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Declarations for functions in ic_hmltn.cpp
