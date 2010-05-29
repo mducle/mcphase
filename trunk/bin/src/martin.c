@@ -1,13 +1,9 @@
 // martins functions
 // to get on better in c
 
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
+
 #include<martin.h>
-#include<vector.h>
+
 
 #ifndef __linux__
 #include<cfloat>
@@ -341,3 +337,118 @@ int sleep(int a)
 
 #endif
 
+// some vector functions
+
+/**********************************************************************/
+void xproduct(Vector & result,Vector a, Vector b)
+{
+ result(1)=a(2)*b(3)-a(3)*b(2);
+ result(2)=-a(1)*b(3)+a(3)*b(1);
+ result(3)=a(1)*b(2)-a(2)*b(1);
+
+ return ;
+}
+
+void rezcalc(Vector r1,Vector  r2,Vector  r3,Vector  rez1,Vector  rez2,Vector  rez3)
+{// calculate reciprocal lattice rezi from real lattice ri
+ float vol;
+ xproduct(rez1,r2,r3); vol=rez1*r1; rez1*=2.0*PI/vol;
+ xproduct(rez2,r1,r3); vol=rez2*r2; rez2*=2.0*PI/vol;
+ xproduct(rez3,r1,r2); vol=rez3*r3; rez3*=2.0*PI/vol;
+return;}
+
+void get_abc_in_ijk(Matrix & abc_in_ijk,Vector & abc)
+{// get lattice vectors in terms of coordinate system ijk
+ //defined by  j||b, k||(a x b) and i normal to k and j
+double alpha=90; if(abc.Hi()==6) alpha=abc(4); // this is to ensure backward compatibility
+double beta=90; if(abc.Hi()==6)  beta=abc(5);
+double gamma=90; if(abc.Hi()==6) gamma=abc(6);
+
+abc_in_ijk(1,1)=abc(1)*sin(gamma*PI/180);  // vector a in terms of ijk
+abc_in_ijk(2,1)=abc(1)*cos(gamma*PI/180);
+abc_in_ijk(3,1)=0;
+
+abc_in_ijk(1,2)=0;   // vector b in terms of ijk
+abc_in_ijk(2,2)=abc(2);
+abc_in_ijk(3,2)=0;
+
+abc_in_ijk(2,3)=abc(3)*cos(alpha*PI/180);  //vector c in terms of ijk
+abc_in_ijk(1,3)=abc(3)*(cos(beta*PI/180)-cos(alpha*PI/180)*cos(gamma*PI/180))/sin(gamma*PI/180);
+if (fabs(abc_in_ijk(1,3))>abc(3)){fprintf(stderr,"ERROR getabc_in_ijk: alpha beta and gamma geometrically inconsistent\n");exit(EXIT_FAILURE);}
+abc_in_ijk(3,3)=abc(3)*abc(3)-abc_in_ijk(2,3)*abc_in_ijk(2,3)-abc_in_ijk(1,3)*abc_in_ijk(1,3);
+if (abc_in_ijk(3,3)<=0){fprintf(stderr,"ERROR getabc_in_ijk: alpha beta and gamma geometrically inconsistent\n");exit(EXIT_FAILURE);}
+abc_in_ijk(3,3)=sqrt(abc_in_ijk(3,3));
+}
+
+void dadbdc2ijk(Matrix & rijk,Matrix & rdadbdc, Vector & abc)
+{// transforms primitive lattice vector matrix r given in terms of abc
+ // to ijk coordinate system
+Matrix rtoijk(1,3,1,3); // define transformation matrix to calculate components of
+                           // r1 r2 and r3 with respect to the ijk coordinate system
+                           //defined by  j||b, k||(a x b) and i normal to k and j
+get_abc_in_ijk(rtoijk,abc);
+
+rijk=rtoijk*rdadbdc;
+}
+
+void dadbdc2ijk(Vector & rijk,Vector & dadbdc, Vector & abc)
+{// transforms vector r given in terms of abc
+ // to ijk coordinate system
+Matrix rtoijk(1,3,1,3); // define transformation matrix to calculate components of
+                           // r1 r2 and r3 with respect to the ijk coordinate system
+                           //defined by  j||b, k||(a x b) and i normal to k and j
+get_abc_in_ijk(rtoijk,abc);
+
+rijk=rtoijk*dadbdc;
+}
+
+void ijk2dadbdc(Vector & dadbdc,Vector & rijk, Vector & abc)
+{// transforms vector r given in terms of ijk coordinates
+// to da db dc
+Matrix rtoijk(1,3,1,3); // define transformation matrix to calculate components of
+                           // r1 r2 and r3 with respect to the ijk coordinate system
+                           //defined by  j||b, k||(a x b) and i normal to k and j
+get_abc_in_ijk(rtoijk,abc);
+dadbdc=rtoijk.Inverse()*rijk;
+}
+
+void hkl2ijk(Vector & qijk,Vector & hkl, Vector & abc)
+{// transforms Miller indices (in terms of reciprocal lattice abc*)
+// to Q vector in ijk coordinate system
+Matrix rtoijk(1,3,1,3); // define transformation matrix to calculate components of
+                           // r1 r2 and r3 with respect to the ijk coordinate system
+                           //defined by  j||b, k||(a x b) and i normal to k and j
+get_abc_in_ijk(rtoijk,abc);
+qijk=rtoijk.Inverse().Transpose()*hkl;
+qijk*=2*PI;
+}
+
+void nlimits_calc(Vector & nmin, Vector & nmax, double radius, Matrix & a)
+{// problem: we want to find all lattice vectors Rn=ni*ai which are within a
+ // sphere of radius r from the origin (ai = column vectors of matrix a)
+ // this routine returns the maximum and minimum values of ni i=1,2,3
+ // by probing the corners of a cube
+ Vector ddd(1,8),dd0(1,3),dd(1,3),minv(1,3),maxv(1,3);
+  int i;
+ minv(1)=-radius;
+ minv(2)=-radius;
+ minv(3)=-radius;
+ maxv(1)=radius;
+ maxv(2)=radius;
+ maxv(3)=radius;
+ // determine ijkmin ijkmax by calculating the 8 corners of the  quader
+  // in terms of primitive lattice
+  // i*p.Column(1)+j*p.Column(2)+k*p.Column(3)=cornerpointvector ... i,j,k =?
+  // ijk=p^-1*cornerpointvector
+  for (i=1;i<=3;++i)
+  {dd0=minv;               dd=a.Inverse()*dd0;ddd(1)=dd(i);
+   dd0=minv;dd0(1)=maxv(1);dd=a.Inverse()*dd0;ddd(2)=dd(i);
+   dd0=minv;dd0(2)=maxv(2);dd=a.Inverse()*dd0;ddd(3)=dd(i);
+   dd0=minv;dd0(3)=maxv(3);dd=a.Inverse()*dd0;ddd(4)=dd(i);
+   dd0=maxv;               dd=a.Inverse()*dd0;ddd(5)=dd(i);
+   dd0=maxv;dd0(1)=minv(1);dd=a.Inverse()*dd0;ddd(6)=dd(i);
+   dd0=maxv;dd0(2)=minv(2);dd=a.Inverse()*dd0;ddd(7)=dd(i);
+   dd0=maxv;dd0(3)=minv(3);dd=a.Inverse()*dd0;ddd(8)=dd(i);
+   nmin(i)=Min(ddd)-1;nmax(i)=Max(ddd)+1;
+  }
+}

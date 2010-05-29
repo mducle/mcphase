@@ -14,7 +14,7 @@
 #define SMALLEDIF 1e-5 // small difference in calculation of transition energy
                        // used to give error if recalculation of mcdisp.trs
 		       // energies gives different results than file
-#define KB 0.0862     // Boltzmanns constant in mev/K
+
 #define MAXNOFCHARINLINE 1024
 
 #include <mcdisp.h>
@@ -54,8 +54,7 @@ typedef struct{
    Matrix **pol, **polICIC, **polICn, **polnIC;
    mfcf **ev_real, **ev_imag, **eev_real, **eev_imag;
    ComplexMatrix **Tau;
-   Vector hkl, q;
-   jq **J;
+   Vector hkl, q;  jq **J;
    inimcdis **ini;
    par **inputpars;
    mdcf **md;
@@ -312,10 +311,71 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
    fprintf(fout,"#            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(fout,"#*********************************************************************\n");
    fprintf(fout,"#(*)The unpolarized powder average neutron cross section sigma for each transition \n");
-   fprintf(fout,"#   is calculated neglectingthe formfactor, the Debye Wallerfactor, factor k'/k.\n");
+   fprintf(fout,"#   is calculated neglecting the formfactor, the Debye Wallerfactor, factor k'/k as follows:\n");
+   fprintf(fout,"#-------------------------------------------------------------- \n");
+   fprintf(fout,"#            Transition intensities in barn/sr.                |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"# =                    - E /T     -----                        |\n");
+   fprintf(fout,"# |                   e   i       \\                   2        |\n");
+   fprintf(fout,"# |     = const --------------     >    |<i,r|M |k,s>|         |\n");
+   fprintf(fout,"# |             ----    - E /T    /            T               |\n");
+   fprintf(fout,"# =             >    n e   i      -----                        |\n");
+   fprintf(fout,"#  E -> E       ----  i            r,s                         |\n");
+   fprintf(fout,"#   i    k       i                                             |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                            with                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                -----                         |\n");
+   fprintf(fout,"#                      2     2   \\                    2        |\n");
+   fprintf(fout,"#        |<i,r|M |k,s>|   = ---   >     |<i,r|M |k,s>|         |\n");
+   fprintf(fout,"#               T            3   /             u               |\n");
+   fprintf(fout,"#                                -----                         |\n");
+   fprintf(fout,"#                             u = x,y,z                        |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                             and                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                   1       2                  |\n");
+   fprintf(fout,"#                  const  =      ( --- r   )                   |\n");
+   fprintf(fout,"#                                   2   0                      |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                      -12                     |\n");
+   fprintf(fout,"#                  r     = -0.53908* 10    cm                  |\n");
+   fprintf(fout,"#                   0                                          |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                 M   =  L  + 2 S  = g  J                      |\n");
+   fprintf(fout,"#                                     J                        |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#--------------------------------------------------------------|\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                       1.Sum rule :                           |\n");
+   fprintf(fout,"#                                                 - E /T       |\n");
+   fprintf(fout,"#                                            n   e   i         |\n");
+   fprintf(fout,"#  ----  =       2                            i                |\n");
+   fprintf(fout,"#  >     |     =--- *g *g *const * J(J+1) * ----------------   |\n");
+   fprintf(fout,"#  ----  =       3    J  J                  ----     - E /T    |\n");
+   fprintf(fout,"#   k     E -> E                            >    n  e   i      |\n");
+   fprintf(fout,"#          i    k                           ----  i            |\n");
+   fprintf(fout,"#                                            i                 |\n");
+   fprintf(fout,"#--------------------------------------------------------------|\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                       2. sum rule :                          |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#                                                              |\n");
+   fprintf(fout,"#            ----  =            2                              |\n");
+   fprintf(fout,"#            >     |         = --- * const*g *g *J(J+1)        |\n");
+   fprintf(fout,"#            ----  =            3           J  J               |\n");
+   fprintf(fout,"#             k,i   E -> E                                     |\n");
+   fprintf(fout,"#                    i    k                                    |\n");
+   fprintf(fout,"#-------------------------------------------------------------- \n");
    fprintf(fout,"# T= %g K\n",ini.T);
    fprintf(fout,"#*********************************************************************\n");
-          fprintf (fout, "#i j k ionnr transnr energy |gamma_s|  sigma [barn](*)\n");
+          fprintf (fout, "#i j k ionnr transnr energy |gamma_s|  sigma [barn/sr](*)\n");
  
   for(i=1;i<=ini.mf.na();++i){for(j=1;j<=ini.mf.nb();++j){for(k=1;k<=ini.mf.nc();++k){
   for(l=1;l<=inputpars.nofatoms;++l){
@@ -331,7 +391,7 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
 
       // here Mijkl is a nxn matrix n ... numberofcomponents
    noftransitions(l)=0;
-    while ((minE>d||d>maxE)&&(minE>-d||-d>maxE)) //only consider transition if it is in interval minE/maxE
+    while (minE>d||d>maxE) //only consider transition if it is in interval minE/maxE
      {//first and following  transitions out of energy range ... do not consider them
      fprintf(stdout," .... transition not stored because out of interval [minE,maxE]=[%g,%g]meV\n",minE,maxE);
      ++(*inputpars.jjj[l]).transitionnumber;
@@ -345,18 +405,19 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
      if ((*inputpars.jjj[l]).gJ!=0)
      { for(k1=1;k1<=3;++k1){intensityp+=(*inputpars.jjj[l]).gJ*(*inputpars.jjj[l]).gJ*real(Mijkl(k1,k1));}}
      else
-     { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1));}}
-     intensityp*=0.61072561;intensitym=intensityp;// prefactor for intensity in barn is 4*PI*2/3*0.54*0.54/4= 0.61072561
-     if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}}
+     { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1))+2*real(Mijkl(2*k1-1,2*k1))+2*real(Mijkl(2*k1,2*k1-1));}}
+     intensityp*=0.048434541067;intensitym=intensityp;// prefactor for intensity in barn/sr is 2/3*0.53908*0.53908/4= 0.048434541067
+     if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}else{intensitym=0;}}
                                   else{intensityp=intensityp*ini.T*KB;intensitym=intensityp;}
                 
 
    jmin=(*inputpars.jjj[l]).transitionnumber;
-//  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
-//                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
-//                    } 
+  if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
+                  myPrintComplexMatrix(stdout,Mijkl);fprintf(stdout,"...diagonalising\n");
+                    } 
      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
-     myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
+     //myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter);
+     gamma=0;gamma(ini.nofcomponents)=real(Trace(Mijkl));
      if(minE<d&&d<maxE)
     { fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,jmin,d,gamma(ini.nofcomponents),intensityp);
      ++noftransitions(l);}
@@ -378,20 +439,26 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
         (*inputpars.jjj[l]).transitionnumber=jmin; // put back transition number for 1st transition
    //printf("noftransitions read by mcdisp: %i",i1);
       
-      if ((minE<d&&d<maxE)||(minE<-d&&-d<maxE)) //only consider transition if it is in interval emin/emax
+      if (minE<d&&d<maxE) //only consider transition if it is in interval emin/emax
      { 
       // calculate powder neutron intensities
      intensityp=0; intensitym=0;
      if ((*inputpars.jjj[l]).gJ!=0)
      { for(k1=1;k1<=3;++k1){intensityp+=(*inputpars.jjj[l]).gJ*(*inputpars.jjj[l]).gJ*real(Mijkl(k1,k1));}}
      else
-     { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1));}}
-     intensityp*=0.61072561;intensitym=intensityp;// prefactor for intensity in barn is 4*PI*2/3*0.54*0.54/4= 0.61072561
-      if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}}
+    { for(k1=1;k1<=3;++k1){intensityp+=4*real(Mijkl(2*k1-1,2*k1-1))+real(Mijkl(2*k1,2*k1))+2*real(Mijkl(2*k1-1,2*k1))+2*real(Mijkl(2*k1,2*k1-1));}}
+    intensityp*=0.048434541067;intensitym=intensityp;// prefactor for intensity in barn/sr is 2/3*0.53908*0.53908/4= 0.048434541067
+     if (d>SMALL){if(d/ini.T/KB<20){intensitym=-intensityp/(1-exp(d/ini.T/KB));intensityp/=(1-exp(-d/ini.T/KB));}else{intensitym=0;}}
                                   else{intensityp=intensityp*ini.T*KB;intensitym=intensityp;}
                
-      // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
-     myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); 
+      if (do_verbose==1){fprintf(stdout,"Matrix M(s=%i %i %i)\n",i,j,k);
+                  myPrintComplexMatrix(stdout,Mijkl);
+                 //fprintf(stdout,"Frobenius Norm(M)=sqrt(sum_i,j |Mij|^2)=%g\n",NormFro(Mijkl));
+                  fprintf(stdout,"...diagonalising\n");
+                    }  // diagonalizeMs to get unitary transformation matrix Us and eigenvalues gamma
+     //if(NormFro(Mijkl)>SMALL*1e-5) {myEigenSystemHermitean (Mijkl,gamma,Uijkl,sort=1,maxiter); } \\ diagonalisation only possible for nonzero matrices !!!
+     //             else {gamma=0;gamma(ini.nofcomponents)=Trace(Mijkl);}
+      gamma=0;gamma(ini.nofcomponents)=real(Trace(Mijkl));
      if(minE<d&&d<maxE)
      {fprintf(fout,"%i %i %i  %i     %i     %g  %g  %g\n",i,j,k,l,j1,d,gamma(ini.nofcomponents),intensityp);
       ++noftransitions(l);}
@@ -869,7 +936,6 @@ if (do_jqfile==1){
 	              {test=fabs(Tn(i2+1-j1)-ini.hkls[counter][j1+3]);
                       jqsta_int+=test*test;}
 	             }
-
  }
  else
  {// no jqfile but excitations to be calculated
@@ -1300,6 +1366,7 @@ inimcdis ini("mcdisp.par",spinfile);
 if (argc > 10) {ini.errexit();}
   // as class load  parameters from file
   par inputpars("./mcphas.j");
+
   if(ini.nofcomponents!=inputpars.nofcomponents){fprintf(stderr,"Error mcdisp: number of components read from mcdisp.par (%i) and mcphas.j (%i) not equal\n",ini.nofcomponents,inputpars.nofcomponents);exit(1);}
   if(ini.nofatoms!=inputpars.nofatoms){fprintf(stderr,"Error mcdisp: number of atoms in crystal unit cell read from mcdisp.par (%i) and mcphas.j (%i) not equal\n",ini.nofatoms,inputpars.nofatoms);exit(1);}
   inputpars.save("./results/_mcdisp.j");

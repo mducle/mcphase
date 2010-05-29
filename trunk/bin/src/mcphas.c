@@ -10,15 +10,16 @@
 // maximum number of spinconfigurations allowed in phasediagramm
 #define MAXNOFSPINCF 500
 #define MAXNOFCHARINLINE 1024
-#define MU_B 0.05788
-#define K_B  0.0862
+
 
 inipar ini("mcphas.ini");
 int verbose=0;
 const char * filemode="w";
 
-#include "mcphas_htcalc.h"
+#include "myev.h"
 #include "mcphas_htcalc.c"
+#include "mcphas_fecalc.c"
+#include "mcphas_physpropcalc.c"
 
 // main program
 int main (int argc, char **argv)
@@ -33,11 +34,10 @@ int main (int argc, char **argv)
   float nn[20];nn[0]=19;
   double sta=0;
   double stamax=1e33;
-  Vector xv(0,3),xvsav(0,3);
-  Vector yv(0,3),yvsav(0,3);
+  Vector xv(1,3);
+  Vector yv(1,3);
   Vector h(1,3);Vector mmax1(1,3);
-  xvsav=0;yvsav=0;
-
+  
 fprintf(stderr,"**************************************************************************\n");
 fprintf(stderr,"*\n");
 fprintf(stderr,"* mcphas - program to calculate static magnetic properties (phase diagram)\n");
@@ -63,6 +63,7 @@ fprintf(stderr,"****************************************************************
 // as class par load  parameters from file
  if(verbose==1){printf("reading parameters from file mcphas.j\n");}
  par inputpars("./mcphas.j"); inputpars.save("./results/_mcphas.j"); 
+
   Vector mmax(1,inputpars.nofatoms*inputpars.nofcomponents);
   Vector mmom(1,inputpars.nofcomponents);
   Vector h1(1,inputpars.nofcomponents);
@@ -116,19 +117,17 @@ for (x=ini.xmin;x<=ini.xmax;x+=ini.xstep)
    if(argc>1&&strncmp(argv[argc-1],"-",1)!=0)  //should T-H values be read from file ?
    {while (feof(fin)==0&&0==inputline(fin,nn));  // if yes -> input them
     if (feof(fin)!=0) goto endproper;
-    x=nn[1];y=nn[2];T=nn[3];h(1)=nn[5];h(2)=nn[6];h(3)=nn[7];}
+    x=nn[1];y=nn[2];T=nn[3];h(1)=nn[5];h(2)=nn[6];h(3)=nn[7];
+    normalizedadbdc(h,nn[4],inputpars);
+   }
    else
    {//if parameters outside specified region then put them into it ...
-    xv=ini.xv;yv=ini.yv; xv/=Norm(xv);yv/=Norm(yv);
+    xv=ini.xv(1,3);normalizedadbdc(xv,1.0,inputpars);
+    yv=ini.yv(1,3);normalizedadbdc(yv,1.0,inputpars);
     if (x<ini.xmin) x=ini.xmin;
     if (y<ini.ymin) y=ini.ymin;    
 
-    //if xv or yv has changed, then set new ini.zero to current vector - dos not make sense !
-//    if(xv!=xvsav||yv!=yvsav)
-//    {yvsav=yv;xvsav=xv;ini.zero(0)=T;ini.zero(1)=h(1);ini.zero(2)=h(2);ini.zero(3)=h(3);
-//    } does not make sense !
-
-     T=ini.zero(0)+x*xv(0)+y*yv(0);
+     T=ini.zero(0)+x*ini.xv(0)+y*ini.yv(0);
      h(1)=ini.zero(1)+x*xv(1)+y*yv(1);
      h(2)=ini.zero(2)+x*xv(2)+y*yv(2);
      h(3)=ini.zero(3)+x*xv(3)+y*yv(3);
@@ -184,3 +183,16 @@ endproper:
 
 exit(0);
 }
+
+int normalizedadbdc(Vector & dadbdc,double n,par & inputpars)
+   {if(Norm(dadbdc)>0.00001){ // normalize Vector dadbdc to length n
+    Vector Hijk(1,3);
+    Vector abc(1,6); abc(1)=1; abc(2)=1; abc(3)=1;
+                     abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
+    dadbdc2ijk(Hijk,dadbdc,abc);
+    Hijk*=n/Norm(Hijk);
+    ijk2dadbdc(dadbdc,Hijk,abc);
+    return true;      }
+    else
+   {return false;}
+   }

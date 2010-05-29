@@ -11,37 +11,15 @@
 #include "spincf.hpp"
 #include "martin.h"
 #include "myev.h"
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
 #include<par.hpp>
-
-
+#include<graphic_parameters.hpp>
+#include "densities_func.c"
 
 
 /**********************************************************************/
-// hauptprogramm
+// main program
 int main (int argc, char **argv)
-{ spincf savmf;
- FILE * fin_coq, * fout;
- float delta,dd,ddT,ddHa,ddHb,ddHc,alpha,beta,gamma;
- int i,n=0,nofatoms=0,nofcomponents=3;
- long int pos=0,j;
- float numbers[13];numbers[9]=1;numbers[10]=3;
- numbers[0]=13;
- char instr[MAXNOFCHARINLINE];
- char outstr[MAXNOFCHARINLINE];
- char filename[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
- char * cffilenames[MAXNOFATOMS];
-// ComplexMatrix * eigenstates[MAXNOFATOMS];
-  Matrix r(1,3,1,3);
-  Vector abc(1,3);
-  int max_ext_nof_components=51;
-  int ext_nof_components[MAXNOFATOMS];
+{
 printf("#***************************************************\n");
 printf("# * charges - display charges at given htpoint\n");
 printf("# * Reference: M. Rotter PRB 79 (2009) 140405R\n");
@@ -61,107 +39,47 @@ printf("# **************************************************\n");
                                             java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n\n");
       exit (1);
     }
-double threshhold;
-threshhold=strtod(argv[1],NULL);
-if (argc==7)
+FILE * fin_coq, * fout;
+ graphic_parameters gp;
+  gp.threshhold=strtod(argv[1],NULL);
+
+   spincf savmf;
+   int i,n,nofatoms=0,nofcomponents=3;
+   char outstr[MAXNOFCHARINLINE];
+   float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
+   char * cffilenames[MAXNOFATOMS];
+   Matrix r(1,3,1,3);
+   Vector abc(1,6);
+
+// read input file with mf configuration
+ if (argc==7)
  { fin_coq = fopen_errchk (argv[6], "rb");}
  else
  { fin_coq = fopen_errchk ("./results/mcphas.mf", "rb");}
-    
- fout = fopen_errchk ("./results/charges.out", "w");
-
-
-
-double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0;
-double show_chargedensity=1.0,spins_scale_moment=1.0;
-abc=0;char *token;
- // input file header ------------------------------------------------------------------
-  instr[0]='#';
- while (instr[strspn(instr," \t")]=='#') // pointer to 'ltrimstring' 
-  { pos=ftell(fin_coq); 
-   if (pos==-1) 
-       {fprintf(stderr,"Error: wrong mf file format\n");exit (EXIT_FAILURE);}
-   fgets(instr,MAXNOFCHARINLINE,fin_coq);
-   // strip /r (dos line feed) from line if necessary
-    while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
-
-   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,"%s",instr);}
-   if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
-                 extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
-   }
-   extract(instr,"show_abc_unitcell",show_abc_unitcell);
-   extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
-   extract(instr,"show_magnetic_unitcell",show_magnetic_unitcell);
-   extract(instr,"show_atoms",show_atoms);
-   extract(instr,"spins_scale_moment",spins_scale_moment);
-   extract(instr,"show_chargedensity",show_chargedensity);
-
-   extract(instr,"scale_view_1",scale_view_1);
-   extract(instr,"scale_view_2",scale_view_2);
-   extract(instr,"scale_view_3",scale_view_3);
-
-   extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
-   extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
-   extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
-   extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
-   extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
-   extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
-   extract(instr,"nofatoms",nofatoms);    extract(instr,"nofcomponents",nofcomponents); 
-   if (nofatoms>0&&(extract(instr,"x",x[n+1])+
-                   extract(instr,"y",y[n+1])+
-  		       extract(instr,"z",z[n+1])==0)||
-		       (extract(instr,"da",x[n+1])+
-                   extract(instr,"db",y[n+1])+
-		       extract(instr,"dc",z[n+1])==0))
-		  {++n;if(n>nofatoms||nofatoms>MAXNOFATOMS) 
-                    {fprintf(stderr,"ERROR charges.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
-                   cffilenames[n]=new char[MAXNOFCHARINLINE];
-                   extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
-                   extract(instr,"gJ",gJ[n]);
-  ext_nof_components[n]=48;
-  if (gJ[n]==0)
-  {ext_nof_components[n]=51;  // here set for 3+48 components, module ic1ion
-   fprintf(stderr,"WARNING program charges: gJ=0 for ion %i - intermediate coupling calculations not supported yet, will create only charges.out and no chargeplot charges.jvx\n",n);}     
-//		   printf("%s\n",cffilenames[n]);
-                  }
-  }
-  if (alpha!=90||beta!=90||gamma!=90)
-  {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
-   Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];}
-  
-  
-// load mfconfigurations and check which one is nearest -------------------------------   
-  double T,ha,hb,hc;
-   j=fseek(fin_coq,pos,SEEK_SET); 
-    if (j!=0){fprintf(stderr,"Error: wrong mf file format\n");exit (EXIT_FAILURE);}
-   
- for (delta=1000.0;feof(fin_coq)==0                      //end of file
-                    &&(n=inputline(fin_coq,numbers))>=8   //error in line reading (8 old format, 9 new format)
-		    ;)
-
-    { spincf spins(1,1,1,(int)numbers[9],(int)numbers[10]);
-      spins.load(fin_coq);
-      ddT=strtod(argv[2],NULL)-numbers[3];ddT*=ddT;
-      ddHa=strtod(argv[3],NULL)-numbers[5];ddHa*=ddHa;
-      ddHb=strtod(argv[4],NULL)-numbers[6];ddHb*=ddHb;
-      ddHc=strtod(argv[5],NULL)-numbers[7];ddHc*=ddHc;
-      dd=sqrt(ddT+ddHa+ddHb+ddHc+0.000001);
-      if (dd<delta)
-       {delta=dd;
-        sprintf(outstr,"T=%g Ha=%g Hb=%g Hc=%g n=%g spins nofatoms=%i in primitive basis nofcomponents=%i",numbers[3],numbers[5],numbers[6],numbers[7],numbers[8],(int)numbers[9],(int)numbers[10]);
-        savmf=spins;T=numbers[3];ha=numbers[5];hb=numbers[6];hc=numbers[7];
-       }
-    }
+  fout = fopen_errchk ("./results/charges.out", "w");
+   // input file header and mfconf------------------------------------------------------------------
+   n=headerinput(fin_coq,fout,gp,abc,r,x,y,z,gJ,cffilenames,nofatoms,nofcomponents);
+ 
+   int ext_nof_components[MAXNOFATOMS];
+   Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];
+                                       ext_nof_components[i]=48;if (gJ[i]==0){ext_nof_components[i]=51;}
+                                       // here set for 3+48 components, module ic1ion
+                                      }
+   // check for spinfconfiguration which is nearest to the T/H values chosen by user in command line
+   double T,ha,hb,hc;
+   check_for_best(fin_coq,strtod(argv[2],NULL),strtod(argv[3],NULL),strtod(argv[4],NULL),strtod(argv[5],NULL),savmf,T,ha,hb,hc,outstr);
   fclose (fin_coq);
   
 // create plot of spin+chargeconfiguration -----------------------------------------------------------
-  int ii,nt,k,l,m;
+  int ii,nt,k,l,m,j;
   double lnz,u;
   float d;
 
   par inputpars("./mcphas.j");
   
   Vector hh(1,savmf.nofcomponents*savmf.nofatoms);
+  int max_ext_nof_components=51;
+
   spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,max_ext_nof_components);
 
           // the following is for the printout of charges.out ...........................
@@ -230,37 +148,43 @@ fclose(fout);
              Vector hkl(1,3);hkl=0;
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
-             
+             gp.showprim=0;
   fout = fopen_errchk ("./results/chargesi.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,10,100,100,scale_view_1,scale_view_2,scale_view_3,
-                       savev_real,savev_imag,0.0,0.0,hkl);
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,10,100,100,
+                       savev_real,savev_imag,0.0,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/chargesj.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,100,10,100,scale_view_1,scale_view_2,scale_view_3,
-                       savev_real,savev_imag,0.0,0.0,hkl);
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,100,10,100,
+                       savev_real,savev_imag,0.0,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/chargesk.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,0,100,100,10,scale_view_1,scale_view_2,scale_view_3,
-                       savev_real,savev_imag,0.0,0.0,hkl);
+     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,100,100,10,
+                       savev_real,savev_imag,0.0,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges.jvx", "w");
-     extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0,threshhold);
+    gp.showprim=0;gp.spins_wave_amplitude=0;
+     extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,gp,
+                  0.0,savev_real,savev_imag,hkl,cffilenames);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges_prim.jvx", "w");
-     extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,cffilenames,show_chargedensity,0.0,threshhold);
+     gp.showprim=1;
+    extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,gp,
+                  0.0,savev_real,savev_imag,hkl,cffilenames);
     fclose (fout);
 
 
 if (argc>=10){// try a spinwave picture
-             double h,k,l,E,ddh,ddk,ddl,ddE;
+             double h,k,l,E;
+             long int pos=0;
              int extended_eigenvector_dimension;
-             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_oscillation=1.0; 
+              char instr[MAXNOFCHARINLINE];
+              float numbers[13];numbers[9]=1;numbers[10]=3;
+              numbers[0]=13;
+             gp.spins_wave_amplitude=1.0;gp.spins_show_ellipses=1.0;gp.spins_show_oscillation=1.0;
              fin_coq = fopen_errchk ("./results/mcdisp.qee", "rb");
              // input file header ------------------------------------------------------------------
              instr[0]='#';
@@ -272,15 +196,16 @@ if (argc>=10){// try a spinwave picture
                 // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
                 for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
                // load evs and check which one is nearest -------------------------------   
-               extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
-               extract(instr,"spins_show_ellipses",spins_show_ellipses);
-               extract(instr,"spins_show_oscillation",spins_show_oscillation);
+               extract(instr,"spins_wave_amplitude",gp.spins_wave_amplitude);
+               extract(instr,"spins_show_ellipses",gp.spins_show_ellipses);
+               extract(instr,"spins_show_oscillation",gp.spins_show_oscillation);
                extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
               }
 //               if(extended_eigenvector_dimension!=48){fprintf(stderr,"Error program charges - extended_eigenvector_dimension in results/mcdisp.qee not equal to 48\n");exit(1);}
                j=fseek(fin_coq,pos,SEEK_SET); 
                if (j!=0){fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
    
+               double delta,dd,ddT,ddHa,ddHb,ddHc,ddh,ddk,ddl,ddE;
                for (delta=1000.0;feof(fin_coq)==0                      //end of file
                     &&(n=inputline(fin_coq,numbers))>=8   //error in line reading (8 old format, 9 new format)
 		    ;)
@@ -323,16 +248,16 @@ if (argc>=10){// try a spinwave picture
                printf("\n********************************************\n");
                printf(" calculating movie sequence %i(16)\n",i+1);
                printf("********************************************\n");
-               
+               char filename[MAXNOFCHARINLINE];
                sprintf(filename,"./results/charges.%i.jvx",i+1);
-               fin_coq = fopen_errchk (filename, "w");
-                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation,threshhold);
+               fin_coq = fopen_errchk (filename, "w");gp.showprim=0;
+                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,
+                                  phase,savev_real,savev_imag,hkl,cffilenames);
                fclose (fin_coq);
                sprintf(filename,"./results/charges_prim.%i.jvx",i+1);
-               fin_coq = fopen_errchk (filename, "w");
-                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,cffilenames,show_chargedensity,spins_show_oscillation,threshhold);
+               fin_coq = fopen_errchk (filename, "w");gp.showprim=1;
+                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,
+                                  phase,savev_real,savev_imag,hkl,cffilenames);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);

@@ -1,6 +1,6 @@
 //calculate intensities for given energy
-#define PI 3.1415926535
-#define KB 0.0862     // Boltzmanns constant in mev/K
+
+
 
 
 //***********************************************************************//
@@ -9,10 +9,16 @@
 // returns 1 on success and zero on failure
 //***********************************************************************
 int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,Vector & hkl)
-{int i,j,k,l,m,n,jmin,i1,j1,tn; Vector qabc(1,3);
-    qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
-    qabc(2)=hkl(2)*2*PI/inputpars.b;
-    qabc(3)=hkl(3)*2*PI/inputpars.c;
+{int i,j,k,l,m,n,jmin,i1,j1,tn; Vector qijk(1,3);
+ Vector abc(1,6); abc(1)=inputpars.a; abc(2)=inputpars.b; abc(3)=inputpars.c;
+                  abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
+ hkl2ijk(qijk,hkl, abc);
+ // transforms Miller indices (in terms of reciprocal lattice abc*)
+ // to Q vector in ijk coordinate system
+ 
+//    qijk(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
+//    qijk(2)=hkl(2)*2*PI/inputpars.b;
+//    qijk(3)=hkl(3)*2*PI/inputpars.c;
 
  float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
  if(do_verbose==1) printf("#calculating intensity beyond dipole approximation\n");
@@ -53,7 +59,7 @@ int intcalc_beyond_ini(inimcdis & ini,par & inputpars,mdcf & md,int do_verbose,V
         (*inputpars.jjj[l]).transitionnumber=-tn; // try calculation for transition  j
         if(do_verbose==1)(*inputpars.jjj[l]).transitionnumber=tn;
       int nnt;
-      nnt=(*inputpars.jjj[l]).dncalc(qabc,ini.T,Nijkl,md.est(i,j,k,l));
+      nnt=(*inputpars.jjj[l]).dncalc(qijk,ini.T,Nijkl,md.est(i,j,k,l));
 //       myPrintComplexMatrix(stdout,Nijkl); 
 
       (*inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
@@ -155,11 +161,16 @@ double intcalc_approx(ComplexMatrix & chi,ComplexMatrix & chibey,Matrix & pol,Ma
  complex <double> sumS;
  complex <double> chileft;
  complex <double> chileftbey;
- Vector qabc(1,3);
-    qabc(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
-    qabc(2)=hkl(2)*2*PI/inputpars.b;
-    qabc(3)=hkl(3)*2*PI/inputpars.c;
-    QQ=Norm(qabc);
+ Vector qijk(1,3);
+ Vector abc(1,6); abc(1)=inputpars.a; abc(2)=inputpars.b; abc(3)=inputpars.c;
+                  abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
+ hkl2ijk(qijk,hkl, abc);
+ // transforms Miller indices (in terms of reciprocal lattice abc*)
+ // to Q vector in ijk coordinate system
+//   qijk(1)=hkl(1)*2*PI/inputpars.a; // only correct for ortholattices !!!!
+//    qijk(2)=hkl(2)*2*PI/inputpars.b;
+//    qijk(3)=hkl(3)*2*PI/inputpars.c;
+    QQ=Norm(qijk);
  
  // init eigenvector to zero
   ev_real.clear();ev_imag.clear();
@@ -224,7 +235,7 @@ if(intensitybey>0){  chibey((s-1)*md.nofcomponents+i,(ss-1)*md.nofcomponents+j)=
 // higher components in the polarization factor !!!
     pol=0;
     for(i=1;i<=3;++i){pol(i,i)=1.0;
-    for(j=1;j<=3;++j){pol(i,j)-=qabc(i)*qabc(j)/(qabc*qabc);
+    for(j=1;j<=3;++j){pol(i,j)-=qijk(i)*qijk(j)/(qijk*qijk);
     }}
 // yes and for intermediate coupling we need another polarization factor
 // because neutrons sense the first 6x6 part of S
@@ -527,15 +538,20 @@ double intcalc(int dimA, double en,inimcdis & ini,par & inputpars,jq & J,Vector 
 // neutrons only sense first 3x3 part of S !! - this is taken into account by setting 0 all
 // higher components in the polarization factor !!!
  Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
- Vector qabc(1,3);
+ Vector qijk(1,3);
+ Vector abc(1,6); abc(1)=inputpars.a; abc(2)=inputpars.b; abc(3)=inputpars.c;
+                  abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
+ hkl2ijk(qijk,hkl, abc);
+ // transforms Miller indices (in terms of reciprocal lattice abc*)
+ // to Q vector in ijk coordinate system
  pol=0;
-    qabc(1)=hkl(1)/inputpars.a; // only correct for ortholattices !!!!
-    qabc(2)=hkl(2)/inputpars.b;
-    qabc(3)=hkl(3)/inputpars.c;
+//    qijk(1)=hkl(1)/inputpars.a; // only correct for ortholattices !!!!
+//    qijk(2)=hkl(2)/inputpars.b;
+//    qijk(3)=hkl(3)/inputpars.c;
     for(i=1;i<=3;++i){pol(i,i)=1.0;
-    for(j=1;j<=3;++j){pol(i,j)-=qabc(i)*qabc(j)/(qabc*qabc);
+    for(j=1;j<=3;++j){pol(i,j)-=qijk(i)*qijk(j)/(qijk*qijk);
     }}
-    QQ=Norm(qabc)*2*PI;
+    QQ=Norm(qijk);
 // yes and for intermediate coupling we need another polarization factor
 // because neutrons sense the first 6x6 part of S
     Matrix polICIC(1,md.nofcomponents,1,md.nofcomponents);

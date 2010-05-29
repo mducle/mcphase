@@ -5,19 +5,12 @@
  * in Rare Earth Compounds, in print
  ***********************************************************************/
 
-#define MU_B  5.788378E-02 // Bohrmagneton in meV/tesla
-#define PI   3.141592654
 #define MAXNOFCHARINLINE 1000
 
 #include "jjjpar.hpp"
 #include "../../version"
 #include "martin.h"
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
+
 
 /**********************************************************************/
 // main program
@@ -175,7 +168,7 @@ if (argc<5) // read pointcharges from file
 }
 
  // print information about pointcharges to file and calculate Blms and Llms
-  printf ("#pointcharges charge[|e|]  x[A] y[A] z[A]\n");
+  printf ("\n#pointcharges charge[|e|]  x[A] y[A] z[A]\n");
 while(n>0)
 {
 

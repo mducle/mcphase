@@ -5,17 +5,11 @@
 
 #define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
-#define PI  3.14159265
+
 
 #include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
 #include<par.hpp>
 
 /**********************************************************************/
@@ -67,6 +61,7 @@ printf("#*****************************************************\n");
                                           }
   }
 
+  printf("# q=%g %g %g:\n",qvector(1),qvector(2),qvector(3));
   // transform hkl to primitive reciprocal lattice
   qvector=qvector*inputpars.rez.Inverse();
   printf("# Miller indices of q vector with respect to primitive reciprocal lattice: (%6.4f %6.4f %6.4f)\n",qvector(1),qvector(2),qvector(3));
@@ -84,7 +79,7 @@ printf("#*****************************************************\n");
   savspin.spinfromq (n1,n2,n3,qvector,nettom, momentq0, phi);
  if (argc>7)
   {double s,t;
-   printf("double q option\n q=%g %g %g:\n",qvector(1),qvector(2),qvector(3));
+   printf("# double q option\n");
    s=nettom(1);t=nettom(2); nettom(2)=0;nettom(1)=s;
    savspin1.spinfromq (n1,n2,n3,qvector,nettom, momentq0, phi);
    savspin1.print(stdout);
@@ -93,16 +88,18 @@ printf("#*****************************************************\n");
    qvector(1)=strtod(argv[7],NULL);
    qvector(2)=strtod(argv[8],NULL);
    qvector(3)=strtod(argv[9],NULL);
-   printf(" q=%g %g %g:\n",qvector(1),qvector(2),qvector(3));
+   printf("# q2=%g %g %g:\n",qvector(1),qvector(2),qvector(3));
+   qvector=qvector*inputpars.rez.Inverse();
+   printf("# Miller indices of q2 with respect to primitive reciprocal lattice: (%6.4f %6.4f %6.4f)\n",qvector(1),qvector(2),qvector(3));
    savspin2.spinfromq (n1,n2,n3,qvector,nettom, momentq0, phi);
    savspin2.print(stdout);
    savspin=savspin1+savspin2;
-   printf("double q structure:\n");   
+   printf("# double q structure:\n");
   }
  
   inputpars.savelattice(stdout);
   inputpars.saveatoms(stdout);
-  printf("0 0 0 0 0 0 0 %i %i %i\n",n1*n2*n3*inputpars.nofatoms,inputpars.nofatoms,inputpars.nofcomponents);
+  printf("0 0 1 0 0 0 0 %i %i %i\n",n1*n2*n3*inputpars.nofatoms,inputpars.nofatoms,inputpars.nofcomponents);
   savspin.print(stdout);
   return 0;
 }

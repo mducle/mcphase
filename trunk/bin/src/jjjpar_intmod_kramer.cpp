@@ -12,7 +12,7 @@ void jjjpar::kramer (Vector & Jret,double & T, Vector & gjmbH, double & lnZ, dou
     Z		single ion partition function
     U		single ion magnetic energy
 */
-  double alpha, betar, betai, lambdap,lambdap_K_BT, lambdap2, expp, expm, np, nm;
+  double alpha, betar, betai, lambdap,lambdap_KBT, lambdap2, expp, expm, np, nm;
   double nennerp, nennerm, jap, jam, jbp, jbm, jcp, jcm,Z;
   double alpha_lambdap,alphaplambdap,alphaxlambdap;
 
@@ -21,11 +21,11 @@ void jjjpar::kramer (Vector & Jret,double & T, Vector & gjmbH, double & lnZ, dou
   betai = -ABC[3] * gjmbH[3];
   lambdap2 = alpha * alpha + betar * betar + betai * betai;
   lambdap = sqrt (lambdap2);
-  lambdap_K_BT=lambdap/K_B/T;
-  if (lambdap_K_BT>700){lambdap_K_BT=700;}
-  if (lambdap_K_BT<-700){lambdap_K_BT=-700;}
-  expm = exp (lambdap_K_BT);
-  expp = 1/expm; //=exp (-lambdap_K_BT);
+  lambdap_KBT=lambdap/KB/T;
+  if (lambdap_KBT>700){lambdap_KBT=700;}
+  if (lambdap_KBT<-700){lambdap_KBT=-700;}
+  expm = exp (lambdap_KBT);
+  expp = 1/expm; //=exp (-lambdap_KBT);
   Z = expp + expm;
   lnZ=log(Z);
   np = expp / Z;
@@ -101,7 +101,7 @@ int jjjpar::kramerdm(int & transitionnumber,double & T,Vector & gjmbH,ComplexMat
     delta	splitting of kramers doublet [meV]
     mat(i,j)	<-|(Ji-<Ji>)|+><+|(Jj-<Jj>|-> tanh(delta/2kT)
 */
-  double alpha, betar, betai, lambdap,lambdap_K_BT, lambdap2, expp, expm, np, nm;
+  double alpha, betar, betai, lambdap,lambdap_KBT, lambdap2, expp, expm, np, nm;
   double nennerp, nennerm, nenner;
   complex<double> ja,jb,jc,i(0,1), jap, jam, jbp, jbm, jcp, jcm;
   double alpha_lambdap,alphaplambdap,alphaxlambdap;
@@ -123,11 +123,11 @@ int jjjpar::kramerdm(int & transitionnumber,double & T,Vector & gjmbH,ComplexMat
 
 
   
-  lambdap_K_BT=lambdap/K_B/T;
-  if (lambdap_K_BT>700){lambdap_K_BT=700;}
-  if (lambdap_K_BT<-700){lambdap_K_BT=-700;}
-  expm = exp (lambdap_K_BT);
-  expp = 1/expm; //=exp (-lambdap_K_BT);
+  lambdap_KBT=lambdap/KB/T;
+  if (lambdap_KBT>700){lambdap_KBT=700;}
+  if (lambdap_KBT<-700){lambdap_KBT=-700;}
+  expm = exp (lambdap_KBT);
+  expp = 1/expm; //=exp (-lambdap_KBT);
   Z = expp + expm;
   np = expp / Z;
   nm = expm / Z;
@@ -177,15 +177,15 @@ if (transitionnumber==2)
  mat(3,3)=jc*conj(jc)*(nm-np); 
  }else
  {// quasielastic scattering needs epsilon * nm / KT ....
- mat(1,1)=ja*conj(ja)*nm/K_B/T;
- mat(1,2)=ja*conj(jb)*nm/K_B/T;
- mat(1,3)=ja*conj(jc)*nm/K_B/T;
- mat(2,1)=jb*conj(ja)*nm/K_B/T;
- mat(2,2)=jb*conj(jb)*nm/K_B/T;
- mat(2,3)=jb*conj(jc)*nm/K_B/T;
- mat(3,1)=jc*conj(ja)*nm/K_B/T;
- mat(3,2)=jc*conj(jb)*nm/K_B/T;
- mat(3,3)=jc*conj(jc)*nm/K_B/T; 
+ mat(1,1)=ja*conj(ja)*nm/KB/T;
+ mat(1,2)=ja*conj(jb)*nm/KB/T;
+ mat(1,3)=ja*conj(jc)*nm/KB/T;
+ mat(2,1)=jb*conj(ja)*nm/KB/T;
+ mat(2,2)=jb*conj(jb)*nm/KB/T;
+ mat(2,3)=jb*conj(jc)*nm/KB/T;
+ mat(3,1)=jc*conj(ja)*nm/KB/T;
+ mat(3,2)=jc*conj(jb)*nm/KB/T;
+ mat(3,3)=jc*conj(jc)*nm/KB/T;
  }
 }
 else
@@ -233,26 +233,26 @@ else
     }
  if (transitionnumber==1)
  {// now lets calculate mat
- mat(1,1)=(jam-Jret(1))*(jam-Jret(1))*nm/K_B/T;
- mat(1,2)=(jam-Jret(1))*(jbm-Jret(2))*nm/K_B/T;
- mat(1,3)=(jam-Jret(1))*(jcm-Jret(3))*nm/K_B/T;
- mat(2,1)=(jbm-Jret(2))*(jam-Jret(1))*nm/K_B/T;
- mat(2,2)=(jbm-Jret(2))*(jbm-Jret(2))*nm/K_B/T;
- mat(2,3)=(jbm-Jret(2))*(jcm-Jret(3))*nm/K_B/T;
- mat(3,1)=(jcm-Jret(3))*(jam-Jret(1))*nm/K_B/T;
- mat(3,2)=(jcm-Jret(3))*(jbm-Jret(2))*nm/K_B/T;
- mat(3,3)=(jcm-Jret(3))*(jcm-Jret(3))*nm/K_B/T;
+ mat(1,1)=(jam-Jret(1))*(jam-Jret(1))*nm/KB/T;
+ mat(1,2)=(jam-Jret(1))*(jbm-Jret(2))*nm/KB/T;
+ mat(1,3)=(jam-Jret(1))*(jcm-Jret(3))*nm/KB/T;
+ mat(2,1)=(jbm-Jret(2))*(jam-Jret(1))*nm/KB/T;
+ mat(2,2)=(jbm-Jret(2))*(jbm-Jret(2))*nm/KB/T;
+ mat(2,3)=(jbm-Jret(2))*(jcm-Jret(3))*nm/KB/T;
+ mat(3,1)=(jcm-Jret(3))*(jam-Jret(1))*nm/KB/T;
+ mat(3,2)=(jcm-Jret(3))*(jbm-Jret(2))*nm/KB/T;
+ mat(3,3)=(jcm-Jret(3))*(jcm-Jret(3))*nm/KB/T;
  }else{
  // now lets calculate mat
- mat(1,1)=(jap-Jret(1))*(jap-Jret(1))*np/K_B/T;
- mat(1,2)=(jap-Jret(1))*(jbp-Jret(2))*np/K_B/T;
- mat(1,3)=(jap-Jret(1))*(jcp-Jret(3))*np/K_B/T;
- mat(2,1)=(jbp-Jret(2))*(jap-Jret(1))*np/K_B/T;
- mat(2,2)=(jbp-Jret(2))*(jbp-Jret(2))*np/K_B/T;
- mat(2,3)=(jbp-Jret(2))*(jcp-Jret(3))*np/K_B/T;
- mat(3,1)=(jcp-Jret(3))*(jap-Jret(1))*np/K_B/T;
- mat(3,2)=(jcp-Jret(3))*(jbp-Jret(2))*np/K_B/T;
- mat(3,3)=(jcp-Jret(3))*(jcp-Jret(3))*np/K_B/T;
+ mat(1,1)=(jap-Jret(1))*(jap-Jret(1))*np/KB/T;
+ mat(1,2)=(jap-Jret(1))*(jbp-Jret(2))*np/KB/T;
+ mat(1,3)=(jap-Jret(1))*(jcp-Jret(3))*np/KB/T;
+ mat(2,1)=(jbp-Jret(2))*(jap-Jret(1))*np/KB/T;
+ mat(2,2)=(jbp-Jret(2))*(jbp-Jret(2))*np/KB/T;
+ mat(2,3)=(jbp-Jret(2))*(jcp-Jret(3))*np/KB/T;
+ mat(3,1)=(jcp-Jret(3))*(jap-Jret(1))*np/KB/T;
+ mat(3,2)=(jcp-Jret(3))*(jbp-Jret(2))*np/KB/T;
+ mat(3,3)=(jcp-Jret(3))*(jcp-Jret(3))*np/KB/T;
  }
 }
 if (pr==1) printf ("delta=%4.6g meV\n",delta);

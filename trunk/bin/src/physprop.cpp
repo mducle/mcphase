@@ -103,6 +103,14 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
   double sta;
   sta=0; 
   float nn[200];nn[0]=199;
+  int ortho=1;
+  if (inputpars.alpha!=90||inputpars.beta!=90||inputpars.gamma!=90){ortho=0;}
+      Vector abc(1,6); abc(1)=1; abc(2)=1; abc(3)=1;
+                       abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
+
+   Vector mabc(1,3),Hijk(1,3);
+   dadbdc2ijk(Hijk,H,abc);
+   ijk2dadbdc(mabc,m,abc);
 
   printf("saving properties for T=%g K  Ha= %g Hb= %g Hc= %g T\n", T,H(1),H(2),H(3));
 
@@ -120,17 +128,22 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
    fprintf(fout,"#**********************************************************\n");
    fprintf (fout, "#note: - for specific heat calculation use unit conversion 1mev/ion=96.48J/mol\n");
    fprintf (fout, "#      - moments and energies are given per ion - not per formula unit !\n");
-   fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment m     ma mb mc m||(projection along H) [mb/ion]}\n");
+   if(ortho==0){fprintf (fout, "#      - coordinate system ijk defined by  j||b, k||(a x b) and i normal to k and j\n");}
+   fprintf (fout, "#   x    y   T[K] H[T] Ha[T] Hb[T] Hc[T] free energy f[meV/ion] energy u[meV/ion] total moment |m|     ma mb mc m||(projection along H) [mb/ion]");
+   if(ortho==0){fprintf (fout, "mi   mj   mk[muB/f.u.]   Hi  Hj  Hk[T]");}
+   fprintf (fout,"}\n");
    fclose(fout);
       }
    if (htfailed!=0){fe=0;u=0;m=0;m[1]=0;m[2]=0;m[3]=0;}
    fout = fopen_errchk ("./results/mcphas.fum","a");
-   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g       %8.8g            %8.8g       %4.4g    %4.4g %4.4g %4.4g    %4.4g\n",
-            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3],m*H/Norm(H));
+   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g       %8.8g            %8.8g       %4.4g    %4.4g %4.4g %4.4g    %4.4g",
+            x,y,T,Norm(Hijk),H[1],H[2],H[3],fe,u,Norm(m),mabc[1],mabc[2],mabc[3],m*Hijk/Norm(Hijk));
+   if(ortho==0){fprintf (fout, "    %4.4g %4.4g %4.4g   %4.4g %4.4g %4.4g",m(1),m(2),m(3),Hijk(1),Hijk(2),Hijk(3));}
+   fprintf(fout,"\n");
    fclose(fout);
    fout = fopen_errchk ("./results/.mcphas.fum","a");
    fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g %8.8g %8.8g  %4.4g %4.4g %4.4g %4.4g\n",
-            x,y,T,Norm(H),H[1],H[2],H[3],fe,u,Norm(m),m[1],m[2],m[3],m*H/Norm(H));
+            x,y,T,Norm(Hijk),H[1],H[2],H[3],fe,u,Norm(m),mabc[1],mabc[2],mabc[3],m*Hijk/Norm(Hijk));
    fclose(fout);
    if((fout=fopen("./fit/mcphas.fum","rb"))!=NULL)
     {// some measured data should be fitted
@@ -169,7 +182,7 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
   if (htfailed!=0){j=0;}else{totalJ=sps.totalJ();}
    if(j<0){sps.wasstable=j;}
    fprintf (fout, "%4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g       %ip           %ip      ",
-            x,y,T,Norm(H),H[1],H[2],H[3],j,sps.wasstable);
+            x,y,T,Norm(Hijk),H[1],H[2],H[3],j,sps.wasstable);
            for(i1=1;i1<=nofcomponents;++i1)
 	      {fprintf(fout,"%4.4g ",totalJ(i1));}
 	      fprintf(fout,"\n");
@@ -222,7 +235,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
       }
   fout = fopen_errchk (filename,"a");
   if (htfailed!=0){jj[i](1)=0;jj[i](2)=0;jj[i](3)=0;}
-   fprintf (fout, "%4.4g %4.4g   %4.4g %4.4g   %4.4g %4.4g %4.4g     ",x,y,T,Norm(H),H[1],H[2],H[3]);
+   fprintf (fout, "%4.4g %4.4g   %4.4g %4.4g   %4.4g %4.4g %4.4g     ",x,y,T,Norm(Hijk),H[1],H[2],H[3]);
         for(j2=1;j2<=nofcomponents*nofcomponents;++j2)               
             {fprintf (fout, "%4.4g ",jj[i](j2+nofcomponents*nofcomponents*(l-1)));
 	    }
@@ -253,7 +266,8 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  int       h   k   l   int       h   k   l   int ...}\n");
    fclose(fout);
    //xray a component
-   fout = fopen_errchk ("./results/mcphasa.hkl",filemode);
+   if(ortho==0){   fout = fopen_errchk ("./results/mcphasi.hkl",filemode);
+               } else {fout = fopen_errchk ("./results/mcphasa.hkl",filemode);}
    fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
    fprintf(fout,"#!<--mcphas.mcphasa.hkl-->\n");
@@ -261,11 +275,18 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
    fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
    fprintf(fout,"#**********************************************************\n");
+      if(ortho==0){
+   fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - i component\n");
+   fprintf (fout, "#      - coordinate system ijk defined by  j||b, k||(a x b) and i normal to k and j\n");
+   fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||i       h   k   l   FT||i       h   k   l   FT||i ...}\n");
+   }else{
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - a component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||a       h   k   l   FT||a       h   k   l   FT||a ...}\n");
+   }
    fclose(fout);
    //xray b component
-   fout = fopen_errchk ("./results/mcphasb.hkl",filemode);
+   if(ortho==0){   fout = fopen_errchk ("./results/mcphasj.hkl",filemode);
+               } else {fout = fopen_errchk ("./results/mcphasb.hkl",filemode);}
    fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
    fprintf(fout,"#!<--mcphas.mcphasb.hkl-->\n");
@@ -273,11 +294,18 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
    fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
    fprintf(fout,"#**********************************************************\n");
+      if(ortho==0){
+   fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - j component\n");
+   fprintf (fout, "#      - coordinate system ijk defined by  j||b, k||(a x b) and i normal to k and j\n");
+   fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||j       h   k   l   FT||j       h   k   l   FT||j ...}\n");
+   }else{
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - b component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||b       h   k   l   FT||b       h   k   l   FT||b ...}\n");
+   }
    fclose(fout);
-   //xray a component
-   fout = fopen_errchk ("./results/mcphasc.hkl",filemode);
+   //xray c component
+      if(ortho==0){   fout = fopen_errchk ("./results/mcphask.hkl",filemode);
+               } else {fout = fopen_errchk ("./results/mcphasc.hkl",filemode);}
    fprintf(fout, "#{output file of program %s ",MCPHASVERSION);
    curtime=time(NULL);loctime=localtime(&curtime);fputs (asctime(loctime),fout);
    fprintf(fout,"#!<--mcphas.mcphasc.hkl-->\n");
@@ -285,8 +313,14 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fprintf(fout,"# mcphas - program to calculate static magnetic properties\n");
    fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
    fprintf(fout,"#**********************************************************\n");
+      if(ortho==0){
+   fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - k component\n");
+   fprintf (fout, "#      - coordinate system ijk defined by  j||b, k||(a x b) and i normal to k and j\n");
+   fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||k       h   k   l   FT||k       h   k   l   FT||k ...}\n");
+   }else{
    fprintf (fout,"#Absolute Value of the Fourier Transform of the moment configuration - c component\n"); 
    fprintf (fout, "#x   y   T[K]  H[T]  Ha[T] Hb[T] Hc[T]       h   k   l  FT||c       h   k   l   FT||c       h   k   l   FT||c ...}\n");
+   }
    fclose(fout);
 
       }
@@ -295,26 +329,32 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    sort(intensity,1,nofhkls,inew); // sort according to ascending intensity
 
   //neutrons
-  fout = fopen_errchk ("./results/mcphas.hkl","a");fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(H),H[1],H[2],H[3]);
+  fout = fopen_errchk ("./results/mcphas.hkl","a");fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(Hijk),H[1],H[2],H[3]);
    for (i=nofhkls;i>=1;--i)
     {if (htfailed!=0){hkli[inew[i]](1)=0;hkli[inew[i]](2)=0;hkli[inew[i]](3)=0;hkli[inew[i]](4)=0;}
     fprintf (fout, "%4.4g %4.4g %4.4g  %4.4g     ",hkli[inew[i]](1),hkli[inew[i]](2),hkli[inew[i]](3),hkli[inew[i]](4));
     } fprintf(fout,"\n");
    fclose(fout);
   //xray a component
-  fout = fopen_errchk ("./results/mcphasa.hkl","a");fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(H),H[1],H[2],H[3]);
+      if(ortho==0){fout = fopen_errchk ("./results/mcphasi.hkl","a");
+   }else{
+  fout = fopen_errchk ("./results/mcphasa.hkl","a");}fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(Hijk),H[1],H[2],H[3]);
    for (i=nofhkls;i>=1;--i)
     {fprintf (fout, "%4.4g %4.4g %4.4g  %4.4g     ",hkli[inew[i]](1),hkli[inew[i]](2),hkli[inew[i]](3),hkli[inew[i]](5));
     } fprintf(fout,"\n");
    fclose(fout);
   //xray b component
-  fout = fopen_errchk ("./results/mcphasb.hkl","a");fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(H),H[1],H[2],H[3]);
+      if(ortho==0){fout = fopen_errchk ("./results/mcphasj.hkl","a");
+   }else{
+  fout = fopen_errchk ("./results/mcphasb.hkl","a");}fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(Hijk),H[1],H[2],H[3]);
    for (i=nofhkls;i>=1;--i)
     {fprintf (fout, "%4.4g %4.4g %4.4g  %4.4g     ",hkli[inew[i]](1),hkli[inew[i]](2),hkli[inew[i]](3),hkli[inew[i]](6));
     } fprintf(fout,"\n");
    fclose(fout);
   //xray c component
-  fout = fopen_errchk ("./results/mcphasc.hkl","a");fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(H),H[1],H[2],H[3]);
+      if(ortho==0){fout = fopen_errchk ("./results/mcphask.hkl","a");
+   }else{
+  fout = fopen_errchk ("./results/mcphasc.hkl","a");}fprintf (fout, " %-4.4g %-4.4g %-4.4g %-4.4g  %-4.4g %-4.4g %-4.4g      ",x,y,T,Norm(Hijk),H[1],H[2],H[3]);
    for (i=nofhkls;i>=1;--i)
     {fprintf (fout, "%4.4g %4.4g %4.4g  %4.4g     ",hkli[inew[i]](1),hkli[inew[i]](2),hkli[inew[i]](3),hkli[inew[i]](7));
     } fprintf(fout,"\n");
@@ -356,7 +396,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    }  
   fout = fopen_errchk ("./results/mcphas.sps","a");
    fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %i %i %i \n",
-            x,y,T,Norm(H),H[1],H[2],H[3],sps.n()*sps.nofatoms,sps.nofatoms,sps.nofcomponents);
+            x,y,T,Norm(Hijk),H[1],H[2],H[3],sps.n()*sps.nofatoms,sps.nofatoms,sps.nofcomponents);
    if (htfailed!=0){sps.spinfromq(1,1,1,null1,null,null,null);}
     sps.print(fout);fprintf(fout,"\n");
    fclose(fout);
@@ -396,7 +436,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    }  
      fout = fopen_errchk ("./results/mcphas.mf","a");
 fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %i %i %i\n",
-            x,y,T,Norm(H),H[1],H[2],H[3],mf.n()*mf.nofatoms,mf.nofatoms,mf.nofcomponents);
+            x,y,T,Norm(Hijk),H[1],H[2],H[3],mf.n()*mf.nofatoms,mf.nofatoms,mf.nofcomponents);
    if (htfailed!=0){sps.print(fout);fprintf(fout,"\n");}else
     {mf.print(fout);fprintf(fout,"\n");}
    fclose(fout);

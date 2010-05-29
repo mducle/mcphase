@@ -48,8 +48,6 @@ par::par (const char *filejjj)
 		  if(feof(fin_coq)!=0)
                     {fprintf(stderr,"ERROR reading header of file mcphas.j: no line ****** found\n");exit(EXIT_FAILURE);}
   }
-  if (alpha!=90||beta!=90||gamma!=90)
-  {fprintf(stderr,"ERROR: non orthogonal lattice not supported yet\n");exit(EXIT_FAILURE);}
   if(nofatoms>MAX_NOF_ATOMS_IN_PRIMITIVE_CRYST_UNITCELL)
   {fprintf(stderr,"ERROR reading mcphas.j: maximum number of atoms in unit cell exceeded - enlarge it in par.hpp and recompile\n");exit(EXIT_FAILURE);}
   

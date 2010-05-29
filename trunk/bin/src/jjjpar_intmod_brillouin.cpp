@@ -18,13 +18,13 @@ if(Jret.Hi()!=3||gjmbH.Hi()!=3||ABC.Hi()!=1)
    {fprintf(stderr,"Error loadable module brillouin.so: wrong number of dimensions - check number of columns in file mcphas.j or number of parameters in single ion property file\n");
     exit(EXIT_FAILURE);}
     
-double JJ,K_BT,XJ,gmhkt,Jav,gmh,Z,X;
+double JJ,KBT,XJ,gmhkt,Jav,gmh,Z,X;
 
 // program brillouin function for S=J=ABC(1)
 JJ=ABC[1];
-K_BT=T*K_B;
+KBT=T*KB;
 gmh=Norm(gjmbH);
-gmhkt=gmh/K_BT;
+gmhkt=gmh/KBT;
 
 if(JJ*gmhkt>100||gmhkt>100){Jav=JJ;lnZ=JJ*gmhkt;}
 else
@@ -94,14 +94,14 @@ int pr;
   pr=1;
   if (tn<0) {pr=0;tn*=-1;}
 
-  double JJ,K_BT,XJ,gmhkt,gmh,Z,R,X,sinth,hxxyy,jjkt;
+  double JJ,KBT,XJ,gmhkt,gmh,Z,R,X,sinth,hxxyy,jjkt;
   complex <double> i(0,1),bx,by,bz;
 
 // program brillouin function for S=J=ABC(1)
   JJ=ABC[1];
-  K_BT=T*K_B;
+  KBT=T*KB;
   gmh=Norm(gjmbH);
-  gmhkt=gmh/K_BT;
+  gmhkt=gmh/KBT;
   X=exp(gmhkt);
   XJ=exp(JJ*gmhkt);
 // calculate Z and R
@@ -151,7 +151,7 @@ if (tn==2) // transition to finite energy
   mat(3,3)=bz*conj(bz)*(-R/Z);
   } else
   {// quasielastic scattering needs epsilon * nm / KT ....
-  jjkt=0.6666667*JJ*(JJ+1)/K_BT;
+  jjkt=0.6666667*JJ*(JJ+1)/KBT;
   mat(1,1)=bx*conj(bx)*jjkt;
   mat(1,2)=bx*conj(by)*jjkt;
   mat(1,3)=bx*conj(bz)*jjkt;
@@ -165,9 +165,9 @@ if (tn==2) // transition to finite energy
  }
  else
  { delta=-SMALL; // tn=1 ... transition within the same level
-   if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/K_BT/(2*JJ+1);}
+   if(X==1.0){jjkt=JJ*(2*JJ*JJ+3*JJ+1)/3/KBT/(2*JJ+1);}
    else {if(X>1e50)
-         {jjkt=JJ*JJ*K_BT;}
+         {jjkt=JJ*JJ*KBT;}
          else 
          {jjkt=(1-2*JJ-2*JJ*JJ)/XJ;
          jjkt+=JJ*JJ/X/XJ;
@@ -176,7 +176,7 @@ if (tn==2) // transition to finite energy
 	 jjkt+=(2*JJ*JJ+2*JJ-1)*XJ*X;
 	 jjkt-=JJ*JJ*XJ*X*X;
 	 jjkt*=X/(1-X)/(1-X);
-	 jjkt/=(1/XJ-X*XJ)*K_BT;
+	 jjkt/=(1/XJ-X*XJ)*KBT;
          }
         }
  // now lets calculate mat

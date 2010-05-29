@@ -59,6 +59,8 @@ ifdef LINUX
 XLIBS= -ldl
 #XLIBS=           -L/usr/X11/lib -lX11 -lXext -lc -lXpm -ldl
 #EZLIB=           -ljpeg -ldl
+else
+EXE=.exe
 endif
 ifdef OMP
 LFLAGS +=          $(XLIBS) $(EZLIB) -lstdc++ -lm -lgomp -lpthread
@@ -101,8 +103,10 @@ RCSCI    =      ci -u -f -s"Rel" -r$(VERSION) -m"$(LOCKMSG)"
 #		installation directories
 #
 
-INCL = mcphas.h  mcphas_htcalc.h testspin.hpp qvectors.hpp spincf.hpp par.hpp  jjjpar.hpp inipar.hpp mfcf.hpp vector.h martin.h
-OBJS = jjjpar.o par.o physprop.o qvectors.o mcphas.o testspin.o spincf.o inipar.o mfcf.o martin.o ionpars.o
+INCL = mcphas.h  testspin.hpp qvectors.hpp spincf.hpp par.hpp  jjjpar.hpp inipar.hpp \
+       mfcf.hpp vector.h martin.h
+OBJS = jjjpar.o par.o physprop.o qvectors.o mcphas.o testspin.o spincf.o inipar.o \
+        mfcf.o martin.o ionpars.o
 
 VOBS = ivector.o imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o cmatrix.o cmatmul.o \
 	dludcomp.o dsvdcomp.o dortho.o cludcomp.o tred.o imtql.o imtql2.o rseigen.o cheigen.o \
@@ -126,12 +130,16 @@ LINKER= $(CCC) $(LDFLAGS)
 # Build mcphas
 #
 
-all :  martin.o ../cond ../coq2jjj ../jjj2j ../mcdispit ../mcphasit ../spins ../spinsfromq ../addj ../singleion ../charges ../chrgplt ../pointc ../mcdiff
+all :  martin.o ../cond$(EXE) ../coq2jjj$(EXE) ../jjj2j$(EXE) \
+	../mcdispit$(EXE) ../mcphasit$(EXE) ../spins$(EXE) \
+	../spinsfromq$(EXE) ../addj$(EXE) ../singleion$(EXE) ../charges$(EXE) \
+	../chrgplt$(EXE) ../spindensplt$(EXE) ../pointc$(EXE) ../mcdiff$(EXE) \
+        ../orbmomdensplt$(EXE) ../momdensplt$(EXE)
 
 # ****************************************************
 # compile sources 
 
-martin.o:  martin.c martin.h
+martin.o:  martin.c martin.h vector.h
 	$(CCC) $(CFLAGS) $< 
 	
 paramete.o: paramete.cpp paramete.hpp martin.h vector.h 
@@ -140,16 +148,16 @@ paramete.o: paramete.cpp paramete.hpp martin.h vector.h
 par.o: par.cpp par.hpp jjjpar.hpp martin.h vector.h
 	$(CCC) $(CFLAGS) $< 
 
-jjjpar.o: jjjpar.cpp jjjpar_intmod_kramer.cpp jjjpar_intmod_brillouin.cpp jjjpar.hpp martin.h vector.h myev.h
+jjjpar.o: jjjpar.cpp jjjpar_intmod_kramer.cpp jjjpar_intmod_brillouin.cpp jjjpar_basmodfunc.cpp jjjpar.hpp martin.h vector.h myev.h
 	$(CCC) $(CFLAGS) $< 
 
 testspin.o: testspin.cpp testspin.hpp spincf.hpp martin.h
 	$(CCC) $(CFLAGS) $< 
 
-spincf.o: spincf.cpp spincf.hpp vector.h chargedensity.hpp jjjpar.hpp
+spincf.o: spincf.cpp spincf_out.cpp spincf.hpp vector.h density.hpp jjjpar.hpp graphic_parameters.hpp
 	$(CCC) $(CFLAGS) $< 
 
-chargedensity.o: chargedensity.cpp chargedensity.hpp vector.h
+density.o: density.cpp density.hpp vector.h
 	$(CCC) $(CFLAGS) $< 
 
 
@@ -177,7 +185,7 @@ physprop.o: physprop.cpp physprop.hpp spincf.hpp vector.h mfcf.hpp martin.h par.
 qvectors.o: qvectors.cpp qvectors.hpp spincf.hpp martin.h vector.h inipar.hpp myev.c
 	$(CCC) $(CFLAGS) $<
 
-mcphas.o: mcphas.c $(INCL) mcphas_htcalc.c 
+mcphas.o: mcphas.c $(INCL) mcphas_htcalc.c mcphas_fecalc.c mcphas_physpropcalc.c
 	$(CCC) $(CFLAGS) $(THREADFLAG) $<
 
 mcdisp.o: mcdisp.c  myev.c mcdisp_intcalc.c jq.hpp mdcf.hpp $(INCL)
@@ -192,7 +200,7 @@ coq2jjj.o: coq2jjj.c paramete.hpp martin.h
 jjj2j.o: jjj2j.c par.hpp jjj2j.h jjjpar.hpp vector.h
 	$(CCC) $(CFLAGS) $<
 
-spins.o: spins.c spincf.hpp  martin.h vector.h
+spins.o: spins.c spincf.hpp  martin.h vector.h graphic_parameters.hpp
 	$(CCC) $(CFLAGS) $<
 
 spinsfromq.o: spinsfromq.c spincf.hpp  par.hpp martin.h vector.h 
@@ -201,11 +209,21 @@ spinsfromq.o: spinsfromq.c spincf.hpp  par.hpp martin.h vector.h
 singleion.o: singleion.c par.hpp  martin.h vector.h
 	$(CCC) $(CFLAGS) $<
 
-charges.o: charges.c par.hpp  spincf.hpp martin.h vector.h myev.h
+charges.o: charges.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp
 	$(CCC) $(CFLAGS) $<
 
-chrgplt.o:  chrgplt.c chargedensity.hpp martin.h vector.h jjjpar.hpp
+chrgplt.o:  chrgplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
 	$(CCC) $(CFLAGS) $<
+
+spindensplt.o:  spindensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+	$(CCC) $(CFLAGS) $<
+
+orbmomdensplt.o:  orbmomdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+	$(CCC) $(CFLAGS) $<
+
+momdensplt.o:  momdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+	$(CCC) $(CFLAGS) $<
+
 
 pointc.o:  pointc.c  martin.h vector.h ionpars.hpp jjjpar.hpp
 	$(CCC) $(CFLAGS) $<
@@ -213,7 +231,7 @@ pointc.o:  pointc.c  martin.h vector.h ionpars.hpp jjjpar.hpp
 addj.o: addj.c par.hpp  martin.h vector.h
 	$(CCC) $(CFLAGS) $<
 
-mcdiff.o: mcdiff.c jjjpar.hpp martin.h myev.h
+mcdiff.o: mcdiff.c jjjpar.hpp martin.h myev.h mcdiff.h mcdiff_intcalc.c mcdiff_output.c spincf.hpp
 	$(CCC) $(CFLAGS) $<
 
 myev.o: myev.c
@@ -235,63 +253,75 @@ endif
 # ************************************************
 # make  binaries (link .o files)
 
-../cond: cond.o paramete.o $(VOBS) martin.o
+../cond$(EXE): cond.o paramete.o $(VOBS) martin.o
 	@echo Linking ../cond
 	@$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
 
-../coq2jjj: coq2jjj.o paramete.o $(VOBS) martin.o
+../coq2jjj$(EXE): coq2jjj.o paramete.o $(VOBS) martin.o
 	@echo Linking ../coq2jjj
 	@$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
 
-../jjj2j: jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o
+../jjj2j$(EXE): jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o
 	@echo Linking ../jjj2j
 	@$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
 
-../mcdispit: mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS)
+../mcdispit$(EXE): mcdisp.o martin.o par.o jjjpar.o inimcdis.o jq.o mdcf.o mfcf.o ionpars.o  $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS)
 	@echo Linking ../mcdispit
 	@$(LINKER)  -Wall  -o ../mcdispit   $^  $(LFLAGS) $(THREADLINK)
 
-../mcphasit: $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o
+../mcphasit$(EXE): $(OBJS) martin.o $(VOBS)  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o
 	@echo Linking ../mcphasit
 	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) $(THREADLINK)
 
-../spins: spincf.o spins.o martin.o  $(VOBS) chargedensity.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS)
+../spins$(EXE): spincf.o spins.o martin.o  $(VOBS) density.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../spins
 	@$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
-../spinsfromq: spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o chargedensity.o
+../spinsfromq$(EXE): spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o density.o
 	@echo Linking ../spinsfromq
 	@$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
 
-../singleion:  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o chargedensity.o
+../singleion$(EXE):  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o density.o
 	@echo Linking ../singleion
 	@$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
-../charges:  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o chargedensity.o myev.o
+../charges$(EXE):  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o
 	@echo Linking ../charges
 	@$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
-../chrgplt: chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o chargedensity.o spincf.o jjjpar.o
+../chrgplt$(EXE): chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
 	@echo Linking ../chrgplt
 	@$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
-../pointc: pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) jjjpar.o
+../spindensplt$(EXE): spindensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+	@echo Linking ../spindensplt
+	@$(LINKER)  -Wall  -o ../spindensplt $^  $(LFLAGS)
+
+../orbmomdensplt$(EXE): orbmomdensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+	@echo Linking ../orbmomdensplt
+	@$(LINKER)  -Wall  -o ../orbmomdensplt $^  $(LFLAGS)
+
+../momdensplt$(EXE): momdensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+	@echo Linking ../momdensplt
+	@$(LINKER)  -Wall  -o ../momdensplt $^  $(LFLAGS)
+
+../pointc$(EXE): pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) jjjpar.o
 	@echo Linking ../pointc
 	@$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
 
-../addj: addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o chargedensity.o
+../addj$(EXE): addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o density.o
 	@echo Linking ../addj
 	@$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
 
-../mcdiff: mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o chargedensity.o
+../mcdiff$(EXE): mcdiff.o jjjpar.o martin.o myev.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o density.o spincf.o
 	@echo Linking ../mcdiff
 	@$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
-../mf2fe: mf2fe.o martin.o jjjpar.o inipar.o par.o ionpars.o chargedensity.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+../mf2fe$(EXE): mf2fe.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../mf2fe
 	@$(LINKER)  -Wall  -o ../mf2fe $^  $(LFLAGS)
 
-../fediff: fediff.o martin.o jjjpar.o inipar.o par.o ionpars.o chargedensity.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+../fediff$(EXE): fediff.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../fediff
 	@$(LINKER)  -Wall  -o ../fediff $^  $(LFLAGS)
 

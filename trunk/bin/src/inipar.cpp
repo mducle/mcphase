@@ -2,7 +2,7 @@
 #include "inipar.hpp"
 #include "../../version"
 #include <martin.h>
-#include <cstring>
+
 
 #define MAXNOFCHARINLINE 1024
 

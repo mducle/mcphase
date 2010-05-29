@@ -8,12 +8,7 @@
 #include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
+#include "graphic_parameters.hpp"
 
 /**********************************************************************/
 // hauptprogramm
@@ -30,6 +25,16 @@ int main (int argc, char **argv)
  char filename[MAXNOFCHARINLINE];
  float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
  char * cffilenames[MAXNOFATOMS];
+ graphic_parameters gp;
+gp.show_abc_unitcell=1.0;
+gp.show_primitive_crystal_unitcell=1.0;
+gp.show_magnetic_unitcell=1.0;
+gp.show_atoms=1.0;
+gp.scale_view_1=1.0;
+gp.scale_view_2=1.0;
+gp.scale_view_3=1.0;
+gp.spins_scale_moment=1.0;
+
   Matrix r(1,3,1,3);
   Vector abc(1,6);
 // check command line
@@ -64,7 +69,6 @@ printf("#****************************************************\n");
  fout = fopen_errchk ("./results/spins.out", "w");
 
 
-double show_abc_unitcell=1.0,show_primitive_crystal_unitcell=1.0,show_magnetic_unitcell=1.0,show_atoms=1.0,scale_view_1=1.0,scale_view_2=1.0,scale_view_3=1.0,spins_scale_moment=1.0;
 abc=0;
  // input file header ------------------------------------------------------------------
   instr[0]='#';
@@ -80,14 +84,14 @@ abc=0;
    if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
                  extract(instr,"alpha",abc[4]);  extract(instr,"beta",abc[5]);extract(instr,"gamma",abc[6]); 
    }
-   extract(instr,"show_abc_unitcell",show_abc_unitcell);
-   extract(instr,"show_primitive_crystal_unitcell",show_primitive_crystal_unitcell);
-   extract(instr,"show_magnetic_unitcell",show_magnetic_unitcell);
-   extract(instr,"show_atoms",show_atoms);
-   extract(instr,"spins_scale_moment",spins_scale_moment);
-   extract(instr,"scale_view_1",scale_view_1);
-   extract(instr,"scale_view_2",scale_view_2);
-   extract(instr,"scale_view_3",scale_view_3);
+   extract(instr,"show_abc_unitcell",gp.show_abc_unitcell);
+   extract(instr,"show_primitive_crystal_unitcell",gp.show_primitive_crystal_unitcell);
+   extract(instr,"show_magnetic_unitcell",gp.show_magnetic_unitcell);
+   extract(instr,"show_atoms",gp.show_atoms);
+   extract(instr,"spins_scale_moment",gp.spins_scale_moment);
+   extract(instr,"scale_view_1",gp.scale_view_1);
+   extract(instr,"scale_view_2",gp.scale_view_2);
+   extract(instr,"scale_view_3",gp.scale_view_3);
 
    extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
    extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
@@ -110,8 +114,8 @@ abc=0;
 //		   printf("%s\n",cffilenames[n]);
 		  }
   }
-  if (abc(4)!=90||abc(5)!=90||abc(6)!=90)
-  {fprintf(stderr,"#!!!! WARNING: non orthogonal lattice not supported yet !!!!!!!\n");}
+ // if (abc(4)!=90||abc(5)!=90||abc(6)!=90)
+ // {fprintf(stderr,"#!!!! WARNING: non orthogonal lattice not supported yet !!!!!!!\n");}
    Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];}
   
 
@@ -188,14 +192,14 @@ abc=0;
 
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins.jvx", "w");
-     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  0,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,0.0);
+    gp.showprim=0;gp.spins_wave_amplitude=0;
+     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins_prim.jvx", "w");
-     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                  1,0.0,savev_real,savev_imag,0.0,hkl,0.0,spins_scale_moment,0.0);
+     gp.showprim=1;
+     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 if (argc>=9){// try a spinwave picture
@@ -259,13 +263,13 @@ if (argc>=9){// try a spinwave picture
                printf("\n calculating movie sequence %i(16)\n",i+1);
                sprintf(filename,"./results/spins.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
-                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  0,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,spins_show_static_moment_direction);
+               gp.showprim=0;
+                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
                sprintf(filename,"./results/spins_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
-                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,show_abc_unitcell,show_primitive_crystal_unitcell,show_magnetic_unitcell,show_atoms,scale_view_1,scale_view_2,scale_view_3,
-                                  1,phase,savev_real,savev_imag,spins_wave_amplitude,hkl,spins_show_ellipses,spins_scale_moment,spins_show_static_moment_direction);
+               gp.showprim=1;
+                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);  
