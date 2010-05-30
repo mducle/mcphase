@@ -1228,9 +1228,9 @@ std::vector<double> icmfmat::spindensity_expJ(iceig &VE,int xyz, double T, std::
          #else
          me[ind_j] = F77NAME(ddot)(&Hsz, VE.V(ind_j), &incx, vt, &incx);
          #endif
-         eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=E[ind_j]*eb[ind_j];
+         eb[ind_j] = exp(-E[ind_j]/(KB*T)); /*ex[0]+=me[ind_j]*eb[ind_j];*/ Z+=eb[ind_j]; U+=E[ind_j]*eb[ind_j];
       }
-      free(fJmat); free(vt); matel.push_back(me); ex[0]/=Z; U/=Z;
+      free(fJmat); free(vt); matel.push_back(me); /*ex[0]/=Z;*/ U/=Z;
    }
    else
    {
@@ -1246,9 +1246,9 @@ std::vector<double> icmfmat::spindensity_expJ(iceig &VE,int xyz, double T, std::
          zme = F77NAME(zdotc)(&Hsz, VE.zV(ind_j), &incx, zt, &incx);
          #endif
          me[ind_j] = zme.r;
-         eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
+         eb[ind_j] = exp(-E[ind_j]/(KB*T)); /*ex[0]+=me[ind_j]*eb[ind_j];*/ Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
       }
-      free(zJmat); free(zt); matel.push_back(me); ex[0]/=Z; U/=Z;
+      free(zJmat); free(zt); matel.push_back(me); /*ex[0]/=Z;*/ U/=Z;
    }
 
    char nstr[6]; char basename[255]; strcpy(basename,"results/mms/");
