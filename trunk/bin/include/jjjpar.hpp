@@ -6,8 +6,7 @@
 #ifndef JJJPAR
 #define JJJPAR
 
-#include<martin.h>
-#include<ionpars.hpp>
+typedef void fnc_t();
 
 #ifdef __linux__
 #include<dlfcn.h>
@@ -15,6 +14,9 @@
 #include <windows.h>
 #endif
 
+#include<martin.h>
+#include<ionpars.hpp>
+#include<myev.h>
 
 class jjjpar
 {
@@ -90,6 +92,7 @@ public:
 
 private:
   // external module functions, intern_mcalc=0
+ 
   void (*m)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*);
   int  (*dm)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*);
 
@@ -176,6 +179,7 @@ void orbmomdensity_mcalc (Vector &mom,int xyz, double & T, Vector &  gjmbH, Comp
 // fi and expansion coeff. of Zlm R^2(r)
 //***********************************************************************
 double spindensity_calc (double & teta,double & fi,double & R, Vector & moments);
+Vector spindensity_calc (double & teta,double & fi,double & R, Vector & momentsx, Vector & momentsy, Vector & momentsz);
 
    double Fr(double r); // evaluate F(r)=1/r integral_r^inf dx R^2(x)
                         // r in units of Angstroems, F(r) in units of 1/A^3
@@ -185,6 +189,8 @@ double spindensity_calc (double & teta,double & fi,double & R, Vector & moments)
 // fi and expansion coeff. of Zlm R^2(r)
 //***********************************************************************
 double orbmomdensity_calc (double & teta,double & fi,double & R, Vector & moments);
+Vector orbmomdensity_calc (double & teta,double & fi,double & R, Vector & momentsx, Vector & momentsy, Vector & momentsz);
+Vector currdensity_calc (double & teta,double & fi,double & R, Vector & momentlx, Vector & momently, Vector & momentlz);
 
 private:
 #ifdef __linux__
@@ -193,7 +199,7 @@ private:
 //  HANDLE handle;
   HINSTANCE__* handle;
 #endif
-
+  
   void  (*sd_m)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*);
   void  (*od_m)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*);
 

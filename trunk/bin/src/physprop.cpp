@@ -142,7 +142,7 @@ double physproperties::save (int verbose, const char * filemode, int htfailed, p
    fprintf(fout,"\n");
    fclose(fout);
    fout = fopen_errchk ("./results/.mcphas.fum","a");
-   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g %8.8g %8.8g  %4.4g %4.4g %4.4g %4.4g\n",
+   fprintf (fout, "%4.4g %4.4g  %4.4g %4.4g %4.4g %4.4g %4.4g %8.8g %8.8g  %4.4g %4.4g %4.4g %4.4g %4.4g\n",
             x,y,T,Norm(Hijk),H[1],H[2],H[3],fe,u,Norm(m),mabc[1],mabc[2],mabc[3],m*Hijk/Norm(Hijk));
    fclose(fout);
    if((fout=fopen("./fit/mcphas.fum","rb"))!=NULL)
@@ -324,7 +324,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
    fclose(fout);
 
       }
-   int inew[nofhkls];float intensity[nofhkls];
+   int * inew;inew=new int[nofhkls+1];float *intensity;intensity=new float[nofhkls+1];
    for (i=1;i<=nofhkls;++i) {intensity[i]=hkli[i](4);}
    sort(intensity,1,nofhkls,inew); // sort according to ascending intensity
 
@@ -366,7 +366,7 @@ fprintf(stderr,"         because in mcphas.j for atom %i  only %i neighbours are
      if (washere==0){fprintf(stderr,"Warning: Calculation of standard deviation using  ./fit/mcphas.hkl not implemented\n");}
      fclose(fout);
     }else{errno=0;}
-
+   delete []inew;delete []intensity;
 //-----------------------------------------------------------------------------------------  
  errno = 0;
   if (verbose==1)printf("saving mcphas.sps - spinconfiguration\n");

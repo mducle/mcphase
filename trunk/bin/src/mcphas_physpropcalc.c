@@ -186,7 +186,7 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
       physprops.mf=mf;
 
 // display spinstructure
-  float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+  float * x;x=new float[inputpars.nofatoms+1];float *y;y=new float[inputpars.nofatoms+1];float*z;z=new float[inputpars.nofatoms+1];
 		 for (is=1;is<=inputpars.nofatoms;++is)
 		   {x[is]=(*inputpars.jjj[is]).xyz[1];
  		    y[is]=(*inputpars.jjj[is]).xyz[2];
@@ -204,7 +204,7 @@ void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physp
    fin_coq = fopen_errchk ("./results/.spins.eps", "w");
     sps.eps(fin_coq,text);
    fclose (fin_coq);
-
+delete[]x;delete []y; delete []z;
   //sps.display(text);
 delete []mq;
 }

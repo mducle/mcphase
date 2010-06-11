@@ -176,9 +176,9 @@ fprintf(fout,"#\n");
   }
   fseek(fin_coq,pos,SEEK_SET); 
   printf ("     section 2 - nat=%i\n",nat);
-  float x1[nat+1],y1[nat+1],z1[nat+1];
-  float da[nat+1],db[nat+1],dc[nat+1];
-  float sl1r[nat+1],sl1i[nat+1],dwf1[nat+1];
+  float *x1;x1=new float[nat+1];float*y1;y1=new float[nat+1];float*z1;z1=new float[nat+1];
+  float *da;da=new float[nat+1];float*db;db=new float[nat+1];float*dc;dc=new float[nat+1];
+  float *sl1r;sl1r=new float[nat+1];float*sl1i;sl1i=new float[nat+1];float *dwf1;dwf1=new float[nat+1];
 
 fprintf(fout,"# %%SECTION 2%% LIST OF NONMAGNETIC ATOMS IN CRYSTALLOGRAPHIC UNIT CELL\n");
 fprintf(fout,"#\n");
@@ -362,7 +362,7 @@ printf ("                 nat=%i magnetic atoms\n",natmagnetic);
 n = nr1 * nr2 * nr3 * nat + natmagnetic; //atoms in der magnetic unit cell
 
 
-int J[n+1]; // code for indicating if ion is nonmagnetic (J=1), 
+int *J;J=new int[n+1]; // code for indicating if ion is nonmagnetic (J=1),
             // go beyond dipole approx for rare earth (J=0)
             // use magnetic moment with dipole approx (J=-1)
             // use L and S values with dipole approx (J=-2) 
@@ -433,7 +433,7 @@ if(use_dadbdc!=0)        {       numbers[4]= (numbers[1]*rez1(1)+numbers[2]*rez1
                                  numbers[6]= (numbers[1]*rez3(1)+numbers[2]*rez3(2)+numbers[3]*rez3(3))/2/PI;
                          }
                             if (j<9) {fprintf(stderr,"ERROR mcdiff: too few parameters for magnetic atom %i: %s\n",i,instr);exit(EXIT_FAILURE);}
-                             jjjpars[i]=new jjjpar(numbers[4] / nr1,numbers[5] / nr2,numbers[6] / nr3, cffilename);
+                             jjjpars[i]=new jjjpar((double)numbers[4] / nr1,(double)numbers[5] / nr2,(double)numbers[6] / nr3, cffilename);
                              (*jjjpars[i]).save_sipf("./results/_");// save read single ion parameter file
                               // store moment and components of S and L (if given)
                               for(k=7;k<=j&&k<=15;++k){(*jjjpars[i]).mom(k-6) = numbers[k];}
@@ -533,6 +533,8 @@ for(na = 1;na<=nr1;++na){
       }
     }
 }}}
+delete []x1;delete []y1;delete []z1;delete []da;delete []db;delete[]dc;
+delete []sl1r;delete[]sl1i;delete[]dwf1;
 
 int m=0;
 Vector * hkl = new Vector[MAXNOFREFLECTIONS+1];for(i=0;i<=MAXNOFREFLECTIONS;++i){hkl[i]=Vector(1,3);}
@@ -608,6 +610,7 @@ fprintf (stderr,"***********************************************************\n")
 //  for (i=1;i<=n;++i){delete jjjpars[i];}
 //  delete []jjjpars;
   delete []hkl;
+  delete []J;
  return 0;
 }
 

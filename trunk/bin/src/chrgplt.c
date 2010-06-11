@@ -4,10 +4,7 @@
  *           an ion given its CF pars, T and effective H
  * Author: M. Rotter
  **********************************************************/
-
-#define MAXNOFCHARINLINE 1000
 #define MAXNOFATOMS 100
-
 
 #include "../../version"
 #include "density.hpp"
@@ -15,8 +12,7 @@
 #include "jjjpar.hpp"
 #include "martin.h"
 #include "plt_func.c"
-
-
+#include "cryststruct.hpp"
 
 /**********************************************************************/
 // main program
@@ -55,6 +51,10 @@ gp.show_magnetic_unitcell=0;
 gp.threshhold=strtod(argv[1],NULL);
 gp.scale_pointcharges=1;
 gp.show_pointcharges=1;
+  gp.show_atoms=1;gp.showprim=1;
+  gp.spins_scale_moment=1;
+ gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
+cryststruct cs;
 
   double T,ha,hb,hc;
   T=strtod(argv[2],NULL);
@@ -114,42 +114,41 @@ printf("\n");
  if(jjjps.module_type==0||jjjps.module_type==4){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
  if(jjjps.module_type==2){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=cab</title>\n", T, ha, hb, hc);}
 
- char * cffilenames[MAXNOFATOMS];
- cffilenames[1]=new char[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
-
-Vector abc(1,3);abc(1)=6.0;abc(2)=6.0;abc(3)=6.0;
-Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
-
- strcpy(cffilenames[1],argv[6]);
- x[1]=0.5;y[1]=0.5;z[1]=0.5; // put atom in middle of cell
-
+ cs.cffilenames[1]=new char[MAXNOFCHARINLINE];
+ cs.abc(1)=6.0;cs.abc(2)=6.0;cs.abc(3)=6.0;
+ cs.r=0;cs.r(1,1)=1.0;cs.r(2,2)=1.0;cs.r(3,3)=1.0;
+ strcpy(cs.cffilenames[1],argv[6]);
+ cs.x[1]=0.5;cs.y[1]=0.5;cs.z[1]=0.5; // put atom in middle of cell
 
 // read pointcharge-parameters
-if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharges,cffilenames,argv[6],x,y,z,jjjps,abc);
+if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharges,cs.cffilenames,argv[6],cs.x,cs.y,cs.z,jjjps,cs.abc);
 
   spincf s(1,1,1,nofpc+1,dim);
   
   
-  Vector gJJ(1,nofpc+1);gJJ=0;gJJ(1)=jjjps.gJ;
+ // Vector gJJ(1,nofpc+1);gJJ=0;gJJ(1)=jjjps.gJ;
+  cs.gJ[1]=jjjps.gJ;
   Vector hkl(1,3);hkl=0;s=s*0;
   spincf ev_real(s),ev_imag(s);
 
   for(i=1;i<=dim;++i)s.m(1,1,1)(i)=moments(i);
-  gp.show_atoms=1;gp.showprim=1;
-  gp.spins_scale_static_moment=1;
   fout = fopen_errchk ("results/chrgplt.jvx", "w");
-   s.jvx_cd(fout,text,abc,r,x,y,z,gJJ,gp,0.0,ev_real,ev_imag,hkl,cffilenames);
+   s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
+  fclose (fout);
+  fout = fopen_errchk ("results/chrgplt.grid", "w");
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/chrgplti.grid", "w");
-  gp.showprim=1;
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,1,200,200,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=1;gp.gridj=200;gp.gridk=200;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/chrgpltj.grid", "w");
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,200,1,200,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=200;gp.gridj=1;gp.gridk=200;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/chrgpltk.grid", "w");
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,200,200,1,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=200;gp.gridj=200;gp.gridk=1;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
 fprintf(stderr,"# ************************************************************************\n");
 fprintf(stderr,"# *             end of program chrgplt\n");
@@ -163,7 +162,7 @@ fprintf(stderr,"# * displaycontour 1 2 4 results/chrgpltk.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;
-  for(dj=1;dj<=nofpc+1;++dj){delete cffilenames[dj];}
+  for(dj=1;dj<=nofpc+1;++dj){delete cs.cffilenames[dj];}
   return 0;
 }
 

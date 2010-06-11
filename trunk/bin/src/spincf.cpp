@@ -44,10 +44,10 @@ Vector spincf::moment(int i,int j,int k,int l) // returns moment of atom l (1,no
  for(m=1;m<=nofcomponents;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
  return xyz;
 }
-Vector spincf::magmom(int i,int j,int k,int l,Vector & gJ) // returns magnetic moment 
+Vector spincf::magmom(int i,int j,int k,int l,double & gJ) // returns magnetic moment
 {       Vector xyz(1,3);int m,maxm;
        xyz=0;
-       if (gJ(l)==0)  //load magnetic moment into vector xyz
+       if (gJ==0)  //load magnetic moment into vector xyz
        {             // intermediate coupling  <M>=2*<S>+<L>
         if(nofcomponents>6){maxm=6;}else{maxm=nofcomponents;}
         for(m=1;m<=maxm;++m){if(m==2||m==4||m==6){xyz((m+1)/2)+=mom[in(i,j,k)](nofcomponents*(l-1)+m);}
@@ -56,7 +56,7 @@ Vector spincf::magmom(int i,int j,int k,int l,Vector & gJ) // returns magnetic m
        }
        else // LS coupling
        {if(nofcomponents>3){maxm=3;}else{maxm=nofcomponents;}
-        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ(l);}
+        for(m=1;m<=maxm;++m){xyz(m)=mom[in(i,j,k)](nofcomponents*(l-1)+m)*gJ;}
        }
        return xyz;
 }
@@ -120,14 +120,14 @@ int spincf::nc()
 
 Vector spincf::nettomagmom(Vector & gJ) // returns nettomagnetic moment [mu_b]
 {
- int i,j,k,l,m,n; 
+ int i,j,k,l; 
  Vector ret(1,3);
  ret=0;
  for (i=1;i<=nofa;++i)
  { for (j=1;j<=nofb;++j)
    {for (k=1;k<=nofc;++k)
     {for (l=1;l<=nofatoms;++l)
-     {ret+=magmom(i,j,k,l,gJ);
+     {ret+=magmom(i,j,k,l,gJ(l));
      }    
     }
    }
@@ -369,6 +369,9 @@ double spincf::nndist(float * x, float * y, float * z,Vector & abc,Matrix & p,Ve
 return mindist;
 }
 
+Vector spincf::pos(int i, int j, int k, int l,cryststruct & cs)
+{return pos(i,j,k,l,cs.abc,cs.r,cs.x,cs.y,cs.z);
+}
 Vector spincf::pos(int i, int j, int k, int l,Vector & abc,Matrix & r,float * x,float *y,float*z)
 {//returns position of atom l at lattice site (i j k) (Angstrom)
 Vector dd(1,3),dd0(1,3);

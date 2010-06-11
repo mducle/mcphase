@@ -3,28 +3,30 @@
  * Author: Martin Rotter
  ****************************************************/
 
-#define MAXNOFCHARINLINE 1000
+
 #define MAXNOFATOMS 100
 #include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
 #include "graphic_parameters.hpp"
+#include "cryststruct.hpp"
+#include "densities_func.c"
 
 /**********************************************************************/
 // hauptprogramm
 int main (int argc, char **argv)
 { spincf savspins;
  FILE * fin_coq, * fout;
- float delta,dd,ddT,ddHa,ddHb,ddHc,alpha,beta,gamma,T,Ha,Hb,Hc;
- int i,n=0,nofatoms=0,nofcomponents=3;
+ float delta,dd,ddT,ddHa,ddHb,ddHc;
+double T,Ha,Hb,Hc;
+ int i,n=0;
+ cryststruct cs;
  long int pos=0,j;
  float numbers[13];numbers[9]=1;numbers[10]=3;
  numbers[0]=13;
  char instr[MAXNOFCHARINLINE];
  char outstr[MAXNOFCHARINLINE];
  char filename[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
- char * cffilenames[MAXNOFATOMS];
  graphic_parameters gp;
 gp.show_abc_unitcell=1.0;
 gp.show_primitive_crystal_unitcell=1.0;
@@ -35,9 +37,7 @@ gp.scale_view_2=1.0;
 gp.scale_view_3=1.0;
 gp.spins_scale_moment=1.0;
 
-  Matrix r(1,3,1,3);
-  Vector abc(1,6);
-// check command line
+ // check command line
 printf("#****************************************************\n");
 printf("# spins - display spinconfiguration at given htpoint\n");
 printf("# Author: Martin Rotter %s\n",MCPHASVERSION);
@@ -68,85 +68,18 @@ printf("#****************************************************\n");
     
  fout = fopen_errchk ("./results/spins.out", "w");
 
-
-abc=0;
- // input file header ------------------------------------------------------------------
-  instr[0]='#';
- while (instr[strspn(instr," \t")]=='#') // pointer to 'ltrimstring' 
-  { pos=ftell(fin_coq); 
-   if (pos==-1) 
-       {fprintf(stderr,"Error: wrong sps file format\n");exit (EXIT_FAILURE);}
-   fgets_errchk(instr,MAXNOFCHARINLINE,fin_coq);
-   // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
-   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
-   
-   if (instr[strspn(instr," \t")]=='#'){fprintf(fout,"%s",instr);}
-   if(abc[1]==0){extract(instr,"a",abc[1]);extract(instr,"b",abc[2]); extract(instr,"c",abc[3]); 
-                 extract(instr,"alpha",abc[4]);  extract(instr,"beta",abc[5]);extract(instr,"gamma",abc[6]); 
-   }
-   extract(instr,"show_abc_unitcell",gp.show_abc_unitcell);
-   extract(instr,"show_primitive_crystal_unitcell",gp.show_primitive_crystal_unitcell);
-   extract(instr,"show_magnetic_unitcell",gp.show_magnetic_unitcell);
-   extract(instr,"show_atoms",gp.show_atoms);
-   extract(instr,"spins_scale_moment",gp.spins_scale_moment);
-   extract(instr,"scale_view_1",gp.scale_view_1);
-   extract(instr,"scale_view_2",gp.scale_view_2);
-   extract(instr,"scale_view_3",gp.scale_view_3);
-
-   extract(instr,"r1x",r[1][1]);extract(instr,"r2x",r[1][2]); extract(instr,"r3x",r[1][3]); 
-   extract(instr,"r1y",r[2][1]); extract(instr,"r2y",r[2][2]); extract(instr,"r3y",r[2][3]);
-   extract(instr,"r1z",r[3][1]); extract(instr,"r2z",r[3][2]); extract(instr,"r3z",r[3][3]);
-   extract(instr,"r1a",r[1][1]);extract(instr,"r2a",r[1][2]); extract(instr,"r3a",r[1][3]); 
-   extract(instr,"r1b",r[2][1]); extract(instr,"r2b",r[2][2]); extract(instr,"r3b",r[2][3]);
-   extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
-   extract(instr,"nofatoms",nofatoms);    extract(instr,"nofcomponents",nofcomponents); 
-   if (nofatoms>0&&(extract(instr,"x",x[n+1])+
-                   extract(instr,"y",y[n+1])+
-  		       extract(instr,"z",z[n+1])==0)||
-		       (extract(instr,"da",x[n+1])+
-                   extract(instr,"db",y[n+1])+
-		       extract(instr,"dc",z[n+1])==0))
-		  {++n;if(n>nofatoms||nofatoms>MAXNOFATOMS)
-                    {fprintf(stderr,"ERROR spins.c reading file:maximum number of atoms in unit cell exceeded\n");exit(EXIT_FAILURE);}
-                   cffilenames[n]=new char[MAXNOFCHARINLINE];
-                   extract(instr,"cffilename",cffilenames[n],(size_t)MAXNOFCHARINLINE);
-                   extract(instr,"gJ",gJ[n]);
-//		   printf("%s\n",cffilenames[n]);
-		  }
-  }
- // if (abc(4)!=90||abc(5)!=90||abc(6)!=90)
- // {fprintf(stderr,"#!!!! WARNING: non orthogonal lattice not supported yet !!!!!!!\n");}
-   Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];}
-  
+  // input file header and mfconf------------------------------------------------------------------
+   n=headerinput(fin_coq,fout,gp,cs);
 
 // load spinsconfigurations and check which one is nearest -------------------------------   
 
-   j=fseek(fin_coq,pos,SEEK_SET); 
-    if (j!=0){fprintf(stderr,"Error: wrong sps file format\n");exit (EXIT_FAILURE);}
-   
- for (delta=1000.0;feof(fin_coq)==0                      //end of file
-                    &&(n=inputline(fin_coq,numbers))>=8   //error in line reading (8 old format, 9 new format)
-		    ;)
+     check_for_best(fin_coq,strtod(argv[1],NULL),strtod(argv[2],NULL),strtod(argv[3],NULL),strtod(argv[4],NULL),savspins,T,Ha,Hb,Hc,outstr);
 
-    { spincf spins(1,1,1,(int)numbers[9],(int)numbers[10]);
-      spins.load(fin_coq);
-      ddT=strtod(argv[1],NULL)-numbers[3];ddT*=ddT;
-      ddHa=strtod(argv[2],NULL)-numbers[5];ddHa*=ddHa;
-      ddHb=strtod(argv[3],NULL)-numbers[6];ddHb*=ddHb;
-      ddHc=strtod(argv[4],NULL)-numbers[7];ddHc*=ddHc;
-      dd=sqrt(ddT+ddHa+ddHb+ddHc+0.000001);
-      if (dd<delta)
-       {delta=dd;
-        sprintf(outstr,"T=%g Ha=%g Hb=%g Hc=%g n=%g spins nofatoms=%i in primitive basis nofcomponents=%i",numbers[3],numbers[5],numbers[6],numbers[7],numbers[8],(int)numbers[9],(int)numbers[10]);
-        savspins=spins;T=numbers[3];Ha=numbers[5];Hb=numbers[6];Hc=numbers[7];
-        
-       }
-    }
   fclose (fin_coq);
 
   printf("%s - momentum configuration <J(i)>\n",outstr);
   fprintf(fout,"#! %s - momentum configuration <J(i)>\n",outstr);
-  savspins.printall(fout,abc,r,x,y,z,cffilenames,gJ);
+  savspins.printall(fout,cs);
   savspins.print(stdout);
   fclose (fout);
   
@@ -158,31 +91,32 @@ abc=0;
 
 // here the 3d file should be created
     fin_coq = fopen_errchk ("./results/spinsab.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,1,gJJ);
+Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=cs.gJ[i];}
+   savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,1,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./results/spinsac.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,2,gJJ);
+     savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,2,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./results/spinsbc.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,3,gJJ);
+     savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,3,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./results/spins3dab.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,4,gJJ);
+     savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,4,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./results/spins3dac.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,5,gJJ);
+     savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,5,gJJ);
     fclose (fin_coq);
     fin_coq = fopen_errchk ("./results/spins3dbc.eps", "w");
-     savspins.eps3d(fin_coq,outstr,abc,r,x,y,z,6,gJJ);
+     savspins.eps3d(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,6,gJJ);
     fclose (fin_coq);
 
     fin_coq = fopen_errchk ("./results/spins.fst", "w");
-     savspins.fst(fin_coq,outstr,abc,r,x,y,z,gJJ);
+     savspins.fst(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,gJJ);
     fclose (fin_coq);
 
     
    fin_coq = fopen_errchk ("./results/spins_prim.fst", "w");
-     savspins.fstprim(fin_coq,outstr,abc,r,x,y,z,gJJ);
+     savspins.fstprim(fin_coq,outstr,cs.abc,cs.r,cs.x,cs.y,cs.z,gJJ);
     fclose (fin_coq);
 
              Vector hkl(1,3);hkl=0;
@@ -193,17 +127,17 @@ abc=0;
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins.jvx", "w");
     gp.showprim=0;gp.spins_wave_amplitude=0;
-     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,0.0,savev_real,savev_imag,hkl);
+     savspins.jvx(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins_prim.jvx", "w");
      gp.showprim=1;
-     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,0.0,savev_real,savev_imag,hkl);
+     savspins.jvx(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 if (argc>=9){// try a spinwave picture
-             double h,k,l,E,ddh,ddk,ddl,ddE;
+             double E,ddh,ddk,ddl,ddE;
              double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_static_moment_direction=1; 
              fin_coq = fopen_errchk ("./results/mcdisp.qev", "rb");
              // input file header ------------------------------------------------------------------
@@ -264,19 +198,19 @@ if (argc>=9){// try a spinwave picture
                sprintf(filename,"./results/spins.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                gp.showprim=0;
-                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,phase,savev_real,savev_imag,hkl);
+                     savspins.jvx(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
                sprintf(filename,"./results/spins_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                gp.showprim=1;
-                     savspins.jvx(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,phase,savev_real,savev_imag,hkl);
+                     savspins.jvx(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);  
           }
 
 
-  for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
+  for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}
   return 0;
 }
 

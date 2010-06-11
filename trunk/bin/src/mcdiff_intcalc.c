@@ -45,7 +45,7 @@ int getint(jjjpar ** jjjpars,int hi,int ki,int li,float thetamax,Vector rez1,Vec
 
 
             double s,Q,FQ,FQL,sintheta,qr,sin2theta,ovallt,mux,muy,muz;
-            int i,j;
+            int i;
             Vector Qvec(1,3);
             //calculate d spacing and intensity for h,k,l triple (d,intmag,ikern)************
             Qvec=rez1*(double)(hi) + rez2*(double)(ki)  + rez3*(double)(li) ;
@@ -259,14 +259,15 @@ int i;
 
 if(code==0){ m = 0;// reset m
  double qmax;//,rr;
- int hmax,kmax,lmax,ahi,aki,ali,sh,sk,sl,htrue,ktrue,ltrue,msort,hi,ki,li;
+ int htrue,ktrue,ltrue,msort,hi,ki,li;
  qmax = 4.0 * PI * sin(thetamax / 180 * PI) / lambda;
 // rr=r1*r1; hmax =(int)( qmax / 2 / PI * sqrt(rr) + 1);
 // rr=r2*r2; kmax =(int)( qmax / 2 / PI * sqrt(rr) + 1);
 // rr=r3*r3; lmax =(int)( qmax / 2 / PI * sqrt(rr) + 1);
 
      Matrix pstar(1,3,1,3);  // inserted 10.5.10 MR to make sure all hkls are probed
-     pstar=(rez1,rez2,rez3);
+     //pstar=(rez1,rez2,rez3);
+     for(i=1;i<=3;++i){pstar(i,1)=rez1(i);pstar(i,2)=rez2(i);pstar(i,3)=rez3(i);}
      nlimits_calc(nmin, nmax, qmax, pstar);
      // problem: we want to find all lattice vectors Rn=ni*ai which are within a
      // sphere of radius r from the origin (ai = column vectors of matrix a)
@@ -331,12 +332,12 @@ if(code==0){ m = 0;// reset m
             }
           }
    }}// NEXT li NEXT ki
-   printf("%i \%",100* (hi-(int)nmin(1))/((int)nmax(1)-(int)nmin(1)));
+   printf("%i %s",100* (hi-(int)nmin(1))/((int)nmax(1)-(int)nmin(1)),"%");
   }
  printf("\n");
  }
 else
- {for(i=1;i<=m;++i){int ii;
+ {for(i=1;i<=m;++i){
                 complex <double> mqx=0,mqx2=0,mqxy=0;
                 complex <double> mqy=0,mqy2=0,mqxz=0;
                 complex <double> mqz=0,mqz2=0,mqyz=0;
@@ -360,7 +361,7 @@ else
                my2[i]=(double)sqrt(scale)*mqy2;
                mz2[i]=(double)sqrt(scale)*mqz2;
                           }
-              printf("%i \%",(int)(100* (double)i/(double)m));
+              printf("%i %s",(int)(100* (double)i/(double)m),"%");
                   }
  }
 

@@ -1,3 +1,25 @@
+#!MODULE=../../bin/ic1ion_module/ic1ion.so
+#<!--mcphase.sipf-->
+#***************************************************************
+# Single Ion Parameter File for Module ic1ion for
+# mcphas version 3.0
+# - program to calculate static magnetic properties
+# reference: M. Rotter JMMM 272-276 (2004) 481
+# mcdisp version 3.0
+# - program to calculate the dispersion of magnetic excitations
+# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+# mcdiff version 3.0
+# - program to calculate neutron and magnetic xray diffraction
+# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
+#***************************************************************
+
+
+#-----------
+IONTYPE=Mn3+
+#-----------
+nof_electrons=4
+
+
 #Neutron magnetic form factor coefficients
 FFj0A= 0.4198 FFj0a=14.2829 FFj0B= 0.6054 FFj0b= 5.4689 FFj0C= 0.9241 FFj0c=-0.0088 FFj0D=-0.9498
 FFj2A= 1.2427 FFj2a=14.9966 FFj2B= 1.9567 FFj2b= 6.1181 FFj2C= 0.5732 FFj2c= 2.2577 FFj2D= 0.0031
@@ -10,7 +32,7 @@ FFj4A=-0.6603 FFj4a=13.6066 FFj4B= 0.2322 FFj4b= 6.2175 FFj4C= 0.4104 FFj4c= 1.7
 # the 3D4 radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)
 #------------------------------------------------------------------------------------------------------
 N1=3 XI1=3.60415 C1=0.34299
-N2=3 XI2=10.9399 C2=0.03216.02707
+N2=3 XI2=10.9399 C2=0.03216
 N3=3 XI3=5.67612 C3=0.30117
 N4=3 XI4=2.43096 C4=0.42553
 N5=3 XI5=1.38690 C5=0.01531
@@ -26,3 +48,12 @@ SCATTERINGLENGTHIMAG=0
 #  ... note: - if an occupancy other than 1.0 is needed, just reduce 
 #              the scattering length linear accordingly
 
+#---------------------------------------------------------
+# Radial Matrix Elements
+#---------------------------------------------------------
+#<r^2> in units of a0^2 a0=0.5292 Angstroem
+R2=1.2774
+#<r^4> in units of a0^4 a0=0.5292 Angstroem
+R4=3.43039
+#<r^6> in units of a0^6 a0=0.5292 Angstroem
+R6=16.4202

@@ -56,14 +56,13 @@ $colx=$ARGV[0];shift @ARGV;
 
    print ">\n";
 
-   $stappoint=$sta/$i;
-
-   $absppoint=$abs/$i;
 
    print "sum of values sum=".$sum."\n";
 
    print "number of points n=".$i."\n";
-
+   if($i<1){$i=1;}
+   $stappoint=$sta/$i;
+   $absppoint=$abs/$i;
    print "standard deviation sum_i (value_i*value_i) sta=".$sta."\n";
 
    print "standard deviation/n stappoint=".$stappoint."\n";

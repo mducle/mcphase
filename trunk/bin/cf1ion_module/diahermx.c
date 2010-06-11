@@ -59,7 +59,7 @@ extern MATRIX  *mx_ewev();
 extern MATRIX  *mx_sub() ; /* Matrizen subtrahieren   */
 extern MATRIX  *mx_alloc();/* Speicher fuer Matrix holen */
 extern KOMPLEX *cdiv();    /* komplexe Zahlen dividieren */
-extern KOMPLEX *csqrt();   /* Quadratwurzel komplexer Zahlen */
+extern KOMPLEX *csqroot();   /* Quadratwurzel komplexer Zahlen */
 extern KOMPLEX *vskalar(); /*         <a|b>                  */
 extern DOUBLE  cnorm();    /* Euklidnorm eines komplexen Vektors */
  
@@ -79,7 +79,9 @@ extern DOUBLE  log();      /* Logarithmus               */
 
 extern FILE *fopen_errchk();         /* definiert in EINGABE.C*/
  
- 
+INT test_nullmatrix();
+void write_title();
+INT gi_entartung();
 /*----------------------------------------------------------------------------
                                diagonalisiere()
 ------------------------------------------------------------------------------*/
@@ -291,7 +293,7 @@ SETUP *create_setup(setup)  /* setupfile erzeugen */
 {
    FILE *fopen(),*fp;
    CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
-   CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
+   CHAR *t11,*t12,*t13;/*,*t14,*t15,*t16,*t17,*t18,*t19,*t20;*/
    DOUBLE accuracy(),log();
    INT stelle;
  
@@ -383,11 +385,11 @@ return(setup);
 /*----------------------------------------------------------------------------
                                write_title()
 ------------------------------------------------------------------------------*/
-write_title(fp)  /* setupfile erzeugen */
+void write_title(fp)  /* setupfile erzeugen */
    FILE *fp;
 {
    CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
-   CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
+   CHAR *t11,*t12,*t13,*t14,*t15,*t16;/*,*t17,*t18,*t19,*t20;*/
  
 t01=" -----------------------\n";
 t02="| VERSION : %6.2f      |\n";
@@ -424,11 +426,11 @@ fprintf(fp,t16);
 /*----------------------------------------------------------------------------
                                write_titlecom()
 ------------------------------------------------------------------------------*/
-write_titlecom(fp)  /* setupfile erzeugen */
+void write_titlecom(fp)  /* setupfile erzeugen */
    FILE *fp;
 {
    CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
-   CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
+   CHAR *t11,*t12,*t13,*t14,*t15,*t16;/*,*t17,*t18,*t19,*t20;*/
  
 t01="#{-----------------------\n";
 t02="#{VERSION : %6.2f      |\n";
@@ -496,7 +498,7 @@ INT    null(a,macheps) /* ist |a|< macheps ? */
 /*----------------------------------------------------------------------------
                                null_mx_error()
 ------------------------------------------------------------------------------*/
-null_mx_error()
+void null_mx_error()
 {
   clearscreen;
   printf("\nThe total Hamiltonian is zero .\n");
@@ -628,8 +630,7 @@ EWPROBLEM *ordnen_ew( ewproblem,overwrite )
       EWPROBLEM *ewproblem;
       INT       overwrite;
 {
-   INT *nummer,level,i,j,*sort();
-   INT dim;
+   INT *nummer,level,i,*sort();
    VEKTOR *ew;
    DOUBLE *werte;
    COMHES *comhes;
@@ -692,7 +693,7 @@ INT *sort(werte,nummer,anz)
  
 */
 /* Entartung der Eigenwerte bestimmen */
-/* Energienievaus shiften ,sodass kleinster*                             /
+/* Energienievaus shiften ,sodass kleinster*/
 /* Eigenwert Null ist */
  
 EWPROBLEM *entartung( ewproblem,overwrite )
@@ -703,8 +704,6 @@ EWPROBLEM *entartung( ewproblem,overwrite )
     VEKTOR    *ew;
     INT       *nummer,*gi,level,i,zeile,spalte;
     DOUBLE    eps,shift;
-    COMHES *comhes;
- 
  
     ew        =  ewproblem->eigenwerte;
     nummer    =  ewproblem->energie_nummer;
@@ -803,7 +802,7 @@ EWPROBLEM *orthonormalisieren( ewproblem )/* Eigenvektoren */
     VEKTOR *v,*w,*c,*d,*ortho;
     VEKTOR *vr_normalisieren();
     KOMPLEX *vw;
-    INT    spalte,i,k,*gi;
+    INT    spalte,k,*gi;
     COMHES *comhes;
  
     comhes = ewproblem -> comhes;
@@ -955,7 +954,7 @@ COMLR2 *comlr2(ewproblem,low,upp,comhes,macheps)/*diagonalisiertHESSENBERGFORM*/
     INT    its=0;
     INT    i,j,k,m,en;
     DOUBLE sr,si,tr,ti,xr,xi,yr,yi,zr,zi,norm,e1,e2;
-    KOMPLEX *dummy,*cdiv(),*csqrt();
+    KOMPLEX *dummy,*cdiv(),*csqroot();
     MATRIX *ev;                                /* Eigenvektoren */
     VEKTOR *ew;                                /* Eigenwerte    */
     MATRIX *mx;
@@ -1061,7 +1060,7 @@ cont1:
               yr    = ( R(mx,en-1,en-1)-sr  )/2.0;
               yi    = ( I(mx,en-1,en-1)-si  )/2.0;
  
-              dummy = csqrt( yr*yr-yi*yi+xr , 2.0*yr*yi+xi );
+              dummy = csqroot( yr*yr-yi*yi+xr , 2.0*yr*yi+xi );
               zr = RT(dummy);
               zi = IT(dummy);
               free_(dummy);
@@ -1290,7 +1289,7 @@ fail:
 /*----------------------------------------------------------------------------
                                  info_ewproblem()
 ------------------------------------------------------------------------------*/
-info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
+void info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
     EWPROBLEM *ewproblem;
 {
     KOMPLEX *dummy;
@@ -1302,7 +1301,7 @@ info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
     VEKTOR *ew,*v,*vir,*vis;
     DOUBLE re,im,macheps,shift;
     DOUBLE is_null();
-    INT    z,s,dim,its,i,j,k,ze,sp,*nummer;
+    INT    z,s,dim,its,ze,sp,*nummer;
     INT    *gi,zeile,spalte1,spalte2;
     CHAR   *text;
     CHAR   *textmx  = "RM(%2d,%2d) = %20.12e     IM(%2d,%2d) = %20.12e\n";
@@ -1351,7 +1350,7 @@ info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
     fprintf(out,"| Answer :                                             |\n");
     fprintf(out,"---------------------------------------------------------\n");
     fprintf(out,"\n");
-    if( text==FAILED ){ fprintf(out," Iteration has failed .\n");
+    if(text==FAILED){ fprintf(out," Iteration has failed .\n");
                         exit(1);fclose(out);}
     fprintf(out,"The interation has finsihed .\n");
     fprintf(out,"The calculated accuracy is                 : %6.1e.\n",

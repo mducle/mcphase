@@ -3,15 +3,9 @@
  * Author: Martin Rotter
  **************************************************************/
 
-#define MAXNOFCHARINLINE 1000
+
 #include "../../version"
-#include<cstdio>
 #include "martin.h"
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
 #include<par.hpp>
 
 /**********************************************************************/

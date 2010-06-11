@@ -14,6 +14,7 @@
 
 
 
+
 #define SMALL 1e-6   //!!! must match SMALL in mcdisp.c and ionpars.cpp !!!
                      // because it is used to decide whether for small transition
 		     // energy the matrix Mijkl contains wn-wn' or wn/kT
@@ -395,10 +396,10 @@ void jjjpar::save_sipf(const char * path)
 /*****************************************************************************************/
 //constructor with file handle of mcphas.j
 jjjpar::jjjpar(FILE * file,int nofcomps) 
-{ FILE * cf_file;   
+{   
   char instr[MAXNOFCHARINLINE];
   cffilename= new char [MAXNOFCHARINLINE];
-  int i,j,i1,j1,k1,l;
+  int i,j,i1,j1,k1;
   double gjcheck;
   float nn[MAXNOFNUMBERSINLINE];
   nn[0]=MAXNOFNUMBERSINLINE;
@@ -570,7 +571,7 @@ jjjpar::jjjpar (const jjjpar & p)
   cffilename= new char [strlen(p.cffilename)+1];
   strcpy(cffilename,p.cffilename);
   if (p.module_type==1||p.module_type==0)  ABC=p.ABC;
-  if (p.module_type==1||p.module_type==0 && p.mcalc_parstorage.Cols()>0 && p.mcalc_parstorage.Rows()>0)
+  if ((p.module_type==1||p.module_type==0) && (p.mcalc_parstorage.Cols()>0) && (p.mcalc_parstorage.Rows()>0))
   {
      mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage.Rlo(),p.mcalc_parstorage.Rhi(),p.mcalc_parstorage.Clo(),p.mcalc_parstorage.Chi());
      mcalc_parstorage = p.mcalc_parstorage;
@@ -633,3 +634,8 @@ jjjpar::~jjjpar ()
  }
 
 
+// for test
+/*int main(int argc, char **argv)
+{
+  jjjpar *d=new jjjpar(1,2,3, argv[1]);
+}*/

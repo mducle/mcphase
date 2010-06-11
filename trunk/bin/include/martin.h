@@ -8,6 +8,7 @@
 #define PI 3.141592654
 #define KB 0.0862     // Boltzmanns constant in mev/K
 #define MU_B  5.788378E-02 // Bohrmagneton in meV/tesla
+#define MAXNOFCHARINLINE 7024
 
 #if __GNUC__ > 2
 #include <unistd.h>
@@ -18,6 +19,7 @@
 #include<cstdlib>
 #include<cstring>
 #include<cmath>
+#include<ctime>
 #include <stdio.h>
 #include<vector.h>
 

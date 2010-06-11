@@ -82,7 +82,7 @@ jq::jq (int n1,int n2,int n3,mdcf & m)
 
 //kopier-konstruktor
 jq::jq (const jq & p)
-{ int i,j,ind;
+{ int ind;
   nofa=p.nofa;nofb=p.nofb;nofc=p.nofc;
   nofatoms=p.nofatoms;
   nofcomponents=p.nofcomponents;

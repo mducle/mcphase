@@ -1,13 +1,5 @@
 #makefile for program cfield
 
-OSTYPE=$(shell uname)
-#  (linux windows)
-ifeq ($(OSTYPE),Linux)
- LINUX = linux
-else
- WINDOWS = windows
-endif
-
 vpath %.h  ../include
 vpath %.hpp ../include
 vpath %.o  ../src/vector
@@ -17,21 +9,8 @@ vpath %.o  ../src/vector
 # Intel Pentium PC, use -m486 for 486 CPU or -mpentium for Pentium Systems
 ###########################################################################
 
-# C compiler 
-#CC= g++ -pipe
-#COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -m486 -x c 
-#CC= g++ 
-#COPTS= -ansi -O0 -x c 
-
-# C++ compiler
-#CCC= g++ -pipe
-#CCC= g++ 
-#CCOPTS= -O3 -fomit-frame-pointer -fforce-addr -mpentium -x c++ 
-#CCOPTS= -O0 -Wall -DDEBUG
-# ... define in makefile.common
 include ../src/Makefile.common
 
-#LIBL= /usr/lib/libfl.a
 ###########################################################################
 ### include directory: don't change !					  #
 ###########################################################################
@@ -45,10 +24,10 @@ INCLUDE= ../../include
 .SUFFIXES: .cc .o
 
 .c.o: 
-	${CC} -c ${COPTS} -Wno-format -I ${INCLUDE} $<
+	${CC} -c ${COPTS}  -I ${INCLUDE} $<
 
 .cc.o: 
-	${CCC} -c ${CCOPTS} -Wno-format -I ${INCLUDE} $<
+	${CCC} -c ${CCOPTS}   -I ${INCLUDE} $<
 
 ###########################################################################
 ###########################################################################
@@ -61,9 +40,23 @@ INCLDIRS =      -I. \
 		-I/local/lib  \
 		-I/usr/X11R6/include
 
+#  Operating system
+OSTYPE=$(shell uname)
+#  (linux windows)
+ifneq (,$(findstring $(OSTYPE),Linux))
+ LINUX = linux
+else
+ WINDOWS = windows
+ifneq (,$(findstring CYGWIN,$(shell uname)))
+ CYGWIN=1
+endif
+endif
 
+ifdef WINDOWS
+EXE=.exe
+endif
 
-all : cfieldrout.o cfield.so cfield so1ion module.o
+all : cfieldrout.o cfield.so ../cfield$(EXE) ../so1ion$(EXE) module.o
 
 VECOBJS= matpack.o sortdbl.o sort2dbl.o sort3dbl.o ivector.o \
 		imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o \
@@ -82,20 +75,17 @@ so1ion.o: types.c main.c
 # used for internal module in mcphas and mcdisp
 cfieldrout.o: cfieldrout.c $(VECOBJS) $(CFOBJS) 
 
-#	$(CC) -o cfieldrout.o cfieldrout.c  $(INCLDIRS)
-
-
 cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS) 
-	$(CCC) $(CCOPTS) -Wall -o cfield.so $^ -shared $(LDFLAGS)
+	g++  -Wall -o cfield.so $^ -shared $(LFLAGS)
 
-cfield: cfield.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) $(CCOPTS) -Wall -o ../cfield $^ $(LDFLAGS)
+../cfield$(EXE): cfield.o  $(VECOBJS) $(CFOBJS)
+	g++  -Wall -o ../cfield $^ $(LFLAGS)
 
-so1ion: so1ion.o  $(VECOBJS) $(CFOBJS)
-	$(CCC) $(CCOPTS) -Wall -o ../so1ion $^ $(LDFLAGS)
+../so1ion$(EXE): so1ion.o  $(VECOBJS) $(CFOBJS)
+	g++  -Wall -o ../so1ion $^ $(LFLAGS)
 
 module.o: module.c 
-	$(CCC) $(CCOPTS) -Wall -c module.c $(INCLDIRS) $(LDFLAGS)
+	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) $(LFLAGS)
 
 clean:
 	rm -vf ./*.o ./*.info ./*.parameter ./*.output

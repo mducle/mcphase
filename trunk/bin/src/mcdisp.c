@@ -15,7 +15,7 @@
                        // used to give error if recalculation of mcdisp.trs
 		       // energies gives different results than file
 
-#define MAXNOFCHARINLINE 1024
+
 
 #include <mcdisp.h>
 #include "../../version"
@@ -274,9 +274,9 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   double jq0=0;
   Vector hkl(1,3),q(1,3);
   Vector mf(1,ini.nofcomponents),extmf(1,ini.extended_eigenvector_dimension);
-  int jmin,tl,tll;
+  int jmin;
   IntVector noftransitions(1,inputpars.nofatoms); // vector to remember how many transitions are on each atom
-  int offset[inputpars.nofatoms+1]; // vector to remember where higher  transitions are stored 
+  //int offset[inputpars.nofatoms+1]; // vector to remember where higher  transitions are stored
                                     // (as "separate ions on the same unit cell position")
   mf=0;extmf=0;
    int sort=0;int maxiter=1000000;
@@ -538,7 +538,7 @@ ComplexMatrix Ec(1,dimA,1,ini.extended_eigenvector_dimension);Ec=0;
        // here we if required calculate the higher dimension matrix used to do the
        // extension of chi to higher value of (uncoupled) nofcomponents in intcalc_approx ... needed for chargedensityfluctuations, extended eigenvectors ...
              d=1e10;(*inputpars.jjj[l]).dmcalc(ini.T,extmf,extMijkl,d,md.est(i,j,k,l));
-      
+     
         (* inputpars.jjj[l]).transitionnumber=j1; // put back transition number for 1st transition
 
        j1=md.baseindex(i,j,k,l,jmin); 
@@ -762,7 +762,7 @@ fprintf(stdout,"#q=(%g,%g,%g)\n",hkl(1),hkl(2),hkl(3));
    int thrcount=0, ithread=0, num_threads_started=-1;
 #endif
  // calculate Js,ss(Q) summing up contributions from the l=1-paranz parameters
-   int sl,sll,sublat;
+   
    for(ll=1;ll<=inputpars.nofatoms;++ll)
    { //sum up l.th neighbour interaction of crystallographic atom ll
      // 1. transform dn(l) to primitive lattice and round it to integer value
@@ -928,7 +928,7 @@ if (do_jqfile==1){
        else           {if(Tn(i2)>jq0)
                          {if(jqsta<0){jqsta=0;}
                           jqsta+=(Tn(i2)-jq0)*(Tn(i2)-jq0);}
-                       else{if(jqsta<0&Tn(i2)-jq0>jqsta){jqsta=Tn(i2)-jq0;}}
+                       else{if((jqsta<0)&(Tn(i2)-jq0>jqsta)){jqsta=Tn(i2)-jq0;}}
                       }
        if (ini.hkllist==1)
 	             {double test;

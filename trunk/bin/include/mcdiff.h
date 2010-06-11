@@ -2,15 +2,14 @@
 
 
 
-#define MAXNOFCHARINLINE 1000
-#define MAXNOFREFLECTIONS 10000
+
+#define MAXNOFREFLECTIONS 6000
 #define SMALL 1e-8
 #include "../../version"
 #include <mpspecfunp.h>
 #include <martin.h>
 #include <myev.h>
 #include <jjjpar.hpp>
-#include<ctime>
 #include <complex>
 #include<cstddef>
 #include<spincf.hpp>

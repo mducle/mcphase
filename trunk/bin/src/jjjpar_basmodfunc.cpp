@@ -77,7 +77,9 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
      {if(strcmp(modulefilename,"cfield")==0)
      {module_type=2;fprintf (stderr,"#[internal]\n");
       fclose(cf_file);cf_file = fopen_errchk (sipffilename, "rb"); // reopen file
+       
       iops=new ionpars(cf_file);
+
       int dj;dj=(int)(2*J()+1);
       est=ComplexMatrix(0,dj,1,dj);
       mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
@@ -125,37 +127,46 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
              ABC=Vector(1,1);
 	    }
     fprintf(stderr,"\n");
-
-  char * error;module_type=0;
+module_type=0;
 #ifdef __linux__
+  char * error;
   handle=dlopen (modulefilename,RTLD_NOW | RTLD_GLOBAL);
   if (!handle){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
                if ((error=dlerror())!=NULL)
 	         {fprintf (stderr,"%s\n",error);}
 	       exit (EXIT_FAILURE);
 	      }
-  m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))dlsym(handle,"mcalc");
+  //m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))dlsym(handle,"mcalc");
+  *(void **)(&m)=dlsym(handle,"mcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s\n",error);exit (EXIT_FAILURE);}
-  dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))dlsym(handle,"dmcalc");
+  //dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))dlsym(handle,"dmcalc");
+  *(void **)(&dm)=dlsym(handle,"dmcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);dm=NULL;}
-  mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))dlsym(handle,"mq");
+  //mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))dlsym(handle,"mq");
+  *(void **)(&mq)=dlsym(handle,"mq");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mq=NULL;}
-  estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"estates");
+  //estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"estates");
+  *(void **)(&estates)=dlsym(handle,"estates");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);estates=NULL;
                                 est=ComplexMatrix(0,2,1,2);est=0;// not used, just initialize to prevent errors
                                }
-  mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"mcalc_parameter_storage_matrix_init");
+  //mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))dlsym(handle,"mcalc_parameter_storage_matrix_init");
+  *(void **)(&mcalc_parameter_storage)=dlsym(handle,"mcalc_parameter_storage_matrix_init");
+
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);mcalc_parameter_storage=NULL;
                                 mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
                                }
 
-  ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))dlsym(handle,"dncalc");
+  //ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))dlsym(handle,"dncalc");
+  *(void **)(&ddnn)=dlsym(handle,"dncalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);ddnn=NULL;}
 
-  sd_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))dlsym(handle,"spindensity_mcalc");
+  //sd_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))dlsym(handle,"spindensity_mcalc");
+  *(void **)(&sd_m)=dlsym(handle,"spindensity_mcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);sd_m=NULL;}
 
-  od_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))dlsym(handle,"orbmomdensity_mcalc");
+  //od_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))dlsym(handle,"orbmomdensity_mcalc");
+  *(void **)(&od_m)=dlsym(handle,"orbmomdensity_mcalc");
   if ((error=dlerror())!=NULL) {fprintf (stderr,"jjjpar::jjjpar %s -continuing\n",error);od_m=NULL;}
 
 
@@ -166,29 +177,37 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
 	       exit (EXIT_FAILURE);
 	      }
 
-    m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mcalc");
-     if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %d  module %s loading function mcalc not possible\n",GetLastError(),modulefilename);exit (EXIT_FAILURE);}
-    dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))GetProcAddress(handle,"dmcalc");
-     if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d module %s loading function dmcalc not possible - continuing\n",GetLastError(),modulefilename);}
-    mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mq");
-     if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mq not possible - continuing\n",GetLastError(),modulefilename);}
-    estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"estates");
-     if (estates==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function estates not possible - continuing\n",GetLastError(),modulefilename);
+    //m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mcalc");
+    *(void **)(&m)=GetProcAddress(handle,"mcalc");
+     if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %s  module %s loading function mcalc not possible\n",GetLastError(),modulefilename);exit (EXIT_FAILURE);}
+    //dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))GetProcAddress(handle,"dmcalc");
+    *(void **)(&dm)=GetProcAddress(handle,"dmcalc");
+     if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s module %s loading function dmcalc not possible - continuing\n",GetLastError(),modulefilename);}
+    //mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mq");
+    *(void **)(&mq)=GetProcAddress(handle,"mq");
+     if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s  module %s loading function mq not possible - continuing\n",GetLastError(),modulefilename);}
+    //estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"estates");
+    *(void **)(&estates)=GetProcAddress(handle,"estates");
+     if (estates==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s  module %s loading function estates not possible - continuing\n",GetLastError(),modulefilename);
                                 est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
                                 est=0;
                                }
-    mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
+    //mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
+    *(void **)(&mcalc_parameter_storage)=GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
     if (mcalc_parameter_storage==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mcalc_parameter_storage_matrix_init not possible - continuing\n",GetLastError(),modulefilename);
                                   mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
                                   }
 
-  ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
+  //ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
+    *(void **)(&dnn)=GetProcAddress(handle,"dncalc");
      if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",GetLastError(),modulefilename);}
 
-    sd_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"spindensity_mcalc");
+    //sd_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"spindensity_mcalc");
+    *(void **)(&sd_m)=GetProcAddress(handle,"spindensity_mcalc");
     if (sd_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function spindensity_mcalc not possible - continuing\n",GetLastError(),modulefilename);}
 
-    od_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"orbmomdensity_mcalc");
+    //od_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"orbmomdensity_mcalc");
+    *(void **)(&od_m)=GetProcAddress(handle,"orbmomdensity_mcalc");
     if (od_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function orbmomdensity_mcalc not possible - continuing\n",GetLastError(),modulefilename);}
 
 #endif
@@ -211,7 +230,6 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
   DWF=0;  gJ=0;
 
   cf_file = fopen_errchk (sipffilename, "rb");
-
   while(feof(cf_file)==false)
   {fgets(instr, MAXNOFCHARINLINE, cf_file);
    if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
@@ -535,9 +553,9 @@ return R;
      return rk;
    }
 
-   int jjjpar::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);if(module_type==2||module_type==4){(*iops).r2=r2;}}
-   int jjjpar::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);if(module_type==2||module_type==4){(*iops).r4=r4;}}
-   int jjjpar::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);if(module_type==2||module_type==4){(*iops).r6=r6;}}
+   int jjjpar::r2_from_radial_wavefunction() {r2=rk_from_radial_wavefunction(2);if(module_type==2||module_type==4){(*iops).r2=r2;}return true;}
+   int jjjpar::r4_from_radial_wavefunction() {r4=rk_from_radial_wavefunction(4);if(module_type==2||module_type==4){(*iops).r4=r4;}return true;}
+   int jjjpar::r6_from_radial_wavefunction() {r6=rk_from_radial_wavefunction(6);if(module_type==2||module_type==4){(*iops).r6=r6;}return true;}
 
 void jjjpar::save_radial_wavefunction(const char * filename)
    {double r=0.1;
@@ -553,9 +571,9 @@ void jjjpar::save_radial_wavefunction(const char * filename)
     fprintf(fout,"# nuclear data tables 14 (1974) 177-478 for the transition metals\n");
     fprintf(fout,"# for rare earth parameters can be found in Freeman and Watson PR 127 (1962) 2058\n");
     fprintf(fout,"# and O. Sovers, J. Phys. Chem. Solids Vol 28 (1966) 1073\n");
-    fprintf(fout,"# the parameters used are: \n");
+    fprintf(fout,"# the parameters used are (a0=0.5292 A): \n");
     int p;
-    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"#! N%i=%g XI%i=%g C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
+    for(p=1;p<=9;++p){if(Np(p)!=0){fprintf(fout,"#! N%i=%g XI%i=%g /a0 C%i=%g\n",p,Np(p),p,Xip(p),p,Cp(p));}}
     fprintf(fout,"# r[A]  vs R(r)[1/A^1.5]\n");
     for(r=0.01;r<=10;r*=1.05){fprintf(fout,"%8.8g  %8.8g\n",r,radial_wavefunction(r));}
     fclose(fout);
@@ -822,14 +840,14 @@ void jjjpar::orbmomdensity_mcalc (Vector &mom,int  xyz, double & T, Vector &  gj
 }
 
 //***********************************************************************
-// sub for calculation of spin density given a radiu R and polar angles teta,
+// sub for calculation of spin density component given a radiu R and polar angles teta,
 // fi and expansion coeff. of Zlm R^2(r)
 //***********************************************************************
 double jjjpar::spindensity_calc (double & teta,double & fi,double & R, Vector & moments)
 {double ro,rr;
 
 if (R>4.0||R<0){ro=0;}else{
- int l,m;
+
  Matrix a(0,6,-6,6); 
 //a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
 // Indices for spindensity
@@ -837,27 +855,62 @@ if (R>4.0||R<0){ro=0;}else{
 //          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849 
 int k[] = {-1,0, 1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
 int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
-
-int i;
-for (i=1;i<=49;++i){a(k[i],q[i])=moments(i);}
-
 // R given in Angstroems, returns R(r) in units of 1/A^1.5
-  rr=radial_wavefunction(R);
-  rr=rr*rr;// then the spindensity will be in units of 1/A^3
-  ro=rr*zlmsum(a,teta,fi);
+   rr=radial_wavefunction(R);
+   rr=rr*rr;// then the spindensity will be in units of 1/A^3
+int i;
+ if(moments.Hi()==49)
+ {
+ for (i=1;i<=49;++i){a(k[i],q[i])=moments(i);}
+   ro=rr*zlmsum(a,teta,fi);
+ }
+ else
+ {fprintf(stderr,"Error jjjpar.spindensitycalc: dimension of moments must be 49 or 3x49=147\n");
+  exit(EXIT_FAILURE);
+ }
  }
 return ro;
 }
 
 //***********************************************************************
-// sub for calculation of orbital moment density given a radiu R and polar angles teta,
+// sub for calculation of spin density vector given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+Vector  jjjpar::spindensity_calc (double & teta,double & fi,double & R, Vector & momentsx,Vector & momentsy,Vector & momentsz)
+{double rr;
+ static Vector mm(1,3);
+if (R>4.0||R<0){mm=0;}else{
+
+ Matrix a(0,6,-6,6);
+//a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
+// Indices for spindensity
+//          0 not used
+//          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849
+int k[] = {-1,0, 1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
+int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
+// R given in Angstroems, returns R(r) in units of 1/A^1.5
+   rr=radial_wavefunction(R);
+   rr=rr*rr;// then the spindensity will be in units of 1/A^3
+int i;
+  for (i=1;i<=49;++i){a(k[i],q[i])=momentsx(i);}
+   mm(1)=rr*zlmsum(a,teta,fi);
+  for (i=1;i<=49;++i){a(k[i],q[i])=momentsy(i);}
+   mm(2)=rr*zlmsum(a,teta,fi);
+  for (i=1;i<=49;++i){a(k[i],q[i])=momentsz(i);}
+   mm(3)=rr*zlmsum(a,teta,fi);
+ }
+return mm;
+}
+
+//***********************************************************************
+// sub for calculation of orbital moment density component given a radiu R and polar angles teta,
 // fi and expansion coeff. of Zlm R^2(r)
 //***********************************************************************
 double jjjpar::orbmomdensity_calc (double & teta,double & fi,double & R, Vector & moments)
 {double ro,rr;
 
 if (R>4.0||R<0){ro=0;}else{
- int l,m;
+
 Matrix a(0,6,-6,6);
 //a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
 // Indices for spindensity
@@ -876,6 +929,169 @@ for (i=1;i<=49;++i){a(k[i],q[i])=moments(i);}
  }
 return ro;
 }
+
+//***********************************************************************
+// sub for calculation of orbital moment density vector given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+Vector jjjpar::orbmomdensity_calc (double & teta,double & fi,double & R, Vector & momentsx, Vector & momentsy, Vector & momentsz)
+{double rr;
+ static Vector mm(1,3);
+if (R>4.0||R<0){mm=0;}else{
+
+Matrix a(0,6,-6,6);
+//a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
+// Indices for spindensity
+//          0 not used
+//          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849
+int k[] = {-1,0, 1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
+int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
+
+int i;
+// R given in Angstroems, returns R(r) in units of 1/A^1.5
+  rr=Fr(R);
+  // then the orbital moment density will be in units of 1/A^3
+
+ for (i=1;i<=49;++i){a(k[i],q[i])=momentsx(i);}
+  mm(1)=rr*zlmsum(a,teta,fi);
+ for (i=1;i<=49;++i){a(k[i],q[i])=momentsy(i);}
+  mm(2)=rr*zlmsum(a,teta,fi);
+ for (i=1;i<=49;++i){a(k[i],q[i])=momentsz(i);}
+  mm(3)=rr*zlmsum(a,teta,fi);
+ }
+return mm;
+}
+
+//***********************************************************************
+// sub for calculation of orbital current density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+Vector jjjpar::currdensity_calc (double & teta,double & fi,double & R, Vector & momentlx, Vector & momently, Vector & momentlz)
+{double ro,rr;
+ static Vector mm(1,3);
+if (R>4.0||R<0){mm=0;}else{
+ 
+ Matrix ax(0,6,-6,6),ay(0,6,-6,6),az(0,6,-6,6);
+ Matrix bx(0,6,-6,6),by(0,6,-6,6),bz(0,6,-6,6);
+ Matrix dx(0,6,-6,6),dy(0,6,-6,6),dz(0,6,-6,6);
+ double ct,st,sf,cf,fp,fm;
+ ct = cos(teta);                      // z/r
+ st = sin(teta);   // y/r=st sfi
+ sf = sin(fi);    // x/r=st cfi
+ cf = cos(fi);
+ Vector Jr(1,3),Jth(1,3),Jfi(1,3);
+ Jr(1)=st*cf; Jr(2)=st*sf; Jr(3)=ct;
+ Jth(1)=ct*cf;Jth(2)=ct*sf;Jth(3)=-st;
+ if(st>0){Jfi(1)=-sf/st;Jfi(2)=cf/st;Jfi(3)=0;}else{Jfi=0;}
+ Vector res(1,3),a(1,3);
+
+//a(0, 0) = moments(calcmagdensity) / sqrt(4.0 * 3.1415);
+// Indices for spindensity
+//          0 not used
+//          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849
+int k[] = {-1,0, 1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
+int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
+
+int i;
+  // R given in Angstroems, returns R(r) in units of 1/A^1.5
+   ro=radial_wavefunction(R);
+   ro=0.9274e-1*ro*ro/R;// then the spindensity will be in units of 1/A^3  ro=R(R);
+   rr=0.9274e-1*Fr(R)/R;
+  // then the orbital moment density will be in units of 1/A^3
+  // then orbital current density will be in mb/A^4
+  // transform to milliAmpere/A^2 by multiplying with 0.9274e-4
+
+for (i=1;i<=49;++i){
+ax(k[i],q[i])=momentlx(i);
+ay(k[i],q[i])=momently(i);
+az(k[i],q[i])=momentlz(i);
+}
+
+for (i=1;i<=49;++i){
+a(1)=momentlx(i);
+a(2)=momently(i);
+a(3)=momentlz(i);
+xproduct(res,a,Jr);
+bx(k[i],q[i])=res(1);
+by(k[i],q[i])=res(2);
+bz(k[i],q[i])=res(3);
+// now blm coefficients are calculated
+
+// we need now the dlm
+dx(k[i],q[i])=res(1);
+dy(k[i],q[i])=res(2);
+dz(k[i],q[i])=res(3);
+
+     // add second term m* Jfi x al-m
+if(q[i]!=0){
+     a(1)=q[i]*ax(k[i],-q[i]);
+     a(2)=q[i]*ay(k[i],-q[i]);
+     a(3)=q[i]*az(k[i],-q[i]);
+     xproduct(res,Jfi,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+     // add third term costheta |m| Jth x alm
+     a(1)=fabs(q[i])*ct*ax(k[i],q[i]);
+     a(2)=fabs(q[i])*ct*ay(k[i],q[i]);
+     a(3)=fabs(q[i])*ct*az(k[i],q[i]);
+     xproduct(res,Jth,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+           }
+// insert here addition of flm term !!
+if(q[i]==-1){
+     a(1)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
+     a(2)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
+     a(3)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
+     xproduct(res,Jth,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+            }
+if(q[i]==+1){
+     a(1)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
+     a(2)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
+     a(3)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
+     xproduct(res,Jth,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+            }
+if(q[i]>+1){
+     fp=-0.5*(sqrt((k[i]+q[i]-1)/(k[i]-q[i]+1))+sqrt((k[i]-q[i]+1)*(k[i]+q[i])));
+     fm=-0.5*(sqrt((k[i]+q[i]-1)/(k[i]-q[i]+1))-sqrt((k[i]-q[i]+1)*(k[i]+q[i])));
+     a(1)=fm*cf*ax(k[i],q[i]-1)-fp*sf*ax(k[i],-q[i]+1);
+     a(2)=fm*cf*ay(k[i],q[i]-1)-fp*sf*ay(k[i],-q[i]+1);
+     a(3)=fm*cf*az(k[i],q[i]-1)-fp*sf*az(k[i],-q[i]+1);
+     xproduct(res,Jth,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+            }
+if(q[i]<-1){
+     fp=-0.5*(sqrt((k[i]-q[i]-1)/(k[i]+q[i]+1))+sqrt((k[i]+q[i]+1)*(k[i]-q[i])));
+     fm=-0.5*(sqrt((k[i]-q[i]-1)/(k[i]+q[i]+1))-sqrt((k[i]+q[i]+1)*(k[i]-q[i])));
+     a(1)=fp*cf*ax(k[i],q[i]+1)-fm*sf*ax(k[i],-q[i]-1);
+     a(2)=fp*cf*ay(k[i],q[i]+1)-fm*sf*ay(k[i],-q[i]-1);
+     a(3)=fp*cf*az(k[i],q[i]+1)-fm*sf*az(k[i],-q[i]-1);
+     xproduct(res,Jth,a);
+      dx(k[i],q[i])+=res(1);
+      dy(k[i],q[i])+=res(2);
+      dz(k[i],q[i])+=res(3);
+            }
+
+}
+
+  mm(1)=ro*zlmsum(bx,teta,fi)+rr*zlmsum(dx,teta,fi);
+  mm(2)=ro*zlmsum(by,teta,fi)+rr*zlmsum(dy,teta,fi);
+  mm(3)=ro*zlmsum(bz,teta,fi)+rr*zlmsum(dz,teta,fi);
+
+ }
+return mm;
+}
+
 
 /************************************************************************************/
 // evaluate F(r) for orbital momentum density (see mynotes, balcar 1975)

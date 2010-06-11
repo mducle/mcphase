@@ -26,7 +26,7 @@ java PostscriptViewer results/.spins.eps results/.spins3dab.eps results/.spins3d
  #displayspins  &
  spinid=$!
   
-if [ X"$1" == X"-v" ]; then
+if [ X"$1" = X"-v" ]; then
 cat << EOF > results/.fe_status.dat
 0 0 0 0 0 0 0 0 0 0 0 0 0
 1 1 1 1 1 1 1 1 1 1 1 1 1

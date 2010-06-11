@@ -3,16 +3,13 @@
  * Author: M. Rotter
  **************************************************/
 
-#define MAXNOFCHARINLINE 1000
-#define MAXNOFATOMS 100
-#define MUB  5.788378E-02 // Bohrmagneton in meV/tesla
-
 #include "../../version"
 #include "spincf.hpp"
 #include "martin.h"
 #include "myev.h"
-#include<par.hpp>
-#include<graphic_parameters.hpp>
+#include <par.hpp>
+#include <graphic_parameters.hpp>
+#include <cryststruct.hpp>
 #include "densities_func.c"
 
 
@@ -43,13 +40,10 @@ FILE * fin_coq, * fout;
  graphic_parameters gp;
   gp.threshhold=strtod(argv[1],NULL);
 
+  cryststruct cs;
    spincf savmf;
-   int i,n,nofatoms=0,nofcomponents=3;
+   int i,n;
    char outstr[MAXNOFCHARINLINE];
-   float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
-   char * cffilenames[MAXNOFATOMS];
-   Matrix r(1,3,1,3);
-   Vector abc(1,6);
 
 // read input file with mf configuration
  if (argc==7)
@@ -58,11 +52,10 @@ FILE * fin_coq, * fout;
  { fin_coq = fopen_errchk ("./results/mcphas.mf", "rb");}
   fout = fopen_errchk ("./results/charges.out", "w");
    // input file header and mfconf------------------------------------------------------------------
-   n=headerinput(fin_coq,fout,gp,abc,r,x,y,z,gJ,cffilenames,nofatoms,nofcomponents);
+   n=headerinput(fin_coq,fout,gp,cs);
  
    int ext_nof_components[MAXNOFATOMS];
-   Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=gJ[i];
-                                       ext_nof_components[i]=48;if (gJ[i]==0){ext_nof_components[i]=51;}
+   for (i=1;i<=n;++i){ext_nof_components[i]=48;if (cs.gJ[i]==0){ext_nof_components[i]=51;}
                                        // here set for 3+48 components, module ic1ion
                                       }
    // check for spinfconfiguration which is nearest to the T/H values chosen by user in command line
@@ -71,9 +64,9 @@ FILE * fin_coq, * fout;
   fclose (fin_coq);
   
 // create plot of spin+chargeconfiguration -----------------------------------------------------------
-  int ii,nt,k,l,m,j;
+  int ii,nt,k,j;
   double lnz,u;
-  float d;
+  
 
   par inputpars("./mcphas.j");
   
@@ -89,7 +82,7 @@ FILE * fin_coq, * fout;
 
   // determine primitive magnetic unit cell
      Matrix p(1,3,1,3);Vector xyz(1,3),dd0(1,3);
-     savmf.calc_prim_mag_unitcell(p,abc,r);
+     savmf.calc_prim_mag_unitcell(p,cs.abc,cs.r);
   // .............................................................................                                
 	       
 //  1. from the meanfieldconfiguration (savmf) the <Olm> have to be calculated for all l=2,4,6
@@ -118,13 +111,13 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
 
           // output atoms and moments in primitive unit cell to stdout
               Vector dd3(1,3);
-              dd3=savmf.pos(i,j,k,ii, abc, r,x,y,z);   
+              dd3=savmf.pos(i,j,k,ii, cs.abc, cs.r,cs.x,cs.y,cs.z);
               dd0=p.Inverse()*dd3;dd0(1)*=savmf.na();dd0(2)*=savmf.nb();dd0(3)*=savmf.nc();
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
-	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
+	              cs.cffilenames[ii],dd3(1)/cs.abc(1),dd3(2)/cs.abc(2),dd3(3)/cs.abc(3),dd0(1),dd0(2),dd0(3));
               printf("{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f \n",
-	              cffilenames[ii],dd3(1)/abc(1),dd3(2)/abc(2),dd3(3)/abc(3),dd0(1),dd0(2),dd0(3));
-                     for(nt=1;nt<=3;++nt){if(gJ[ii]!=0){fprintf(fout," %4.4f",gJ[ii]*moments(nt));}
+	              cs.cffilenames[ii],dd3(1)/cs.abc(1),dd3(2)/cs.abc(2),dd3(3)/cs.abc(3),dd0(1),dd0(2),dd0(3));
+                     for(nt=1;nt<=3;++nt){if(cs.gJ[ii]!=0){fprintf(fout," %4.4f",cs.gJ[ii]*moments(nt));}
                                           else         {fprintf(fout," %4.4f",2*moments(2*nt-1)+moments(2*nt));}
                                          }
                      for(nt=1;nt<=ext_nof_components[ii];++nt)                                                               // this else is when gJ=0: means intermediate coupling
@@ -140,6 +133,7 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
   }}}}
 
 fclose(fout);
+  gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
 
 //print out the long vector of moments 1-48
   printf("%s - spin configuration <Olm>(i)\n",outstr);
@@ -148,37 +142,25 @@ fclose(fout);
              Vector hkl(1,3);hkl=0;
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
-             gp.showprim=0;
-  fout = fopen_errchk ("./results/chargesi.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,10,100,100,
-                       savev_real,savev_imag,0.0,hkl);
-    fclose (fout);
-
-  fout = fopen_errchk ("./results/chargesj.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,100,10,100,
-                       savev_real,savev_imag,0.0,hkl);
-    fclose (fout);
-
-  fout = fopen_errchk ("./results/chargesk.grid", "w");
-     extendedspincf.cd(fout,abc,r,x,y,z,cffilenames,gp,100,100,10,
-                       savev_real,savev_imag,0.0,hkl);
+  fout = fopen_errchk ("./results/charges.grid", "w");
+     extendedspincf.cd(fout,cs,gp,savev_real,savev_imag,0.0,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges.jvx", "w");
     gp.showprim=0;gp.spins_wave_amplitude=0;
-     extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,gp,
-                  0.0,savev_real,savev_imag,hkl,cffilenames);
+     extendedspincf.jvx_cd(fout,outstr,cs,gp,
+                  0.0,savev_real,savev_imag,hkl);
     fclose (fout);
 
   fout = fopen_errchk ("./results/charges_prim.jvx", "w");
      gp.showprim=1;
-    extendedspincf.jvx_cd(fout,outstr,abc,r,x,y,z,gJJ,gp,
-                  0.0,savev_real,savev_imag,hkl,cffilenames);
+    extendedspincf.jvx_cd(fout,outstr,cs,gp,
+                  0.0,savev_real,savev_imag,hkl);
     fclose (fout);
 
 
 if (argc>=10){// try a spinwave picture
-             double h,k,l,E;
+             double E;
              long int pos=0;
              int extended_eigenvector_dimension;
               char instr[MAXNOFCHARINLINE];
@@ -194,7 +176,7 @@ if (argc>=10){// try a spinwave picture
                 {fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
                 fgets(instr,MAXNOFCHARINLINE,fin_coq); 
                 // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
-                for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
+                for(i=0;(unsigned int)i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;}
                // load evs and check which one is nearest -------------------------------   
                extract(instr,"spins_wave_amplitude",gp.spins_wave_amplitude);
                extract(instr,"spins_show_ellipses",gp.spins_show_ellipses);
@@ -251,13 +233,13 @@ if (argc>=10){// try a spinwave picture
                char filename[MAXNOFCHARINLINE];
                sprintf(filename,"./results/charges.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");gp.showprim=0;
-                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,
-                                  phase,savev_real,savev_imag,hkl,cffilenames);
+                     extendedspincf.jvx_cd(fin_coq,outstr,cs,gp,
+                                  phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
                sprintf(filename,"./results/charges_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");gp.showprim=1;
-                     extendedspincf.jvx_cd(fin_coq,outstr,abc,r,x,y,z,gJJ,gp,
-                                  phase,savev_real,savev_imag,hkl,cffilenames);
+                     extendedspincf.jvx_cd(fin_coq,outstr,cs,gp,
+                                  phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);
@@ -272,7 +254,7 @@ fprintf(stderr,"# * javaview results/charges.jvx\n");
 fprintf(stderr,"# * java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
 fprintf(stderr,"# ************************************************************************\n");
 
-  for(i=1;i<=nofatoms;++i){  delete cffilenames[i];}
+  for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}
 
   return 0;
 

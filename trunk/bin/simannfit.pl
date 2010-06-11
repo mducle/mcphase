@@ -63,6 +63,11 @@ sprintf ("%s [%+e,%+e,%+e,%+e,%+e]",$parnam[$i],$par[$i],$parmin[$i],$parmax[$i]
                             {print "ERROR simannfit reading parameterrange: parmin > parmax\n";
                              print " <Press enter to close>";$in=<STDIN>;exit 1;
                              }
+                          if($parstp[$i]<=0)
+                            {print "ERROR simannfit reading parameterstepwidth: parstp <=0 \n";
+                             print " <Press enter to close>";$in=<STDIN>;exit 1;
+                             }
+
                          $line=~s/(?:#!|[^#])*?\bpar\w+\s*\Q[\E//;                     
 				 $perlhistostart[$i]=$hh;
 				  for($hx=0;$hx<=int(($parmax[$i]-$parmin[$i])/$parstp[$i])+1;++$hx)
@@ -149,6 +154,8 @@ if($sta>0)
    $i=0;foreach(@par){write STDOUT;++$i;}
    ($sta)=sta(); # CALCULATE sta !!!!
 }
+   print "best fit:\n";
+   $i=0;foreach(@par){write STDOUT;++$i;}
    print "      sta=$sta\n";
 # move files
 # foreach (@ARGV)
@@ -157,7 +164,18 @@ if($sta>0)
 #            #if(mydel($file)){die "\n error deleting $file \n";}
 #            #if(mycopy ($file.".par ",$file)){die "\n error copying $file.par \n";}
 # }
-     open(Fout,">results/simannfit.status");print Fout " ... simannfit stopped\n"; close Fout;
+     open(Fout,">results/simannfit.status");print Fout " ... simannfit stopped\n";
+     print Fout "best fit:\n";
+     print Fout "      sta=$sta\n";
+     print Fout "----------------------------------------------------------------------------------------\n";
+     print Fout "Statistical Temperature=$stattemp      Step Ratio=$stps\n";
+     print Fout "----------------------------------------------------------------------------------------\n";
+     $est=sprintf("%6.2f",(time-$starttime)/3600);
+     print Fout "Time since start of simannfit: $est hours    ($stepnumber steps)\n";
+     print Fout "----------------------------------------------------------------------------------------\n";
+     print Fout "parameter[value,      min,           max,           variation,     stepwidth]\n";
+     $i=0;foreach(@par){write Fout;++$i;}
+      close Fout;
 print " <Press enter to close>";$in=<STDIN>;exit 0;
 # END OF MAIN PROGRAM
 #****************************************************************************** 

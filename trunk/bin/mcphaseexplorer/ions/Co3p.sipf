@@ -17,7 +17,7 @@
 #-----------
 IONTYPE=Co3+
 #-----------
-
+nof_electrons=6
 #------------------------------------------------------------------------------------
 # The following is a guide on what to do if ic1ion does not recognize the IONTYPE
 #

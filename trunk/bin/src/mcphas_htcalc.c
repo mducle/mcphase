@@ -218,7 +218,8 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
                 if (verbose==1)
                 {Vector abc(1,6); abc(1)=inputpars.a; abc(2)=inputpars.b; abc(3)=inputpars.c;
                   abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
-		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+                 float * x;x=new float[inputpars.nofatoms+1];float *y;y=new float[inputpars.nofatoms+1];float*z;z=new float[inputpars.nofatoms+1];
+		 
 		 for (is=1;is<=inputpars.nofatoms;++is)
 		   {x[is]=(*inputpars.jjj[is]).xyz[1];
  		    y[is]=(*inputpars.jjj[is]).xyz[2];
@@ -237,9 +238,9 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
                     fin_coq = fopen_errchk ("./results/.spins.eps", "w");
                      sps.eps(fin_coq,text);
                     fclose (fin_coq);
-		}
-
-	           
+		delete[]x;delete []y; delete []z;
+	        }
+                   
                            // see if spinconfiguration is already stored
              #ifndef _THREADS
 	     if (0==checkspincf(j,sps,testqs,nettom,momentq0,phi,testspins,physprops))//0 means error in checkspincf/addspincf
@@ -544,7 +545,7 @@ else // if yes ... then
              // display spinstructure
                 if (verbose==1)
                 {
-		 float x[inputpars.nofatoms],y[inputpars.nofatoms],z[inputpars.nofatoms];
+		 float * x;x=new float[inputpars.nofatoms+1];float *y;y=new float[inputpars.nofatoms+1];float*z;z=new float[inputpars.nofatoms+1];
 		 for (is=1;is<=inputpars.nofatoms;++is)
 		   {x[is]=(*inputpars.jjj[is]).xyz[1];
  		    y[is]=(*inputpars.jjj[is]).xyz[2];
@@ -562,6 +563,7 @@ else // if yes ... then
 		 fin_coq = fopen_errchk ("./results/.spins.eps", "w");
                      sps.eps(fin_coq,text);
                     fclose (fin_coq);
+                delete[]x;delete []y; delete []z;
 		}
  //check if fecalculation gives again correct result
    if (physprops.fe>femin+(0.00001*fabs(femin))){fprintf(stderr,"Warning htcalc.c: at T=%g K /  H= %g Tfemin=%4.9g was calc.(conf no %i),\n but recalculation  gives fe= %4.9gmeV -> no structure saved\n",

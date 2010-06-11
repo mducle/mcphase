@@ -2,8 +2,8 @@
 #include <martin.h>
 
 #define MAXNOFNUMBERSINLINE 20
-#define MAXNOFCHARINLINE 1024
 #define MAXNOFBCPLANES 20
+#define MAXNOFCHARINLINE 7024
 
 
  // *************************************************************************

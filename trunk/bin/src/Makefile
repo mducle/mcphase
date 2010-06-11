@@ -104,9 +104,9 @@ RCSCI    =      ci -u -f -s"Rel" -r$(VERSION) -m"$(LOCKMSG)"
 #
 
 INCL = mcphas.h  testspin.hpp qvectors.hpp spincf.hpp par.hpp  jjjpar.hpp inipar.hpp \
-       mfcf.hpp vector.h martin.h
+       mfcf.hpp vector.h martin.h graphic_parameters.hpp
 OBJS = jjjpar.o par.o physprop.o qvectors.o mcphas.o testspin.o spincf.o inipar.o \
-        mfcf.o martin.o ionpars.o
+        mfcf.o martin.o ionpars.o graphic_parameters.o
 
 VOBS = ivector.o imatrix.o dvector.o dmatrix.o dmatmul.o cvector.o cmatrix.o cmatmul.o \
 	dludcomp.o dsvdcomp.o dortho.o cludcomp.o tred.o imtql.o imtql2.o rseigen.o cheigen.o \
@@ -132,16 +132,25 @@ LINKER= $(CCC) $(LDFLAGS)
 
 all :  martin.o ../cond$(EXE) ../coq2jjj$(EXE) ../jjj2j$(EXE) \
 	../mcdispit$(EXE) ../mcphasit$(EXE) ../spins$(EXE) \
-	../spinsfromq$(EXE) ../addj$(EXE) ../singleion$(EXE) ../charges$(EXE) \
+	../spinsfromq$(EXE) ../addj$(EXE) ../singleion$(EXE) ../charges$(EXE)  \
 	../chrgplt$(EXE) ../spindensplt$(EXE) ../pointc$(EXE) ../mcdiff$(EXE) \
-        ../orbmomdensplt$(EXE) ../momdensplt$(EXE)
+        ../orbmomdensplt$(EXE) ../momdensplt$(EXE) ../currdensplt$(EXE) \
+        ../spindensities$(EXE) \
+        ../orbmomdensities$(EXE) ../momdensities$(EXE) ../currdensities$(EXE)
 
+
+
+test: ../ionpars$(EXE) ../jjjpar$(EXE)
 # ****************************************************
 # compile sources 
+
 
 martin.o:  martin.c martin.h vector.h
 	$(CCC) $(CFLAGS) $< 
 	
+graphic_parameters.o: graphic_parameters.cpp graphic_parameters.hpp martin.h vector.h
+	$(CCC) $(CFLAGS) $<
+
 paramete.o: paramete.cpp paramete.hpp martin.h vector.h 
 	$(CCC) $(CFLAGS) $< 
 
@@ -154,7 +163,7 @@ jjjpar.o: jjjpar.cpp jjjpar_intmod_kramer.cpp jjjpar_intmod_brillouin.cpp jjjpar
 testspin.o: testspin.cpp testspin.hpp spincf.hpp martin.h
 	$(CCC) $(CFLAGS) $< 
 
-spincf.o: spincf.cpp spincf_out.cpp spincf.hpp vector.h density.hpp jjjpar.hpp graphic_parameters.hpp
+spincf.o: spincf.cpp spincf_out.cpp spincf.hpp vector.h density.hpp jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $< 
 
 density.o: density.cpp density.hpp vector.h
@@ -200,7 +209,7 @@ coq2jjj.o: coq2jjj.c paramete.hpp martin.h
 jjj2j.o: jjj2j.c par.hpp jjj2j.h jjjpar.hpp vector.h
 	$(CCC) $(CFLAGS) $<
 
-spins.o: spins.c spincf.hpp  martin.h vector.h graphic_parameters.hpp
+spins.o: spins.c densities_func.c spincf.hpp  martin.h vector.h graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
 spinsfromq.o: spinsfromq.c spincf.hpp  par.hpp martin.h vector.h 
@@ -209,19 +218,34 @@ spinsfromq.o: spinsfromq.c spincf.hpp  par.hpp martin.h vector.h
 singleion.o: singleion.c par.hpp  martin.h vector.h
 	$(CCC) $(CFLAGS) $<
 
-charges.o: charges.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp
+charges.o: charges.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
-chrgplt.o:  chrgplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+spindensities.o: spindensities.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
-spindensplt.o:  spindensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+orbmomdensities.o: orbmomdensities.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
-orbmomdensplt.o:  orbmomdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+momdensities.o: momdensities.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
-momdensplt.o:  momdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp
+currdensities.o: currdensities.c densities_func.c par.hpp  spincf.hpp martin.h vector.h myev.h graphic_parameters.hpp cryststruct.hpp
+	$(CCC) $(CFLAGS) $<
+
+chrgplt.o:  chrgplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
+	$(CCC) $(CFLAGS) $<
+
+spindensplt.o:  spindensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
+	$(CCC) $(CFLAGS) $<
+
+orbmomdensplt.o:  orbmomdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
+	$(CCC) $(CFLAGS) $<
+
+momdensplt.o:  momdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
+	$(CCC) $(CFLAGS) $<
+
+currdensplt.o:  currdensplt.c plt_func.c density.hpp martin.h vector.h jjjpar.hpp graphic_parameters.hpp cryststruct.hpp
 	$(CCC) $(CFLAGS) $<
 
 
@@ -250,9 +274,22 @@ inimenu.o: inimenu.c
 
 endif
 
+ip.o: ionpars.cpp
+	$(CCC) $(CFLAGS) -o  $<
+
 # ************************************************
 # make  binaries (link .o files)
 
+#for testing only
+../ionpars$(EXE): ionpars.o $(CFIELDOBJS) $(VOBS) $(FUNCTIONOBJS) martin.o myev.o
+	@echo Linking ../ionpars
+	@$(LINKER)  -Wall  -o ../ionpars  $^ $(LFLAGS)
+
+../jjjpar$(EXE): jjjpar.o ionpars.o $(CFIELDOBJS) $(VOBS) $(FUNCTIONOBJS) martin.o myev.o
+	@echo Linking ../jjjpar
+	@$(LINKER)  -Wall  -o ../jjjpar  $^ $(LFLAGS)
+
+# mcphase software suite programs
 ../cond$(EXE): cond.o paramete.o $(VOBS) martin.o
 	@echo Linking ../cond
 	@$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
@@ -261,7 +298,7 @@ endif
 	@echo Linking ../coq2jjj
 	@$(LINKER)  -Wall  -o ../coq2jjj $^ $(LFLAGS)
 
-../jjj2j$(EXE): jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o
+../jjj2j$(EXE): jjj2j.o par.o jjjpar.o  $(VOBS) martin.o $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o myev.o
 	@echo Linking ../jjj2j
 	@$(LINKER)  -Wall  -o ../jjj2j $^ $(LFLAGS)
 
@@ -273,43 +310,63 @@ endif
 	@echo Linking ../mcphasit
 	@$(LINKER)  -Wall  -o ../mcphasit  $^ $(LFLAGS) $(THREADLINK)
 
-../spins$(EXE): spincf.o spins.o martin.o  $(VOBS) density.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS)
+../spins$(EXE): spincf.o spins.o martin.o myev.o  $(VOBS) density.o ionpars.o jjjpar.o $(CFIELDOBJS) $(FUNCTIONOBJS) graphic_parameters.o
 	@echo Linking ../spins
 	@$(LINKER)  -Wall  -o ../spins $^  $(LFLAGS)
 
-../spinsfromq$(EXE): spincf.o spinsfromq.o martin.o jjjpar.o par.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o density.o
+../spinsfromq$(EXE): spincf.o spinsfromq.o martin.o jjjpar.o par.o myev.o $(FUNCTIONOBJS)  $(VOBS) $(CFIELDOBJS) ionpars.o density.o
 	@echo Linking ../spinsfromq
 	@$(LINKER)  -Wall  -o ../spinsfromq $^  $(LFLAGS)
 
-../singleion$(EXE):  singleion.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o density.o
+../singleion$(EXE):  singleion.o martin.o  jjjpar.o par.o myev.o $(VOBS) $(FUNCTIONOBJS)  $(CFIELDOBJS) ionpars.o density.o
 	@echo Linking ../singleion
 	@$(LINKER)  -Wall  -o ../singleion $^  $(LFLAGS)
 
-../charges$(EXE):  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o
+../charges$(EXE):  charges.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o graphic_parameters.o
 	@echo Linking ../charges
 	@$(LINKER)  -Wall  -o ../charges $^  $(LFLAGS)
 
-../chrgplt$(EXE): chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+../spindensities$(EXE):  spindensities.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o graphic_parameters.o
+	@echo Linking ../spindensities
+	@$(LINKER)  -Wall  -o ../spindensities $^  $(LFLAGS)
+
+../orbmomdensities$(EXE):  orbmomdensities.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o graphic_parameters.o
+	@echo Linking ../orbmomdensities
+	@$(LINKER)  -Wall  -o ../orbmomdensities $^  $(LFLAGS)
+
+../momdensities$(EXE):  momdensities.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o graphic_parameters.o
+	@echo Linking ../momdensities
+	@$(LINKER)  -Wall  -o ../momdensities $^  $(LFLAGS)
+
+../currdensities$(EXE):  currdensities.o martin.o  jjjpar.o par.o $(VOBS) $(FUNCTIONOBJS) $(CFIELDOBJS) ionpars.o spincf.o density.o myev.o graphic_parameters.o
+	@echo Linking ../currdensities
+	@$(LINKER)  -Wall  -o ../currdensities $^  $(LFLAGS)
+
+../chrgplt$(EXE): chrgplt.o martin.o $(VOBS) $(CFIELDOBJS) myev.o $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o graphic_parameters.o
 	@echo Linking ../chrgplt
 	@$(LINKER)  -Wall  -o ../chrgplt $^  $(LFLAGS)
 
-../spindensplt$(EXE): spindensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+../spindensplt$(EXE): spindensplt.o martin.o $(VOBS) $(CFIELDOBJS) myev.o  $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o graphic_parameters.o
 	@echo Linking ../spindensplt
 	@$(LINKER)  -Wall  -o ../spindensplt $^  $(LFLAGS)
 
-../orbmomdensplt$(EXE): orbmomdensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+../orbmomdensplt$(EXE): orbmomdensplt.o martin.o $(VOBS) myev.o  $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o graphic_parameters.o
 	@echo Linking ../orbmomdensplt
 	@$(LINKER)  -Wall  -o ../orbmomdensplt $^  $(LFLAGS)
 
-../momdensplt$(EXE): momdensplt.o martin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o
+../momdensplt$(EXE): momdensplt.o martin.o $(VOBS) $(CFIELDOBJS) myev.o  $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o graphic_parameters.o
 	@echo Linking ../momdensplt
 	@$(LINKER)  -Wall  -o ../momdensplt $^  $(LFLAGS)
 
-../pointc$(EXE): pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o $(FUNCTIONOBJS) jjjpar.o
+../currdensplt$(EXE): currdensplt.o martin.o $(VOBS) $(CFIELDOBJS) myev.o  $(FUNCTIONOBJS) ionpars.o density.o spincf.o jjjpar.o graphic_parameters.o
+	@echo Linking ../currdensplt
+	@$(LINKER)  -Wall  -o ../currdensplt $^  $(LFLAGS)
+
+../pointc$(EXE): pointc.o martin.o $(VOBS) $(CFIELDOBJS) ionpars.o myev.o  $(FUNCTIONOBJS) jjjpar.o
 	@echo Linking ../pointc
 	@$(LINKER)  -Wall  -o ../pointc $^  $(LFLAGS)
 
-../addj$(EXE): addj.o par.o martin.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o density.o
+../addj$(EXE): addj.o par.o martin.o myev.o jjjpar.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)  ionpars.o density.o
 	@echo Linking ../addj
 	@$(LINKER)  -Wall  -o ../addj $^  $(LFLAGS)
 

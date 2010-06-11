@@ -1,7 +1,41 @@
+#!MODULE=../../bin/ic1ion_module/ic1ion.so
+#<!--mcphase.sipf-->
+#***************************************************************
+# Single Ion Parameter File for Module ic1ion for
+# mcphas version 3.0
+# - program to calculate static magnetic properties
+# reference: M. Rotter JMMM 272-276 (2004) 481
+# mcdisp version 3.0
+# - program to calculate the dispersion of magnetic excitations
+# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+# mcdiff version 3.0
+# - program to calculate neutron and magnetic xray diffraction
+# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
+#***************************************************************
+
+
+#-----------
+IONTYPE=Cu3+
+#-----------
+nof_electrons=8
+
+#------------------------------------------------------------------------------------------------------
+# radial wave function parameters R_Np,XIp(r)= r^(Np-1) . exp(-xi r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# values tabulated in clementi & roetti Atomic data and nuclear data tables 14 (1974) 177-478
+# Cu3+ is 3d8 looking at page 424 of Clemente & Roetti
+# the 3D6 radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)
+#------------------------------------------------------------------------------------------------------
+N1=3 XI1=4.69645 C1=0.38122
+N2=3 XI2=13.0776 C2=0.02913
+N3=3 XI3=7.37194 C3=0.25907
+N4=3 XI4=2.90714 C4=0.41901
+N5=3 XI5=1.82419 C5=0.04543
+
 #Neutron magnetic form factor coefficients
 FFj0A= 0.0031 FFj0a=34.9074 FFj0B= 0.3582 FFj0b=10.9138 FFj0C= 0.6531 FFj0c= 3.8279 FFj0D=-0.0147
 FFj2A= 1.2797 FFj2a= 8.4502 FFj2B= 1.0315 FFj2b= 3.2796 FFj2C= 0.2401 FFj2c= 1.2498 FFj2D= 0.0015
 FFj4A=-0.3671 FFj4a=14.0816 FFj4B=-0.0078 FFj4b= 3.3149 FFj4C= 0.3154 FFj4c= 1.3767 FFj4D= 0.0132
+
 
 
 

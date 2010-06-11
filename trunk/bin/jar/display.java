@@ -89,13 +89,15 @@ public class display extends Panel implements Runnable {
       sy=TrimString(strLine);
       int cx =clx-1;
       int cy =cly-1;      
-
+      int colxnotfound=0;
+      int colynotfound=0;
       while (cx>0)
       {--cx;
        int iPos = sx.indexOf(" ");
        if (iPos < 0)
        {
-         continue;
+         colxnotfound=1;
+        continue;
        }
        sx=sx.substring(iPos);
        sx=TrimString(sx); 
@@ -106,6 +108,7 @@ public class display extends Panel implements Runnable {
        int iPos = sy.indexOf(" ");
        if (iPos < 0)
        {
+        colynotfound=1;
          continue;
        }
        sy=sy.substring(iPos);
@@ -124,11 +127,14 @@ public class display extends Panel implements Runnable {
 //      p.valueOf(strLine);
 //    double[] myDatax = {p.parseDouble(sx)};
 //    double[] myDatay = {p.parseDouble(sy)};
+   if(colxnotfound==0&&colxnotfound==0){
+
    try{
       Datum d = new Datum(p.parseDouble(sx),p.parseDouble(sy),null);
       ds.addDatum(d);}
       catch(NumberFormatException e){;}
-    }
+                                        }
+     }
     ff.close();
     //double[] myDatay = {stringToDouble(strLine,0),stringToDouble(strLine,0)};
     }

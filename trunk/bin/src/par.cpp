@@ -4,7 +4,8 @@
 #include <cstring>
 
 #define MAXNOFNUMBERSINLINE 20
-#define MAXNOFCHARINLINE 1024
+#define MAXNOFCHARINLINE 7024
+
 
 
  // *************************************************************************
@@ -28,7 +29,7 @@ par::par (const char *filejjj)
                  extract(instr,"alpha",alpha);  extract(instr,"beta",beta);extract(instr,"gamma",gamma); 
   instr[0]='#';
    // inserted 12.11.07 in order to format output correctly (characterstring 13 spoiled output string)
-   for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
+   for(i=0;(unsigned int)i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;}
    rems[1]=new char[strlen(instr)+2];strcpy(rems[1],instr);
    rems[2]=new char[40];strcpy(rems[2],"#!<--mcphas.mcphas.j-->");
   nofatoms=0;

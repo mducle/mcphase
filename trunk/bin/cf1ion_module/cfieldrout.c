@@ -109,7 +109,12 @@ extern DOUBLE beta_J[];  /* definiert in theta.c */
 extern DOUBLE gamma_J[]; /* definiert in theta.c */
 
 extern IONEN IONENIMP[]; /* definiert in theta.c*/ 
- 
+
+INT isimplementiert();
+void read_error();
+INT coor_error();
+int strlen_own();
+INT equal();
 /*----------------------------------------------------------------------------
                                 Programmname
 -----------------------------------------------------------------------------*/
@@ -141,25 +146,25 @@ SYMMETRIE SYMLISTE[]={
 #define ANZ_SYMNR   ( sizeof(SYMLISTE) / sizeof(SYMMETRIE) )
  
 INFO INFOLISTE[]={
-/* 0 */   "c[lm] l m theta phi"   ,
-/* 1 */   "ep[silonkq]"           ,
-/* 2 */   "ew[=eigenwertproblem] A[kq]|B[kq]|D[kq]|L[kq]|V[kq]|W[kq]|x[W]",
-/* 3 */   "ew[=eigenwertproblem] s[ingleion] filename.type symmetrienr",
-/* 4 */   "F[kq(J)]    k q J"       ,
-/* 5 */   "F[kq-Tabelle]    "       ,
-/* 6 */   "G[kq(J)]    k q J"       ,
-/* 7 */   "G[kq-Tabelle]    "       ,
-/* 8 */   "h[amilton]"              ,
-/* 9 */   "k[onstanten]"            ,
-/*10 */   "m[agnetfeld] J Bx By Bz" ,
-/*11 */   "o[megakq]"               ,
-/*12 */   "P[kq(J)]    G[GT]|n[orm] k q J",
-/*13 */   "S[TEVkq(J)] G[GT]|n[orm] k q J",
-/*14 */   "r[n]"                    ,
-/*15 */   "sy[mmetrienummern]"      ,
-/*16 */   "t[hetakq]"             ,
-/*17 */   "V[ersionsnummer des Programmes]",
-/*18 */   "v[lm] eV|cm-1 filename.filetype symmetrienummer",
+/* 0 */   {"c[lm] l m theta phi"   },
+/* 1 */   {"ep[silonkq]"           },
+/* 2 */   {"ew[=eigenwertproblem] A[kq]|B[kq]|D[kq]|L[kq]|V[kq]|W[kq]|x[W]"},
+/* 3 */   {"ew[=eigenwertproblem] s[i]ngleion] filename.type symmetrienr"},
+/* 4 */   {"F[kq(J)]    k q J"      } ,
+/* 5 */   {"F[kq-Tabelle]    "      } ,
+/* 6 */   {"G[kq(J)]    k q J"      } ,
+/* 7 */   {"G[kq-Tabelle]    "      } ,
+/* 8 */   {"h[amilton]"             } ,
+/* 9 */   {"k[onstanten]"           } ,
+/*10 */   {"m[agnetfeld] J Bx By Bz"} ,
+/*11 */   {"o[megakq]"              } ,
+/*12 */   {"P[kq(J)]    G[GT]|n[orm] k q J"},
+/*13 */   {"S[TEVkq(J)] G[GT]|n[orm] k q J"},
+/*14 */   {"r[n]"                    },
+/*15 */   {"sy[mmetrienummern]"     } ,
+/*16 */   {"t[hetakq]"             },
+/*17 */   {"V[ersionsnummer des Programmes]"},
+/*18 */   {"v[lm] eV|cm-1 filename.filetype symmetrienummer"},
 };
 #define ANZ_INFOS   ( sizeof(INFOLISTE) / sizeof(INFO) )
  
@@ -191,7 +196,7 @@ EINHEIT EINHEITIMP[]={
 };
 #define ANZ_EINHEIT            (  sizeof(EINHEITIMP)/sizeof(EINHEIT)  )
  
-INT init_einheit()
+void init_einheit()
 {
     INT i;
  
@@ -233,11 +238,11 @@ INT init_einheit()
 }
  
 INFO INFO_EINHEIT[]={
-/*  0 */     "K[elvin]",
-/*  1 */     "m[eV]"   ,
-/*  2 */     "e[V]"    ,
-/*  3 */     "c[m-1]"  ,
-/*  4 */     "T[hz]"   ,
+/*  0 */     {"K[elvin]"},
+/*  1 */     {"m[eV]"   },
+/*  2 */     {"e[V]"    },
+/*  3 */     {"c[m-1]"  },
+/*  4 */     {"T[hz]"   },
 };
 #define ANZ_INFO_EINHEIT       (  sizeof(INFO_EINHEIT)/sizeof(INFO)  )
  
@@ -420,7 +425,7 @@ DOUBLE omegan6n(n)
  function for extracting some important parameters of ions - for INTERNAL 
  class ionpars
 ------------------------------------------------------------------------------*/
-getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, double * lande,
+void getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, double * lande,
        double * rh2, double * rh4,double * rh6, int * nof_electrons )
 {
     KRISTALLFELD *kristallfeld,*init_iterationnew();
@@ -448,56 +453,56 @@ getpar(char * iontype, int * dj, double * alpha, double * beta, double * gamma, 
  module cfield
 ------------------------------------------------------------------------------*/
 /*cfield_mcphasnew is designed for operation without reading a Bkq.parameter file*/
-cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, double ** Jyi, double ** Jzr, double ** Jzi,
-                              double ** mo22sr, double ** mo22si,
-                              double ** mo21sr, double ** mo21si,
-                              double ** mo20cr, double ** mo20ci,
-                              double ** mo21cr, double ** mo21ci,
-                              double ** mo22cr, double ** mo22ci,
+void cfield_mcphasnew(char * iontype, double * Jxr,double * Jxi,  double * Jyr, double * Jyi, double * Jzr, double * Jzi,
+                              double * mo22sr, double * mo22si,
+                              double * mo21sr, double * mo21si,
+                              double * mo20cr, double * mo20ci,
+                              double * mo21cr, double * mo21ci,
+                              double * mo22cr, double * mo22ci,
 
-                              double ** mo33sr, double ** mo33si,
-                              double ** mo32sr, double ** mo32si,
-                              double ** mo31sr, double ** mo31si,
-                              double ** mo30cr, double ** mo30ci,
-                              double ** mo31cr, double ** mo31ci,
-                              double ** mo32cr, double ** mo32ci,
-                              double ** mo33cr, double ** mo33ci,
+                              double * mo33sr, double * mo33si,
+                              double * mo32sr, double * mo32si,
+                              double * mo31sr, double * mo31si,
+                              double * mo30cr, double * mo30ci,
+                              double * mo31cr, double * mo31ci,
+                              double * mo32cr, double * mo32ci,
+                              double * mo33cr, double * mo33ci,
 
-                              double ** mo44sr, double ** mo44si,
-                              double ** mo43sr, double ** mo43si,
-                              double ** mo42sr, double ** mo42si,
-                              double ** mo41sr, double ** mo41si,
-                              double ** mo40cr, double ** mo40ci,
-                              double ** mo41cr, double ** mo41ci,
-                              double ** mo42cr, double ** mo42ci,
-                              double ** mo43cr, double ** mo43ci,
-                              double ** mo44cr, double ** mo44ci,
+                              double * mo44sr, double * mo44si,
+                              double * mo43sr, double * mo43si,
+                              double * mo42sr, double * mo42si,
+                              double * mo41sr, double * mo41si,
+                              double * mo40cr, double * mo40ci,
+                              double * mo41cr, double * mo41ci,
+                              double * mo42cr, double * mo42ci,
+                              double * mo43cr, double * mo43ci,
+                              double * mo44cr, double * mo44ci,
 
-                              double ** mo55sr, double ** mo55si,
-                              double ** mo54sr, double ** mo54si,
-                              double ** mo53sr, double ** mo53si,
-                              double ** mo52sr, double ** mo52si,
-                              double ** mo51sr, double ** mo51si,
-                              double ** mo50cr, double ** mo50ci,
-                              double ** mo51cr, double ** mo51ci,
-                              double ** mo52cr, double ** mo52ci,
-                              double ** mo53cr, double ** mo53ci,
-                              double ** mo54cr, double ** mo54ci,
-                              double ** mo55cr, double ** mo55ci,
+                              double * mo55sr, double * mo55si,
+                              double * mo54sr, double * mo54si,
+                              double * mo53sr, double * mo53si,
+                              double * mo52sr, double * mo52si,
+                              double * mo51sr, double * mo51si,
+                              double * mo50cr, double * mo50ci,
+                              double * mo51cr, double * mo51ci,
+                              double * mo52cr, double * mo52ci,
+                              double * mo53cr, double * mo53ci,
+                              double * mo54cr, double * mo54ci,
+                              double * mo55cr, double * mo55ci,
 
-                              double ** mo66sr, double ** mo66si,
-                              double ** mo65sr, double ** mo65si,
-                              double ** mo64sr, double ** mo64si,
-                              double ** mo63sr, double ** mo63si,
-                              double ** mo62sr, double ** mo62si,
-                              double ** mo61sr, double ** mo61si,
-                              double ** mo60cr, double ** mo60ci,
-                              double ** mo61cr, double ** mo61ci,
-                              double ** mo62cr, double ** mo62ci,
-                              double ** mo63cr, double ** mo63ci,
-                              double ** mo64cr, double ** mo64ci,
-                              double ** mo65cr, double ** mo65ci,
-                              double ** mo66cr, double ** mo66ci,
+                              double * mo66sr, double * mo66si,
+                              double * mo65sr, double * mo65si,
+                              double * mo64sr, double * mo64si,
+                              double * mo63sr, double * mo63si,
+                              double * mo62sr, double * mo62si,
+                              double * mo61sr, double * mo61si,
+                              double * mo60cr, double * mo60ci,
+                              double * mo61cr, double * mo61ci,
+                              double * mo62cr, double * mo62ci,
+                              double * mo63cr, double * mo63ci,
+                              double * mo64cr, double * mo64ci,
+                              double * mo65cr, double * mo65ci,
+                              double * mo66cr, double * mo66ci,
                               int * dj, 
                               double * alpha, double * beta, double * gamma, 
                               double * lande,
@@ -506,11 +511,9 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
     KRISTALLFELD *kristallfeld,*init_iterationnew();
     EWPROBLEM    *ewproblem,   *setuphcf();
     SETUP        *setup;
-    CHAR         c,cc,cs,input_modus,*filename,*name,*ion,*einheit,e_4f;
-    INFO         *info;
-    INT          naechste_nachbarn,l,m,dimj,zeinheit,k,q,n;
-    INT          einheitnr,ionennr,i,j;
-    DOUBLE       theta,phi,Bx,By,Bz,temperatur,myB;
+    INT          m,n;
+    INT          i,j;
+    DOUBLE       Bx,By,Bz,myB;
     ITERATION    *iteration;
     MATRIX       *calc_Bmag();
 
@@ -540,7 +543,7 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
       HMAG(iteration)=calc_Bmag(DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     for (i=1;i<=DIMJ(iteration);++i)
      {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jxr[i])[j]=R(HMAG(iteration),i,j);(Jxi[i])[j]=I(HMAG(iteration),i,j);}
+     {Jxr[30*(i-1)+j-1]=R(HMAG(iteration),i,j);Jxi[30*(i-1)+j-1]=I(HMAG(iteration),i,j);}
      }
      
      
@@ -548,14 +551,14 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
     HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     for (i=1;i<=DIMJ(iteration);++i)
      {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jyr[i])[j]=R(HMAG(iteration),i,j);(Jyi[i])[j]=I(HMAG(iteration),i,j);}
+     {Jyr[30*(i-1)+j-1]=R(HMAG(iteration),i,j);Jyi[30*(i-1)+j-1]=I(HMAG(iteration),i,j);}
      }
 
     Bx=0.0;By=0.0; Bz=-1.0/GJ(iteration)/myB;
     HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     for (i=1;i<=DIMJ(iteration);++i)
      {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jzr[i])[j]=R(HMAG(iteration),i,j);(Jzi[i])[j]=I(HMAG(iteration),i,j);}
+     {Jzr[30*(i-1)+j-1]=R(HMAG(iteration),i,j);Jzi[30*(i-1)+j-1]=I(HMAG(iteration),i,j);}
      }
 
     Bx=0.0;By=0.0; Bz=0.0;
@@ -593,351 +596,101 @@ cfield_mcphasnew(char * iontype, double ** Jxr,double ** Jxi,  double ** Jyr, do
          for( m=DIMJ(iteration) ; m>=1 ; --m ){
 
 
-             mo22sr[n][m]= ( I(P2P2(PKQ(iteration)),n,m )-I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-	     mo22si[n][m]=-( R(P2P2(PKQ(iteration)),n,m )-R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-             mo21sr[n][m]= ( I(P2P1(PKQ(iteration)),n,m )-I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo21si[n][m]=-( R(P2P1(PKQ(iteration)),n,m )-R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo20cr[n][m]=  R(P2P0(PKQ(iteration)),n,m );
-	     mo20ci[n][m]=0;
-             mo21cr[n][m]=( R(P2P1(PKQ(iteration)),n,m )+R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo21ci[n][m]=( I(P2P1(PKQ(iteration)),n,m )+I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-             mo22cr[n][m]=( R(P2P2(PKQ(iteration)),n,m )+R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-	     mo22ci[n][m]=( I(P2P2(PKQ(iteration)),n,m )+I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
+             mo22sr[30*(n-1)+m-1]= ( I(P2P2(PKQ(iteration)),n,m )-I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
+	     mo22si[30*(n-1)+m-1]=-( R(P2P2(PKQ(iteration)),n,m )-R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
+             mo21sr[30*(n-1)+m-1]= ( I(P2P1(PKQ(iteration)),n,m )-I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
+	     mo21si[30*(n-1)+m-1]=-( R(P2P1(PKQ(iteration)),n,m )-R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
+	     mo20cr[30*(n-1)+m-1]=  R(P2P0(PKQ(iteration)),n,m );
+	     mo20ci[30*(n-1)+m-1]=0;
+             mo21cr[30*(n-1)+m-1]=( R(P2P1(PKQ(iteration)),n,m )+R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
+	     mo21ci[30*(n-1)+m-1]=( I(P2P1(PKQ(iteration)),n,m )+I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
+             mo22cr[30*(n-1)+m-1]=( R(P2P2(PKQ(iteration)),n,m )+R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
+	     mo22ci[30*(n-1)+m-1]=( I(P2P2(PKQ(iteration)),n,m )+I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
 
 
-             mo33sr[n][m]= ( I(P3P3(PKQ(iteration)),n,m )-I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-	     mo33si[n][m]=-( R(P3P3(PKQ(iteration)),n,m )-R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-             mo32sr[n][m]= ( I(P3P2(PKQ(iteration)),n,m )-I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-	     mo32si[n][m]=-( R(P3P2(PKQ(iteration)),n,m )-R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-             mo31sr[n][m]= ( I(P3P1(PKQ(iteration)),n,m )-I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo31si[n][m]=-( R(P3P1(PKQ(iteration)),n,m )-R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo30cr[n][m]=  R(P3P0(PKQ(iteration)),n,m );
-	     mo30ci[n][m]=0;
-             mo31cr[n][m]=( R(P3P1(PKQ(iteration)),n,m )+R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo31ci[n][m]=( I(P3P1(PKQ(iteration)),n,m )+I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-             mo32cr[n][m]=( R(P3P2(PKQ(iteration)),n,m )+R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-	     mo32ci[n][m]=( I(P3P2(PKQ(iteration)),n,m )+I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-             mo33cr[n][m]=( R(P3P3(PKQ(iteration)),n,m )+R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-	     mo33ci[n][m]=( I(P3P3(PKQ(iteration)),n,m )+I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
+             mo33sr[30*(n-1)+m-1]= ( I(P3P3(PKQ(iteration)),n,m )-I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
+	     mo33si[30*(n-1)+m-1]=-( R(P3P3(PKQ(iteration)),n,m )-R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
+             mo32sr[30*(n-1)+m-1]= ( I(P3P2(PKQ(iteration)),n,m )-I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
+	     mo32si[30*(n-1)+m-1]=-( R(P3P2(PKQ(iteration)),n,m )-R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
+             mo31sr[30*(n-1)+m-1]= ( I(P3P1(PKQ(iteration)),n,m )-I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
+	     mo31si[30*(n-1)+m-1]=-( R(P3P1(PKQ(iteration)),n,m )-R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
+	     mo30cr[30*(n-1)+m-1]=  R(P3P0(PKQ(iteration)),n,m );
+	     mo30ci[30*(n-1)+m-1]=0;
+             mo31cr[30*(n-1)+m-1]=( R(P3P1(PKQ(iteration)),n,m )+R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
+	     mo31ci[30*(n-1)+m-1]=( I(P3P1(PKQ(iteration)),n,m )+I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
+             mo32cr[30*(n-1)+m-1]=( R(P3P2(PKQ(iteration)),n,m )+R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
+	     mo32ci[30*(n-1)+m-1]=( I(P3P2(PKQ(iteration)),n,m )+I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
+             mo33cr[30*(n-1)+m-1]=( R(P3P3(PKQ(iteration)),n,m )+R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
+	     mo33ci[30*(n-1)+m-1]=( I(P3P3(PKQ(iteration)),n,m )+I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
 
-             mo44sr[n][m]= ( I(P4P4(PKQ(iteration)),n,m )-I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-	     mo44si[n][m]=-( R(P4P4(PKQ(iteration)),n,m )-R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-             mo43sr[n][m]= ( I(P4P3(PKQ(iteration)),n,m )-I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-	     mo43si[n][m]=-( R(P4P3(PKQ(iteration)),n,m )-R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-             mo42sr[n][m]= ( I(P4P2(PKQ(iteration)),n,m )-I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-	     mo42si[n][m]=-( R(P4P2(PKQ(iteration)),n,m )-R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-             mo41sr[n][m]= ( I(P4P1(PKQ(iteration)),n,m )-I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo41si[n][m]=-( R(P4P1(PKQ(iteration)),n,m )-R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo40cr[n][m]=  R(P4P0(PKQ(iteration)),n,m );
-	     mo40ci[n][m]=0;
-             mo41cr[n][m]=( R(P4P1(PKQ(iteration)),n,m )+R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo41ci[n][m]=( I(P4P1(PKQ(iteration)),n,m )+I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-             mo42cr[n][m]=( R(P4P2(PKQ(iteration)),n,m )+R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-	     mo42ci[n][m]=( I(P4P2(PKQ(iteration)),n,m )+I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-             mo43cr[n][m]=( R(P4P3(PKQ(iteration)),n,m )+R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-	     mo43ci[n][m]=( I(P4P3(PKQ(iteration)),n,m )+I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-             mo44cr[n][m]=( R(P4P4(PKQ(iteration)),n,m )+R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-	     mo44ci[n][m]=( I(P4P4(PKQ(iteration)),n,m )+I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
+             mo44sr[30*(n-1)+m-1]= ( I(P4P4(PKQ(iteration)),n,m )-I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
+	     mo44si[30*(n-1)+m-1]=-( R(P4P4(PKQ(iteration)),n,m )-R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
+             mo43sr[30*(n-1)+m-1]= ( I(P4P3(PKQ(iteration)),n,m )-I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
+	     mo43si[30*(n-1)+m-1]=-( R(P4P3(PKQ(iteration)),n,m )-R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
+             mo42sr[30*(n-1)+m-1]= ( I(P4P2(PKQ(iteration)),n,m )-I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
+	     mo42si[30*(n-1)+m-1]=-( R(P4P2(PKQ(iteration)),n,m )-R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
+             mo41sr[30*(n-1)+m-1]= ( I(P4P1(PKQ(iteration)),n,m )-I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
+	     mo41si[30*(n-1)+m-1]=-( R(P4P1(PKQ(iteration)),n,m )-R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
+	     mo40cr[30*(n-1)+m-1]=  R(P4P0(PKQ(iteration)),n,m );
+	     mo40ci[30*(n-1)+m-1]=0;
+             mo41cr[30*(n-1)+m-1]=( R(P4P1(PKQ(iteration)),n,m )+R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
+	     mo41ci[30*(n-1)+m-1]=( I(P4P1(PKQ(iteration)),n,m )+I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
+             mo42cr[30*(n-1)+m-1]=( R(P4P2(PKQ(iteration)),n,m )+R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
+	     mo42ci[30*(n-1)+m-1]=( I(P4P2(PKQ(iteration)),n,m )+I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
+             mo43cr[30*(n-1)+m-1]=( R(P4P3(PKQ(iteration)),n,m )+R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
+	     mo43ci[30*(n-1)+m-1]=( I(P4P3(PKQ(iteration)),n,m )+I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
+             mo44cr[30*(n-1)+m-1]=( R(P4P4(PKQ(iteration)),n,m )+R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
+	     mo44ci[30*(n-1)+m-1]=( I(P4P4(PKQ(iteration)),n,m )+I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
 
-             mo55sr[n][m]= ( I(P5P5(PKQ(iteration)),n,m )-I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-	     mo55si[n][m]=-( R(P5P5(PKQ(iteration)),n,m )-R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-             mo44sr[n][m]= ( I(P5P4(PKQ(iteration)),n,m )-I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-	     mo54si[n][m]=-( R(P5P4(PKQ(iteration)),n,m )-R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-             mo53sr[n][m]= ( I(P5P3(PKQ(iteration)),n,m )-I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-	     mo53si[n][m]=-( R(P5P3(PKQ(iteration)),n,m )-R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-             mo52sr[n][m]= ( I(P5P2(PKQ(iteration)),n,m )-I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-	     mo52si[n][m]=-( R(P5P2(PKQ(iteration)),n,m )-R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-             mo51sr[n][m]= ( I(P5P1(PKQ(iteration)),n,m )-I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo51si[n][m]=-( R(P5P1(PKQ(iteration)),n,m )-R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo50cr[n][m]=  R(P5P0(PKQ(iteration)),n,m );
-	     mo50ci[n][m]=0;
-             mo51cr[n][m]=( R(P5P1(PKQ(iteration)),n,m )+R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo51ci[n][m]=( I(P5P1(PKQ(iteration)),n,m )+I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-             mo52cr[n][m]=( R(P5P2(PKQ(iteration)),n,m )+R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-	     mo52ci[n][m]=( I(P5P2(PKQ(iteration)),n,m )+I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-             mo53cr[n][m]=( R(P5P3(PKQ(iteration)),n,m )+R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-	     mo53ci[n][m]=( I(P5P3(PKQ(iteration)),n,m )+I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-             mo54cr[n][m]=( R(P5P4(PKQ(iteration)),n,m )+R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-	     mo54ci[n][m]=( I(P5P4(PKQ(iteration)),n,m )+I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-             mo55cr[n][m]=( R(P5P5(PKQ(iteration)),n,m )+R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-	     mo55ci[n][m]=( I(P5P5(PKQ(iteration)),n,m )+I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
+             mo55sr[30*(n-1)+m-1]= ( I(P5P5(PKQ(iteration)),n,m )-I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
+	     mo55si[30*(n-1)+m-1]=-( R(P5P5(PKQ(iteration)),n,m )-R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
+             mo44sr[30*(n-1)+m-1]= ( I(P5P4(PKQ(iteration)),n,m )-I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
+	     mo54si[30*(n-1)+m-1]=-( R(P5P4(PKQ(iteration)),n,m )-R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
+             mo53sr[30*(n-1)+m-1]= ( I(P5P3(PKQ(iteration)),n,m )-I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
+	     mo53si[30*(n-1)+m-1]=-( R(P5P3(PKQ(iteration)),n,m )-R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
+             mo52sr[30*(n-1)+m-1]= ( I(P5P2(PKQ(iteration)),n,m )-I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
+	     mo52si[30*(n-1)+m-1]=-( R(P5P2(PKQ(iteration)),n,m )-R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
+             mo51sr[30*(n-1)+m-1]= ( I(P5P1(PKQ(iteration)),n,m )-I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
+	     mo51si[30*(n-1)+m-1]=-( R(P5P1(PKQ(iteration)),n,m )-R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
+	     mo50cr[30*(n-1)+m-1]=  R(P5P0(PKQ(iteration)),n,m );
+	     mo50ci[30*(n-1)+m-1]=0;
+             mo51cr[30*(n-1)+m-1]=( R(P5P1(PKQ(iteration)),n,m )+R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
+	     mo51ci[30*(n-1)+m-1]=( I(P5P1(PKQ(iteration)),n,m )+I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
+             mo52cr[30*(n-1)+m-1]=( R(P5P2(PKQ(iteration)),n,m )+R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
+	     mo52ci[30*(n-1)+m-1]=( I(P5P2(PKQ(iteration)),n,m )+I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
+             mo53cr[30*(n-1)+m-1]=( R(P5P3(PKQ(iteration)),n,m )+R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
+	     mo53ci[30*(n-1)+m-1]=( I(P5P3(PKQ(iteration)),n,m )+I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
+             mo54cr[30*(n-1)+m-1]=( R(P5P4(PKQ(iteration)),n,m )+R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
+	     mo54ci[30*(n-1)+m-1]=( I(P5P4(PKQ(iteration)),n,m )+I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
+             mo55cr[30*(n-1)+m-1]=( R(P5P5(PKQ(iteration)),n,m )+R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
+	     mo55ci[30*(n-1)+m-1]=( I(P5P5(PKQ(iteration)),n,m )+I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
 
-             mo66sr[n][m]= ( I(P6P6(PKQ(iteration)),n,m )-I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-	     mo66si[n][m]=-( R(P6P6(PKQ(iteration)),n,m )-R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-             mo65sr[n][m]= ( I(P6P5(PKQ(iteration)),n,m )-I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-	     mo65si[n][m]=-( R(P6P5(PKQ(iteration)),n,m )-R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-             mo64sr[n][m]= ( I(P6P4(PKQ(iteration)),n,m )-I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-	     mo64si[n][m]=-( R(P6P4(PKQ(iteration)),n,m )-R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-             mo63sr[n][m]= ( I(P5P3(PKQ(iteration)),n,m )-I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-	     mo63si[n][m]=-( R(P6P3(PKQ(iteration)),n,m )-R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-             mo62sr[n][m]= ( I(P6P2(PKQ(iteration)),n,m )-I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-	     mo62si[n][m]=-( R(P6P2(PKQ(iteration)),n,m )-R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-             mo61sr[n][m]= ( I(P6P1(PKQ(iteration)),n,m )-I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo61si[n][m]=-( R(P6P1(PKQ(iteration)),n,m )-R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo60cr[n][m]=  R(P6P0(PKQ(iteration)),n,m );
-	     mo60ci[n][m]=0;
-             mo61cr[n][m]=( R(P6P1(PKQ(iteration)),n,m )+R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo61ci[n][m]=( I(P6P1(PKQ(iteration)),n,m )+I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-             mo62cr[n][m]=( R(P6P2(PKQ(iteration)),n,m )+R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-	     mo62ci[n][m]=( I(P6P2(PKQ(iteration)),n,m )+I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-             mo63cr[n][m]=( R(P6P3(PKQ(iteration)),n,m )+R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-	     mo63ci[n][m]=( I(P6P3(PKQ(iteration)),n,m )+I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-             mo64cr[n][m]=( R(P6P4(PKQ(iteration)),n,m )+R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-	     mo64ci[n][m]=( I(P6P4(PKQ(iteration)),n,m )+I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-             mo65cr[n][m]=( R(P6P5(PKQ(iteration)),n,m )+R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-	     mo65ci[n][m]=( I(P6P5(PKQ(iteration)),n,m )+I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-             mo66cr[n][m]=( R(P6P6(PKQ(iteration)),n,m )+R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-	     mo66ci[n][m]=( I(P6P6(PKQ(iteration)),n,m )+I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-       }
-}
-
-cfield_mcphas(char * cf_filename, double ** hcfr,double ** hcfi, double ** Jxr,double ** Jxi,  double ** Jyr, double ** Jyi, double ** Jzr, double ** Jzi,
-                              double ** mo22sr, double ** mo22si,
-                              double ** mo21sr, double ** mo21si,
-                              double ** mo20cr, double ** mo20ci,
-                              double ** mo21cr, double ** mo21ci,
-                              double ** mo22cr, double ** mo22ci,
-
-                              double ** mo33sr, double ** mo33si,
-                              double ** mo32sr, double ** mo32si,
-                              double ** mo31sr, double ** mo31si,
-                              double ** mo30cr, double ** mo30ci,
-                              double ** mo31cr, double ** mo31ci,
-                              double ** mo32cr, double ** mo32ci,
-                              double ** mo33cr, double ** mo33ci,
-
-                              double ** mo44sr, double ** mo44si,
-                              double ** mo43sr, double ** mo43si,
-                              double ** mo42sr, double ** mo42si,
-                              double ** mo41sr, double ** mo41si,
-                              double ** mo40cr, double ** mo40ci,
-                              double ** mo41cr, double ** mo41ci,
-                              double ** mo42cr, double ** mo42ci,
-                              double ** mo43cr, double ** mo43ci,
-                              double ** mo44cr, double ** mo44ci,
-
-                              double ** mo55sr, double ** mo55si,
-                              double ** mo54sr, double ** mo54si,
-                              double ** mo53sr, double ** mo53si,
-                              double ** mo52sr, double ** mo52si,
-                              double ** mo51sr, double ** mo51si,
-                              double ** mo50cr, double ** mo50ci,
-                              double ** mo51cr, double ** mo51ci,
-                              double ** mo52cr, double ** mo52ci,
-                              double ** mo53cr, double ** mo53ci,
-                              double ** mo54cr, double ** mo54ci,
-                              double ** mo55cr, double ** mo55ci,
-
-                              double ** mo66sr, double ** mo66si,
-                              double ** mo65sr, double ** mo65si,
-                              double ** mo64sr, double ** mo64si,
-                              double ** mo63sr, double ** mo63si,
-                              double ** mo62sr, double ** mo62si,
-                              double ** mo61sr, double ** mo61si,
-                              double ** mo60cr, double ** mo60ci,
-                              double ** mo61cr, double ** mo61ci,
-                              double ** mo62cr, double ** mo62ci,
-                              double ** mo63cr, double ** mo63ci,
-                              double ** mo64cr, double ** mo64ci,
-                              double ** mo65cr, double ** mo65ci,
-                              double ** mo66cr, double ** mo66ci,int * dj, double * alpha, double * beta, double * gamma)
-{
-    KRISTALLFELD *kristallfeld,*init_iteration();
-    EWPROBLEM    *ewproblem,   *setuphcf();
-    SETUP        *setup;
-    CHAR         c,cc,cs,input_modus,*filename,*name,*ion,*einheit,e_4f;
-    INFO         *info;
-    INT          naechste_nachbarn,symmetrienr,l,m,dimj,zeinheit,k,q,n;
-    INT          einheitnr,ionennr,i,j;
-    DOUBLE       theta,phi,Bx,By,Bz,temperatur,myB;
-    ITERATION    *iteration;
-    MATRIX       *calc_Bmag();
-
-
-    init_einheit();
-
-    setup =  cfield_setup(); /* setup's aus SETUP-file holen */
-    
-    symmetrienr  = NICHTIMP;
-/* determine crystal field and solver eigenvalue problem */
-/* mind we are using stevens Blms from input file with the type of BKQ.parameter*/
-
-/*  here the cf + magnetic field parameters should enter the calculation */
-  
-
-    kristallfeld=init_iteration(cf_filename,symmetrienr,BKQ );/*reads cf parameters from file !!!*/
-						/* at the moment must be in Blm notation -
-						this should be changed to allow any notation */
-							    
-                            /*here we could change the cf parameters !!!! - we leave this for 
-			    the moment */
-			    
-    iteration= ITERATION (kristallfeld);
-    myB              = myBmeV;    
-
-    (*dj)=DIMJ(iteration);
-    (*alpha)=alpha_J[E4f(IONENNUMMER(iteration))];
-    (*beta)=beta_J[E4f(IONENNUMMER(iteration))];
-    (*gamma)=gamma_J[E4f(IONENNUMMER(iteration))];
-
-    Bx=-1.0/GJ(iteration)/myB;By=0.0;Bz=0.0;
-      HMAG(iteration)=calc_Bmag(DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
-    for (i=1;i<=DIMJ(iteration);++i)
-     {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jxr[i])[j]=R(HMAG(iteration),i,j);(Jxi[i])[j]=I(HMAG(iteration),i,j);}
-     }
-     
-     
-    Bx=0.0;By=-1.0/GJ(iteration)/myB;Bz=0.0;
-    HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
-    for (i=1;i<=DIMJ(iteration);++i)
-     {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jyr[i])[j]=R(HMAG(iteration),i,j);(Jyi[i])[j]=I(HMAG(iteration),i,j);}
-     }
-
-    Bx=0.0;By=0.0; Bz=-1.0/GJ(iteration)/myB;
-    HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
-    for (i=1;i<=DIMJ(iteration);++i)
-     {for (j=1;j<=DIMJ(iteration);++j)
-     {(Jzr[i])[j]=R(HMAG(iteration),i,j);(Jzi[i])[j]=I(HMAG(iteration),i,j);}
-     }
-
-    Bx=0.0;By=0.0; Bz=0.0;
-    HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
-      
-    ewproblem=setuphcf(setup,(EWPROBLEM*)0,NEIN,kristallfeld,BKQ);
-/*sets up hamiltonian and solves ev problem */
-
-    for (i=1;i<=DIMJ(iteration);++i)
-     {for (j=1;j<=DIMJ(iteration);++j)
-     {(hcfr[i])[j]=R(HAMILTONIAN(iteration),i,j);(hcfi[i])[j]=I(HAMILTONIAN(iteration),i,j);}
-     }
-
-/* here we use the stevens operators for the quadrupolar hamiltonian  (NOT the Racah) */
-/* ===============================================================
-|                                                             |
-|Kristallfeldparameter  B    in  meV     und  reell           |
-|                        kq                                   |
-|-----------------------------                                |
-|        ---                 |                                |
-| H   =  >     B   STEV (J)  |  mit  STEV (J)  hermitesch     |
-|  KF    ---    kq     kq    |           kq                   |
-|        k>=0                |                                |
-|        q>=0                |                                |
-|-----------------------------                                |
-|                                                             |
-| und    q=0 :  STEV (J) := P  (J)                            |
-|                   k0       k0                               |
-|                                                             |
-|                                       +                     |
-|        q>0 :  STEV (J)c := ( P  (J) + P  (J) )/2/omega      |
-|                   kq         kq       kq             kq     |
-|                                                             |
-|                                       +                     |
-|        q<0 :  STEV (J)s := ( P  (J) - P  (J) )/2/i/omega    |
-|                   kq         kq       kq               kq   |
-|                                                             |
-*/
-
-    for( n=DIMJ(iteration) ; n>=1 ; --n )
-         for( m=DIMJ(iteration) ; m>=1 ; --m ){
-
-
-             mo22sr[n][m]= ( I(P2P2(PKQ(iteration)),n,m )-I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-	     mo22si[n][m]=-( R(P2P2(PKQ(iteration)),n,m )-R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-             mo21sr[n][m]= ( I(P2P1(PKQ(iteration)),n,m )-I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo21si[n][m]=-( R(P2P1(PKQ(iteration)),n,m )-R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo20cr[n][m]=  R(P2P0(PKQ(iteration)),n,m );
-	     mo20ci[n][m]=0;
-             mo21cr[n][m]=( R(P2P1(PKQ(iteration)),n,m )+R(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-	     mo21ci[n][m]=( I(P2P1(PKQ(iteration)),n,m )+I(P2M1(PKQ(iteration)),n,m))/2/omegan1n(1);
-             mo22cr[n][m]=( R(P2P2(PKQ(iteration)),n,m )+R(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-	     mo22ci[n][m]=( I(P2P2(PKQ(iteration)),n,m )+I(P2M2(PKQ(iteration)),n,m))/2/omegan0n(2);
-
-
-             mo33sr[n][m]= ( I(P3P3(PKQ(iteration)),n,m )-I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-	     mo33si[n][m]=-( R(P3P3(PKQ(iteration)),n,m )-R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-             mo32sr[n][m]= ( I(P3P2(PKQ(iteration)),n,m )-I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-	     mo32si[n][m]=-( R(P3P2(PKQ(iteration)),n,m )-R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-             mo31sr[n][m]= ( I(P3P1(PKQ(iteration)),n,m )-I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo31si[n][m]=-( R(P3P1(PKQ(iteration)),n,m )-R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo30cr[n][m]=  R(P3P0(PKQ(iteration)),n,m );
-	     mo30ci[n][m]=0;
-             mo31cr[n][m]=( R(P3P1(PKQ(iteration)),n,m )+R(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-	     mo31ci[n][m]=( I(P3P1(PKQ(iteration)),n,m )+I(P3M1(PKQ(iteration)),n,m))/2/omegan2n(1);
-             mo32cr[n][m]=( R(P3P2(PKQ(iteration)),n,m )+R(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-	     mo32ci[n][m]=( I(P3P2(PKQ(iteration)),n,m )+I(P3M2(PKQ(iteration)),n,m))/2/omegan1n(2);
-             mo33cr[n][m]=( R(P3P3(PKQ(iteration)),n,m )+R(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-	     mo33ci[n][m]=( I(P3P3(PKQ(iteration)),n,m )+I(P3M3(PKQ(iteration)),n,m))/2/omegan0n(3);
-
-             mo44sr[n][m]= ( I(P4P4(PKQ(iteration)),n,m )-I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-	     mo44si[n][m]=-( R(P4P4(PKQ(iteration)),n,m )-R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-             mo43sr[n][m]= ( I(P4P3(PKQ(iteration)),n,m )-I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-	     mo43si[n][m]=-( R(P4P3(PKQ(iteration)),n,m )-R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-             mo42sr[n][m]= ( I(P4P2(PKQ(iteration)),n,m )-I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-	     mo42si[n][m]=-( R(P4P2(PKQ(iteration)),n,m )-R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-             mo41sr[n][m]= ( I(P4P1(PKQ(iteration)),n,m )-I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo41si[n][m]=-( R(P4P1(PKQ(iteration)),n,m )-R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo40cr[n][m]=  R(P4P0(PKQ(iteration)),n,m );
-	     mo40ci[n][m]=0;
-             mo41cr[n][m]=( R(P4P1(PKQ(iteration)),n,m )+R(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-	     mo41ci[n][m]=( I(P4P1(PKQ(iteration)),n,m )+I(P4M1(PKQ(iteration)),n,m))/2/omegan3n(1);
-             mo42cr[n][m]=( R(P4P2(PKQ(iteration)),n,m )+R(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-	     mo42ci[n][m]=( I(P4P2(PKQ(iteration)),n,m )+I(P4M2(PKQ(iteration)),n,m))/2/omegan2n(2);
-             mo43cr[n][m]=( R(P4P3(PKQ(iteration)),n,m )+R(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-	     mo43ci[n][m]=( I(P4P3(PKQ(iteration)),n,m )+I(P4M3(PKQ(iteration)),n,m))/2/omegan1n(3);
-             mo44cr[n][m]=( R(P4P4(PKQ(iteration)),n,m )+R(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-	     mo44ci[n][m]=( I(P4P4(PKQ(iteration)),n,m )+I(P4M4(PKQ(iteration)),n,m))/2/omegan0n(4);
-
-             mo55sr[n][m]= ( I(P5P5(PKQ(iteration)),n,m )-I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-	     mo55si[n][m]=-( R(P5P5(PKQ(iteration)),n,m )-R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-             mo44sr[n][m]= ( I(P5P4(PKQ(iteration)),n,m )-I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-	     mo54si[n][m]=-( R(P5P4(PKQ(iteration)),n,m )-R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-             mo53sr[n][m]= ( I(P5P3(PKQ(iteration)),n,m )-I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-	     mo53si[n][m]=-( R(P5P3(PKQ(iteration)),n,m )-R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-             mo52sr[n][m]= ( I(P5P2(PKQ(iteration)),n,m )-I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-	     mo52si[n][m]=-( R(P5P2(PKQ(iteration)),n,m )-R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-             mo51sr[n][m]= ( I(P5P1(PKQ(iteration)),n,m )-I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo51si[n][m]=-( R(P5P1(PKQ(iteration)),n,m )-R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo50cr[n][m]=  R(P5P0(PKQ(iteration)),n,m );
-	     mo50ci[n][m]=0;
-             mo51cr[n][m]=( R(P5P1(PKQ(iteration)),n,m )+R(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-	     mo51ci[n][m]=( I(P5P1(PKQ(iteration)),n,m )+I(P5M1(PKQ(iteration)),n,m))/2/omegan4n(1);
-             mo52cr[n][m]=( R(P5P2(PKQ(iteration)),n,m )+R(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-	     mo52ci[n][m]=( I(P5P2(PKQ(iteration)),n,m )+I(P5M2(PKQ(iteration)),n,m))/2/omegan3n(2);
-             mo53cr[n][m]=( R(P5P3(PKQ(iteration)),n,m )+R(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-	     mo53ci[n][m]=( I(P5P3(PKQ(iteration)),n,m )+I(P5M3(PKQ(iteration)),n,m))/2/omegan2n(3);
-             mo54cr[n][m]=( R(P5P4(PKQ(iteration)),n,m )+R(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-	     mo54ci[n][m]=( I(P5P4(PKQ(iteration)),n,m )+I(P5M4(PKQ(iteration)),n,m))/2/omegan1n(4);
-             mo55cr[n][m]=( R(P5P5(PKQ(iteration)),n,m )+R(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-	     mo55ci[n][m]=( I(P5P5(PKQ(iteration)),n,m )+I(P5M5(PKQ(iteration)),n,m))/2/omegan0n(5);
-
-             mo66sr[n][m]= ( I(P6P6(PKQ(iteration)),n,m )-I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-	     mo66si[n][m]=-( R(P6P6(PKQ(iteration)),n,m )-R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-             mo65sr[n][m]= ( I(P6P5(PKQ(iteration)),n,m )-I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-	     mo65si[n][m]=-( R(P6P5(PKQ(iteration)),n,m )-R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-             mo64sr[n][m]= ( I(P6P4(PKQ(iteration)),n,m )-I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-	     mo64si[n][m]=-( R(P6P4(PKQ(iteration)),n,m )-R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-             mo63sr[n][m]= ( I(P5P3(PKQ(iteration)),n,m )-I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-	     mo63si[n][m]=-( R(P6P3(PKQ(iteration)),n,m )-R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-             mo62sr[n][m]= ( I(P6P2(PKQ(iteration)),n,m )-I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-	     mo62si[n][m]=-( R(P6P2(PKQ(iteration)),n,m )-R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-             mo61sr[n][m]= ( I(P6P1(PKQ(iteration)),n,m )-I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo61si[n][m]=-( R(P6P1(PKQ(iteration)),n,m )-R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo60cr[n][m]=  R(P6P0(PKQ(iteration)),n,m );
-	     mo60ci[n][m]=0;
-             mo61cr[n][m]=( R(P6P1(PKQ(iteration)),n,m )+R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-	     mo61ci[n][m]=( I(P6P1(PKQ(iteration)),n,m )+I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
-             mo62cr[n][m]=( R(P6P2(PKQ(iteration)),n,m )+R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-	     mo62ci[n][m]=( I(P6P2(PKQ(iteration)),n,m )+I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
-             mo63cr[n][m]=( R(P6P3(PKQ(iteration)),n,m )+R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-	     mo63ci[n][m]=( I(P6P3(PKQ(iteration)),n,m )+I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
-             mo64cr[n][m]=( R(P6P4(PKQ(iteration)),n,m )+R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-	     mo64ci[n][m]=( I(P6P4(PKQ(iteration)),n,m )+I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
-             mo65cr[n][m]=( R(P6P5(PKQ(iteration)),n,m )+R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-	     mo65ci[n][m]=( I(P6P5(PKQ(iteration)),n,m )+I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
-             mo66cr[n][m]=( R(P6P6(PKQ(iteration)),n,m )+R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
-	     mo66ci[n][m]=( I(P6P6(PKQ(iteration)),n,m )+I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
+             mo66sr[30*(n-1)+m-1]= ( I(P6P6(PKQ(iteration)),n,m )-I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
+	     mo66si[30*(n-1)+m-1]=-( R(P6P6(PKQ(iteration)),n,m )-R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
+             mo65sr[30*(n-1)+m-1]= ( I(P6P5(PKQ(iteration)),n,m )-I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
+	     mo65si[30*(n-1)+m-1]=-( R(P6P5(PKQ(iteration)),n,m )-R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
+             mo64sr[30*(n-1)+m-1]= ( I(P6P4(PKQ(iteration)),n,m )-I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
+	     mo64si[30*(n-1)+m-1]=-( R(P6P4(PKQ(iteration)),n,m )-R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
+             mo63sr[30*(n-1)+m-1]= ( I(P5P3(PKQ(iteration)),n,m )-I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
+	     mo63si[30*(n-1)+m-1]=-( R(P6P3(PKQ(iteration)),n,m )-R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
+             mo62sr[30*(n-1)+m-1]= ( I(P6P2(PKQ(iteration)),n,m )-I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
+	     mo62si[30*(n-1)+m-1]=-( R(P6P2(PKQ(iteration)),n,m )-R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
+             mo61sr[30*(n-1)+m-1]= ( I(P6P1(PKQ(iteration)),n,m )-I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
+	     mo61si[30*(n-1)+m-1]=-( R(P6P1(PKQ(iteration)),n,m )-R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
+	     mo60cr[30*(n-1)+m-1]=  R(P6P0(PKQ(iteration)),n,m );
+	     mo60ci[30*(n-1)+m-1]=0;
+             mo61cr[30*(n-1)+m-1]=( R(P6P1(PKQ(iteration)),n,m )+R(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
+	     mo61ci[30*(n-1)+m-1]=( I(P6P1(PKQ(iteration)),n,m )+I(P6M1(PKQ(iteration)),n,m))/2/omegan5n(1);
+             mo62cr[30*(n-1)+m-1]=( R(P6P2(PKQ(iteration)),n,m )+R(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
+	     mo62ci[30*(n-1)+m-1]=( I(P6P2(PKQ(iteration)),n,m )+I(P6M2(PKQ(iteration)),n,m))/2/omegan4n(2);
+             mo63cr[30*(n-1)+m-1]=( R(P6P3(PKQ(iteration)),n,m )+R(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
+	     mo63ci[30*(n-1)+m-1]=( I(P6P3(PKQ(iteration)),n,m )+I(P6M3(PKQ(iteration)),n,m))/2/omegan3n(3);
+             mo64cr[30*(n-1)+m-1]=( R(P6P4(PKQ(iteration)),n,m )+R(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
+	     mo64ci[30*(n-1)+m-1]=( I(P6P4(PKQ(iteration)),n,m )+I(P6M4(PKQ(iteration)),n,m))/2/omegan2n(4);
+             mo65cr[30*(n-1)+m-1]=( R(P6P5(PKQ(iteration)),n,m )+R(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
+	     mo65ci[30*(n-1)+m-1]=( I(P6P5(PKQ(iteration)),n,m )+I(P6M5(PKQ(iteration)),n,m))/2/omegan1n(5);
+             mo66cr[30*(n-1)+m-1]=( R(P6P6(PKQ(iteration)),n,m )+R(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
+	     mo66ci[30*(n-1)+m-1]=( I(P6P6(PKQ(iteration)),n,m )+I(P6M6(PKQ(iteration)),n,m))/2/omegan0n(6);
        }
 }
 
@@ -1025,6 +778,7 @@ INT isreell( symmetrienr , ion ) /* testet ob alle Kristallfeldparameter     */
                            case 0: return(NEIN);break;
                        }
                     }
+return(NEIN);
 }
 /*------------------------------------------------------------------------------
                                  solve()
@@ -1330,12 +1084,13 @@ EWPROBLEM *setuphcf(setup,ewproblem,overwrite,kristallfeld,modus)
                   }
                   break;
     }
+return ewproblem;
 }
 
 /*------------------------------------------------------------------------------
                                  show_()
 ------------------------------------------------------------------------------*/
-show_(ew)
+void show_(ew)
     EWPROBLEM *ew;
 {
     info_ewproblem( ew );
@@ -2611,9 +2366,9 @@ ITERATION *auswahlregel(iter,symmetrienr)
                                 IT(V22(iter)) = 0.0;
  
                     case 0 : IT( V20(iter) ) = 0.0;
- //                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
- //                               IT(V21(iter)) = 0.0;                     // results in rotated systems
-                 }
+ /*                            if(RT(V21(iter))!=0.0&&IT(V21(iter))!=0.0)  // removed because it gave strange
+                                IT(V21(iter)) = 0.0;                     // results in rotated systems
+ */                }
                  break;
  
        default : RT( V20(iter) ) = 0.0; IT( V20(iter) ) = 0.0;
@@ -2883,8 +2638,6 @@ ITERATION *iter_alloc(dimj,anz_nn) /* Speicher fuer Struktur  ITERATION*/
 {
     ITERATION  *iteration_i;
     MATRIX     *mx_alloc();
-    INT        i;
- 
     iteration_i = ITERATION_ALLOC(1);
  
  
@@ -3110,7 +2863,6 @@ UMGEBUNG*trans_B_kartesisch(name,umgebung)/*Magnetfeld ins kartesische       */
     CHAR     *name;                      /* Koordinatensystem transformieren */
     UMGEBUNG *umgebung;
 {
-    DOUBLE  x,y,z;
     DOUBLE  h,theta,phi;
     DOUBLE  sin(),cos();
  
@@ -3174,7 +2926,7 @@ SPHAERE *sphaerisch(name,ionnr,x,y,z)  /* ins sphaerische Koordinatensystem */
 /*------------------------------------------------------------------------------
                                info_info()
 ------------------------------------------------------------------------------*/
-info_info()      /* Informationen ueber moegliche Infos ausgeben */
+void info_info()      /* Informationen ueber moegliche Infos ausgeben */
 {
     INT i;
  
@@ -3188,18 +2940,10 @@ info_info()      /* Informationen ueber moegliche Infos ausgeben */
 /*------------------------------------------------------------------------------
                                info_befehle()
 ------------------------------------------------------------------------------*/
-info_befehle()     /* informationen ueber moegliche Befehle  ausgeben */
+void info_befehle()     /* informationen ueber moegliche Befehle  ausgeben */
 {
  INT i;
- CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
- CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
- CHAR *t21,*t22,*t23,*t24,*t25,*t26,*t27,*t28,*t29,*t30;
- CHAR *t31,*t32,*t33,*t34,*t35,*t36,*t37,*t38,*t39,*t40;
- CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
- CHAR *t51,*t52,*t53,*t54,*t55,*t56,*t57,*t58,*t59,*t60;
- CHAR *t61,*t62,*t63,*t64,*t65,*t66,*t67,*t68,*t69,*t70;
- CHAR *t71,*t72,*t73,*t74,*t75,*t76,*t77,*t78,*t79,*t80;
- CHAR *t81,*t82;
+ CHAR *t01,*t02,*t03;
  
     clearscreen;
  
@@ -3220,7 +2964,7 @@ t03=" ------------------------------------------------------------------ \n";
 /*------------------------------------------------------------------------------
                               info_magnetfeld()
 ------------------------------------------------------------------------------*/
-info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
+void info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
     INT    dimj;                 /* Hmag in Einheiten von gJ*myB    */
     DOUBLE Bx,By,Bz;
 {
@@ -3228,7 +2972,7 @@ info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
  
     FILE   *fp,*fopen();
     MATRIX *bmag,*calc_Bmag();
-    DOUBLE gj,myB,rt,it;
+    DOUBLE gj,myB;
     INT   m,n;
     CHAR *t01,*t02,*t03,*t04,*t05,*t06;
     CHAR *t07,*t08,*t09,*t10,*t11,*t12;
@@ -3281,7 +3025,7 @@ info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
 /*------------------------------------------------------------------------------
                                info_symmetrien()
 ------------------------------------------------------------------------------*/
-info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
+void info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
     CHAR *name;
 {
  
@@ -3330,14 +3074,14 @@ info_symmetrien(name)  /* Info ueber implementierte Symmetrien ausgeben */
 /*----------------------------------------------------------------------------
                            info_konstanten()
 -----------------------------------------------------------------------------*/
-info_konstanten()   /* Liste der benutzten Naturkonstanten */
+void info_konstanten()   /* Liste der benutzten Naturkonstanten */
 {
     CHAR *name = "results/konstntn.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15;
-    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
-    CHAR *s11,*s12,*s13,*s14,*s15,*s16;
+    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07;
+
  
     fp = fopen_errchk(name,"w");
     clearscreen;
@@ -3397,7 +3141,7 @@ info_konstanten()   /* Liste der benutzten Naturkonstanten */
 /*----------------------------------------------------------------------------
                                info_Vlm()
 -----------------------------------------------------------------------------*/
-info_Vlm(filename,symmetrienr,einheit)
+void info_Vlm(filename,symmetrienr,einheit)
     CHAR *filename;
     INT  symmetrienr;
     CHAR *einheit;
@@ -3548,7 +3292,7 @@ info_Vlm(filename,symmetrienr,einheit)
 /*----------------------------------------------------------------------------
                                info_epsilonkq()
 -----------------------------------------------------------------------------*/
-info_epsilonkq()   /* Liste der Faktoren epsilonkq */
+void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
 {
     CHAR *name = "results/epsilonkq.info";
     FILE *fp,*fopen();
@@ -3557,7 +3301,7 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
     CHAR *t21,*t22,*t23,*t24,*t25,*t26,*t27,*t28,*t29,*t30;
     CHAR *t31,*t32,*t33,*t34,*t35,*t36,*t37,*t38,*t39,*t40;
     CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
-    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
+    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07;
  
     fp = fopen_errchk(name,"w");
     clearscreen;
@@ -3757,16 +3501,16 @@ info_epsilonkq()   /* Liste der Faktoren epsilonkq */
 /*----------------------------------------------------------------------------
                                info_hamilton()
 -----------------------------------------------------------------------------*/
-info_hamilton() /* Liste der Auswahlregeln fuer die Vkq im Hamiltonian*/
+void info_hamilton() /* Liste der Auswahlregeln fuer die Vkq im Hamiltonian*/
 {
     CHAR *name = "results/hamilton.info";
     FILE *fp,*fopen();
     CHAR *t01,*t02,*t03,*t04,*t05,*t06,*t07,*t08,*t09,*t10;
     CHAR *t11,*t12,*t13,*t14,*t15,*t16,*t17,*t18,*t19,*t20;
     CHAR *t21,*t22,*t23,*t24,*t25,*t26,*t27,*t28,*t29,*t30;
-    CHAR *t31,*t32,*t33,*t34,*t35,*t36,*t37,*t38,*t39,*t40;
-    CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
-    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
+    CHAR *t31,*t32;
+
+   
  
     fp = fopen_errchk(name,"w");
     clearscreen;
@@ -3847,7 +3591,7 @@ t32 = "-----------------------------------------------------------------------";
 /*----------------------------------------------------------------------------
                                info_omegakq()
 -----------------------------------------------------------------------------*/
-info_omegakq(k,q)   /* Liste der Faktoren omegakq */
+void info_omegakq(k,q)   /* Liste der Faktoren omegakq */
 INT k,q;
 {
     CHAR *name = "results/omegakq.info";
@@ -3857,8 +3601,8 @@ INT k,q;
     CHAR *t21,*t22,*t23,*t24,*t25,*t26,*t27,*t28,*t29,*t30;
     CHAR *t31,*t32,*t33,*t34,*t35,*t36,*t37,*t38,*t39,*t40;
     CHAR *t41,*t42,*t43,*t44,*t45,*t46,*t47,*t48,*t49,*t50;
-    CHAR *t51,*t52,*t53,*t54,*t55,*t56,*t57,*t58,*t59,*t60;
-    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07,*s08,*s09,*s10;
+    CHAR *t51,*t52,*t53,*t54,*t55;
+    CHAR *s01,*s02,*s03,*s04,*s05,*s06,*s07;
     DOUBLE omegan0n();
     DOUBLE omegan1n();
     DOUBLE omegan2n();
@@ -4095,7 +3839,7 @@ INT k,q;
 /*------------------------------------------------------------------------------
                            c_single_error()
 ------------------------------------------------------------------------------*/
-c_single_error()   /* Eingabefehler beim Versuch von  -c -s */
+void c_single_error()   /* Eingabefehler beim Versuch von  -c -s */
 {
     clearscreen;
     printf("\n");
@@ -4120,7 +3864,7 @@ c_single_error()   /* Eingabefehler beim Versuch von  -c -s */
 /*------------------------------------------------------------------------------
                            i_kq_error()
 ------------------------------------------------------------------------------*/
-i_kq_error(c)   /* Eingabefehler beim Versuch von  -i e 'c' */
+void i_kq_error(c)   /* Eingabefehler beim Versuch von  -i e 'c' */
   CHAR c;
 {
    clearscreen;
@@ -4138,10 +3882,10 @@ i_kq_error(c)   /* Eingabefehler beim Versuch von  -i e 'c' */
 /*------------------------------------------------------------------------------
                            r_kq_error()
 ------------------------------------------------------------------------------*/
-r_kq_error(c,cs)   /* Eingabefehler beim Versuch von  -r -'c', -s -'c' */
+void r_kq_error(c,cs)   /* Eingabefehler beim Versuch von  -r -'c', -s -'c' */
   CHAR c,cs;
 {
-    CHAR *s,*t01,*t02;
+    CHAR *s;
  
     clearscreen;
     printf("\n");
@@ -4198,11 +3942,11 @@ printf("%s -m[oment] -%c[W ] anf_feld end_feld temp\n",s,cs);
 /*------------------------------------------------------------------------------
                            c_kq_error()
 ------------------------------------------------------------------------------*/
-c_kq_error(c)   /* Eingabefehler beim Versuch von  -c -'c' */
+void c_kq_error(c)   /* Eingabefehler beim Versuch von  -c -'c' */
    CHAR c;
 {
-    INT  len ,i,k;
-    CHAR *s="-c[reate] -c[kq]";
+    INT  i;
+    /*CHAR *s="-c[reate] -c[kq]";*/
  
     clearscreen;
     printf("\n");
@@ -4244,7 +3988,7 @@ c_kq_error(c)   /* Eingabefehler beim Versuch von  -c -'c' */
 /*------------------------------------------------------------------------------
                            create_error()
 ------------------------------------------------------------------------------*/
-create_error()   /* Eingabefehler beim Versuch von  -c */
+void create_error()   /* Eingabefehler beim Versuch von  -c */
 {
     clearscreen;
     printf("\n");
@@ -4286,7 +4030,7 @@ CHAR *leftcopy(string,bufferlen)
 /*------------------------------------------------------------------------------
                                   strlen_own()
 ------------------------------------------------------------------------------*/
-strlen_own(s)
+INT strlen_own(s)
     CHAR *s;
 {
     INT len=0;
@@ -4296,7 +4040,7 @@ strlen_own(s)
 /*------------------------------------------------------------------------------
                                read_error()
 ------------------------------------------------------------------------------*/
-read_error(nr,fp,name) /* Eingabefehler beim Versuch von  -r -s*/
+void read_error(nr,fp,name) /* Eingabefehler beim Versuch von  -r -s*/
     INT nr;
     FILE *fp;
     CHAR *name;
@@ -4436,65 +4180,65 @@ exit(1);
             exit(1);
  
     case 22:printf("Error in %s !\n",name);
-            printf("It must be 2*V44 =  5*V40  .\n",name);
+            printf("It must be 2*V44 =  5*V40  .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 23:printf("Error in %s !\n",name);
-            printf("it must be  2*V64 = - 21*V60  .\n",name);
+            printf("it must be  2*V64 = - 21*V60  .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 24:printf("Error in %s !\n",name);
-            printf("The Magnetfield mode ",name);
+            printf("The Magnetfield mode ");
             printf("not recognised.\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 25:printf("Error in %s !\n",name);
-            printf("It must be  B44 =  5*B40  .\n",name);
+            printf("It must be  B44 =  5*B40  .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 26:printf("Error in %s !\n",name);
-            printf("It must be  B64 = - 21*B60 .\n",name);
+            printf("It must be  B64 = - 21*B60 .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 27:printf("Error !\n");
-            printf("The Temperature %7.2f is <0 !\n",name);
+            printf("The Temperature  is <0 !\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 28:printf("Error in %s !\n",name);
-            printf("It must be  2*W44 =  5*W40  .\n",name);
+            printf("It must be  2*W44 =  5*W40  .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 29:printf("Error in %s !\n",name);
-            printf("It must  2*W64 = - 21*W60  be .\n",name);
+            printf("It must  2*W64 = - 21*W60  be .\n");
             printf("\n");
             fclose(fp);
             exit(1);
  
  
     case 30:printf("Error !\n");
-            printf("It must  2*V44 =  5*V40  be .\n",name);
-            printf("Point charge model does not fulfill \n",name);
+            printf("It must  2*V44 =  5*V40  be .\n");
+            printf("Point charge model does not fulfill \n");
             printf("cubic symmetry!\n");
             fclose(fp);
             exit(1);
  
-    case 31:printf("Error in !\n",name);
-            printf("It must be  2*V64 = - 21*V60  .\n",name);
-            printf("Point charge model does not fulfill \n",name);
+    case 31:printf("Error in %s !\n",name);
+            printf("It must be  2*V64 = - 21*V60  .\n");
+            printf("Point charge model does not fulfill \n");
             printf("cubic symmetry!\n");
             fclose(fp);
             exit(1);
@@ -4524,14 +4268,14 @@ exit(1);
  
  
     case 42:printf("Error in %s !\n",name);
-            printf("It must be 2*epsilon  * D   = 5*epsilon  * D  .\n",name);
+            printf("It must be 2*epsilon  * D   = 5*epsilon  * D  .\n");
             printf("                 44   44            40   40      \n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 43:printf("Error in %s !\n",name);
-            printf("It must be 2*epsilon  * D   = -21*epsilon  *D  .\n",name);
+            printf("It must be 2*epsilon  * D   = -21*epsilon  *D  .\n");
             printf("                 64   64              60  60      \n");
             printf("\n");
             fclose(fp);
@@ -4539,14 +4283,14 @@ exit(1);
  
  
     case 52:printf("Error in %s !\n",name);
-            printf("It must be 2*epsilon  * L   = 5*epsilon  * L  .\n",name);
+            printf("It must be 2*epsilon  * L   = 5*epsilon  * L  .\n");
             printf("                 44   44            40   40      \n");
             printf("\n");
             fclose(fp);
             exit(1);
  
     case 53:printf("Error in %s !\n",name);
-            printf("It must be 2*epsilon  * L   = -21*epsilon  *L  .\n",name);
+            printf("It must be 2*epsilon  * L   = -21*epsilon  *L  .\n");
             printf("                 64   64              60  60      \n");
             printf("\n");
             fclose(fp);
@@ -4588,7 +4332,7 @@ exit(1);
 /*------------------------------------------------------------------------------
                                Bkq_error()
 ------------------------------------------------------------------------------*/
-Bkq_error( filename,ion,symmetrienr )
+void Bkq_error( filename,ion,symmetrienr )
    CHAR *filename;
    CHAR *ion;
    INT  symmetrienr;
@@ -4607,7 +4351,7 @@ Bkq_error( filename,ion,symmetrienr )
 /*------------------------------------------------------------------------------
                                Bkq_tip()
 ------------------------------------------------------------------------------*/
-Bkq_tip( ion,symmetrienr )
+void Bkq_tip( ion,symmetrienr )
    CHAR *ion;
    INT  symmetrienr;
 {
@@ -4627,7 +4371,7 @@ Bkq_tip( ion,symmetrienr )
 /*------------------------------------------------------------------------------
                                i_error()
 ------------------------------------------------------------------------------*/
-i_error() /* Eingabefehler beim Versuch von  -i */
+void i_error() /* Eingabefehler beim Versuch von  -i */
 {
     clearscreen;
     printf("\n");
@@ -4650,7 +4394,7 @@ i_error() /* Eingabefehler beim Versuch von  -i */
 /*------------------------------------------------------------------------------
                                r_error()
 ------------------------------------------------------------------------------*/
-r_error(c) /* Eingabefehler beim Versuch von  -r,-s */
+void r_error(c) /* Eingabefehler beim Versuch von  -r,-s */
 CHAR c;
 {
  CHAR *s;
@@ -4763,7 +4507,7 @@ if(c=='k'||c=='K'){
 /*------------------------------------------------------------------------------
                               isinlimits()
 ------------------------------------------------------------------------------*/
-isinlimits(fp,filename,nrion,x1,x2,x3,modus) /* x1,x2,x3 in seinen Grenzen ? */
+void isinlimits(fp,filename,nrion,x1,x2,x3,modus) /* x1,x2,x3 in seinen Grenzen ? */
     FILE *fp;
     CHAR *filename;
     INT  nrion;
@@ -4872,7 +4616,7 @@ INT a_toi(string,anfang,ende) /* Integer aus String bestimmen */
     INT  anfang,ende;
 {
     CHAR *buffer,*a_tos();
-    INT  i,zahl;
+    INT  zahl;
  
     buffer = a_tos( string,anfang,ende);
     zahl   = atoi( buffer );
@@ -4888,7 +4632,6 @@ DOUBLE a_tof(string,anfang,ende) /* Reelle Zahl im String bestimmen */
     INT  anfang,ende;
 {
     CHAR   *buffer,*a_tos();
-    INT    i;
     DOUBLE zahl;
  
  
@@ -4904,9 +4647,8 @@ DOUBLE a_tof(string,anfang,ende) /* Reelle Zahl im String bestimmen */
 CHAR  *a_tos(string,anfang,ende)
     CHAR *string;
     INT  anfang,ende;
-{
+{    INT i;
     CHAR   *buffer;
-    INT    i;
  
     buffer = STRING_ALLOC(ende-anfang+2);
     for( i=anfang ; i<=ende ; ++i )

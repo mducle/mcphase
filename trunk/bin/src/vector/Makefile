@@ -34,18 +34,19 @@
 ### include common rules
 ###########################################################################
 
-MATPACK = ..
+MATPACK=..
 include $(MATPACK)/Makefile.common
 
 INCLUDE= ../../include
 
+
 .SUFFIXES: .cc .o
 
 .c.o: 
-	${CC} -c ${COPTS} -I ${INCLUDE} ${BLAS} $<
+	${CC} -c ${COPTS} -I ${INCLUDE} $<
 
 .cc.o: 
-	${CCC} -c ${CCOPTS} -I ${INCLUDE} ${BLAS} $<
+	${CCC} -c ${CCOPTS} -I ${INCLUDE} $<
 
 
 
@@ -83,9 +84,5 @@ OBJLIST:
  
 clean:
 	rm -vf ${VECOBJ} 
-
-new:
-	${MAKE} clean
-	${MAKE}
 
 ###########################################################################

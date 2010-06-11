@@ -17,7 +17,7 @@
 #-----------
 IONTYPE=Yb3+
 #-----------
-
+nof_electrons=13
 #----------------
 # Stevens Factors
 #----------------
@@ -46,8 +46,8 @@ FFj2A= 0.1570 FFj2a=18.5553 FFj2B= 0.8484 FFj2b= 6.5403 FFj2C= 0.8880 FFj2c= 2.0
 FFj4A=-0.2121 FFj4a= 8.1967 FFj4B= 0.0325 FFj4b= 3.1533 FFj4C= 0.1975 FFj4c= 0.8842 FFj4D= 0.0093
 FFj6A=-0.0345 FFj6a= 5.0073 FFj6B=-0.0677 FFj6b= 2.0198 FFj6C= 0.0985 FFj6c= 0.5485 FFj6D=-0.0076
 
-Coefficients of Z(K')
-#
+#Coefficients of Z(K')
+
 Z1c0=2.0 Z1c2=1.333333333
 Z3c2=0.44721360 Z3c4=0.16262313
 Z5c4=0.10101010 Z5c6=0.01554002

@@ -3,7 +3,7 @@
  * Author: Martin Rotter
  ***********************************************************************/
 
-#define MAXNOFCHARINLINE 1000
+
 #define MAXNOFATOMS 100
 
 

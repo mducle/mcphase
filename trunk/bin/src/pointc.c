@@ -5,7 +5,6 @@
  * in Rare Earth Compounds, in print
  ***********************************************************************/
 
-#define MAXNOFCHARINLINE 1000
 
 #include "jjjpar.hpp"
 #include "../../version"
@@ -83,7 +82,7 @@ float invalues[100];invalues[0]=99;
  ionpars * iops;
  jjjpar * jjjps;
  char *token;
- if(sipf_file=fopen(argv[1],"r")) //read ion parameters from file
+ if((sipf_file=fopen(argv[1],"r"))) //read ion parameters from file
  { iops=new ionpars(2);
    jjjps=new jjjpar(1,1,1);
    while(feof(sipf_file)==false)
@@ -322,7 +321,7 @@ while(n>0)
                     }
  n=0;
  if (argc<5)
- { while(n==0&feof(table_file)==false)n=inputline(table_file, invalues);
+ { while((n==0)&(feof(table_file)==false))n=inputline(table_file, invalues);
   q=invalues[1];
   x=invalues[2];
   y=invalues[3];

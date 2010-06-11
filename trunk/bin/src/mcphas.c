@@ -9,7 +9,7 @@
 
 // maximum number of spinconfigurations allowed in phasediagramm
 #define MAXNOFSPINCF 500
-#define MAXNOFCHARINLINE 1024
+
 
 
 inipar ini("mcphas.ini");

@@ -3,13 +3,8 @@
 #ifndef PAR
 #define PAR
 
-#include<cstdio>
-#include<cstring>
-#include<cstdlib>
-#include<cerrno>
-#include<ctime>
+
 #include<martin.h>
-#include<vector.h>
 #include "jjjpar.hpp"
 
 #define MAX_NOF_ATOMS_IN_PRIMITIVE_CRYST_UNITCELL 4000

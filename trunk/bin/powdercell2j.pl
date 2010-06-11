@@ -12,10 +12,12 @@ unless ($#ARGV >=0)
 
     program $0  used to create mcphas.j type file from output of powdercell
 
-    usage: $0 *.*
+    usage: $0 *.*  [*.cel]
 
-    *.* .. filenname of powdercell file
-    output is written to mcphas.j
+    *.* .. filenname of powdercell file with atomic positions
+    *.cel ... optional, filename of powdercell .CEL file
+
+    output is written to mcphas.j, mcdiff.in
 
  In case of any error please check the format of the input file *.*
 
@@ -29,10 +31,46 @@ unless ($#ARGV >=0)
 EOF
  exit 0;
 }
+
+  if($ARGV[1])
+  {# read .cel file if given
+     $file=$ARGV[1];
+    unless (open (Fin, $file)){die "\n error:unable to open $file\n";}
+    while($line=<Fin>)
+     {
+      if ($line=~/^\s*CELL/) {@c=split(" ",$line);
+                          $alattice=$c[1];
+                          $blattice=$c[2];
+                          $clattice=$c[3];
+                          $alpha=$c[4];
+                          $beta=$c[5];
+                          $gamma=$c[6];
+                   print "\nLATTICE from $file\n";
+                   print " a=$alattice A b=$blattice A c=$clattice A\n alpha=$alpha deg beta=$beta deg gamma=$gamma deg\n\n";
+                              }
+     }
+  }
+  else
+  {
+  print "Give the lattice constants a(A) and then press enter\n";
+  $alattice= <STDIN>;$alattice=~s/\n//;
+  print "Give the lattice constants b(A) and then press enter\n";
+  $blattice=<STDIN>;$blattice=~s/\n//;
+  print "Give the lattice constants c(A) and then press enter\n";
+  $clattice=<STDIN>;$clattice=~s/\n//;
+  print "Give the angle alpha(deg) and then press enter\n";
+  $alpha=<STDIN>;$alpha=~s/\n//;
+  print "Give the angle beta(deg) and then press enter\n";
+  $beta=<STDIN>;$beta=~s/\n//;
+  print "Give the angle gamma(deg)  and then press enter\n";
+  $gamma=<STDIN>;$gamma=~s/\n//;
+  }
+
+
  scattlengthoutput();
    $p=0;
-  foreach (@ARGV)
-  {   $file=$_;
+ 
+     $file=$ARGV[0];
  #   %
  #   %begin:"find how many different types of atoms do we have in the structure"
  #   %
@@ -66,21 +104,8 @@ EOF
     print "@atomtypetempp\n";
     print "    Number of different atoms for each type:\n";
     print "@nofatoms\n";
-  }
-  print "Give the lattice constants a(A) and then press enter\n";
-  $alattice= <STDIN>;$alattice=~s/\n//;
-  print "Give the lattice constants b(A) and then press enter\n";
-  $blattice=<STDIN>;$blattice=~s/\n//;
-  print "Give the lattice constants c(A) and then press enter\n";
-  $clattice=<STDIN>;$clattice=~s/\n//;
-  print "Give the angle alpha(deg) and then press enter\n";
-  $alpha=<STDIN>;$alpha=~s/\n//;
-  print "Give the angle beta(deg) and then press enter\n";
-  $beta=<STDIN>;$beta=~s/\n//;
-  print "Give the angle gamma(deg)  and then press enter\n";
-  $gamma=<STDIN>;$gamma=~s/\n//;
 
- 
+
   foreach(@atomtypetempp)
   {  open (Fout1, ">$_.sipf");
      print "For $_ atom the oxidation state is? \nPlease give the charge in units of elementary charge |e|; for ex. -2 or +1 or +3:\n";
@@ -251,7 +276,7 @@ mydel  ("powdercell2j.sps");
 mydel ("scatteringlengths.txt");
 open (Fout, ">mcdiff.in");
 print Fout << "EOF";
-# this file is the input file read by program mcdiff version 3.0 Tue Jun 23 11:27:48 2009
+# this file is the input file created by program powdercell2j
 #<!--mcdiff.mcdiff.in>
 #***************************************************************
 #      mcdiff is a program for the calculation of elastic

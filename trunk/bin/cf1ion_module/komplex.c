@@ -16,7 +16,7 @@ Definierte Funktionen :
 -----------------------
 cdiv()
 cabs()
-csqrt()
+csqroot()
 -----------------------------------------------------------------------------*/
  
  
@@ -151,9 +151,9 @@ DOUBLE cabs1(xr,xi)   /* cabs = +sqrt( xi*xi + xr*xr ) */
     return(   (xi==0.0) ? xr : xr * sqrt( 1.0+(xi/xr)*(xi/xr) )   );
 }
 /*----------------------------------------------------------------------------
-                                    csqrt()
+                                    csqroot()
 ------------------------------------------------------------------------------*/
-KOMPLEX *csqrt(xr,xi)
+KOMPLEX *csqroot(xr,xi)
     DOUBLE   xr;
     DOUBLE   xi;
 {

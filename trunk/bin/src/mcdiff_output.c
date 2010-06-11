@@ -132,7 +132,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
      {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) \n");}
     }
     // calculate alpha_i delta_i for reflection hkl[i](1..3)  [currently ok only for ortholattices !!!]
-    double alpha1,alpha2,alpha3,delta1,delta2,delta3,Q,sqr1,sqr2;
+    double alpha1,alpha2,alpha3,delta1,delta2,delta3,sqr1,sqr2;
     alpha1=acos(-0.999999*hkl[i](1)*D[i]/a);   // the following lines should be extended to non ortho lattices !!!
     alpha2=acos(-0.999999*hkl[i](2)*D[i]/b);   // mind: in this section still the old convention is used: a||x,b||y,c||z ... this should be changed for nonortholattices
     alpha3=acos(-0.999999*hkl[i](3)*D[i]/c);
@@ -157,7 +157,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
 
     for(azimuth=0.0;azimuth<=2*PI;azimuth+=PI/90)
      {complex <double> z1,z2,z3,z1z2,z2z3,z12,z32;
-      double f,f1ps,f1sp,f1pp,f2ps,f2sp,f2pp;
+      double f1ps,f1sp,f1pp,f2ps,f2sp,f2pp;
       double st,ct,s2t;
 
       Matrix ang(1,3,1,3);

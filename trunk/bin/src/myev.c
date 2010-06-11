@@ -23,8 +23,10 @@ void myPrintComplexMatrix(FILE * file,ComplexMatrix & M)
 }    
 
 int myReadComplexMatrix (FILE * file, ComplexMatrix & M)
-{int i,i1,j1;char instr[MAXNOFCHARINLINE];
- float numbers[M.Rhi()-M.Rlo()+2];numbers[0]=M.Rhi()-M.Rlo()+2;
+{int i1,j1;char instr[MAXNOFCHARINLINE];
+ float *numbers;
+  numbers = new float[M.Rhi()-M.Rlo()+2];
+  numbers[0]=M.Rhi()-M.Rlo()+2;
  
      //read comment line 
      if(fgets(instr,MAXNOFCHARINLINE,file)==false) {fprintf (stderr, "ERROR reading complex matrix - comment line before real part\n");return false;}
@@ -42,6 +44,7 @@ int myReadComplexMatrix (FILE * file, ComplexMatrix & M)
     j1=inputline(file,numbers);if(j1!=M.Chi()-M.Clo()+1) {fprintf (stderr, "ERROR reading complex matrix - number of columns read (%i) does not match matrix dimension (%i)\n",j1,M.Chi()-M.Clo()+1);return false;}
     for (j1=M.Clo();j1<=M.Chi();++j1)M(i1,j1)+=complex <double> (0,numbers[j1-M.Clo()+1]);
     }
+delete []numbers;
 return true;
 }
 
@@ -101,12 +104,13 @@ void myEigenSystemHermitean (ComplexMatrix & M,Vector & lambda,ComplexMatrix & l
   Matrix li(l.Rlo(),l.Rhi(),l.Clo(),l.Chi());
   complex<double> ii(0,1);  
   int i1,j1;
-
+  double d;
   //check if M it is hermitean
-   if (NormFro(M-M.Conjugate().Transpose())>VERYSMALL)
-   {fprintf(stderr,"myEigenSystemHermitean: ERROR-matrix not hermitian\n");
+   d=NormFro(M-M.Conjugate().Transpose());
+   if (d>VERYSMALL)
+   {fprintf(stderr,"myEigenSystemHermitean: ERROR- %ix%i matrix not hermitian, abs sum of differences= %g\n",M.Rhi(),M.Rhi(),d);
     //printout matrix
-    myPrintComplexMatrix(stderr,M);
+    //myPrintComplexMatrix(stderr,M);
     getchar();
    }
 

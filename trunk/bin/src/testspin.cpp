@@ -5,7 +5,7 @@
 #include "testspin.hpp"
 #include "../../version"
 
-#define MAXNOFCHARINLINE 1024
+
 
 // add spinconfiguration sps to list
 int testspincf::addspincf(spincf & sps)

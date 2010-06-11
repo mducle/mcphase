@@ -5,9 +5,8 @@
  * Author: M. Rotter
  **********************************************************/
 
-#define MAXNOFCHARINLINE 1000
-#define MAXNOFATOMS 100
 
+#define MAXNOFATOMS 100
 
 #include "../../version"
 #include "density.hpp"
@@ -15,8 +14,7 @@
 #include "jjjpar.hpp"
 #include "martin.h"
 #include "plt_func.c"
-
-
+#include "cryststruct.hpp"
 
 /**********************************************************************/
 // main program
@@ -30,12 +28,13 @@ printf("* Reference: M. Rotter PRB 79 (2009) 140405R\n");
 printf("* %s\n",MCPHASVERSION);
 printf("***********************************************************\n");
 // check command line
-  if (argc < 10)
+  if (argc < 7)
     { printf ("\nprogram momdensplt - calculate moment density of a single ion\n\n\
                 use as: momdensplt threshhold T Ha Hb Hc i j k mcphas.sipf \n\n\
+                    or: momdensplt threshhold T Ha Hb Hc mcphas.sipf \n\n\
                 - given is temperature T[K] and magnetic effective field H[T]\n\
 		- the moment density vector component along direction (i,j,k)\n\
-                  is calculated\n\
+                  is calculated (if omitted abs value of momdens is calc.)\n\
                 - crystal field  parameters Blm should be read from a \n\
 	          standard mcphas single ion property file mcphas.sipf \n\
                 options: if T<0 then no thermal boltzmann distribution is taken\n\
@@ -51,48 +50,48 @@ printf("***********************************************************\n");
       exit (1);
     }
 
- graphic_parameters gp;
-gp.show_abc_unitcell=0;
-gp.show_primitive_crystal_unitcell=0;
-gp.show_magnetic_unitcell=0;
-gp.threshhold=strtod(argv[1],NULL);
-gp.scale_pointcharges=1;
-gp.show_pointcharges=1;
 
-  double T,ha,hb,hc,xx,yy,zz;
+  double T,ha,hb,hc,xx=0,yy=0,zz=0;
   T=strtod(argv[2],NULL);
   ha=strtod(argv[3],NULL);
   hb=strtod(argv[4],NULL);
   hc=strtod(argv[5],NULL);
-  xx=strtod(argv[6],NULL);
+ int doijk=0;
+if (argc>9)
+ {  xx=strtod(argv[6],NULL);
   yy=strtod(argv[7],NULL);
   zz=strtod(argv[8],NULL);
-  double rr;
+ double rr;
   // normalize direction vector
   rr=sqrt(xx*xx+yy*yy+zz*zz);
   xx/=rr;yy/=rr;zz/=rr;
-
+  doijk=3;
+  }
  FILE * fout;
 
  // read cf-parameters into class object jjjpar
- jjjpar jjjps(0.0,0.0,0.0,argv[9]);
+ jjjpar jjjps(0.0,0.0,0.0,argv[6+doijk]);
  if(jjjps.module_type!=0){fprintf(stderr,"ERROR chrgplt: calculation not possible for this single ion module\n");exit(EXIT_FAILURE);}
   
-  int dim=49;
+  int dim=49;if(doijk==0){dim=3*49;}
 // Indices for momdensity
 //          0 not used
 //          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849
 int k[] = {-1,0, 1,1,1, 2, 2,2,2,2, 3, 3, 3,3,3,3,3, 4, 4, 4, 4,4,4,4,4,4, 5, 5, 5, 5, 5,5,5,5,5,5,5, 6, 6, 6, 6, 6, 6,6,6,6,6,6,6,6};
 int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,-3,-2,-1,0,1,2,3,4,5,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6};
 
-  Vector h(1,dim);
+  Vector h(1,6);
+  Vector moms(1,6);
   Vector moments(1,2*dim);
 
- Vector momS(1,dim);
- Vector momL(1,dim);
-  Vector momentsx(1,dim);
-  Vector momentsy(1,dim);
-  Vector momentsz(1,dim);
+ Vector momS(1,49);
+ Vector momL(1,49);
+  Vector momentsx(1,49);
+  Vector momentsy(1,49);
+  Vector momentsz(1,49);
+  Vector momentlx(1,49);
+  Vector momently(1,49);
+  Vector momentlz(1,49);
   h=0;
 
   if(jjjps.module_type==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;} 
@@ -101,69 +100,93 @@ int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
 
   jjjps.mcalc_parameter_storage_init(h,T);
   printf("calculating expectation values ....\n");
-double lnz,u;
-  jjjps.mcalc(moments,T,h,lnz,u,jjjps.mcalc_parstorage);
-if(xx!=0)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
-if(yy!=0)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
-if(zz!=0)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
+//double lnz,u;
+ // jjjps.mcalc(moms,T,h,lnz,u,jjjps.mcalc_parstorage);
+if(xx!=0||doijk==0)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
+if(yy!=0||doijk==0)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
+if(zz!=0||doijk==0)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
  momS=xx*momentsx+yy*momentsy+zz*momentsz;
-if(xx!=0)jjjps.orbmomdensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
-if(yy!=0)jjjps.orbmomdensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
-if(zz!=0)jjjps.orbmomdensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
- momL=xx*momentsx+yy*momentsy+zz*momentsz;
+if(xx!=0||doijk==0)jjjps.orbmomdensity_mcalc (momentlx,1, T, h, jjjps.mcalc_parstorage);
+if(yy!=0||doijk==0)jjjps.orbmomdensity_mcalc (momently,2, T, h, jjjps.mcalc_parstorage);
+if(zz!=0||doijk==0)jjjps.orbmomdensity_mcalc (momentlz,3, T, h, jjjps.mcalc_parstorage);
+ momL=xx*momentlx+yy*momently+zz*momentlz;
 int i,nofpc=0;
- for(i=1;i<=dim;++i){moments(i)=momS(i);moments(i+dim)=momL(i);}
-
 printf("#momdensity is expanded in tesseral harmonics Zlm\n\
 #   M(r).(%g,%g,%g)= sum_lm (aS(l,m) R^2(r)+ aL(l,m) F(r) Zlm(Omega)\n\
 #   with F(r)=1/r int_r^inf R^2(x) dx\n\
 #   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
-   for(i=1;i<=dim;++i){int l,m;double factor;
+   for(i=1;i<=49;++i){
+if(doijk>0){moments(i)=momS(i);moments(i+49)=momL(i);
                        printf(" aS(%i,%i) =%12.6f  ",k[i],q[i],moments(i));
-                       printf(" aL(%i,%i) =%12.6f\n",k[i],q[i],moments(i+dim));
+                       printf(" aL(%i,%i) =%12.6f\n",k[i],q[i],moments(i+49));
+           }
+else
+           {
+                       printf(" aSx(%i,%i) =%12.6f  ",k[i],q[i],momentsx(i));
+                       printf(" aSy(%i,%i) =%12.6f  ",k[i],q[i],momentsy(i));
+                       printf(" aSz(%i,%i) =%12.6f  ",k[i],q[i],momentsz(i));
+                       printf(" aLx(%i,%i) =%12.6f  ",k[i],q[i],momentlx(i));
+                       printf(" aLy(%i,%i) =%12.6f  ",k[i],q[i],momently(i));
+                       printf(" aLz(%i,%i) =%12.6f\n",k[i],q[i],momentlz(i));
+             moments(i)=momentsx(i);moments(i+49)=momentsy(i);moments(i+2*49)=momentsz(i);
+             moments(i+3*49)=momentlx(i);moments(i+4*49)=momently(i);moments(i+5*49)=momentlz(i);
+
+           }
 }
 printf("\n");
+ graphic_parameters gp;
+gp.show_abc_unitcell=0;
+gp.show_primitive_crystal_unitcell=0;
+gp.show_magnetic_unitcell=0;
+gp.threshhold=strtod(argv[1],NULL);
+gp.scale_pointcharges=1;
+gp.show_pointcharges=1;
+gp.scale_density_vectors=1;
+ gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
+cryststruct cs;
 
  char text[1000];
  if(jjjps.module_type==0||jjjps.module_type==4){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc, momdensity M(r).(%g,%g,%g)</title>\n", T, ha, hb, hc,xx,yy,zz);}
  if(jjjps.module_type==2){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=cab, momdensity M(r).(%g,%g,%g)</title>\n", T, ha, hb, hc,xx,yy,zz);}
 
- char * cffilenames[MAXNOFATOMS];
- cffilenames[1]=new char[MAXNOFCHARINLINE];
- float x[MAXNOFATOMS],y[MAXNOFATOMS],z[MAXNOFATOMS],gJ[MAXNOFATOMS];
-
-Vector abc(1,3);abc(1)=6.0;abc(2)=6.0;abc(3)=6.0;
-Matrix r(1,3,1,3);r=0;r(1,1)=1.0;r(2,2)=1.0;r(3,3)=1.0;
-
- strcpy(cffilenames[1],argv[9]);
- x[1]=0.5;y[1]=0.5;z[1]=0.5; // put atom in middle of cell
+ cs.cffilenames[1]=new char[MAXNOFCHARINLINE];
+ cs.abc(1)=6.0;cs.abc(2)=6.0;cs.abc(3)=6.0;
+ cs.r=0;cs.r(1,1)=1.0;cs.r(2,2)=1.0;cs.r(3,3)=1.0;
+ strcpy(cs.cffilenames[1],argv[6+doijk]);
+ cs.x[1]=0.5;cs.y[1]=0.5;cs.z[1]=0.5; // put atom in middle of cell
 
 
 // read pointcharge-parameters
-if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharges,cffilenames,argv[9],x,y,z,jjjps,abc);
+if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharges,cs.cffilenames,argv[6+doijk],cs.x,cs.y,cs.z,jjjps,cs.abc);
 
   spincf s(1,1,1,nofpc+1,2*dim);
-  Vector gJJ(1,nofpc+1);gJJ=0;gJJ(1)=jjjps.gJ;
+  cs.gJ[1]=jjjps.gJ;
   Vector hkl(1,3);hkl=0;s=s*0;
   spincf ev_real(s),ev_imag(s);
 
   for(i=1;i<=2*dim;++i)s.m(1,1,1)(i)=moments(i);
   gp.show_atoms=1;gp.showprim=1;
-  gp.spins_scale_static_moment=0;
+  gp.spins_scale_moment=0;
   gp.spins_show_static_moment_direction=0;
   sprintf(gp.title,"momdensity M(r).(%g,%g,%g)",xx,yy,zz);
   fout = fopen_errchk ("results/momdensplt.jvx", "w");
-   s.jvx_cd(fout,text,abc,r,x,y,z,gJJ,gp,0.0,ev_real,ev_imag,hkl,cffilenames);
+   s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
+  fclose (fout);
+  fout = fopen_errchk ("results/momdensplt.grid", "w");
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/momdensplti.grid", "w");
   gp.showprim=1;
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,1,200,200,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=1;gp.gridj=200;gp.gridk=200;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/momdenspltj.grid", "w");
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,200,1,200,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=200;gp.gridj=1;gp.gridk=200;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/momdenspltk.grid", "w");
-  s.cd(fout,abc,r,x,y,z,cffilenames,gp,200,200,1,ev_real,ev_imag,0.0,hkl);
+  gp.gridi=200;gp.gridj=200;gp.gridk=1;
+  s.cd(fout,cs,gp,ev_real,ev_imag,0.0,hkl);
   fclose (fout);
 fprintf(stderr,"# ************************************************************************\n");
 fprintf(stderr,"# *             end of program momdensplt\n");
@@ -177,7 +200,7 @@ fprintf(stderr,"# * displaycontour 1 2 4 results/momdenspltk.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;
-  for(dj=1;dj<=nofpc+1;++dj){delete cffilenames[dj];}
+  for(dj=1;dj<=nofpc+1;++dj){delete cs.cffilenames[dj];}
   return 0;
 }
 

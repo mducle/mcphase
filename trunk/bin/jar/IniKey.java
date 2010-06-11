@@ -35,8 +35,9 @@ private String m_Key;
   }
 
   public int AddItem(IniItem Item)
-  {
+  { Item.iSequence=iMaxItems+1; // introduced by Martin
     m_Items.put(Item.GetItem(), Item);
+
 	iMaxItems++;
     return(0);
   }

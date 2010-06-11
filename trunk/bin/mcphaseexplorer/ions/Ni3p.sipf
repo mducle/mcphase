@@ -1,7 +1,42 @@
+#!MODULE=../../bin/ic1ion_module/ic1ion.so
+#<!--mcphase.sipf-->
+#***************************************************************
+# Single Ion Parameter File for Module ic1ion for
+# mcphas version 3.0
+# - program to calculate static magnetic properties
+# reference: M. Rotter JMMM 272-276 (2004) 481
+# mcdisp version 3.0
+# - program to calculate the dispersion of magnetic excitations
+# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751
+# mcdiff version 3.0
+# - program to calculate neutron and magnetic xray diffraction
+# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R
+#***************************************************************
+
+
+#-----------
+IONTYPE=Ni3+
+#-----------
+nof_electrons=7
+
+#------------------------------------------------------------------------------------------------------
+# radial wave function parameters R_Np,XIp(r)= r^(Np-1) . exp(-xi r) . (2 XIp)^(Np+0.5) / sqrt(2Np!)
+# values tabulated in clementi & roetti Atomic data and nuclear data tables 14 (1974) 177-478
+# Ni3+ is 3d7 looking at page 422 of Clemente & Roetti
+# the 3D6 radial wave function is expanded as R(r)=sum_p C_p R_Np,XIp(r)
+#------------------------------------------------------------------------------------------------------
+N1=3 XI1=4.76011 C1=0.37504
+N2=3 XI2=12.9274 C2=0.02687
+N3=3 XI3=7.17214 C3=0.22445
+N4=3 XI4=2.83172 C4=0.47501
+N5=3 XI5=1.63056 C5=0.02722
+
+
 #Neutron magnetic form factor coefficients
 FFj0A= 0.0012 FFj0a=34.9998 FFj0B= 0.3468 FFj0b=11.9874 FFj0C= 0.6667 FFj0c= 4.2518 FFj0D=-0.0148
 FFj2A= 1.4683 FFj2a= 8.6713 FFj2B= 1.1068 FFj2b= 3.2574 FFj2C= 0.1794 FFj2c= 1.1058 FFj2D=-0.0023
 FFj4A=-0.4014 FFj4a= 9.0462 FFj4B= 0.2314 FFj4b= 3.0753 FFj4C= 0.2192 FFj4c= 1.0838 FFj4D= 0.0060
+
 
 
 

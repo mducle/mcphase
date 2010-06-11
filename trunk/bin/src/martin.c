@@ -21,7 +21,6 @@ if (instr[strspn(instr," \t")]=='#'&&instr[strspn(instr," \t#")]!='!') return 1;
                                  // inserted again 27.8.09 to be able to have real comment lines ignored
                                  // by mcphase - however "#!" will be treated as comment with variable to be read
  
-
   // strip /r (dos line feed) from line if necessary
  // while ((token=strchr(instr,'\r'))!=NULL){*token=' ';}
  
@@ -228,13 +227,13 @@ if(i>=(int)nn[0])
  // *************************************************************************
 
 // return random number between 0 and z
-float rnd(float z){return  z*rand()/RAND_MAX;};
+float rnd(float z){return  z*rand()/RAND_MAX;}
 
 // return integer of floating number (like basic integer function)
-float integer (float s){  double result;modf(s,&result);  return result;};
+float integer (float s){  double result;modf(s,&result);  return result;}
 
 //return rounded integer of floating number
-int cint (float s){  double result;if(modf(s,&result)<0.5){return (int)result;}{return (int)result+1;}};
+int cint (float s){  double result;if(modf(s,&result)<0.5){return (int)result;}{return (int)result+1;}}
 
 
 // factorial of an integer number
@@ -259,8 +258,8 @@ float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
 //    CAMBRIDGE UNIVERSITY PRESS 
 //    ... and transfered to c and improved by M. Rotter 2008
 
-        int I,J,M,N,J7;
-	double R0,R4,R5,R6,R7,R8,R9;
+        int I,J7;
+	double R0,R4,R5,R6,R8,R9;
 	double F[31];      
 
 //  DEFINE THE FACTORIAL FUNCTION
@@ -294,7 +293,7 @@ float threej (float AJ1,float  AJ2,float  AJ3,float AM1,float AM2,float AM3)
      R0 = sqrt(R4 / R5) * R6 ;
      R0 *= odd(int(AJ1 - AJ2 - AM3)) ? -1 : 1; //.... equiv to * (-1) ^ int((AJ1 - AJ2 - AM3))
   return R0;
-};
+}
 
 
 

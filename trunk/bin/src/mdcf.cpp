@@ -101,7 +101,7 @@ int mdcf::nc()
 
 //constructors
 mdcf::mdcf (int n1,int n2,int n3,int n,int nc)
-{  int i,j,k,i1;
+{  int i;
    nofa=n1;nofb=n2;nofc=n3;
    mxa=nofa+1; mxb=nofb+1; mxc=nofc+1;
    nofatoms=n;nofcomponents=nc;

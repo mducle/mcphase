@@ -5,16 +5,10 @@
 #define PHYSPROP
 
 
-#include<cstdio>
-#include<cstring>
-#include<cstdlib>
-#include<cerrno>
-#include<ctime>
+#include<par.hpp>
 #include<martin.h>
-#include<vector.h>
 #include<spincf.hpp>
 #include<mfcf.hpp>
-#include<par.hpp>
 
 class physproperties
 {

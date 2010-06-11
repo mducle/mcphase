@@ -2,32 +2,16 @@
 
 #include "ionpars.hpp"
 #include "martin.h"
-#include <cstring>
-#include <cstdlib>
 #include "ionpars.h"
+#include "myev.h"
 
-#define PI 3.1415926535
 #define NOF_OLM_MATRICES 45
-#define MAXNOFCHARINLINE 1024
-#define K_B  0.0862
+
 #define SMALL 1e-6   //!!! must match SMALL in mcdisp.c and ionpars.cpp !!!
                      // because it is used to decide wether for small transition
 		     // energy the matrix Mijkl contains wn-wn' or wn/kT
 
-void myPrintComplexMat(FILE * file,ComplexMatrix & M)
-{int i1,j1;
- fprintf (file,"#Real Part\n");
-   
-   for (i1=M.Rlo();i1<=M.Rhi();++i1){
-    for (j1=M.Clo();j1<=M.Chi();++j1) fprintf (file,"%6.3g ",real(M(i1,j1)));
-    fprintf (file,"\n");
-    }
-    fprintf (file,"#Imaginary Part\n");
-   for (i1=M.Rlo();i1<=M.Rhi();++i1){
-   for (j1=M.Clo();j1<=M.Chi();++j1)fprintf (file,"%6.3g ",imag(M(i1,j1)));
-    fprintf (file,"\n");
-    }
-}    
+
 
 
  ionpars::ionpars (const ionpars & p) //copy constructor
@@ -128,20 +112,20 @@ ionpars::~ionpars(){
 
  for (i=1;i<=NOF_OLM_MATRICES;++i)
   {delete Olm[i];delete OOlm[i];}
-   delete []Olm;
-   delete []OOlm;
+   delete[] Olm;
+   delete[] OOlm;
   
  } //destructor
 
 
 ionpars::ionpars(FILE * cf_file) 
 //constructor with commands from file handle (filename of cf parameters etc)
-{   static int pr=1;
+{      
+   static int pr=1;
 //  FILE * tryfile;
   int dimj;complex<double> im(0,1);
-  int i,j,l,m,dj=30; //30 ... maximum number of 2j+1
+  int i,j,l,m; //30 ... maximum number of 2j+1
   double alphar,betar,gammar,r2r,r4r,r6r,gJr;
-
   char instr[MAXNOFCHARINLINE];
   iontype= new char[MAXNOFCHARINLINE];
   char  moduletype[MAXNOFCHARINLINE];
@@ -287,172 +271,58 @@ ionpars::ionpars(FILE * cf_file)
 	}}
 
 
-  
-  double ** hcfr,**hcfi,**Jxr,**Jxi,**Jyr,**Jyi,**Jzr,**Jzi;
+  double Jxr[31*31],Jxi[31*31],Jyr[31*31],Jyi[31*31],Jzr[31*31],Jzi[31*31];
 
-  double ** mo22sr,**mo22si;
-  double ** mo21sr,**mo21si;
-  double ** mo20cr,**mo20ci;
-  double ** mo21cr,**mo21ci;
-  double ** mo22cr,**mo22ci;
-  
-  double ** mo33sr,**mo33si;
-  double ** mo32sr,**mo32si;
-  double ** mo31sr,**mo31si;
-  double ** mo30cr,**mo30ci;
-  double ** mo31cr,**mo31ci;
-  double ** mo32cr,**mo32ci;
-  double ** mo33cr,**mo33ci;
+  double  mo22sr[31*31],mo22si[31*31];
+  double  mo21sr[31*31],mo21si[31*31];
+  double  mo20cr[31*31],mo20ci[31*31];
+  double  mo21cr[31*31],mo21ci[31*31];
+  double  mo22cr[31*31],mo22ci[31*31];
 
-  double ** mo44sr,**mo44si;
-  double ** mo43sr,**mo43si;
-  double ** mo42sr,**mo42si;
-  double ** mo41sr,**mo41si;
-  double ** mo40cr,**mo40ci;
-  double ** mo41cr,**mo41ci;
-  double ** mo42cr,**mo42ci;
-  double ** mo43cr,**mo43ci;
-  double ** mo44cr,**mo44ci;
-  
-  double ** mo55sr,**mo55si;
-  double ** mo54sr,**mo54si;
-  double ** mo53sr,**mo53si;
-  double ** mo52sr,**mo52si;
-  double ** mo51sr,**mo51si;
-  double ** mo50cr,**mo50ci;
-  double ** mo51cr,**mo51ci;
-  double ** mo52cr,**mo52ci;
-  double ** mo53cr,**mo53ci;
-  double ** mo54cr,**mo54ci;
-  double ** mo55cr,**mo55ci;
+  double  mo33sr[31*31],mo33si[31*31];
+  double  mo32sr[31*31],mo32si[31*31];
+  double  mo31sr[31*31],mo31si[31*31];
+  double  mo30cr[31*31],mo30ci[31*31];
+  double  mo31cr[31*31],mo31ci[31*31];
+  double  mo32cr[31*31],mo32ci[31*31];
+  double  mo33cr[31*31],mo33ci[31*31];
 
-  double ** mo66sr,**mo66si;
-  double ** mo65sr,**mo65si;
-  double ** mo64sr,**mo64si;
-  double ** mo63sr,**mo63si;
-  double ** mo62sr,**mo62si;
-  double ** mo61sr,**mo61si;
-  double ** mo60cr,**mo60ci;
-  double ** mo61cr,**mo61ci;
-  double ** mo62cr,**mo62ci;
-  double ** mo63cr,**mo63ci;
-  double ** mo64cr,**mo64ci;
-  double ** mo65cr,**mo65ci;
-  double ** mo66cr,**mo66ci;
+  double  mo44sr[31*31],mo44si[31*31];
+  double  mo43sr[31*31],mo43si[31*31];
+  double  mo42sr[31*31],mo42si[31*31];
+  double  mo41sr[31*31],mo41si[31*31];
+  double  mo40cr[31*31],mo40ci[31*31];
+  double  mo41cr[31*31],mo41ci[31*31];
+  double  mo42cr[31*31],mo42ci[31*31];
+  double  mo43cr[31*31],mo43ci[31*31];
+  double  mo44cr[31*31],mo44ci[31*31];
 
+  double  mo55sr[31*31],mo55si[31*31];
+  double  mo54sr[31*31],mo54si[31*31];
+  double  mo53sr[31*31],mo53si[31*31];
+  double  mo52sr[31*31],mo52si[31*31];
+  double  mo51sr[31*31],mo51si[31*31];
+  double  mo50cr[31*31],mo50ci[31*31];
+  double  mo51cr[31*31],mo51ci[31*31];
+  double  mo52cr[31*31],mo52ci[31*31];
+  double  mo53cr[31*31],mo53ci[31*31];
+  double  mo54cr[31*31],mo54ci[31*31];
+  double  mo55cr[31*31],mo55ci[31*31];
 
-    Jxr=new double*[dj+1];Jxi=new double*[dj+1];
-    Jyr=new double*[dj+1];Jyi=new double*[dj+1];
-    Jzr=new double*[dj+1];Jzi=new double*[dj+1];
-    hcfr=new double*[dj+1];hcfi=new double*[dj+1];
-
-  mo22sr=new double*[dj+1];mo22si=new double*[dj+1];
-  mo21sr=new double*[dj+1];mo21si=new double*[dj+1];
-  mo20cr=new double*[dj+1];mo20ci=new double*[dj+1];
-  mo21cr=new double*[dj+1];mo21ci=new double*[dj+1];
-  mo22cr=new double*[dj+1];mo22ci=new double*[dj+1];
-
-  mo33sr=new double*[dj+1];mo33si=new double*[dj+1];
-  mo32sr=new double*[dj+1];mo32si=new double*[dj+1];
-  mo31sr=new double*[dj+1];mo31si=new double*[dj+1];
-  mo30cr=new double*[dj+1];mo30ci=new double*[dj+1];
-  mo31cr=new double*[dj+1];mo31ci=new double*[dj+1];
-  mo32cr=new double*[dj+1];mo32ci=new double*[dj+1];
-  mo33cr=new double*[dj+1];mo33ci=new double*[dj+1];
-
-  mo44sr=new double*[dj+1];mo44si=new double*[dj+1];
-  mo43sr=new double*[dj+1];mo43si=new double*[dj+1];
-  mo42sr=new double*[dj+1];mo42si=new double*[dj+1];
-  mo41sr=new double*[dj+1];mo41si=new double*[dj+1];
-  mo40cr=new double*[dj+1];mo40ci=new double*[dj+1];
-  mo41cr=new double*[dj+1];mo41ci=new double*[dj+1];
-  mo42cr=new double*[dj+1];mo42ci=new double*[dj+1];
-  mo43cr=new double*[dj+1];mo43ci=new double*[dj+1];
-  mo44cr=new double*[dj+1];mo44ci=new double*[dj+1];
-
-  mo55sr=new double*[dj+1];mo55si=new double*[dj+1];
-  mo54sr=new double*[dj+1];mo54si=new double*[dj+1];
-  mo53sr=new double*[dj+1];mo53si=new double*[dj+1];
-  mo52sr=new double*[dj+1];mo52si=new double*[dj+1];
-  mo51sr=new double*[dj+1];mo51si=new double*[dj+1];
-  mo50cr=new double*[dj+1];mo50ci=new double*[dj+1];
-  mo51cr=new double*[dj+1];mo51ci=new double*[dj+1];
-  mo52cr=new double*[dj+1];mo52ci=new double*[dj+1];
-  mo53cr=new double*[dj+1];mo53ci=new double*[dj+1];
-  mo54cr=new double*[dj+1];mo54ci=new double*[dj+1];
-  mo55cr=new double*[dj+1];mo55ci=new double*[dj+1];
-
-  mo66sr=new double*[dj+1];mo66si=new double*[dj+1];
-  mo65sr=new double*[dj+1];mo65si=new double*[dj+1];
-  mo64sr=new double*[dj+1];mo64si=new double*[dj+1];
-  mo63sr=new double*[dj+1];mo63si=new double*[dj+1];
-  mo62sr=new double*[dj+1];mo62si=new double*[dj+1];
-  mo61sr=new double*[dj+1];mo61si=new double*[dj+1];
-  mo60cr=new double*[dj+1];mo60ci=new double*[dj+1];
-  mo61cr=new double*[dj+1];mo61ci=new double*[dj+1];
-  mo62cr=new double*[dj+1];mo62ci=new double*[dj+1];
-  mo63cr=new double*[dj+1];mo63ci=new double*[dj+1];
-  mo64cr=new double*[dj+1];mo64ci=new double*[dj+1];
-  mo65cr=new double*[dj+1];mo65ci=new double*[dj+1];
-  mo66cr=new double*[dj+1];mo66ci=new double*[dj+1];
-
-    for (i=1;i<=dj;++i)
-     {Jxr[i]=new double [dj];Jxi[i]=new double [dj];
-      Jyr[i]=new double [dj];Jyi[i]=new double [dj];
-      Jzr[i]=new double [dj];Jzi[i]=new double [dj];
-      hcfr[i]=new double [dj];hcfi[i]=new double [dj];
-
-    mo22sr[i]=new double [dj];mo22si[i]=new double [dj];
-    mo21sr[i]=new double [dj];mo21si[i]=new double [dj];
-    mo20cr[i]=new double [dj];mo20ci[i]=new double [dj];
-    mo21cr[i]=new double [dj];mo21ci[i]=new double [dj];
-    mo22cr[i]=new double [dj];mo22ci[i]=new double [dj];
-
-    mo33sr[i]=new double [dj];mo33si[i]=new double [dj];
-    mo32sr[i]=new double [dj];mo32si[i]=new double [dj];
-    mo31sr[i]=new double [dj];mo31si[i]=new double [dj];
-    mo30cr[i]=new double [dj];mo30ci[i]=new double [dj];
-    mo31cr[i]=new double [dj];mo31ci[i]=new double [dj];
-    mo32cr[i]=new double [dj];mo32ci[i]=new double [dj];
-    mo33cr[i]=new double [dj];mo33ci[i]=new double [dj];
-
-    mo44sr[i]=new double [dj];mo44si[i]=new double [dj];
-    mo43sr[i]=new double [dj];mo43si[i]=new double [dj];
-    mo42sr[i]=new double [dj];mo42si[i]=new double [dj];
-    mo41sr[i]=new double [dj];mo41si[i]=new double [dj];
-    mo40cr[i]=new double [dj];mo40ci[i]=new double [dj];
-    mo41cr[i]=new double [dj];mo41ci[i]=new double [dj];
-    mo42cr[i]=new double [dj];mo42ci[i]=new double [dj];
-    mo43cr[i]=new double [dj];mo43ci[i]=new double [dj];
-    mo44cr[i]=new double [dj];mo44ci[i]=new double [dj];
-
-    mo55sr[i]=new double [dj];mo55si[i]=new double [dj];
-    mo54sr[i]=new double [dj];mo54si[i]=new double [dj];
-    mo53sr[i]=new double [dj];mo53si[i]=new double [dj];
-    mo52sr[i]=new double [dj];mo52si[i]=new double [dj];
-    mo51sr[i]=new double [dj];mo51si[i]=new double [dj];
-    mo50cr[i]=new double [dj];mo50ci[i]=new double [dj];
-    mo51cr[i]=new double [dj];mo51ci[i]=new double [dj];
-    mo52cr[i]=new double [dj];mo52ci[i]=new double [dj];
-    mo53cr[i]=new double [dj];mo53ci[i]=new double [dj];
-    mo54cr[i]=new double [dj];mo54ci[i]=new double [dj];
-    mo55cr[i]=new double [dj];mo55ci[i]=new double [dj];
-
-    mo66sr[i]=new double [dj];mo66si[i]=new double [dj];
-    mo65sr[i]=new double [dj];mo65si[i]=new double [dj];
-    mo64sr[i]=new double [dj];mo64si[i]=new double [dj];
-    mo63sr[i]=new double [dj];mo63si[i]=new double [dj];
-    mo62sr[i]=new double [dj];mo62si[i]=new double [dj];
-    mo61sr[i]=new double [dj];mo61si[i]=new double [dj];
-    mo60cr[i]=new double [dj];mo60ci[i]=new double [dj];
-    mo61cr[i]=new double [dj];mo61ci[i]=new double [dj];
-    mo62cr[i]=new double [dj];mo62ci[i]=new double [dj];
-    mo63cr[i]=new double [dj];mo63ci[i]=new double [dj];
-    mo64cr[i]=new double [dj];mo64ci[i]=new double [dj];
-    mo65cr[i]=new double [dj];mo65ci[i]=new double [dj];
-    mo66cr[i]=new double [dj];mo66ci[i]=new double [dj];
-    }
-     
+  double  mo66sr[31*31],mo66si[31*31];
+  double  mo65sr[31*31],mo65si[31*31];
+  double  mo64sr[31*31],mo64si[31*31];
+  double  mo63sr[31*31],mo63si[31*31];
+  double  mo62sr[31*31],mo62si[31*31];
+  double  mo61sr[31*31],mo61si[31*31];
+  double  mo60cr[31*31],mo60ci[31*31];
+  double  mo61cr[31*31],mo61ci[31*31];
+  double  mo62cr[31*31],mo62ci[31*31];
+  double  mo63cr[31*31],mo63ci[31*31];
+  double  mo64cr[31*31],mo64ci[31*31];
+  double  mo65cr[31*31],mo65ci[31*31];
+  double  mo66cr[31*31],mo66ci[31*31];
+    
 
 if (pr==1) {printf("#using %s ...\n",moduletype);
             switch(calcmagdensity)
@@ -534,22 +404,22 @@ if (pr==1) printf("#J=%g\n",J);
    Ja = Matrix(1,dimj,1,dimj); 
    Jaa = ComplexMatrix(1,dimj,1,dimj); 
    for(i=1;i<=dimj;++i)for(j=1;j<=dimj;++j)
-   {Jaa(i,j)=im*(Jxi[i])[j]+(Jxr[i])[j];
-    if(i<j){Ja(i,j)=(Jxi[j])[i];}else{Ja(i,j)=(Jxr[i])[j];}
+   {Jaa(i,j)=im*Jxi[30*(i-1)+j-1]+Jxr[30*(i-1)+j-1];
+    if(i<j){Ja(i,j)=Jxi[30*(j-1)+i-1];}else{Ja(i,j)=Jxr[30*(i-1)+j-1];}
    }
 
    Jb = Matrix(1,dimj,1,dimj); 
    Jbb = ComplexMatrix(1,dimj,1,dimj); 
    for(i=1;i<=dimj;++i)for(j=1;j<=dimj;++j)
-   {Jbb(i,j)=im*(Jyi[i])[j]+(Jyr[i])[j];
-    if(i<j){Jb(i,j)=(Jyi[j])[i];}else{Jb(i,j)=(Jyr[i])[j];}
+   {Jbb(i,j)=im*Jyi[30*(i-1)+j-1]+Jyr[30*(i-1)+j-1];
+    if(i<j){Jb(i,j)=Jyi[30*(j-1)+i-1];}else{Jb(i,j)=Jyr[30*(i-1)+j-1];}
    }
 
    Jc = Matrix(1,dimj,1,dimj); 
    Jcc = ComplexMatrix(1,dimj,1,dimj); 
    for(i=1;i<=dimj;++i)for(j=1;j<=dimj;++j)
-   {Jcc(i,j)=im*(Jzi[i])[j]+(Jzr[i])[j];
-    if(i<j){Jc(i,j)=(Jzi[j])[i];}else{Jc(i,j)=(Jzr[i])[j];}
+   {Jcc(i,j)=im*Jzi[30*(i-1)+j-1]+Jzr[30*(i-1)+j-1];
+    if(i<j){Jc(i,j)=Jzi[30*(j-1)+i-1];}else{Jc(i,j)=Jzr[30*(i-1)+j-1];}
    }
 
 //---------------------------------------------------------------------------
@@ -565,220 +435,105 @@ if (pr==1) printf("#J=%g\n",J);
     
     
    for(i=1;i<=dimj;++i){for(j=1;j<=dimj;++j)
-   {(*OOlm[1])(i,j)=im*(mo22si[i])[j]+(mo22sr[i])[j];
-if(i<j){(*Olm[1])(i,j)=(mo22si[j])[i];}else{(*Olm[1])(i,j)=(mo22sr[i])[j];}
-    (*OOlm[2])(i,j)=im*(mo21si[i])[j]+(mo21sr[i])[j];
-if(i<j){(*Olm[2])(i,j)=(mo21si[j])[i];}else{(*Olm[2])(i,j)=(mo21sr[i])[j];}
-    (*OOlm[3])(i,j)=im*(mo20ci[i])[j]+(mo20cr[i])[j];
-if(i<j){(*Olm[3])(i,j)=(mo20ci[j])[i];}else{(*Olm[3])(i,j)=(mo20cr[i])[j];}
-    (*OOlm[4])(i,j)=im*(mo21ci[i])[j]+(mo21cr[i])[j];
-if(i<j){(*Olm[4])(i,j)=(mo21ci[j])[i];}else{(*Olm[4])(i,j)=(mo21cr[i])[j];}
-    (*OOlm[5])(i,j)=im*(mo22ci[i])[j]+(mo22cr[i])[j];
-if(i<j){(*Olm[5])(i,j)=(mo22ci[j])[i];}else{(*Olm[5])(i,j)=(mo22cr[i])[j];}
+   {(*OOlm[1])(i,j)=im*mo22si[30*(i-1)+j-1]+mo22sr[30*(i-1)+j-1];
+if(i<j){(*Olm[1])(i,j)=mo22si[30*(j-1)+i-1];}else{(*Olm[1])(i,j)=mo22sr[30*(i-1)+j-1];}
+    (*OOlm[2])(i,j)=im*mo21si[30*(i-1)+j-1]+mo21sr[30*(i-1)+j-1];
+if(i<j){(*Olm[2])(i,j)=mo21si[30*(j-1)+i-1];}else{(*Olm[2])(i,j)=mo21sr[30*(i-1)+j-1];}
+    (*OOlm[3])(i,j)=im*mo20ci[30*(i-1)+j-1]+mo20cr[30*(i-1)+j-1];
+if(i<j){(*Olm[3])(i,j)=mo20ci[30*(j-1)+i-1];}else{(*Olm[3])(i,j)=mo20cr[30*(i-1)+j-1];}
+    (*OOlm[4])(i,j)=im*mo21ci[30*(i-1)+j-1]+mo21cr[30*(i-1)+j-1];
+if(i<j){(*Olm[4])(i,j)=mo21ci[30*(j-1)+i-1];}else{(*Olm[4])(i,j)=mo21cr[30*(i-1)+j-1];}
+    (*OOlm[5])(i,j)=im*mo22ci[30*(i-1)+j-1]+mo22cr[30*(i-1)+j-1];
+if(i<j){(*Olm[5])(i,j)=mo22ci[30*(j-1)+i-1];}else{(*Olm[5])(i,j)=mo22cr[30*(i-1)+j-1];}
     
-    (*OOlm[6])(i,j)=im*(mo33si[i])[j]+(mo33sr[i])[j];
-if(i<j){(*Olm[6])(i,j)=(mo33si[j])[i];}else{(*Olm[6])(i,j)=(mo33sr[i])[j];}
-    (*OOlm[7])(i,j)=im*(mo32si[i])[j]+(mo32sr[i])[j];
-if(i<j){(*Olm[7])(i,j)=(mo32si[j])[i];}else{(*Olm[7])(i,j)=(mo32sr[i])[j];}
-    (*OOlm[8])(i,j)=im*(mo31si[i])[j]+(mo31sr[i])[j];
-if(i<j){(*Olm[8])(i,j)=(mo31si[j])[i];}else{(*Olm[8])(i,j)=(mo31sr[i])[j];}
-    (*OOlm[9])(i,j)=im*(mo30ci[i])[j]+(mo30cr[i])[j];
-if(i<j){(*Olm[9])(i,j)=(mo30ci[j])[i];}else{(*Olm[9])(i,j)=(mo30cr[i])[j];}
-    (*OOlm[10])(i,j)=im*(mo31ci[i])[j]+(mo31cr[i])[j];
-if(i<j){(*Olm[10])(i,j)=(mo31ci[j])[i];}else{(*Olm[10])(i,j)=(mo31cr[i])[j];}
-    (*OOlm[11])(i,j)=im*(mo32ci[i])[j]+(mo32cr[i])[j];
-if(i<j){(*Olm[11])(i,j)=(mo32ci[j])[i];}else{(*Olm[11])(i,j)=(mo32cr[i])[j];}
-    (*OOlm[12])(i,j)=im*(mo33ci[i])[j]+(mo33cr[i])[j];
-if(i<j){(*Olm[12])(i,j)=(mo33ci[j])[i];}else{(*Olm[12])(i,j)=(mo33cr[i])[j];}
+    (*OOlm[6])(i,j)=im*mo33si[30*(i-1)+j-1]+mo33sr[30*(i-1)+j-1];
+if(i<j){(*Olm[6])(i,j)=mo33si[30*(j-1)+i-1];}else{(*Olm[6])(i,j)=mo33sr[30*(i-1)+j-1];}
+    (*OOlm[7])(i,j)=im*mo32si[30*(i-1)+j-1]+mo32sr[30*(i-1)+j-1];
+if(i<j){(*Olm[7])(i,j)=mo32si[30*(j-1)+i-1];}else{(*Olm[7])(i,j)=mo32sr[30*(i-1)+j-1];}
+    (*OOlm[8])(i,j)=im*mo31si[30*(i-1)+j-1]+mo31sr[30*(i-1)+j-1];
+if(i<j){(*Olm[8])(i,j)=mo31si[30*(j-1)+i-1];}else{(*Olm[8])(i,j)=mo31sr[30*(i-1)+j-1];}
+    (*OOlm[9])(i,j)=im*mo30ci[30*(i-1)+j-1]+mo30cr[30*(i-1)+j-1];
+if(i<j){(*Olm[9])(i,j)=mo30ci[30*(j-1)+i-1];}else{(*Olm[9])(i,j)=mo30cr[30*(i-1)+j-1];}
+    (*OOlm[10])(i,j)=im*mo31ci[30*(i-1)+j-1]+mo31cr[30*(i-1)+j-1];
+if(i<j){(*Olm[10])(i,j)=mo31ci[30*(j-1)+i-1];}else{(*Olm[10])(i,j)=mo31cr[30*(i-1)+j-1];}
+    (*OOlm[11])(i,j)=im*mo32ci[30*(i-1)+j-1]+mo32cr[30*(i-1)+j-1];
+if(i<j){(*Olm[11])(i,j)=mo32ci[30*(j-1)+i-1];}else{(*Olm[11])(i,j)=mo32cr[30*(i-1)+j-1];}
+    (*OOlm[12])(i,j)=im*mo33ci[30*(i-1)+j-1]+mo33cr[30*(i-1)+j-1];
+if(i<j){(*Olm[12])(i,j)=mo33ci[30*(j-1)+i-1];}else{(*Olm[12])(i,j)=mo33cr[30*(i-1)+j-1];}
     
-    (*OOlm[13])(i,j)=im*(mo44si[i])[j]+(mo44sr[i])[j];
-if(i<j){(*Olm[13])(i,j)=(mo44si[j])[i];}else{(*Olm[13])(i,j)=(mo44sr[i])[j];}
-    (*OOlm[14])(i,j)=im*(mo43si[i])[j]+(mo43sr[i])[j];
-if(i<j){(*Olm[14])(i,j)=(mo43si[j])[i];}else{(*Olm[14])(i,j)=(mo43sr[i])[j];}
-    (*OOlm[15])(i,j)=im*(mo42si[i])[j]+(mo42sr[i])[j];
-if(i<j){(*Olm[15])(i,j)=(mo42si[j])[i];}else{(*Olm[15])(i,j)=(mo42sr[i])[j];}
-    (*OOlm[16])(i,j)=im*(mo41si[i])[j]+(mo41sr[i])[j];
-if(i<j){(*Olm[16])(i,j)=(mo41si[j])[i];}else{(*Olm[16])(i,j)=(mo41sr[i])[j];}
-    (*OOlm[17])(i,j)=im*(mo40ci[i])[j]+(mo40cr[i])[j];
-if(i<j){(*Olm[17])(i,j)=(mo40ci[j])[i];}else{(*Olm[17])(i,j)=(mo40cr[i])[j];}
-    (*OOlm[18])(i,j)=im*(mo41ci[i])[j]+(mo41cr[i])[j];
-if(i<j){(*Olm[18])(i,j)=(mo41ci[j])[i];}else{(*Olm[18])(i,j)=(mo41cr[i])[j];}
-    (*OOlm[19])(i,j)=im*(mo42ci[i])[j]+(mo42cr[i])[j];
-if(i<j){(*Olm[19])(i,j)=(mo42ci[j])[i];}else{(*Olm[19])(i,j)=(mo42cr[i])[j];}
-    (*OOlm[20])(i,j)=im*(mo43ci[i])[j]+(mo43cr[i])[j];
-if(i<j){(*Olm[20])(i,j)=(mo43ci[j])[i];}else{(*Olm[20])(i,j)=(mo43cr[i])[j];}
-    (*OOlm[21])(i,j)=im*(mo44ci[i])[j]+(mo44cr[i])[j];
-if(i<j){(*Olm[21])(i,j)=(mo44ci[j])[i];}else{(*Olm[21])(i,j)=(mo44cr[i])[j];}
+    (*OOlm[13])(i,j)=im*mo44si[30*(i-1)+j-1]+mo44sr[30*(i-1)+j-1];
+if(i<j){(*Olm[13])(i,j)=mo44si[30*(j-1)+i-1];}else{(*Olm[13])(i,j)=mo44sr[30*(i-1)+j-1];}
+    (*OOlm[14])(i,j)=im*mo43si[30*(i-1)+j-1]+mo43sr[30*(i-1)+j-1];
+if(i<j){(*Olm[14])(i,j)=mo43si[30*(j-1)+i-1];}else{(*Olm[14])(i,j)=mo43sr[30*(i-1)+j-1];}
+    (*OOlm[15])(i,j)=im*mo42si[30*(i-1)+j-1]+mo42sr[30*(i-1)+j-1];
+if(i<j){(*Olm[15])(i,j)=mo42si[30*(j-1)+i-1];}else{(*Olm[15])(i,j)=mo42sr[30*(i-1)+j-1];}
+    (*OOlm[16])(i,j)=im*mo41si[30*(i-1)+j-1]+mo41sr[30*(i-1)+j-1];
+if(i<j){(*Olm[16])(i,j)=mo41si[30*(j-1)+i-1];}else{(*Olm[16])(i,j)=mo41sr[30*(i-1)+j-1];}
+    (*OOlm[17])(i,j)=im*mo40ci[30*(i-1)+j-1]+mo40cr[30*(i-1)+j-1];
+if(i<j){(*Olm[17])(i,j)=mo40ci[30*(j-1)+i-1];}else{(*Olm[17])(i,j)=mo40cr[30*(i-1)+j-1];}
+    (*OOlm[18])(i,j)=im*mo41ci[30*(i-1)+j-1]+mo41cr[30*(i-1)+j-1];
+if(i<j){(*Olm[18])(i,j)=mo41ci[30*(j-1)+i-1];}else{(*Olm[18])(i,j)=mo41cr[30*(i-1)+j-1];}
+    (*OOlm[19])(i,j)=im*mo42ci[30*(i-1)+j-1]+mo42cr[30*(i-1)+j-1];
+if(i<j){(*Olm[19])(i,j)=mo42ci[30*(j-1)+i-1];}else{(*Olm[19])(i,j)=mo42cr[30*(i-1)+j-1];}
+    (*OOlm[20])(i,j)=im*mo43ci[30*(i-1)+j-1]+mo43cr[30*(i-1)+j-1];
+if(i<j){(*Olm[20])(i,j)=mo43ci[30*(j-1)+i-1];}else{(*Olm[20])(i,j)=mo43cr[30*(i-1)+j-1];}
+    (*OOlm[21])(i,j)=im*mo44ci[30*(i-1)+j-1]+mo44cr[30*(i-1)+j-1];
+if(i<j){(*Olm[21])(i,j)=mo44ci[30*(j-1)+i-1];}else{(*Olm[21])(i,j)=mo44cr[30*(i-1)+j-1];}
     
-    (*OOlm[22])(i,j)=im*(mo55si[i])[j]+(mo55sr[i])[j];
-if(i<j){(*Olm[22])(i,j)=(mo55si[j])[i];}else{(*Olm[22])(i,j)=(mo55sr[i])[j];}
-    (*OOlm[23])(i,j)=im*(mo54si[i])[j]+(mo54sr[i])[j];
-if(i<j){(*Olm[23])(i,j)=(mo54si[j])[i];}else{(*Olm[23])(i,j)=(mo54sr[i])[j];}
-    (*OOlm[24])(i,j)=im*(mo53si[i])[j]+(mo53sr[i])[j];
-if(i<j){(*Olm[24])(i,j)=(mo53si[j])[i];}else{(*Olm[24])(i,j)=(mo53sr[i])[j];}
-    (*OOlm[25])(i,j)=im*(mo52si[i])[j]+(mo52sr[i])[j];
-if(i<j){(*Olm[25])(i,j)=(mo52si[j])[i];}else{(*Olm[25])(i,j)=(mo52sr[i])[j];}
-    (*OOlm[26])(i,j)=im*(mo51si[i])[j]+(mo51sr[i])[j];
-if(i<j){(*Olm[26])(i,j)=(mo51si[j])[i];}else{(*Olm[26])(i,j)=(mo51sr[i])[j];}
-    (*OOlm[27])(i,j)=im*(mo50ci[i])[j]+(mo50cr[i])[j];
-if(i<j){(*Olm[27])(i,j)=(mo50ci[j])[i];}else{(*Olm[27])(i,j)=(mo50cr[i])[j];}
-    (*OOlm[28])(i,j)=im*(mo51ci[i])[j]+(mo51cr[i])[j];
-if(i<j){(*Olm[28])(i,j)=(mo51ci[j])[i];}else{(*Olm[28])(i,j)=(mo51cr[i])[j];}
-    (*OOlm[29])(i,j)=im*(mo52ci[i])[j]+(mo52cr[i])[j];
-if(i<j){(*Olm[29])(i,j)=(mo52ci[j])[i];}else{(*Olm[29])(i,j)=(mo52cr[i])[j];}
-    (*OOlm[30])(i,j)=im*(mo53ci[i])[j]+(mo53cr[i])[j];
-if(i<j){(*Olm[30])(i,j)=(mo53ci[j])[i];}else{(*Olm[30])(i,j)=(mo53cr[i])[j];}
-    (*OOlm[31])(i,j)=im*(mo54ci[i])[j]+(mo54cr[i])[j];
-if(i<j){(*Olm[31])(i,j)=(mo54ci[j])[i];}else{(*Olm[31])(i,j)=(mo54cr[i])[j];}
-    (*OOlm[32])(i,j)=im*(mo55ci[i])[j]+(mo55cr[i])[j];
-if(i<j){(*Olm[32])(i,j)=(mo55ci[j])[i];}else{(*Olm[32])(i,j)=(mo55cr[i])[j];}
-    
-    (*OOlm[33])(i,j)=im*(mo66si[i])[j]+(mo66sr[i])[j];
-if(i<j){(*Olm[33])(i,j)=(mo66si[j])[i];}else{(*Olm[33])(i,j)=(mo66sr[i])[j];}
-    (*OOlm[34])(i,j)=im*(mo65si[i])[j]+(mo65sr[i])[j];
-if(i<j){(*Olm[34])(i,j)=(mo65si[j])[i];}else{(*Olm[34])(i,j)=(mo65sr[i])[j];}
-    (*OOlm[35])(i,j)=im*(mo64si[i])[j]+(mo64sr[i])[j];
-if(i<j){(*Olm[35])(i,j)=(mo64si[j])[i];}else{(*Olm[35])(i,j)=(mo64sr[i])[j];}
-    (*OOlm[36])(i,j)=im*(mo63si[i])[j]+(mo63sr[i])[j];
-if(i<j){(*Olm[36])(i,j)=(mo63si[j])[i];}else{(*Olm[36])(i,j)=(mo63sr[i])[j];}
-    (*OOlm[37])(i,j)=im*(mo62si[i])[j]+(mo62sr[i])[j];
-if(i<j){(*Olm[37])(i,j)=(mo62si[j])[i];}else{(*Olm[37])(i,j)=(mo62sr[i])[j];}
-    (*OOlm[38])(i,j)=im*(mo61si[i])[j]+(mo61sr[i])[j];
-if(i<j){(*Olm[38])(i,j)=(mo61si[j])[i];}else{(*Olm[38])(i,j)=(mo61sr[i])[j];}
-    (*OOlm[39])(i,j)=im*(mo60ci[i])[j]+(mo60cr[i])[j];
-if(i<j){(*Olm[39])(i,j)=(mo60ci[j])[i];}else{(*Olm[39])(i,j)=(mo60cr[i])[j];}
-    (*OOlm[40])(i,j)=im*(mo61ci[i])[j]+(mo61cr[i])[j];
-if(i<j){(*Olm[40])(i,j)=(mo61ci[j])[i];}else{(*Olm[40])(i,j)=(mo61cr[i])[j];}
-    (*OOlm[41])(i,j)=im*(mo62ci[i])[j]+(mo62cr[i])[j];
-if(i<j){(*Olm[41])(i,j)=(mo62ci[j])[i];}else{(*Olm[41])(i,j)=(mo62cr[i])[j];}
-    (*OOlm[42])(i,j)=im*(mo63ci[i])[j]+(mo63cr[i])[j];
-if(i<j){(*Olm[42])(i,j)=(mo63ci[j])[i];}else{(*Olm[42])(i,j)=(mo63cr[i])[j];}
-    (*OOlm[43])(i,j)=im*(mo64ci[i])[j]+(mo64cr[i])[j];
-if(i<j){(*Olm[43])(i,j)=(mo64ci[j])[i];}else{(*Olm[43])(i,j)=(mo64cr[i])[j];}
-    (*OOlm[44])(i,j)=im*(mo65ci[i])[j]+(mo65cr[i])[j];
-if(i<j){(*Olm[44])(i,j)=(mo65ci[j])[i];}else{(*Olm[44])(i,j)=(mo65cr[i])[j];}
-    (*OOlm[45])(i,j)=im*(mo66ci[i])[j]+(mo66cr[i])[j];
-if(i<j){(*Olm[45])(i,j)=(mo66ci[j])[i];}else{(*Olm[45])(i,j)=(mo66cr[i])[j];}
+    (*OOlm[22])(i,j)=im*mo55si[30*(i-1)+j-1]+mo55sr[30*(i-1)+j-1];
+if(i<j){(*Olm[22])(i,j)=mo55si[30*(j-1)+i-1];}else{(*Olm[22])(i,j)=mo55sr[30*(i-1)+j-1];}
+    (*OOlm[23])(i,j)=im*mo54si[30*(i-1)+j-1]+mo54sr[30*(i-1)+j-1];
+if(i<j){(*Olm[23])(i,j)=mo54si[30*(j-1)+i-1];}else{(*Olm[23])(i,j)=mo54sr[30*(i-1)+j-1];}
+    (*OOlm[24])(i,j)=im*mo53si[30*(i-1)+j-1]+mo53sr[30*(i-1)+j-1];
+if(i<j){(*Olm[24])(i,j)=mo53si[30*(j-1)+i-1];}else{(*Olm[24])(i,j)=mo53sr[30*(i-1)+j-1];}
+    (*OOlm[25])(i,j)=im*mo52si[30*(i-1)+j-1]+mo52sr[30*(i-1)+j-1];
+if(i<j){(*Olm[25])(i,j)=mo52si[30*(j-1)+i-1];}else{(*Olm[25])(i,j)=mo52sr[30*(i-1)+j-1];}
+    (*OOlm[26])(i,j)=im*mo51si[30*(i-1)+j-1]+mo51sr[30*(i-1)+j-1];
+if(i<j){(*Olm[26])(i,j)=mo51si[30*(j-1)+i-1];}else{(*Olm[26])(i,j)=mo51sr[30*(i-1)+j-1];}
+    (*OOlm[27])(i,j)=im*mo50ci[30*(i-1)+j-1]+mo50cr[30*(i-1)+j-1];
+if(i<j){(*Olm[27])(i,j)=mo50ci[30*(j-1)+i-1];}else{(*Olm[27])(i,j)=mo50cr[30*(i-1)+j-1];}
+    (*OOlm[28])(i,j)=im*mo51ci[30*(i-1)+j-1]+mo51cr[30*(i-1)+j-1];
+if(i<j){(*Olm[28])(i,j)=mo51ci[30*(j-1)+i-1];}else{(*Olm[28])(i,j)=mo51cr[30*(i-1)+j-1];}
+    (*OOlm[29])(i,j)=im*mo52ci[30*(i-1)+j-1]+mo52cr[30*(i-1)+j-1];
+if(i<j){(*Olm[29])(i,j)=mo52ci[30*(j-1)+i-1];}else{(*Olm[29])(i,j)=mo52cr[30*(i-1)+j-1];}
+    (*OOlm[30])(i,j)=im*mo53ci[30*(i-1)+j-1]+mo53cr[30*(i-1)+j-1];
+if(i<j){(*Olm[30])(i,j)=mo53ci[30*(j-1)+i-1];}else{(*Olm[30])(i,j)=mo53cr[30*(i-1)+j-1];}
+    (*OOlm[31])(i,j)=im*mo54ci[30*(i-1)+j-1]+mo54cr[30*(i-1)+j-1];
+if(i<j){(*Olm[31])(i,j)=mo54ci[30*(j-1)+i-1];}else{(*Olm[31])(i,j)=mo54cr[30*(i-1)+j-1];}
+    (*OOlm[32])(i,j)=im*mo55ci[30*(i-1)+j-1]+mo55cr[30*(i-1)+j-1];
+if(i<j){(*Olm[32])(i,j)=mo55ci[30*(j-1)+i-1];}else{(*Olm[32])(i,j)=mo55cr[30*(i-1)+j-1];}
+
+    (*OOlm[33])(i,j)=im*mo66si[30*(i-1)+j-1]+mo66sr[30*(i-1)+j-1];
+if(i<j){(*Olm[33])(i,j)=mo66si[30*(j-1)+i-1];}else{(*Olm[33])(i,j)=mo66sr[30*(i-1)+j-1];}
+    (*OOlm[34])(i,j)=im*mo65si[30*(i-1)+j-1]+mo65sr[30*(i-1)+j-1];
+if(i<j){(*Olm[34])(i,j)=mo65si[30*(j-1)+i-1];}else{(*Olm[34])(i,j)=mo65sr[30*(i-1)+j-1];}
+    (*OOlm[35])(i,j)=im*mo64si[30*(i-1)+j-1]+mo64sr[30*(i-1)+j-1];
+if(i<j){(*Olm[35])(i,j)=mo64si[30*(j-1)+i-1];}else{(*Olm[35])(i,j)=mo64sr[30*(i-1)+j-1];}
+    (*OOlm[36])(i,j)=im*mo63si[30*(i-1)+j-1]+mo63sr[30*(i-1)+j-1];
+if(i<j){(*Olm[36])(i,j)=mo63si[30*(j-1)+i-1];}else{(*Olm[36])(i,j)=mo63sr[30*(i-1)+j-1];}
+    (*OOlm[37])(i,j)=im*mo62si[30*(i-1)+j-1]+mo62sr[30*(i-1)+j-1];
+if(i<j){(*Olm[37])(i,j)=mo62si[30*(j-1)+i-1];}else{(*Olm[37])(i,j)=mo62sr[30*(i-1)+j-1];}
+    (*OOlm[38])(i,j)=im*mo61si[30*(i-1)+j-1]+mo61sr[30*(i-1)+j-1];
+if(i<j){(*Olm[38])(i,j)=mo61si[30*(j-1)+i-1];}else{(*Olm[38])(i,j)=mo61sr[30*(i-1)+j-1];}
+    (*OOlm[39])(i,j)=im*mo60ci[30*(i-1)+j-1]+mo60cr[30*(i-1)+j-1];
+if(i<j){(*Olm[39])(i,j)=mo60ci[30*(j-1)+i-1];}else{(*Olm[39])(i,j)=mo60cr[30*(i-1)+j-1];}
+    (*OOlm[40])(i,j)=im*mo61ci[30*(i-1)+j-1]+mo61cr[30*(i-1)+j-1];
+if(i<j){(*Olm[40])(i,j)=mo61ci[30*(j-1)+i-1];}else{(*Olm[40])(i,j)=mo61cr[30*(i-1)+j-1];}
+    (*OOlm[41])(i,j)=im*mo62ci[30*(i-1)+j-1]+mo62cr[30*(i-1)+j-1];
+if(i<j){(*Olm[41])(i,j)=mo62ci[30*(j-1)+i-1];}else{(*Olm[41])(i,j)=mo62cr[30*(i-1)+j-1];}
+    (*OOlm[42])(i,j)=im*mo63ci[30*(i-1)+j-1]+mo63cr[30*(i-1)+j-1];
+if(i<j){(*Olm[42])(i,j)=mo63ci[30*(j-1)+i-1];}else{(*Olm[42])(i,j)=mo63cr[30*(i-1)+j-1];}
+    (*OOlm[43])(i,j)=im*mo64ci[30*(i-1)+j-1]+mo64cr[30*(i-1)+j-1];
+if(i<j){(*Olm[43])(i,j)=mo64ci[30*(j-1)+i-1];}else{(*Olm[43])(i,j)=mo64cr[30*(i-1)+j-1];}
+    (*OOlm[44])(i,j)=im*mo65ci[30*(i-1)+j-1]+mo65cr[30*(i-1)+j-1];
+if(i<j){(*Olm[44])(i,j)=mo65ci[30*(j-1)+i-1];}else{(*Olm[44])(i,j)=mo65cr[30*(i-1)+j-1];}
+    (*OOlm[45])(i,j)=im*mo66ci[30*(i-1)+j-1]+mo66cr[30*(i-1)+j-1];
+if(i<j){(*Olm[45])(i,j)=mo66ci[30*(j-1)+i-1];}else{(*Olm[45])(i,j)=mo66cr[30*(i-1)+j-1];}
     
    }}
+//printf("%g\n",mo54sr[1][1]);
 
 // ------------------------------------------------------------
-   
-
-
-   
-    for (i=1;i<=dj;++i)
-     {delete[]Jxr[i];delete[]Jxi[i];
-      delete[]Jyr[i];delete[]Jyi[i];
-      delete[]Jzr[i];delete[]Jzi[i];
-      delete[]hcfr[i];delete[]hcfi[i];
-
-   delete[]mo22sr[i];delete[]mo22si[i];
-   delete[]mo21sr[i];delete[]mo21si[i];
-   delete[]mo20cr[i];delete[]mo20ci[i];
-   delete[]mo21cr[i];delete[]mo21ci[i];
-   delete[]mo22cr[i];delete[]mo22ci[i];
-
-   delete[]mo33sr[i];delete[]mo33si[i];
-   delete[]mo32sr[i];delete[]mo32si[i];
-   delete[]mo31sr[i];delete[]mo31si[i];
-   delete[]mo30cr[i];delete[]mo30ci[i];
-   delete[]mo31cr[i];delete[]mo31ci[i];
-   delete[]mo32cr[i];delete[]mo32ci[i];
-   delete[]mo33cr[i];delete[]mo33ci[i];
-
-   delete[]mo44sr[i];delete[]mo44si[i];
-   delete[]mo43sr[i];delete[]mo43si[i];
-   delete[]mo42sr[i];delete[]mo42si[i];
-   delete[]mo41sr[i];delete[]mo41si[i];
-   delete[]mo40cr[i];delete[]mo40ci[i];
-   delete[]mo41cr[i];delete[]mo41ci[i];
-   delete[]mo42cr[i];delete[]mo42ci[i];
-   delete[]mo43cr[i];delete[]mo43ci[i];
-   delete[]mo44cr[i];delete[]mo44ci[i];
-
-   delete[]mo55sr[i];delete[]mo55si[i];
-   delete[]mo54sr[i];delete[]mo54si[i];
-   delete[]mo53sr[i];delete[]mo53si[i];
-   delete[]mo52sr[i];delete[]mo52si[i];
-   delete[]mo51sr[i];delete[]mo51si[i];
-   delete[]mo50cr[i];delete[]mo50ci[i];
-   delete[]mo51cr[i];delete[]mo51ci[i];
-   delete[]mo52cr[i];delete[]mo52ci[i];
-   delete[]mo53cr[i];delete[]mo53ci[i];
-   delete[]mo54cr[i];delete[]mo54ci[i];
-   delete[]mo55cr[i];delete[]mo55ci[i];
-
-   delete[]mo66sr[i];delete[]mo66si[i];
-   delete[]mo65sr[i];delete[]mo65si[i];
-   delete[]mo64sr[i];delete[]mo64si[i];
-   delete[]mo63sr[i];delete[]mo63si[i];
-   delete[]mo62sr[i];delete[]mo62si[i];
-   delete[]mo61sr[i];delete[]mo61si[i];
-   delete[]mo60cr[i];delete[]mo60ci[i];
-   delete[]mo61cr[i];delete[]mo61ci[i];
-   delete[]mo62cr[i];delete[]mo62ci[i];
-   delete[]mo63cr[i];delete[]mo63ci[i];
-   delete[]mo64cr[i];delete[]mo64ci[i];
-   delete[]mo65cr[i];delete[]mo65ci[i];
-   delete[]mo66cr[i];delete[]mo66ci[i];
-   }
-
-     delete[]Jxr;delete[]Jxi;
-     delete[]Jyr;delete[]Jyi;
-     delete[]Jzr;delete[]Jzi;
-     delete[]hcfr;delete[]hcfi;
-
-   delete []mo22sr;delete []mo22si;
-   delete []mo21sr;delete []mo21si;
-   delete []mo20cr;delete []mo20ci;
-   delete []mo21cr;delete []mo21ci;
-   delete []mo22cr;delete []mo22ci;
-
-   delete []mo33sr;delete []mo33si;
-   delete []mo32sr;delete []mo32si;
-   delete []mo31sr;delete []mo31si;
-   delete []mo30cr;delete []mo30ci;
-   delete []mo31cr;delete []mo31ci;
-   delete []mo32cr;delete []mo32ci;
-   delete []mo33cr;delete []mo33ci;
-
-   delete []mo44sr;delete []mo44si;
-   delete []mo43sr;delete []mo43si;
-   delete []mo42sr;delete []mo42si;
-   delete []mo41sr;delete []mo41si;
-   delete []mo40cr;delete []mo40ci;
-   delete []mo41cr;delete []mo41ci;
-   delete []mo42cr;delete []mo42ci;
-   delete []mo43cr;delete []mo43ci;
-   delete []mo44cr;delete []mo44ci;
-
-   delete []mo55sr;delete []mo55si;
-   delete []mo54sr;delete []mo54si;
-   delete []mo53sr;delete []mo53si;
-   delete []mo52sr;delete []mo52si;
-   delete []mo51sr;delete []mo51si;
-   delete []mo50cr;delete []mo50ci;
-   delete []mo51cr;delete []mo51ci;
-   delete []mo52cr;delete []mo52ci;
-   delete []mo53cr;delete []mo53ci;
-   delete []mo54cr;delete []mo54ci;
-   delete []mo55cr;delete []mo55ci;
-
-   delete []mo66sr;delete []mo66si;
-   delete []mo65sr;delete []mo65si;
-   delete []mo64sr;delete []mo64si;
-   delete []mo63sr;delete []mo63si;
-   delete []mo62sr;delete []mo62si;
-   delete []mo61sr;delete []mo61si;
-   delete []mo60cr;delete []mo60ci;
-   delete []mo61cr;delete []mo61ci;
-   delete []mo62cr;delete []mo62ci;
-   delete []mo63cr;delete []mo63ci;
-   delete []mo64cr;delete []mo64ci;
-   delete []mo65cr;delete []mo65ci;
-   delete []mo66cr;delete []mo66ci;
-   
 // here transform the Llm (if present) to Blm ...
 Vector thetaJ(0,6);thetaJ(2)=alpha;thetaJ(4)=beta;thetaJ(6)=gamma;
 
@@ -809,11 +564,11 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
                      if(Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module %s: wybourne parameter %s is not implemented\n",moduletype,lm4);
                                                   exit(EXIT_FAILURE);}
                                   double Blmcalc=Llm(i)*cnst(l,m)*sqrt(4.0*PI/(2*l+1))*thetaJ(l);if(m!=0){Blmcalc*=sqrt(2.0);}
-                                  if(Blm(i)!=0&fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001){fprintf(stderr,"Warning internal module %s - reading %s=%12.6g meV is ignored, because Wybourne Parameter Llm=%12.6g meV does not correspond ! \npresse enter to continue\n",moduletype,lm4,Blm(i),Llm(i));getchar();}
+                                  if((Blm(i)!=0)&(fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001)){fprintf(stderr,"Warning internal module %s - reading %s=%12.6g meV is ignored, because Wybourne Parameter Llm=%12.6g meV does not correspond ! \npresse enter to continue\n",moduletype,lm4,Blm(i),Llm(i));getchar();}
                                   Blm(i)=Blmcalc;// here set the Blm as calculated from the Llm
                                   }
                      if(Blm(i)!=0){fprintf(stderr," %s=%12.6g meV ",lm4,Blm(i));
-                                   if(l!=3&l!=5){Llm(i)=Blm(i)/thetaJ(l)/cnst(l,m)/sqrt(4.0*PI/(2*l+1));if(m!=0){Llm(i)/=sqrt(2.0);}
+                                   if((l!=3)&(l!=5)){Llm(i)=Blm(i)/thetaJ(l)/cnst(l,m)/sqrt(4.0*PI/(2*l+1));if(m!=0){Llm(i)/=sqrt(2.0);}
                                                  lm4[0]='L';fprintf(stderr,"<-> %s=%12.6g meV",lm4,Llm(i));}
                                                 else
                                                 {lm4[0]='L';fprintf(stderr,"<-> %s=Wybourne parameter not implemented, ",lm4);}
@@ -890,7 +645,7 @@ pr=0;
 
 
 void ionpars::save(FILE * file) // save ion parameters to file 
-{int i;
+{
   fprintf(file,"#-----------\nIONTYPE=%s\n#-----------\n\n",iontype);
 
 
@@ -1095,8 +850,8 @@ if(gjmbH.Hi()>48)
 
 
    // setup hamiltonian
-   int dj,i,j,k,l;
-   double hkl,mukl;
+   int dj,i,j;
+  
    dj=Hcf.Rhi();
    Matrix Ham(1,dj,1,dj);
 //   Matrix Tam(1,dj,1,dj); // transformed Hamiltonian
@@ -1145,12 +900,12 @@ if(gjmbH.Hi()>48)
 
      if (T>0)
      { for (i=1;i<=dj;++i)
-       {if ((y=(En(i)-x)/K_B/T)<600) wn[i]=exp(-y); 
+       {if ((y=(En(i)-x)/KB/T)<600) wn[i]=exp(-y); 
         else wn[i]=0.0;
        }
        Zs=Sum(wn);wn/=Zs;
  
-       lnZs=log(Zs)-x/K_B/T;
+       lnZs=log(Zs)-x/KB/T;
      } 
      else
      { printf ("Temperature T<0: please choose probability distribution of states by hand\n");
@@ -1272,7 +1027,7 @@ static ComplexMatrix eigenstates(0,dj,1,dj);
      for(j=1;j<=dj;++j){eigenstates(i,j)=complex <double> (zr(i,j),zi(i,j));
    }}
     //calculate partition sum
-     double zz=0;double KBT,E0;KBT=T*K_B;E0=En(1);
+     double zz=0;double KBT,E0;KBT=T*KB;E0=En(1);
       for(j=1;j<=dj;++j){zz+=exp(-((En(j)-E0)/KBT));}
         // put boltzmann population into row 0 of eigenstates...
         for(j=1;j<=dj;++j)
@@ -1328,7 +1083,10 @@ cfieldJJ(JJ,T,gjmbH,lnz,u,ests);  //expectation values <J>
    Matrix Ham(1,dj,1,dj);
     
    Ham=Hcf-gjmbH(1)*Ja-gjmbH(2)*Jb-gjmbH(3)*Jc;
- for(j=4;j<=gjmbH.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);}
+ for(j=4;j<=gjmbH.Hi();++j){Ham-=gjmbH(j)*(*Olm[j-3]);
+double dd; dd=NormFro((*OOlm[j-3])-(*OOlm[j-3]).Conjugate().Transpose());
+   if (dd>1e-5) {printf("j=%i\n",j);myPrintComplexMatrix(stderr,(*OOlm[j-3]));}
+}
 
 /*   int i1,j1; //printout matrix
     printf ("\n");
@@ -1362,17 +1120,18 @@ exit(0);
      double x,y;int i,k,l,m;
      x=Min(En);
      for (i=1;i<=dj;++i)
-     {if ((y=(En(i)-x)/K_B/T)<700) wn[i]=exp(-y); 
+     {if ((y=(En(i)-x)/KB/T)<700) wn[i]=exp(-y); 
       else wn[i]=0.0;
 //      printf("%4.4g\n",En(i));
       }
      Zs=Sum(wn);wn/=Zs;  
-     Zs*=exp(-x/K_B/T);
+     Zs*=exp(-x/KB/T);
 
 
    // calculate Ja,Jb,Jc
      ComplexMatrix z(1,dj,1,dj);
-     ComplexMatrix * zp[gjmbH.Hi()+1];
+     ComplexMatrix ** zp;
+     zp=new ComplexMatrix*[gjmbH.Hi()+1];
      for(l=1;l<=gjmbH.Hi();++l)
       {zp[l]= new ComplexMatrix(1,dj,1,dj);}
      z=ComplexMatrix(zr,zi);
@@ -1383,7 +1142,8 @@ exit(0);
 
      
  for(j=4;j<=gjmbH.Hi();++j)
-    {(*zp[j])=(*OOlm[j-3])*z;}
+    {(*zp[j])=(*OOlm[j-3])*z;  
+}
      
 // calculate mat and delta for transition number tn
 // 1. get i and j from tn
@@ -1404,6 +1164,18 @@ for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=gjmbH.Hi();++m)
           mat(l,m)=((z.Column(i)*(*zp[l]).Column(j))-JJ(l))*((z.Column(j)*(*zp[m]).Column(i))-JJ(m));}
  else    {mat(l,m)=(z.Column(i)*(*zp[l]).Column(j))*(z.Column(j)*(*zp[m]).Column(i));}}
 
+  //check if M it is hermitean
+double d;
+   d=NormFro(z*z.Conjugate().Transpose());
+printf("d=%g\n",d);
+   d=NormFro(mat-mat.Conjugate().Transpose());
+   if (d>1e-5)
+   {fprintf(stderr,"cfielddm: ERROR- %ix%i matrix not hermitian, abs sum of differences= %g\n",mat.Rhi(),mat.Rhi(),d);
+//for(l=1;l<=gjmbH.Hi();++l)for(m=1;m<=l;++m)if((fabs(imag(mat(l,m))+imag(mat(m,l)))+fabs(real(mat(l,m))-real(mat(m,l))))>0.1)printf("m(%i,%i)=%g,%g m(%i,%i)=%g,%g\n",l,m,real(mat(l,m)),imag(mat(l,m)),m,l,real(mat(m,l)),imag(mat(m,l)));
+    //printout matrix
+   // myPrintComplexMatrix(stderr,z);
+    getchar();
+   }
 
 
 if (delta>SMALL)
@@ -1418,13 +1190,14 @@ if (delta>SMALL)
       printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
       printf(" |<%i|Ja-<Ja>|%i>|^2=%4.4g |<%i|Jb-<Jb>|%i>|^2=%4.4g |<%i|Jc-<Jc>|%i>|^2=%4.4g",i,j,real(mat(1,1)),i,j,real(mat(2,2)),i,j,real(mat(3,3)));
       printf(" n%i=%4.4g\n",i,wn(i));}
-    mat*=(wn(i)/K_B/T);
+    mat*=(wn(i)/KB/T);
    }
 
 //clean up memory
      for(l=1;l<=gjmbH.Hi();++l)
       {delete zp[l];}
-     
+     delete []zp;
+
 // return number of all transitions     
  return (int)((J+1)*(2*J+1)); 
 }
@@ -1482,7 +1255,7 @@ if(i==j){//take into account thermal expectation values <Jl>
           Malpha-=mm;// subtract thermal expectation values
          
          }
-         delete MQMi[1],MQMi[2],MQMi[3];
+         delete MQMi[1];delete MQMi[2]; delete MQMi[3];
 
 
        // set matrix <i|Ml|j><j|Mm|i>
@@ -1504,7 +1277,7 @@ if (delta>SMALL)
       printf("delta(%i->%i)=%4.4gmeV",i,j,delta);
       printf(" |<%i|Qa-<Qa>|%i>|^2=%4.4g |<%i|Qb-<Qb>|%i>|^2=%4.4g |<%i|Qc-<Qc>|%i>|^2=%4.4g",i,j,real(nat(1,1)),i,j,real(nat(2,2)),i,j,real(nat(3,3)));
       printf(" n%i=%4.4g\n",i,imag(est(0,i)));}
-    nat*=(imag(est(0,i))/K_B/T);
+    nat*=(imag(est(0,i))/KB/T);
    }
 
 
@@ -1615,3 +1388,19 @@ ComplexVector & ionpars::MQ(double th, double ph,double J0,double J2,double J4,d
 // myPrintComplexVector(stdout,mm);//equivalent to moment ...
     return mm;
     }
+
+// for testing the code uncomment and make test and start ionpars.exe
+/* int main(int argc, char **argv)
+{FILE * cf_file;
+cf_file = fopen_errchk (argv[1], "rb"); // reopen file
+
+      ionpars iops(cf_file);
+       myPrintComplexMatrix(stderr,(*iops.OOlm[26-3]));getchar();
+      
+      fclose(cf_file);cf_file = fopen_errchk (argv[1], "rb"); // reopen file
+      ionpars iops1(cf_file);
+       myPrintComplexMatrix(stderr,(*iops1.OOlm[26-3]));getchar();
+      
+      
+return 1;
+}*/

@@ -221,11 +221,11 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
  {// function to plot spins in a 3d manner
   // orientation:1 ab 2 ac 3 bc projection
   //             4 ab 5 ac 6 bc side view
-  int i,j,k,l,m,maxm;char r1,r2,r3;
+  int i,j,k,l;char r1,r2,r3;
 
   Vector a(1,2);
   Vector b(1,2),c(1,3);
-  double scale,d,bbheight,bbwidth,t;
+  double scale,d,bbheight,bbwidth;
 
  // determine scale factor of moments
   scale=0;
@@ -233,7 +233,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
     for (j=1;j<=nofb;++j)
      for (k=1;k<=nofc;++k)
       for(l=1;l<=nofatoms;++l)
-      {c=magmom(i,j,k,l,gJ);
+      {c=magmom(i,j,k,l,gJ(l));
        if ((d=Norm(c))>scale)scale=d;
       }
   scale=0.5/(scale+0.01);
@@ -275,7 +275,7 @@ void spincf::eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,flo
 
   fprintf(fout,"%s!PS-Adobe-2.0 EPSF-2.0\n","%");
   if (abc(4)!=90||abc(5)!=90||abc(6)!=90)
-  {fprintf(fout,"%sBoundingBox:0 0 500 30\n","%%",(int)bbwidth,(int)bbheight);
+  {fprintf(fout,"%sBoundingBox:0 0 %i %i","%%",(int)bbwidth,(int)bbheight);
    fprintf(fout,"%sTitle: Nonorthogonal Lattice - Postscript output not supported\n","%%");
    fprintf(fout,"%sEndComments\n","%%");
    fprintf(fout,"/Helvetica findfont\n15 scalefont setfont\n");
@@ -376,7 +376,7 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 	    if(dd(1)<=maxv(1)+0.0001&&dd(1)>=minv(1)-0.0001&&   //if atom is in big unit cell
             dd(2)<=maxv(2)+0.0001&&dd(2)>=minv(2)-0.0001&&
             dd(3)<=maxv(3)+0.0001&&dd(3)>=minv(3)-0.0001)
-            {c=magmom(i,j,k,l,gJ);
+            {c=magmom(i,j,k,l,gJ(l));
               xyz(1)=dd(1)+scale*c(1);
               xyz(2)=dd(2)+scale*c(2);
               xyz(3)=dd(3)+scale*c(3);
@@ -398,13 +398,13 @@ fprintf(fout,"showpage\n");
  }
 
 // output for javaview
-void spincf::jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
+void spincf::jvx(FILE * fout,char * text,cryststruct & cs,
                  graphic_parameters & gp,
                  double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl)
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
-{char *cffilenames[0];gp.spins_wave_amplitude=0;gp.show_chargedensity=0;
- jvx_cd(fout,text,abc,r,x,y,z,gJ,gp,phase,savev_real,savev_imag,hkl,cffilenames);
+{gp.spins_wave_amplitude=0;gp.show_density=0;
+ jvx_cd(fout,text,cs,gp,phase,savev_real,savev_imag,hkl);
 }
 
 int check_atom_in_big_unitcell(Vector & dd,Vector & maxv1,Vector & minv1,Matrix  &abc_in_ijk_Inverse){
@@ -419,10 +419,9 @@ int check_atom_in_big_unitcell(Vector & dd,Vector & maxv1,Vector & minv1,Matrix 
            {return 0;}
 }
 
-void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
-                 graphic_parameters & gp,double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl,
-                 char ** cffilenames)
-{ int i,j,k,l,ctr=0,maxm,m;int i1,j1,k1;
+void spincf::jvx_cd(FILE * fout,char * text,cryststruct & cs,graphic_parameters & gp,
+                    double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl)
+{ int i,j,k,l,ctr=0;int i1,j1,k1;
  // some checks
  if(nofatoms!=savev_real.nofatoms||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
     nofatoms!=savev_imag.nofatoms||nofa!=savev_imag.na()||nofb!=savev_imag.nb()||nofc!=savev_imag.nc()||
@@ -430,15 +429,15 @@ void spincf::jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,fl
     {fprintf(stderr,"Error creating jvx movie files: eigenvector read from .qev file does not match dimension of spins structure read from sps file\n");exit(1);}
 
   Vector maxv(1,3),minv(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
-  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,abc);
+  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,cs.abc);
   Matrix abc_in_ijk_Inverse(1,3,1,3); abc_in_ijk_Inverse=abc_in_ijk.Inverse();
   Matrix p(1,3,1,3);
-  calc_prim_mag_unitcell_old(p,abc,r);
-  calc_minmax_scale_relabc(minv,maxv,ijkmin,ijkmax,p,abc,gp.scale_view_1,gp.scale_view_2,gp.scale_view_3);
+  calc_prim_mag_unitcell_old(p,cs.abc,cs.r);
+  calc_minmax_scale_relabc(minv,maxv,ijkmin,ijkmax,p,cs.abc,gp.scale_view_1,gp.scale_view_2,gp.scale_view_3);
    if(gp.showprim==1){ijkmin(1)=1;ijkmin(2)=1;ijkmin(3)=1;ijkmax(1)=-2+(int)(gp.scale_view_1);ijkmax(2)=-2+(int)(gp.scale_view_2);ijkmax(3)=-2+(int)(gp.scale_view_3);} // show only primitive magnetic unit cell
   max_min=maxv-minv;
-  calc_prim_mag_unitcell(p,abc,r);
-  double d;
+  calc_prim_mag_unitcell(p,cs.abc,cs.r);
+  
 
 fprintf(fout,"<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"no\"?>\n");
 fprintf(fout,"<jvx-model>\n");
@@ -571,7 +570,7 @@ fprintf(fout,"        <points>\n");
    dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l,cs);
          dd+=dd0;
             if(check_atom_in_big_unitcell(dd,maxv,minv,abc_in_ijk_Inverse)||
             (gp.showprim==1&&gp.scale_view_1>(double)(i1*nofa+i)/nofa&&gp.scale_view_2>(double)(j1*nofb+j)/nofb&&gp.scale_view_3>(double)(k1*nofc+k)/nofc))
@@ -589,7 +588,7 @@ fprintf(fout,"        <colors type=\"rgb\">\n");
    dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l, cs);
           dd+=dd0;if(check_atom_in_big_unitcell(dd,maxv,minv,abc_in_ijk_Inverse)||
              (gp.showprim==1&&gp.scale_view_1>(double)(i1*nofa+i)/nofa&&gp.scale_view_2>(double)(j1*nofb+j)/nofb&&gp.scale_view_3>(double)(k1*nofc+k)/nofc))
             {
@@ -602,7 +601,10 @@ fprintf(fout,"        </colors>\n");
 fprintf(fout,"      </pointSet>\n");
 fprintf(fout,"    </geometry>\n");
 
-if(gp.spins_scale_static_moment>0){
+
+
+
+if(gp.spins_scale_moment>0){
 fprintf(fout,"    <geometry name=\"magnetic moments\">\n");
 fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"show\">\n");
 fprintf(fout,"        <points>\n");
@@ -613,18 +615,19 @@ fprintf(fout,"        <points>\n");
    dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l, cs);
           dd+=dd0;if(check_atom_in_big_unitcell(dd,maxv,minv,abc_in_ijk_Inverse)||
                    (gp.showprim==1&&gp.scale_view_1>(double)(i1*nofa+i)/nofa&&gp.scale_view_2>(double)(j1*nofb+j)/nofb&&gp.scale_view_3>(double)(k1*nofc+k)/nofc))
-            {double QR; // old: QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);
+            {double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
              QR=(hkl*abc_in_ijk_Inverse)*dd;
              QR*=2*PI;
-             xyz=magmom(i,j,k,l,gJ)+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,gJ)+sin(phase-QR)*savev_imag.magmom(i,j,k,l,gJ));
+             xyz=magmom(i,j,k,l,cs.gJ[l])+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,cs.gJ[l])+sin(phase-QR)*savev_imag.magmom(i,j,k,l,cs.gJ[l]));
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_static_moment,dd(2)+xyz(2)*gp.spins_scale_static_moment,dd(3)+xyz(3)*gp.spins_scale_static_moment);
+//fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)-xyz(1)*gp.spins_scale_moment,dd(2)-xyz(2)*gp.spins_scale_moment,dd(3)-xyz(3)*gp.spins_scale_moment);
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_moment,dd(2)+xyz(2)*gp.spins_scale_moment,dd(3)+xyz(3)*gp.spins_scale_moment);
 	     ++ctr;
 
 	     }
@@ -657,15 +660,15 @@ fprintf(fout,"        <points>\n");
    dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l, cs);
           dd+=dd0;if(check_atom_in_big_unitcell(dd,maxv,minv,abc_in_ijk_Inverse)||
                      (gp.showprim==1&&gp.scale_view_1>(double)(i1*nofa+i)/nofa&&gp.scale_view_2>(double)(j1*nofb+j)/nofb&&gp.scale_view_3>(double)(k1*nofc+k)/nofc))
-            {double QR; // old: QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);
+            {double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
              QR=(hkl*abc_in_ijk_Inverse)*dd;
              QR*=2*PI;
-                          xyz=magmom(i,j,k,l,gJ);
+                          xyz=magmom(i,j,k,l,cs.gJ[l]);
 fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1),dd(2),dd(3));
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_static_moment,dd(2)+xyz(2)*gp.spins_scale_static_moment,dd(3)+xyz(3)*gp.spins_scale_static_moment);
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_moment,dd(2)+xyz(2)*gp.spins_scale_moment,dd(3)+xyz(3)*gp.spins_scale_moment);
 	     ++ctr;
 
 	     }
@@ -678,7 +681,7 @@ fprintf(fout,"      </pointSet>\n");
 fprintf(fout,"      <lineSet  arrow=\"hide\" line=\"show\" color=\"show\">\n");
 fprintf(fout,"        <lines>\n");
   for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1);
-fprintf(fout,"          <thickness>%g</thickness>\n",gp.spins_scale_static_moment);
+fprintf(fout,"          <thickness>%g</thickness>\n",gp.spins_scale_moment);
 fprintf(fout,"        </lines>\n");
 fprintf(fout,"      </lineSet>\n");
 fprintf(fout,"    </geometry>\n");
@@ -696,20 +699,20 @@ fprintf(fout,"        <points>\n");
    dd0=p.Column(1)*(double)(i1)+p.Column(2)*(double)(j1)+p.Column(3)*(double)(k1);
       for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l, cs);
           dd+=dd0;if(check_atom_in_big_unitcell(dd,maxv,minv,abc_in_ijk_Inverse)||
                     (gp.showprim==1&&gp.scale_view_1>(double)(i1*nofa+i)/nofa&&gp.scale_view_2>(double)(j1*nofb+j)/nofb&&gp.scale_view_3>(double)(k1*nofc+k)/nofc))
-            {double QR; // old: QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);
+            {double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
              QR=(hkl*abc_in_ijk_Inverse)*dd;
              QR*=2*PI;
              int phi;
              for(phi=0;phi<=16;phi++)
              {
-             xyz=magmom(i,j,k,l,gJ)+gp.spins_wave_amplitude*(cos(-(double)phi*2*3.1415/16+QR)*savev_real.magmom(i,j,k,l,gJ)+sin((double)phi*2*3.1415/16-QR)*savev_imag.magmom(i,j,k,l,gJ));
+             xyz=magmom(i,j,k,l,cs.gJ[l])+gp.spins_wave_amplitude*(cos(-(double)phi*2*3.1415/16+QR)*savev_real.magmom(i,j,k,l,cs.gJ[l])+sin((double)phi*2*3.1415/16-QR)*savev_imag.magmom(i,j,k,l,cs.gJ[l]));
               // <Jalpha>(i)=<Jalpha>0(i)+gp.spins_wave_amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*gp.spins_wave_amplitude; // Q ri not considered for test !!!
-fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_static_moment,dd(2)+xyz(2)*gp.spins_scale_static_moment,dd(3)+xyz(3)*gp.spins_scale_static_moment);
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dd(1)+xyz(1)*gp.spins_scale_moment,dd(2)+xyz(2)*gp.spins_scale_moment,dd(3)+xyz(3)*gp.spins_scale_moment);
 	     }++ctr;
 
 	     }
@@ -728,10 +731,73 @@ fprintf(fout,"        </lines>\n");
 fprintf(fout,"      </lineSet>\n");
 fprintf(fout,"    </geometry>\n");
 }
-if(gp.show_chargedensity>0)
-{int ii,tt,ff;
+
+if(gp.scale_density_vectors>0)
+{int ii;
   double dtheta=0.2; //stepwidth to step surface
   double dfi=0.2;
+
+for(l=1;l<=nofatoms;++l)
+ {fprintf(fout,"    <geometry name=\"density vectors in primitive magnetic unit cell - atom %i\">\n",l);
+  fprintf(fout,"      <pointSet dim=\"3\" point=\"hide\" color=\"show\">\n");
+  fprintf(fout,"<points >\n");
+  double radius=0;double dx,dy,dz,R,fi,theta;
+  int ctr=0;
+  extract(cs.cffilenames[l],"radius",radius);
+  if(radius==0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
+  {jjjpar ionpar(cs.x[l],cs.y[l],cs.z[l],cs.cffilenames[l]);
+   density cd(gp.title,dtheta,dfi);int ndd;
+   for (i=1;i<=1+(nofa-1)*gp.scale_view_1;++i){for(j=1;j<=1+(nofb-1)*gp.scale_view_2;++j){for(k=1;k<=1+(nofc-1)*gp.scale_view_2;++k){
+   dd=pos(i,j,k,l, cs);
+   Vector moments(1,nofcomponents);
+   double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
+   QR=(hkl*abc_in_ijk_Inverse)*dd;
+   QR*=2*PI;
+                for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
+   {moments(ndd)=moment(i,j,k,l)(ndd)+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.moment(i,j,k,l)(ndd)+sin(phase-QR)*savev_imag.moment(i,j,k,l)(ndd));}
+              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
+              // omega t= phase
+              //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
+ // here we calculate the chargedensity of ion
+   cd.calc_cd_surface(moments,ionpar,gp.threshhold);
+   for(ii=1;ii<=cd.nofpoints();++ii)
+     {R=cd.rtf(ii)(1);theta=cd.rtf(ii)(2);fi=cd.rtf(ii)(3);
+     if(ionpar.module_type==2){// mind abc||yzx in module cfield
+     dx=R*sin(theta)*sin(fi)+dd(1);dy=R*cos(theta)+dd(2);dz=R*sin(theta)*cos(fi)+dd(3);
+                              }
+     else
+                              {// mind abc||xyz in other cases ...
+     dx=R*sin(theta)*cos(fi)+dd(1);dy=R*sin(theta)*sin(fi)+dd(2);dz=R*cos(theta)+dd(3);
+                              }
+     
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dx,dy,dz);
+fprintf(fout,"          <p>  %g       %g       %g </p>\n",dx+cd.rtf(ii)(4)*gp.scale_density_vectors,dy+cd.rtf(ii)(5)*gp.scale_density_vectors,dz+cd.rtf(ii)(6)*gp.scale_density_vectors);
+    ++ctr; }
+   }}}
+  }
+fprintf(fout,"          <thickness>6.0</thickness>\n");
+fprintf(fout,"        </points>\n");
+fprintf(fout,"      </pointSet>\n");
+fprintf(fout,"      <lineSet  arrow=\"show\" line=\"show\" color=\"show\">\n");
+fprintf(fout,"        <lines>\n");
+  for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1);
+if (strncmp(gp.title,"currdensity",10)==0){
+  fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",220,153,0);
+                                             }
+ else
+    {fprintf(fout,"        <color type=\"rgb\">0 255 0</color>\n");}
+fprintf(fout,"          <thickness>%g</thickness>\n",gp.scale_density_vectors);
+fprintf(fout,"        </lines>\n");
+fprintf(fout,"      </lineSet>\n");
+fprintf(fout,"    </geometry>\n");
+
+ }
+}
+
+if(gp.show_density>0)
+{int ii,tt,ff;
+  double dtheta=gp.density_dtheta; //stepwidth to step surface
+  double dfi=gp.density_dfi;
 
 for(l=1;l<=nofatoms;++l)
  {fprintf(fout,"    <geometry name=\"densities in primitive magnetic unit cell - atom %i\">\n",l);
@@ -739,12 +805,12 @@ for(l=1;l<=nofatoms;++l)
   fprintf(fout,"<points >\n");
   double radius=0;double dx,dy,dz,R,fi,theta;
 
-  extract(cffilenames[l],"radius",radius);
+  extract(cs.cffilenames[l],"radius",radius);
   if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
   {   if(gp.show_pointcharges>0)
       {  double rp=abs(radius);
         for (i=1;i<=(1+(nofa-1)*gp.scale_view_1);++i){for(j=1;j<=(1+(nofb-1)*gp.scale_view_2);++j){for(k=1;k<=(1+(nofc-1)*gp.scale_view_3);++k){
-        dd=pos(i,j,k,l, abc, r,x,y,z);
+        dd=pos(i,j,k,l, cs);
         for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
              theta=(double)tt*dtheta;fi=(double)ff*dfi;
              dx=rp*sin(theta)*cos(fi)+dd(1);dy=rp*sin(theta)*sin(fi)+dd(2);dz=rp*cos(theta)+dd(3);
@@ -754,12 +820,12 @@ for(l=1;l<=nofatoms;++l)
         }}}
   } }
   else
-  {jjjpar ionpar(x[l],y[l],z[l],cffilenames[l]);
+  {jjjpar ionpar(cs.x[l],cs.y[l],cs.z[l],cs.cffilenames[l]);
    density cd(gp.title,dtheta,dfi);int ndd;
    for (i=1;i<=1+(nofa-1)*gp.scale_view_1;++i){for(j=1;j<=1+(nofb-1)*gp.scale_view_2;++j){for(k=1;k<=1+(nofc-1)*gp.scale_view_2;++k){
-   dd=pos(i,j,k,l, abc, r,x,y,z);
+   dd=pos(i,j,k,l, cs);
    Vector moments(1,nofcomponents);
-   double QR; // old: QR=hkl(1)*dd(1)/abc(1)+hkl(2)*dd(2)/abc(2)+hkl(3)*dd(3)/abc(3);
+   double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
    QR=(hkl*abc_in_ijk_Inverse)*dd;
    QR*=2*PI;
                 for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
@@ -811,7 +877,17 @@ for(l=1;l<=nofatoms;++l)
  else if (radius<0)
  {fprintf(fout,"<color type=\"rgb\">0  0 255</color>\n");}
  else
- {fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",0,(int)(gp.show_chargedensity*((l*97)%256)),(int)(255*gp.show_chargedensity));
+ {
+ if(strncmp(gp.title,"chargedensity",10)==0){
+  fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",0,(int)(gp.show_density*((l*97)%256)),(int)(255*gp.show_density));
+                                             }
+ else if (strncmp(gp.title,"currdensity",10)==0){
+  fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",200+(int)(gp.show_density*((l*97)%56)),153,0);
+                                             }
+ else
+    {
+  fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",0,200+(int)(gp.show_density*((l*97)%56)),0);
+                                             }
  }
  fprintf(fout,"<colorTag type=\"rgb\">255 0 255</colorTag>\n");
  fprintf(fout,"</faces></faceSet>\n");
@@ -821,37 +897,39 @@ for(l=1;l<=nofatoms;++l)
 }
 
 
+
 fprintf(fout,"  </geometries>\n");
 fprintf(fout,"</jvx-model>\n");
 }
 //***********************************************************************************************************************************
 // output of chargedensity on grid as ascii file points are equally spaced as specified
 // nofpoints*
-void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,char ** cffilenames, graphic_parameters & gp,
-                int nofpointsi, int nofpointsj, int nofpointsk,
+void spincf::cd(FILE * fout,cryststruct & cs, graphic_parameters & gp,
                 spincf & savev_real,spincf & savev_imag,double phase,Vector & hkl)
 {// some checks
  if(nofatoms!=savev_real.nofatoms||nofa!=savev_real.na()||nofb!=savev_real.nb()||nofc!=savev_real.nc()||
     nofatoms!=savev_imag.nofatoms||nofa!=savev_imag.na()||nofb!=savev_imag.nb()||nofc!=savev_imag.nc()||
     nofcomponents<savev_real.nofcomponents||savev_real.nofcomponents!=savev_imag.nofcomponents)
     {fprintf(stderr,"Error creating density grid: eigenvector read from .qev file does not match dimension of spins structure read from sps file\n");exit(1);}
+  int nofpointsi=gp.gridi;int nofpointsj=gp.gridj; int nofpointsk=gp.gridk;
+
   Vector maxv(1,3),minv(1,3),ijkmax(1,3),ijkmin(1,3),max_min(1,3),dd(1,3),dd0(1,3),c(1,3),xyz(1,3);
-  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,abc);
+  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,cs.abc);
   Matrix abc_in_ijk_Inverse(1,3,1,3); abc_in_ijk_Inverse=abc_in_ijk.Inverse();
-  Matrix p(1,3,1,3); calc_prim_mag_unitcell(p,abc,r);
+  Matrix p(1,3,1,3); calc_prim_mag_unitcell(p,cs.abc,cs.r);
   Matrix p_inverse (1,3,1,3); p_inverse=p.Inverse();
-  calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,abc,gp.scale_view_1,gp.scale_view_2,gp.scale_view_3);
+  calc_minmax_scale(minv,maxv,ijkmin,ijkmax,p,cs.abc,gp.scale_view_1,gp.scale_view_2,gp.scale_view_3);
   max_min=maxv-minv;
 
   int i,j,k,i1,j1,k1,imin,imax,jmin,jmax,kmin,kmax;Vector rijk(1,3);
-  double ro[nofpointsi*nofpointsj*nofpointsk];
+  double *ro;ro=new double[nofpointsi*nofpointsj*nofpointsk];
   for(i=0;i<=nofpointsi*nofpointsj*nofpointsk-1;++i)ro[i]=0;
     // calculate density contribution of each ion around
   int l;
   for(l=1;l<=nofatoms;++l)
   {
-  double radius=0;                            double dx,dy,dz,R,fi,theta;
-  extract(cffilenames[l],"radius",radius);
+  double radius=0;                            
+  extract(cs.cffilenames[l],"radius",radius);
   if(radius!=0) // this is a trick: if radius is given as cffilename then a sphere with this is radius is generated (pointcharge)
   { if(gp.show_pointcharges>0)
     { double rp=abs(radius);
@@ -860,7 +938,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
        int i0,j0,k0;
        for(i0=-1;i0<=1;++i0){for(j0=-1;j0<=1;++j0){for(k0=-1;k0<=1;++k0){
        for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
-        dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, abc, r,x,y,z);
+        dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, cs);
         // here the ijk range is be more special according to the sphere radius rp
         imax=1+(int)((dd0(1)+rp-minv(1))*nofpointsi/max_min(1)+0.5);
         imin=-1+(int)((dd0(1)-rp-minv(1))*nofpointsi/max_min(1)+0.5);
@@ -873,7 +951,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
         // set position vector
         rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;
         dd=p_inverse*rijk;
-        if(dd(1)>0&dd(1)<1&dd(2)>0&dd(2)<1&dd(3)>0&dd(3)<1)
+        if((dd(1)>0)&(dd(1)<1)&(dd(2)>0)&(dd(2)<1)&(dd(3)>0)&(dd(3)<1))
         {dd=dd0-rijk;
         if(Norm(dd)<rp)ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+= copysign(1.6110481,radius);
         // this is the chargedensity of a homogeneous sphere with 1 electron/(4pi a0^3/3) with a0=0.529177 A
@@ -883,18 +961,18 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
         }}}
   } }
   else
-  {jjjpar ionpar(x[l],y[l],z[l],cffilenames[l]);
+  {jjjpar ionpar(cs.x[l],cs.y[l],cs.z[l],cs.cffilenames[l]);
    int ndd;
    // here we should introduce another loop to go around +-1 around the primitive
    // magnetic unit cell so that we see also atoms at the borders in the density map:
    int i0,j0,k0;
    for(i0=-1;i0<=1;++i0){for(j0=-1;j0<=1;++j0){for(k0=-1;k0<=1;++k0){
    for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
-   dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, abc, r,x,y,z);
+   dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, cs);
   //printf("%i %i %i\n",i1,j1,k1);
    Vector moments(1,nofcomponents);
-   Vector momS(1,49),momL(1,49);
-   double QR; // old: QR=hkl(1)*dd0(1)/abc(1)+hkl(2)*dd0(2)/abc(2)+hkl(3)*dd0(3)/abc(3);
+   Vector momSx(1,49),momLx(1,49),momSy(1,49),momLy(1,49),momSz(1,49),momLz(1,49);
+   double QR; // old: QR=hkl(1)*dd0(1)/cs.abc(1)+hkl(2)*dd0(2)/cs.abc(2)+hkl(3)*dd0(3)/cs.abc(3);
    QR=(hkl*abc_in_ijk_Inverse)*dd0;
    QR*=2*PI;int i1r=i1,j1r=j1,k1r=k1;
 //   while(i1r<=0)i1r+=nofa;while(i1r>nofa)i1r-=nofa;
@@ -902,7 +980,19 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
 //   while(k1r<=0)k1r+=nofc;while(k1r>nofc)k1r-=nofc;
                 for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
    {moments(ndd)=moment(i1r,j1r,k1r,l)(ndd)+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.moment(i1r,j1r,k1r,l)(ndd)+sin(phase-QR)*savev_imag.moment(i1r,j1r,k1r,l)(ndd));}
-   if(strncmp(gp.title,"momdensity",10)==0){int i1i;for(i1i=1;i1i<=49;++i1i){momS(i1i)=moments(i1i);momL(i1i)=moments(i1i+49);}}
+   if(strncmp(gp.title,"momdensity",10)==0){if(nofcomponents>=3*49)
+                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);momLx(i1i)=moments(i1i+3*49);momLy(i1i)=moments(i1i+4*49);momLz(i1i)=moments(i1i+5*49);}}
+                                            else
+                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momLx(i1i)=moments(i1i+49);}}
+                                           }
+   else if (strncmp(gp.title,"orbmomdensity",10)==0&&nofcomponents>=3*49)
+                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}}
+   else if (strncmp(gp.title,"spindensity",10)==0&&nofcomponents>=3*49)
+                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);}}
+   else if(strncmp(gp.title,"currdensity",10)==0){
+                                            int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}
+                                                 }
+
           // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
@@ -921,7 +1011,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
         rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;
         // we should check here if rijk is in primitive unitcell otherwise take next rijk
         dd=p_inverse*rijk;
-        if(dd(1)>0&dd(1)<1&dd(2)>0&dd(2)<1&dd(3)>0&dd(3)<1)
+        if((dd(1)>0)&(dd(1)<1)&(dd(2)>0)&(dd(2)<1)&(dd(3)>0)&(dd(3)<1))
         {
         dd=dd0-rijk;
         // get theta phi R from dd
@@ -941,16 +1031,30 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
                               }
     if(strncmp(gp.title,"spindensity",10)==0)
     // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,moments);}
+    {if(nofcomponents>=3*49)
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz));}
+     else
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,moments);}
+    }
 
     if(strncmp(gp.title,"orbmomdensity",10)==0)
     // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.orbmomdensity_calc(theta,fi,R,moments);}
-
+    {if(nofcomponents>=3*49)
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
+     else
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.orbmomdensity_calc(theta,fi,R,moments);}
+    }
     if(strncmp(gp.title,"momdensity",10)==0)
     // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,momS)
-                                                  +ionpar.orbmomdensity_calc(theta,fi,R,momL);
+    {if(nofcomponents>=3*49)
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz)+ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
+     else
+     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,momSx)
+                                                  +ionpar.orbmomdensity_calc(theta,fi,R,momLx);
+    }}
+    if(strncmp(gp.title,"currdensity",10)==0)
+    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
+    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz));
     }
 
     if(strncmp(gp.title,"chargedensity",10)==0)
@@ -974,6 +1078,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
   // print out density
   fprintf(fout,"%10.7f %10.7f %10.7f %g\n",rijk(1),rijk(2),rijk(3),ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]);
                            }}}
+ delete []ro;
 }
 
 //***********************************************************************************************************************************
@@ -982,7 +1087,7 @@ void spincf::cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,c
 void spincf::fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
 
-int maxm,m;
+
   Vector maxv(1,3),minv(1,3),dd(1,3),max_min(1,3);
   Vector xyz(1,3),dd0(1,3),ijkmax(1,3),ijkmin(1,3);
   Matrix p(1,3,1,3);
@@ -1050,7 +1155,7 @@ for (k1=int(ijkmin(3)-1.0);k1<=int(ijkmax(3)+1);++k1){
 //             i1true=1;j1true=1;k1true=1;
 
 //	    a=xy(dd,orientation, minv, maxv,bbwidth,bbheight);
-            xyz=magmom(i,j,k,l,gJ);
+            xyz=magmom(i,j,k,l,gJ(l));
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd(1),dd(2),dd(3));
 fprintf(fout,"SKP           1  1  %g       %g       %g       0.00000  0.00000  0.00000    0.00000\n",xyz(1),xyz(2),xyz(3));
 	     ++ctr;
@@ -1066,7 +1171,7 @@ fprintf(fout,"}\n");
 
 void spincf::fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ) //print std file to stream
 {int i,j,k,l,ctr=1;
-int maxm,m;
+
 double alpha,beta,gamma;
   // determine max(1,2,3) min(1,2,3) (vector in Angstroem describing a quader) for viewing magnetic unit cell
   Vector ddd(1,8),xyz(1,3),xyz0(1,3),dd0(1,3),dd(1,3);
@@ -1109,7 +1214,7 @@ fprintf(fout,"MSYM  u,v,w,0.0\n");
          for(l=1;l<=nofatoms;++l)
 	 {dd=pos(i,j,k,l, abc, r,x,y,z);
          dd0=p.Inverse()*dd;
-          xyz=magmom(i,j,k,l,gJ);
+          xyz=magmom(i,j,k,l,gJ(l));
           xyz0=p.Inverse()*xyz; xyz0(1)*=Norm(p.Column(1));xyz0(2)*=Norm(p.Column(2));xyz0(3)*=Norm(p.Column(3));
 
 fprintf(fout,"MATOM DY%i    DY      %g       %g       %g   GROUP\n",ctr,dd0(1),dd0(2),dd0(3));
@@ -1141,15 +1246,15 @@ void spincf::print(FILE * fout) //print spinconfiguration to stream
 // fprintf(fout,"\n"); //new line to end spinconfiguration - removed aug 07
 }
 
-void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames,float * gJ) //print spinconfiguration to stream
+void spincf::printall(FILE * fout,cryststruct & cs) //print spinconfiguration to stream
 { int i,j,k,l,lc,m,maxm;
 
  // determine primitive magnetic unit cell
   Vector dd(1,3),ddp(1,3);
   Vector xyz(1,3),dd0(1,3),mmm(1,3);
   Matrix p(1,3,1,3);
-  calc_prim_mag_unitcell(p,abc,r);
-  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,abc);
+  calc_prim_mag_unitcell(p,cs.abc,cs.r);
+  Matrix abc_in_ijk(1,3,1,3); get_abc_in_ijk(abc_in_ijk,cs.abc);
   Matrix abc_in_ijk_Inverse(1,3,1,3); abc_in_ijk_Inverse=abc_in_ijk.Inverse();
 
 
@@ -1159,15 +1264,15 @@ void spincf::printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,flo
    // output atoms and moments in primitive unit cell
   for (i=1;i<=nofa;++i){for (j=1;j<=nofb;++j){for (k=1;k<=nofc;++k){
          for(l=1;l<=nofatoms;++l)
-	 {dd=pos(i,j,k,l, abc, r,x,y,z);
+	 {dd=pos(i,j,k,l, cs);
          dd0=p.Inverse()*dd;dd0(1)*=nofa;dd0(2)*=nofb;dd0(3)*=nofc;
          ddp=abc_in_ijk_Inverse*dd;
               fprintf(fout,"{%s} %4.4f %4.4f %4.4f %4.4f %4.4f %4.4f ",
-	              cffilenames[l],ddp(1),ddp(2),ddp(3),dd0(1),dd0(2),dd0(3));
-             if(gJ[l]!=0)
-              {fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](1+nofcomponents*(l-1)));
-               if(nofcomponents>=2){fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](2+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
-               if(nofcomponents>=2){fprintf(fout," %4.4f",gJ[l]*mom[in(i,j,k)](3+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
+	              cs.cffilenames[l],ddp(1),ddp(2),ddp(3),dd0(1),dd0(2),dd0(3));
+             if(cs.gJ[l]!=0)
+              {fprintf(fout," %4.4f",cs.gJ[l]*mom[in(i,j,k)](1+nofcomponents*(l-1)));
+               if(nofcomponents>=2){fprintf(fout," %4.4f",cs.gJ[l]*mom[in(i,j,k)](2+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
+               if(nofcomponents>=2){fprintf(fout," %4.4f",cs.gJ[l]*mom[in(i,j,k)](3+nofcomponents*(l-1)));}else{fprintf(fout," %4.4f",0.0);}
               }
              else   // if gJ=0 it means we have so print out total moment
               { //load magnetic moment into vector mmm

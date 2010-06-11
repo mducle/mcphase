@@ -8,6 +8,7 @@
 #include<complex>
 #include<cstdio>
 #include<graphic_parameters.hpp>
+#include<cryststruct.hpp>
 
 #ifndef SPINCF_H
 #define SPINCF_H
@@ -19,23 +20,21 @@ public:
 
     void print(FILE * fout);
 //print list of atoms + positions + moments
-    void printall(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z, char ** cffilenames,float * gJ);
+    void printall(FILE * fout,cryststruct & cs);
     void eps(FILE * fout);
     void eps(FILE * fout,const char * text);
     void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation, Vector & gJ);
     void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
-    void jvx(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
+    void jvx(FILE * fout,char * text,cryststruct & cs,
              graphic_parameters & gp,double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl);
 
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
 
-    void jvx_cd(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ,
-              graphic_parameters & gp,double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl,
-              char ** cffilenames);
+    void jvx_cd(FILE * fout,char * text,cryststruct & cs,
+              graphic_parameters & gp,double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl);
 
-    void cd(FILE * fout,Vector & abc,Matrix & r,float * x,float *y,float*z,char ** cffilenames,graphic_parameters & gp,
-                int nofpointsi, int nofpointsj, int nofpointsk,
+    void cd(FILE * fout,cryststruct & cs,graphic_parameters & gp,
                 spincf & savev_real,spincf & savev_imag,double phase,Vector & hkl);
 
     void fstprim(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
@@ -60,13 +59,14 @@ private:
    int iv[4];
    int spequal(Vector a,Vector b);// routine to compare spins
      
-   Vector magmom(int i,int j,int k,int l,Vector & gJ); // returns magnetic moment (1,3)
+   Vector magmom(int i,int j,int k,int l,double & gJ); // returns magnetic moment (1,3)
    Vector moment(int i,int j,int k,int l); // returns moment of atom l (1,nofcomponents)
    // take vector dd and calculate distance nearest atom in spinconfiguration
    double nndist(float * x, float * y, float * z,Vector & abc,Matrix & p,Vector &dd);
  public:
 
     Vector pos(int i, int j, int k, int l,Vector & abc,Matrix & r,float * x,float *y,float*z);
+    Vector pos(int i, int j, int k, int l,cryststruct & cs);
                       //returns position of atom l at lattice site (i j k) (Angstrom)
 
     int  load(FILE * fin_coq);	// load spincf from file

@@ -433,7 +433,7 @@ sub printneighbourlist {
       $stopprint=$stopheader;
      }
 print $l "#-------------------------------------------------------------------------------------\n";
-print $l "# output of program makenn - table with neighbors and interactions\n";
+print $l "# output of program makenn $rmax - table with neighbors and interactions\n";
 print $l "# Reference: M. Rotter et al. PRB 68 (2003) 144418\n";
 
 

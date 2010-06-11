@@ -151,6 +151,7 @@ private int iMaxKeys;
 		
 		for (int iSequKey = 1; iSequKey <= iMaxKeys;++iSequKey)
 		{
+		
 			IniKey m_Key = GetNextKey(iSequKey);
 			if (m_Key != null)
 			{
@@ -223,18 +224,20 @@ private int iMaxKeys;
 			m_Item.SetValues(strItem, strValue,1, strComment);
 		}
 		else
-		{
+		{ if(!("").equals(TrimString(strValue))){
 			m_Key.AddItem(new IniItem(strItem, strValue, 1, strComment));						  
+                                  }
 		}
 	}
 	else
-	{
+	{ if(!("").equals(TrimString(strValue))){
 		m_Key = new IniKey(strKey);
-		
+
 		iMaxKeys++;
 		m_Key.iSequence = iMaxKeys;
-		
 		m_Key.AddItem(new IniItem(strItem, strValue, 1, strComment));
+	        m_Keys.put(strKey, m_Key);
+                          }
 	}
     return(0);
   }

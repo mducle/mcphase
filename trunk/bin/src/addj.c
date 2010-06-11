@@ -4,16 +4,10 @@
  *
  ***********************************************************************/
 
-#define MAXNOFCHARINLINE 1000
+
 #define MAXNOFATOMS 100
 #include "par.hpp"
 #include "martin.h"
-#include<cstdio>
-#include<cerrno>
-#include<cstdlib>
-#include<cstring>
-#include<cmath>
-#include<vector.h>
 
 /**********************************************************************/
 // hauptprogramm
