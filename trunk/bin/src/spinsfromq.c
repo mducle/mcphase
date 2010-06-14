@@ -34,7 +34,7 @@ printf("#*****************************************************\n");
  
   int i,j,n1,n2,n3;
   double lnz,u;
-  float d;
+
   double T;
   Vector h(1,inputpars.nofcomponents);
   Vector moment(1,inputpars.nofcomponents);

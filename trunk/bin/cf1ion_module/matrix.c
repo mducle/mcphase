@@ -71,7 +71,7 @@ INT warning(s)  /* Warnung ausgeben */
     CHAR *s;
 {
     printf("\nWarning : ");
-    printf(s);
+    printf("%s,",s);
     printf("\n");
 }
 /*----------------------------------------------------------------------------
@@ -81,7 +81,7 @@ INT error(s)  /* Ausstieg beim Auftreten eines Fehlers */
     CHAR *s;
 {
     printf("\nError : ");
-    printf(s);
+    printf("%s",s);
     printf("\n");
     exit(1);
 }

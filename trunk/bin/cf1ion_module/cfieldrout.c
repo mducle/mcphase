@@ -2951,7 +2951,7 @@ t01=" ------------------------------------------------------------------ \n";
 t02="|   %8s is a Crystal Field program.                         |\n";
 t03=" ------------------------------------------------------------------ \n";
  
-    printf(t01);printf(t02,PROGRAMMNAME);printf(t03);
+    printf("%s",t01);printf(t02,PROGRAMMNAME);printf("%s",t03);
     printf("\n");
  
  
@@ -3002,22 +3002,22 @@ void info_magnetfeld( dimj,Bx,By,Bz)  /* informiere ueber (Jn|Hmag|mJ)   */
     t12 = "---------------------------------------------------------\n";
  
     j = ((DOUBLE)dimj-1)/2;
-    fprintf(fp,t01);
-    fprintf(fp,t02);
-    fprintf(fp,t03);
-    fprintf(fp,t04);
+    fprintf(fp,"%s",t01);
+    fprintf(fp,"%s",t02);
+    fprintf(fp,"%s",t03);
+    fprintf(fp,"%s",t04);
     fprintf(fp,t05,j);
     fprintf(fp,t06,Bx);
     fprintf(fp,t07,By);
     fprintf(fp,t08,Bz);
-    fprintf(fp,t09);
+    fprintf(fp,"%s",t09);
     for( n=dimj ; n>=1 ; --n )
          for( m=dimj ; m>=1 ; --m ){
                jm = m-j-1;
                jn = n-j-1;
               fprintf(fp,t10,j,jn,jm,j,R(bmag,n,m));
               fprintf(fp,t11,j,jn,jm,j,I(bmag,n,m));
-              fprintf(fp,t12);
+              fprintf(fp,"%s",t12);
          }
  
     fclose(fp);
@@ -3111,29 +3111,29 @@ void info_konstanten()   /* Liste der benutzten Naturkonstanten */
     s06 = "| Bohr Magneton myB :      %10.6e eV/Tesla   |\n";
     s07 = "---------------------------------------------------------\n";
  
-    fprintf(fp,t01);
-    fprintf(fp,t02);
-    fprintf(fp,t03);
+    fprintf(fp,"%s",t01);
+    fprintf(fp,"%s",t02);
+    fprintf(fp,"%s",t03);
     fprintf(fp,t04,_h);
-    fprintf(fp,t05);
+    fprintf(fp,"%s",t05);
     fprintf(fp,t06,_e);
-    fprintf(fp,t07);
+    fprintf(fp,"%s",t07);
     fprintf(fp,t08,_m);
-    fprintf(fp,t09);
+    fprintf(fp,"%s",t09);
     fprintf(fp,t10,_c);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t11);
     fprintf(fp,t12,_k);
-    fprintf(fp,t13);
+    fprintf(fp,"%s",t13);
     fprintf(fp,t14,_NA);
-    fprintf(fp,t15);
+    fprintf(fp,"%s",t15);
  
-    fprintf(fp,s01);
-    fprintf(fp,s02);
-    fprintf(fp,s03);
+    fprintf(fp,"%s",s01);
+    fprintf(fp,"%s",s02);
+    fprintf(fp,"%s",s03);
     fprintf(fp,s04,A0_BOHR);
-    fprintf(fp,s05);
+    fprintf(fp,"%s",s05);
     fprintf(fp,s06,_myBplus);
-    fprintf(fp,s07);
+    fprintf(fp,"%s",s07);
  
  
     fclose(fp);
@@ -3222,7 +3222,7 @@ void info_Vlm(filename,symmetrienr,einheit)
     fprintf(fp,"%s\n",t04);
     fprintf(fp,"%s\n",t05);
     fprintf(fp,t06,SYMLISTE[s].symname,s);
-    fprintf(fp,t07);
+    fprintf(fp,"%s",t07);
  
     if( s==1 || s==2 || s==3 || s==4 || s==5 || s==6 || s==7 ){
          rt = RT(  V20( ITERATION(kf) )  );
@@ -3233,7 +3233,7 @@ void info_Vlm(filename,symmetrienr,einheit)
  
  
          rt = RT(  V40( ITERATION(kf) )  );
-         if( s!=8 )fprintf(fp,t07);
+         if( s!=8 )fprintf(fp,"%s",t07);
          fprintf(fp,t09,4,0,rt);
     if( s==1 ){
          rt = RT(  V42( ITERATION(kf) )  );
@@ -3254,7 +3254,7 @@ void info_Vlm(filename,symmetrienr,einheit)
          fprintf(fp,t09,4,4,rt);}
  
          rt = RT(  V60( ITERATION(kf) )  );
-         fprintf(fp,t07);
+         fprintf(fp,"%s",t07);
          fprintf(fp,t09,6,0,rt);
     if( s==1 ){
          rt = RT(  V62( ITERATION(kf) )  );
@@ -3285,7 +3285,7 @@ void info_Vlm(filename,symmetrienr,einheit)
          rt = RT(  V66( ITERATION(kf) )  );
          fprintf(fp,t09,6,6,rt);}
  
-         fprintf(fp,t10);
+         fprintf(fp,"%s",t10);
  
     fclose(fp);
 }
@@ -3426,26 +3426,26 @@ void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
 
      fprintf(fp,"\n\n");
  
-     fprintf(fp,s01);
-     fprintf(fp,s02);
-     fprintf(fp,s03);
-     fprintf(fp,s04);
-     fprintf(fp,s05);
+     fprintf(fp,"%s",s01);
+     fprintf(fp,"%s",s02);
+     fprintf(fp,"%s",s03);
+     fprintf(fp,"%s",s04);
+     fprintf(fp,"%s",s05);
  
      fprintf(fp,s06,0,0,epn0n(0) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,1,-1,epn0n(-1) );
      fprintf(fp,s06,1, 0,epn1n( 0) );
      fprintf(fp,s06,1, 1,epn0n( 1) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,2,-2,epn0n(-2) );
      fprintf(fp,s06,2,-1,epn1n(-1) );
      fprintf(fp,s06,2, 0,epn2n( 0) );
      fprintf(fp,s06,2, 1,epn1n( 1) );
      fprintf(fp,s06,2, 2,epn0n( 2) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,3,-3,epn0n(-3) );
      fprintf(fp,s06,3,-2,epn1n(-2) );
@@ -3454,7 +3454,7 @@ void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
      fprintf(fp,s06,3, 1,epn2n( 1) );
      fprintf(fp,s06,3, 2,epn1n( 2) );
      fprintf(fp,s06,3, 3,epn0n( 3) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,4,-4,epn0n(-4) );
      fprintf(fp,s06,4,-3,epn1n(-3) );
@@ -3465,7 +3465,7 @@ void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
      fprintf(fp,s06,4, 2,epn2n( 2) );
      fprintf(fp,s06,4, 3,epn1n( 3) );
      fprintf(fp,s06,4, 4,epn0n( 4) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,5,-5,epn0n(-5) );
      fprintf(fp,s06,5,-4,epn1n(-4) );
@@ -3478,7 +3478,7 @@ void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
      fprintf(fp,s06,5, 3,epn2n( 3) );
      fprintf(fp,s06,5, 4,epn1n( 4) );
      fprintf(fp,s06,5, 5,epn0n( 5) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,6,-6,epn0n(-6) );
      fprintf(fp,s06,6,-5,epn1n(-5) );
@@ -3493,7 +3493,7 @@ void info_epsilonkq()   /* Liste der Faktoren epsilonkq */
      fprintf(fp,s06,6, 4,epn2n( 4) );
      fprintf(fp,s06,6, 5,epn1n( 5) );
      fprintf(fp,s06,6, 6,epn0n( 6) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fclose(fp);
 }
@@ -3764,26 +3764,26 @@ INT k,q;
  
      fprintf(fp,"\n\n");
  
-     fprintf(fp,s01);
-     fprintf(fp,s02);
-     fprintf(fp,s03);
-     fprintf(fp,s04);
-     fprintf(fp,s05);
+     fprintf(fp,"%s",s01);
+     fprintf(fp,"%s",s02);
+     fprintf(fp,"%s",s03);
+     fprintf(fp,"%s",s04);
+     fprintf(fp,"%s",s05);
  
      fprintf(fp,s06,0,0,omegan0n(0) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,1,-1,omegan0n( 1) );
      fprintf(fp,s06,1, 0,omegan1n( 0) );
      fprintf(fp,s06,1, 1,omegan0n( 1) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,2,-2,omegan0n( 2) );
      fprintf(fp,s06,2,-1,omegan1n( 1) );
      fprintf(fp,s06,2, 0,omegan2n( 0) );
      fprintf(fp,s06,2, 1,omegan1n( 1) );
      fprintf(fp,s06,2, 2,omegan0n( 2) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,3,-3,omegan0n( 3) );
      fprintf(fp,s06,3,-2,omegan1n( 2) );
@@ -3792,7 +3792,7 @@ INT k,q;
      fprintf(fp,s06,3, 1,omegan2n( 1) );
      fprintf(fp,s06,3, 2,omegan1n( 2) );
      fprintf(fp,s06,3, 3,omegan0n( 3) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,4,-4,omegan0n( 4) );
      fprintf(fp,s06,4,-3,omegan1n( 3) );
@@ -3803,7 +3803,7 @@ INT k,q;
      fprintf(fp,s06,4, 2,omegan2n( 2) );
      fprintf(fp,s06,4, 3,omegan1n( 3) );
      fprintf(fp,s06,4, 4,omegan0n( 4) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,5,-5,omegan0n(-5) );
      fprintf(fp,s06,5,-4,omegan1n( 4) );
@@ -3816,7 +3816,7 @@ INT k,q;
      fprintf(fp,s06,5, 3,omegan2n( 3) );
      fprintf(fp,s06,5, 4,omegan1n( 4) );
      fprintf(fp,s06,5, 5,omegan0n( 5) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fprintf(fp,s06,6,-6,omegan0n( 6) );
      fprintf(fp,s06,6,-5,omegan1n( 5) );
@@ -3831,7 +3831,7 @@ INT k,q;
      fprintf(fp,s06,6, 4,omegan2n( 4) );
      fprintf(fp,s06,6, 5,omegan1n( 5) );
      fprintf(fp,s06,6, 6,omegan0n( 6) );
-     fprintf(fp,s07);
+     fprintf(fp,"%s",s07);
  
      fclose(fp);
 }

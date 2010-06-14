@@ -24,7 +24,7 @@ const char * filemode="w";
 // main program
 int main (int argc, char **argv)
 { FILE * fin=NULL; 
-  char instr[MAXNOFCHARINLINE];
+  //char instr[MAXNOFCHARINLINE];
   int im,j,l;
   int nofstapoints=0;
   int options=1; // this integer indicates how many command strings belong to options (=1+number of option-strings)

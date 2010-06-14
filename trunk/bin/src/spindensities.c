@@ -38,12 +38,9 @@ FILE * fin_coq, * fout;
 int doijk=0;// to be implemented : spindensity-component along specific direction (doijk=1,2,3)
  graphic_parameters gp;
  gp.threshhold=strtod(argv[1],NULL);
- gp.spins_scale_moment=0;
+ 
  gp.spins_show_ellipses=0;
- gp.spins_scale_moment=0;
- gp.spins_show_static_moment_direction=0;
- gp.spins_wave_amplitude=0;
- gp.spins_show_oscillation=0;
+
  gp.scale_density_vectors=1;
 
    spincf savmf;
@@ -114,7 +111,7 @@ int m[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
     Vector momentsy(1,49);
     Vector momentsz(1,49);
     h=0;
-   for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));}
+   for(nt=1;nt<=savmf.nofcomponents;++nt){h(nt)=hh(nt+savmf.nofcomponents*(ii-1));printf("%g ",h(nt));}
             if((*inputpars.jjj[ii]).module_type==0)
             {//(*inputpars.jjj[ii]).mcalc(moms,T,h,lnz,u,(*inputpars.jjj[ii]).mcalc_parstorage); // here we trigger single ion
                                                            // module to calculate all dim moments of spindensity
@@ -151,6 +148,10 @@ else       {
   }}}}
 
  gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
+ gp.spins_scale_moment=0;
+ gp.spins_show_static_moment_direction=0;
+ gp.spins_wave_amplitude=0;
+ gp.spins_show_oscillation=0;
 
 //print out the long vector of moments 1-48
   printf("%s - spin configuration moments(i)\n",outstr);

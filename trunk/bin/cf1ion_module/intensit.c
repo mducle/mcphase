@@ -130,7 +130,7 @@ t01="#-------------------------------------------------------------- \n";
 t02="#                          O U T P U T                         \n";
 t03="#-------------------------------------------------------------- \n";
 t04="#\n#\n";
-/*        fprintf(fp,t01);*/fprintf(fp,t02);/*fprintf(fp,t03);fprintf(fp,t04);*/
+/*        fprintf(fp,"%s",t01);*/fprintf(fp,"%s",t02);/*fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
  
     }
     else      fp=fopen_errchk(FILENAME(kristallfeld),"a");
@@ -145,8 +145,8 @@ t02="#!Temperature of the sample       T=%7.2f Kelvin                \n";
 t04="#\n";*/
     temperatur  = TEMPERATUR( iteration );
 if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
-    fprintf(fp,t01);fprintf(fp,t02,temperatur);
-/* fprintf(fp,t03);fprintf(fp,t04);*/
+    fprintf(fp,"%s",t01);fprintf(fp,t02,temperatur);
+/* fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
 }
  
 t01="#-------------------------------------------------------------- \n";
@@ -204,17 +204,17 @@ t21="#\n";
  
  
  if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
-   /*fprintf(fp,t01);*/fprintf(fp,t02,ionname);
-   /* fprintf(fp,t03);fprintf(fp,t04);*/
-    fprintf(fp,t05,gj);fprintf(fp,t06);
-    fprintf(fp,t07);fprintf(fp,t08,(DOUBLE)( (dimj-1)/2.0 ) );
-  /*  fprintf(fp,t09);*/fprintf(fp,t10,elektronen4f);
-  /*  fprintf(fp,t11);fprintf(fp,t12);
-    fprintf(fp,t13);fprintf(fp,t14);*/
-    fprintf(fp,t15);fprintf(fp,t16,symname);
-  /*  fprintf(fp,t17);*/fprintf(fp,t18,symmetrienr);
-  /*  fprintf(fp,t19);fprintf(fp,t20);
-    fprintf(fp,t21);*/
+   /*fprintf(fp,"%s",t01);*/fprintf(fp,t02,ionname);
+   /* fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
+    fprintf(fp,t05,gj);fprintf(fp,"%s",t06);
+    fprintf(fp,"%s",t07);fprintf(fp,t08,(DOUBLE)( (dimj-1)/2.0 ) );
+  /*  fprintf(fp,"%s",t09);*/fprintf(fp,t10,elektronen4f);
+  /*  fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+    fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);*/
+    fprintf(fp,"%s",t15);fprintf(fp,t16,symname);
+  /*  fprintf(fp,"%s",t17);*/fprintf(fp,t18,symmetrienr);
+  /*  fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+    fprintf(fp,"%s",t21);*/
  }
  
  
@@ -228,9 +228,9 @@ t21="#\n";
   t01="#-------------------------------------------------------------- \n";
   t02="# Paramter          :     %2d von %2d                      \n";
   t03="#-------------------------------------------------------------- \n";
-/*  fprintf(fp,t01);*/
+/*  fprintf(fp,"%s",t01);*/
   fprintf(fp,t02,ZEILE(iteration),MAX_ZEILE(iteration));
-/*  fprintf(fp,t03);*/
+/*  fprintf(fp,"%s",t03);*/
  }
  
  if(ps_null == NEIN){
@@ -300,12 +300,12 @@ t26="#! Bz_mol  =   %11.2f                                     \n";
 t27="#                                                              \n";
 t28="#-------------------------------------------------------------- \n";
 t29="#\n#\n";
-    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) )  fprintf(fp,t01);
-    fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-    fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-    fprintf(fp,t17);fprintf(fp,t18);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) )  fprintf(fp,"%s",t01);
+    fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+    fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+    fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);
  
  if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ||
      (*(FILENAME(kristallfeld)+16) == *(ORTHO+16)&&!IS_MAGFIT(iteration)) ){
@@ -316,7 +316,7 @@ t29="#\n#\n";
          B3(iteration) = 0.0;
      }
  
-    fprintf(fp,t19);
+    fprintf(fp,"%s",t19);
     fprintf(fp,t20,is_null(B1(iteration),0.001 ));
     fprintf(fp,t21,is_null(B2(iteration),0.001 ));
     fprintf(fp,t22,is_null(B3(iteration),0.001 ));
@@ -327,15 +327,15 @@ t29="#\n#\n";
 t19="#                                                              \n";
 t20="# for the Approximation of the magnetic Momente thats in a      \n";
 t21="# external Field B_ex in direction of  [ %5d, %5d, %5d].   \n";
-    fprintf(fp,t19); fprintf(fp,t20);
+    fprintf(fp,"%s",t19); fprintf(fp,"%s",t20);
     fprintf(fp,t21,R1(iteration),R2(iteration),R3(iteration));
   }
-    fprintf(fp,t23);
+    fprintf(fp,"%s",t23);
     fprintf(fp,t24,is_null(B1MOL(iteration),0.001 ));
     fprintf(fp,t25,is_null(B2MOL(iteration),0.001 ));
-    fprintf(fp,t26,is_null(B3MOL(iteration),0.001 ));fprintf(fp,t23);
-    fprintf(fp,t27);fprintf(fp,t28);
-    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,t29);
+    fprintf(fp,t26,is_null(B3MOL(iteration),0.001 ));fprintf(fp,"%s",t23);
+    fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,"%s",t29);
 }
  
 t01="#-------------------------------------------------------------- \n";
@@ -360,11 +360,11 @@ t16="# vanishing Matrix element of the Ground state E( 1).          \n";
 t17="#-------------------------------------------------------------- \n";
 t18="#\n";
  
-    fprintf(fp,t01);fprintf(fp,t02,einheit_out);
-    fprintf(fp,t03);fprintf(fp,t04,anz_niveaus);
-    fprintf(fp,t05,shift);fprintf(fp,t06);fprintf(fp,t07);
-    fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-/*    fprintf(fp,t11);*/
+    fprintf(fp,"%s",t01);fprintf(fp,t02,einheit_out);
+    fprintf(fp,"%s",t03);fprintf(fp,t04,anz_niveaus);
+    fprintf(fp,t05,shift);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);
+    fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+/*    fprintf(fp,"%s",t11);*/
  
  
     for( zeile=1 ; zeile<=anz_niveaus ; ++zeile){
@@ -375,9 +375,9 @@ t18="#\n";
        *EINHEITIMP[einheitnr_in].fek*EINHEITIMP[einheitnr_out].fke,
                   VALUE(gi,zeile) );
     }
-  /*  fprintf(fp,t14);*/fprintf(fp,t15);
-    fprintf(fp,t16);fprintf(fp,t17);
-    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,t18);
+  /*  fprintf(fp,"%s",t14);*/fprintf(fp,"%s",t15);
+    fprintf(fp,"%s",t16);fprintf(fp,"%s",t17);
+    if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,"%s",t18);
  
  
  
@@ -433,14 +433,14 @@ t43="#                                                              \n";
 t44="#-------------------------------------------------------------- \n";
  
 if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
-fprintf(fp,t16);fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);fprintf(fp,t25);
-fprintf(fp,t26);fprintf(fp,t27);
-fprintf(fp,t46);fprintf(fp,t47);fprintf(fp,t48);fprintf(fp,t49);
-fprintf(fp,t28);fprintf(fp,t29);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);fprintf(fp,"%s",t25);
+fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);
+fprintf(fp,"%s",t46);fprintf(fp,"%s",t47);fprintf(fp,"%s",t48);fprintf(fp,"%s",t49);
+fprintf(fp,"%s",t28);fprintf(fp,"%s",t29);
 }
  
 if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
@@ -494,7 +494,7 @@ if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
                            }
                         }
              }
-             fprintf(fp,t43);
+             fprintf(fp,"%s",t43);
        }
 
     ewev=fopen_errchk("results/levels.cef","w"); /* output also  in uncommented format with states to be used in mcdiff.in */
@@ -543,7 +543,7 @@ if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
        }
 
 
-    fprintf(fp,t44);
+    fprintf(fp,"%s",t44);
     fclose(ewev); /*close short output file */  
     printf("Results results/levels.cef written ...\n");
 }
@@ -573,9 +573,9 @@ t12="#                         x      |       y      |       z      \n";
 t13="#--------------------------------+--------------+--------------\n";
 t14="#   %2d  <--> %2d    %11.6f   |%11.6f   |%11.6f   \n";
 t15="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
  
     for( i=1 ; i<= anz_niveaus ; ++i ){
         for( k=1 ; k<= i; ++k ){
@@ -592,12 +592,12 @@ fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
             sumy = is_null( sumy, 0.000001 );
             sumz = is_null( sumz, 0.000001 );
             if( sumx!=0.0 || sumy!=0.0 || sumz!=0.0){
-                fprintf(fp,t13);
+                fprintf(fp,"%s",t13);
                 fprintf(fp,t14,i,k,sumx,sumy,sumz);
             }
         }
     }
-    fprintf(fp,t15);
+    fprintf(fp,"%s",t15);
  
 fprintf(fp,"#\n#\n");
 t01="#-------------------------------------------------------------- \n";
@@ -625,18 +625,18 @@ t22="#             >     |<i,r|J |k,s>|  = n  --- J(J+1)            \n";
 t23="#             ----         T           i  3                    \n";
 t24="#             k,r,s                                            \n";
 t25="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
-fprintf(fp,t16);fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);fprintf(fp,t25);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);fprintf(fp,"%s",t25);
 }/* end nicht ortho */
  
 if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
 t01="#-------------------------------------------------------------- \n";
 t02="# Polycrystal transition matrix elements                       \n";
 t03="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);
 }
     tabelle(fp,anz_niveaus,aJtb2);
  
@@ -699,23 +699,23 @@ t54="#            ----  =            3                              \n";
 t55="#             k,i   E -> E                                     \n";
 t56="#                    i    k                                    \n";
 t57="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
-fprintf(fp,t16);fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);fprintf(fp,t25);
-fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);fprintf(fp,t29);fprintf(fp,t30);
-fprintf(fp,t31);fprintf(fp,t32);fprintf(fp,t33);fprintf(fp,t34);fprintf(fp,t35);
-fprintf(fp,t36);fprintf(fp,t37);fprintf(fp,t38);fprintf(fp,t39);fprintf(fp,t40);
-fprintf(fp,t41);fprintf(fp,t42);fprintf(fp,t43);fprintf(fp,t44);fprintf(fp,t45);
-fprintf(fp,t46);fprintf(fp,t47);fprintf(fp,t48);fprintf(fp,t49);fprintf(fp,t50);
-fprintf(fp,t51);fprintf(fp,t52);fprintf(fp,t53);fprintf(fp,t54);fprintf(fp,t55);
-fprintf(fp,t56);fprintf(fp,t57);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);fprintf(fp,"%s",t25);
+fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);
+fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);
+fprintf(fp,"%s",t36);fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
+fprintf(fp,"%s",t41);fprintf(fp,"%s",t42);fprintf(fp,"%s",t43);fprintf(fp,"%s",t44);fprintf(fp,"%s",t45);
+fprintf(fp,"%s",t46);fprintf(fp,"%s",t47);fprintf(fp,"%s",t48);fprintf(fp,"%s",t49);fprintf(fp,"%s",t50);
+fprintf(fp,"%s",t51);fprintf(fp,"%s",t52);fprintf(fp,"%s",t53);fprintf(fp,"%s",t54);fprintf(fp,"%s",t55);
+fprintf(fp,"%s",t56);fprintf(fp,"%s",t57);
 }/* endif nicht ortho */
  
 t01="#-------------------------------------------------------------- \n";
 t02="#!Temperature of the sample               T= %7.2f Kelvin         \n";
-    fprintf(fp,t01);fprintf(fp,t02,temperatur);
+    fprintf(fp,"%s",t01);fprintf(fp,t02,temperatur);
  
  
  zu_summe    = zustandssumme( einheitnr_in , ew , temperatur );
@@ -727,14 +727,14 @@ t02="#!parition function            Z  = %6.2f                 \n";
 t03="#-------------------------------------------------------------- \n";
 t04="#!Total_magnetic_scattering_intensity = %6.2f barn            \n";
 t05="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02,zu_summe);fprintf(fp,t03);
-fprintf(fp,t04,gesamte_intensitaet);fprintf(fp,t05);
+fprintf(fp,"%s",t01);fprintf(fp,t02,zu_summe);fprintf(fp,"%s",t03);
+fprintf(fp,t04,gesamte_intensitaet);fprintf(fp,"%s",t05);
  
 if( *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
 t01="#-------------------------------------------------------------- \n";
 t02="# Transition intensities Poly crystal                         \n";
 t03="#-------------------------------------------------------------- \n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);
 }
  
  /* Intensitaet noch mit gi_ze*const*gj**2 * exp( -Ei/T)/Z multipizieren */
@@ -753,7 +753,7 @@ fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
 t01="#-------------------------------------------------------------- \n";
 t02="# Transition Energy (%6s) vs Intensity (barn)                  \n";
 t03="#-------------------------------------------------------------- }\n";
-fprintf(fp,t01);fprintf(fp,t02,einheit_out);fprintf(fp,t03);
+fprintf(fp,"%s",t01);fprintf(fp,t02,einheit_out);fprintf(fp,"%s",t03);
 
 /* Intensitaet noch als tabelle ausgeben */
     for( ze=1 ; ze<=anz_niveaus ; ++ze ){
@@ -1435,64 +1435,64 @@ t59="#! By_mol            = %6.2f Tesla                             \n"  ;
 t60="#! Bz_mol            = %6.2f Tesla                             \n"  ;
 t61="# -------------------------------------------------------------- \n";
  
-fprintf(fp,t01);
-fprintf(fp,t02);
-fprintf(fp,t03);
-fprintf(fp,t04);
-fprintf(fp,t05);
-fprintf(fp,t06);
-fprintf(fp,t07);
-fprintf(fp,t08);
-fprintf(fp,t09);
-fprintf(fp,t10);
+fprintf(fp,"%s",t01);
+fprintf(fp,"%s",t02);
+fprintf(fp,"%s",t03);
+fprintf(fp,"%s",t04);
+fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);
+fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);
+fprintf(fp,"%s",t09);
+fprintf(fp,"%s",t10);
  
-fprintf(fp,t11);
-fprintf(fp,t12);
-fprintf(fp,t13);
-fprintf(fp,t14);
-fprintf(fp,t15);
-fprintf(fp,t16);
-fprintf(fp,t17);
-fprintf(fp,t18);
-fprintf(fp,t19);
-fprintf(fp,t20);
+fprintf(fp,"%s",t11);
+fprintf(fp,"%s",t12);
+fprintf(fp,"%s",t13);
+fprintf(fp,"%s",t14);
+fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);
+fprintf(fp,"%s",t17);
+fprintf(fp,"%s",t18);
+fprintf(fp,"%s",t19);
+fprintf(fp,"%s",t20);
  
-fprintf(fp,t21);
-fprintf(fp,t22);
-fprintf(fp,t23);
-fprintf(fp,t24);
-fprintf(fp,t25);
-fprintf(fp,t26);
-fprintf(fp,t27);
-fprintf(fp,t28);
-fprintf(fp,t29);
-fprintf(fp,t30);
+fprintf(fp,"%s",t21);
+fprintf(fp,"%s",t22);
+fprintf(fp,"%s",t23);
+fprintf(fp,"%s",t24);
+fprintf(fp,"%s",t25);
+fprintf(fp,"%s",t26);
+fprintf(fp,"%s",t27);
+fprintf(fp,"%s",t28);
+fprintf(fp,"%s",t29);
+fprintf(fp,"%s",t30);
  
  
-fprintf(fp,t31);
-fprintf(fp,t32);
-fprintf(fp,t33);
-fprintf(fp,t34);
-fprintf(fp,t35);
-fprintf(fp,t36);
-fprintf(fp,t37);
-fprintf(fp,t38);
+fprintf(fp,"%s",t31);
+fprintf(fp,"%s",t32);
+fprintf(fp,"%s",t33);
+fprintf(fp,"%s",t34);
+fprintf(fp,"%s",t35);
+fprintf(fp,"%s",t36);
+fprintf(fp,"%s",t37);
+fprintf(fp,"%s",t38);
 fprintf(fp,t46,is_null(anf_feld,1/1000) );
 fprintf(fp,t47,is_null(end_feld,1/1000) );
-fprintf(fp,t48);
+fprintf(fp,"%s",t48);
 fprintf(fp,t49,temp);
-fprintf(fp,t50);
-fprintf(fp,t51);
+fprintf(fp,"%s",t50);
+fprintf(fp,"%s",t51);
 fprintf(fp,t52,ionname);
-fprintf(fp,t53);
+fprintf(fp,"%s",t53);
 fprintf(fp,t54,b1,b2,b3);
-fprintf(fp,t55);
-fprintf(fp,t56);
-fprintf(fp,t57);
+fprintf(fp,"%s",t55);
+fprintf(fp,"%s",t56);
+fprintf(fp,"%s",t57);
 fprintf(fp,t58,is_null(B1MOL(iteration),1/1000) );
 fprintf(fp,t59,is_null(B2MOL(iteration),1/1000) );
 fprintf(fp,t60,is_null(B3MOL(iteration),1/1000) );
-fprintf(fp,t61);
+fprintf(fp,"%s",t61);
 }
 /*----------------------------------------------------------------------------
                                    raus_kkommentar()
@@ -1542,36 +1542,36 @@ t25="#! By_mol            = %6.2f Tesla                             \n"  ;
 t26="#! Bz_mol            = %6.2f Tesla                             \n"  ;
 t27="# -------------------------------------------------------------- \n";
  
-fprintf(fp,t01);
-fprintf(fp,t02);
-fprintf(fp,t03);
-fprintf(fp,t04);
-fprintf(fp,t05);
-fprintf(fp,t06);
-fprintf(fp,t07);
-fprintf(fp,t08);
-fprintf(fp,t09);
-fprintf(fp,t10);
+fprintf(fp,"%s",t01);
+fprintf(fp,"%s",t02);
+fprintf(fp,"%s",t03);
+fprintf(fp,"%s",t04);
+fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);
+fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);
+fprintf(fp,"%s",t09);
+fprintf(fp,"%s",t10);
  
-fprintf(fp,t11);
-fprintf(fp,t12);
-fprintf(fp,t13);
-fprintf(fp,t14);
-fprintf(fp,t15);
-fprintf(fp,t16);
-fprintf(fp,t17);
-fprintf(fp,t18);
+fprintf(fp,"%s",t11);
+fprintf(fp,"%s",t12);
+fprintf(fp,"%s",t13);
+fprintf(fp,"%s",t14);
+fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);
+fprintf(fp,"%s",t17);
+fprintf(fp,"%s",t18);
  
  
 fprintf(fp,t19,anf_feld);
 fprintf(fp,t20,end_feld);
-fprintf(fp,t21);
+fprintf(fp,"%s",t21);
 fprintf(fp,t22,temp);
-fprintf(fp,t23);
+fprintf(fp,"%s",t23);
 fprintf(fp,t24,B1MOL(iteration) );
 fprintf(fp,t25,B2MOL(iteration) );
 fprintf(fp,t26,B3MOL(iteration) );
-fprintf(fp,t27);
+fprintf(fp,"%s",t27);
 }
 /*----------------------------------------------------------------------------
                                    raus_kommentar()
@@ -1679,97 +1679,97 @@ t82="#! theta             = %7.2f Kelvin                           \n";
 t83="#| theta(T) is read from file %16s .            \n";
 t84="# -------------------------------------------------------------- \n";
  
-fprintf(fp,t01);
-fprintf(fp,t02);
-fprintf(fp,t03);
-fprintf(fp,t04);
-fprintf(fp,t05);
-fprintf(fp,t06);
-fprintf(fp,t07);
-fprintf(fp,t08);
-fprintf(fp,t09);
-fprintf(fp,t10);
+fprintf(fp,"%s",t01);
+fprintf(fp,"%s",t02);
+fprintf(fp,"%s",t03);
+fprintf(fp,"%s",t04);
+fprintf(fp,"%s",t05);
+fprintf(fp,"%s",t06);
+fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);
+fprintf(fp,"%s",t09);
+fprintf(fp,"%s",t10);
  
-fprintf(fp,t11);
-fprintf(fp,t12);
-fprintf(fp,t13);
-fprintf(fp,t14);
-fprintf(fp,t15);
-fprintf(fp,t16);
-fprintf(fp,t17);
-fprintf(fp,t18);
-fprintf(fp,t19);
-fprintf(fp,t20);
+fprintf(fp,"%s",t11);
+fprintf(fp,"%s",t12);
+fprintf(fp,"%s",t13);
+fprintf(fp,"%s",t14);
+fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);
+fprintf(fp,"%s",t17);
+fprintf(fp,"%s",t18);
+fprintf(fp,"%s",t19);
+fprintf(fp,"%s",t20);
  
-fprintf(fp,t21);
-fprintf(fp,t22);
-fprintf(fp,t23);
-fprintf(fp,t24);
-fprintf(fp,t25);
-fprintf(fp,t26);
-fprintf(fp,t27);
-fprintf(fp,t28);
-fprintf(fp,t29);
-fprintf(fp,t30);
+fprintf(fp,"%s",t21);
+fprintf(fp,"%s",t22);
+fprintf(fp,"%s",t23);
+fprintf(fp,"%s",t24);
+fprintf(fp,"%s",t25);
+fprintf(fp,"%s",t26);
+fprintf(fp,"%s",t27);
+fprintf(fp,"%s",t28);
+fprintf(fp,"%s",t29);
+fprintf(fp,"%s",t30);
  
-fprintf(fp,t31);
-fprintf(fp,t32);
-fprintf(fp,t33);
-fprintf(fp,t34);
-fprintf(fp,t35);
-fprintf(fp,t36);
-fprintf(fp,t37);
-fprintf(fp,t38);
-fprintf(fp,t39);
-fprintf(fp,t40);
+fprintf(fp,"%s",t31);
+fprintf(fp,"%s",t32);
+fprintf(fp,"%s",t33);
+fprintf(fp,"%s",t34);
+fprintf(fp,"%s",t35);
+fprintf(fp,"%s",t36);
+fprintf(fp,"%s",t37);
+fprintf(fp,"%s",t38);
+fprintf(fp,"%s",t39);
+fprintf(fp,"%s",t40);
  
-fprintf(fp,t41);
-fprintf(fp,t42);
-fprintf(fp,t43);
-fprintf(fp,t44);
-fprintf(fp,t45);
-fprintf(fp,t46);
-fprintf(fp,t47);
-fprintf(fp,t48);
-fprintf(fp,t49);
-fprintf(fp,t50);
+fprintf(fp,"%s",t41);
+fprintf(fp,"%s",t42);
+fprintf(fp,"%s",t43);
+fprintf(fp,"%s",t44);
+fprintf(fp,"%s",t45);
+fprintf(fp,"%s",t46);
+fprintf(fp,"%s",t47);
+fprintf(fp,"%s",t48);
+fprintf(fp,"%s",t49);
+fprintf(fp,"%s",t50);
  
-fprintf(fp,t51);
-fprintf(fp,t52);
-fprintf(fp,t53);
-fprintf(fp,t54);
-fprintf(fp,t55);
-fprintf(fp,t56);
-fprintf(fp,t57);
-fprintf(fp,t58);
-fprintf(fp,t59);
-fprintf(fp,t60);
+fprintf(fp,"%s",t51);
+fprintf(fp,"%s",t52);
+fprintf(fp,"%s",t53);
+fprintf(fp,"%s",t54);
+fprintf(fp,"%s",t55);
+fprintf(fp,"%s",t56);
+fprintf(fp,"%s",t57);
+fprintf(fp,"%s",t58);
+fprintf(fp,"%s",t59);
+fprintf(fp,"%s",t60);
  
-fprintf(fp,t61);
-fprintf(fp,t62);
-fprintf(fp,t63);
-fprintf(fp,t64);
-fprintf(fp,t65);
-fprintf(fp,t66);
-fprintf(fp,t67);
-fprintf(fp,t68);
-fprintf(fp,t69);
-fprintf(fp,t60);
+fprintf(fp,"%s",t61);
+fprintf(fp,"%s",t62);
+fprintf(fp,"%s",t63);
+fprintf(fp,"%s",t64);
+fprintf(fp,"%s",t65);
+fprintf(fp,"%s",t66);
+fprintf(fp,"%s",t67);
+fprintf(fp,"%s",t68);
+fprintf(fp,"%s",t69);
+fprintf(fp,"%s",t60);
  
-fprintf(fp,t71);
-fprintf(fp,t72);
-fprintf(fp,t73);
-fprintf(fp,t74);
-fprintf(fp,t75);
-fprintf(fp,t76);
-fprintf(fp,t77);
+fprintf(fp,"%s",t71);
+fprintf(fp,"%s",t72);
+fprintf(fp,"%s",t73);
+fprintf(fp,"%s",t74);
+fprintf(fp,"%s",t75);
+fprintf(fp,"%s",t76);
+fprintf(fp,"%s",t77);
 fprintf(fp,t78,anf_temp);
 fprintf(fp,t79,end_temp);
-fprintf(fp,t80);
+fprintf(fp,"%s",t80);
 fprintf(fp,t81,lambda);
 if(lesethetafile == NEIN ) fprintf(fp,t82,theta);
 else                       fprintf(fp,t83,namethetafile);
-fprintf(fp,t84);
+fprintf(fp,"%s",t84);
 
 }
 /*----------------------------------------------------------------------------
@@ -1832,14 +1832,14 @@ parametersatz(fp,modus,kristallfeld,ionennr,einheit,eingabeart)
 if(eingabeart==modus &&  *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="#                     Parameters                     \n";
- /* fprintf(fp,t01);
-  fprintf(fp,t02);*/
+ /* fprintf(fp,"%s",t01);
+  fprintf(fp,"%s",t02);*/
 }
 if( modus == XW      &&  *(FILENAME(kristallfeld)+16) == *(ORTHO+16) ){
   t01="#-------------------------------------------------------------- \n";
   t02="#                  Next cubic point                   \n";
-  fprintf(fp,t01);
-  fprintf(fp,t02);
+  fprintf(fp,"%s",t01);
+  fprintf(fp,"%s",t02);
 }
  
 t01="#-------------------------------------------------------------- \n";
@@ -1872,12 +1872,12 @@ t26="#!   W     =   %16.6f                                \n";
     f6  = F6( ionennr        );
  
     if( b40==0.0 && b60==0.0 ){
-       fprintf(fp,t01);
+       fprintf(fp,"%s",t01);
        fprintf(fp,t22,einheit);
- /*      fprintf(fp,t03);fprintf(fp,t04);*/
-       fprintf(fp,t36);fprintf(fp,t26,0.0);
-/*       fprintf(fp,t04);*/
-       fprintf(fp,t01);
+ /*      fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
+       fprintf(fp,"%s",t36);fprintf(fp,t26,0.0);
+/*       fprintf(fp,"%s",t04);*/
+       fprintf(fp,"%s",t01);
  /*      if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
        return;
     }
@@ -1885,20 +1885,20 @@ t26="#!   W     =   %16.6f                                \n";
  
     if( b40!=0.0 && b60==0.0){
              x = 1; w = b40*f4/x;
-             fprintf(fp,t01);
+             fprintf(fp,"%s",t01);
              fprintf(fp,t22,einheit);
-/*             fprintf(fp,t03);fprintf(fp,t04);*/
+/*             fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
              fprintf(fp,t16,x);fprintf(fp,t26,w);
-/*             fprintf(fp,t04);*/
-/*             fprintf(fp,t01);*/
+/*             fprintf(fp,"%s",t04);*/
+/*             fprintf(fp,"%s",t01);*/
 /*             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
              x =-1; w = b40*f4/x;
- /*            fprintf(fp,t01);*/
+ /*            fprintf(fp,"%s",t01);*/
              fprintf(fp,t22,einheit);
-             fprintf(fp,t03);fprintf(fp,t04);
+             fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
              fprintf(fp,t16,x);fprintf(fp,t26,w);
-/*             fprintf(fp,t04);*/
-             fprintf(fp,t01);
+/*             fprintf(fp,"%s",t04);*/
+             fprintf(fp,"%s",t01);
 /*             if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
              return;
     }
@@ -1921,26 +1921,26 @@ t26="#!   W     =   %16.6f                                \n";
     }
  
  
-    fprintf(fp,t01);
+    fprintf(fp,"%s",t01);
     fprintf(fp,t22,einheit);
-/*    fprintf(fp,t03);fprintf(fp,t04);*/
+/*    fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
     fprintf(fp,t16,x);fprintf(fp,t26,w);
-/*    fprintf(fp,t04);*/
-    fprintf(fp,t01);
+/*    fprintf(fp,"%s",t04);*/
+    fprintf(fp,"%s",t01);
 /*    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
  
     return;
  }
  else{
-    fprintf(fp,t01);
+    fprintf(fp,"%s",t01);
     if( modus==up(AKQ) || modus == up(WKQ) ) fprintf(fp,t12,modus,einheit);
     else fprintf(fp,t02,modus,einheit);
 
-    if( modus==up(VKQ)) fprintf(fp,t02a);
-    if( modus==up(BKQ)) fprintf(fp,t02b);
-    if( modus==up(LKQ)) fprintf(fp,t02l);
-    if( modus==up(AKQ)) fprintf(fp,t12a);
-/*    fprintf(fp,t03);fprintf(fp,t04);*/
+    if( modus==up(VKQ)) fprintf(fp,"%s",t02a);
+    if( modus==up(BKQ)) fprintf(fp,"%s",t02b);
+    if( modus==up(LKQ)) fprintf(fp,"%s",t02l);
+    if( modus==up(AKQ)) fprintf(fp,"%s",t12a);
+/*    fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
     e_4f = E4f( ionennr );
     if(alpha_J[e_4f]==0.0 || beta_J[e_4f]==0.0 || gamma_J[e_4f]==0.0){
        if(alpha_J[e_4f]==0.0) alpha_J[e_4f]=1.0;
@@ -2157,7 +2157,7 @@ t26="#!   W     =   %16.6f                                \n";
                  q  = 2;
                  f=printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im);
  
-                 if( f==JA ) { f=NEIN; fprintf(fp,t04); }
+                 if( f==JA ) { f=NEIN; fprintf(fp,"%s",t04); }
  
                  re = v40r;
                  im = v40i;
@@ -2196,7 +2196,7 @@ t26="#!   W     =   %16.6f                                \n";
                  q  = 4;
                  f=printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im);
  
-                 if( f==JA ) { f=NEIN; fprintf(fp,t04); }
+                 if( f==JA ) { f=NEIN; fprintf(fp,"%s",t04); }
  
                  re = v60r;
                  im = v60i;
@@ -2248,10 +2248,10 @@ t26="#!   W     =   %16.6f                                \n";
                  q  = 6;
                  f=printspalte(modus,fp,t05,t06,t07,t46,t47,k,q,re,im);
  
-                 if( f==JA ) { f=NEIN; /*fprintf(fp,t04); */}
+                 if( f==JA ) { f=NEIN; /*fprintf(fp,"%s",t04); */}
     }
  
-    fprintf(fp,t01);
+    fprintf(fp,"%s",t01);
 /*    if(ZEILE(iteration) ==0 )fprintf(fp,"\n\n");*/
  
  
@@ -2286,7 +2286,7 @@ t06="# -----" ;t16="----";
        if( zeile==(test=(INT)(anz_niveaus/2)+1) )
           if(test>7)
              kopf(fp,anz_niveaus,NEIN);
-        fprintf(fp,t02);
+        fprintf(fp,"%s",t02);
         sum = 0.0;
         for( spalte=1; spalte<=anz_niveaus ;++spalte ){
              sum += R(inten,zeile,spalte);
@@ -2301,10 +2301,10 @@ t06="# -----" ;t16="----";
         fprintf(fp,t13,nf_3s(sum) );
         fprintf(fp,"\n");
  
-        if(zeile< anz_niveaus) fprintf(fp,t05);  else fprintf(fp,t06);
+        if(zeile< anz_niveaus) fprintf(fp,"%s",t05);  else fprintf(fp,"%s",t06);
         for( spalte=1; spalte<=anz_niveaus+1 ;++spalte )
-           if(zeile< anz_niveaus) fprintf(fp,t15);
-           else if(spalte<=anz_niveaus) fprintf(fp,t16); else fprintf(fp,t25);
+           if(zeile< anz_niveaus) fprintf(fp,"%s",t15);
+           else if(spalte<=anz_niveaus) fprintf(fp,"%s",t16); else fprintf(fp,"%s",t25);
         fprintf(fp,"\n");
  
     }
@@ -2398,17 +2398,17 @@ mittlung(fp,anz_niveaus,inten,ew,entartung,
     rel_err_g *= 100.0;
  
  
-    fprintf(fp,t01);
+    fprintf(fp,"%s",t01);
     fprintf(fp,t02,is_null(int_qe,0.001));
-    fprintf(fp,t03);fprintf(fp,t04);
+    fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
     fprintf(fp,t05,is_null(ew_mittel_v,0.001),einheit_out);
     fprintf(fp,t06,is_null(rel_err_v,0.001));
     fprintf(fp,t07,is_null(int_sum_v,0.001));
-    fprintf(fp,t08);
+    fprintf(fp,"%s",t08);
     fprintf(fp,t09,is_null(ew_mittel_g,0.001),einheit_out);
     fprintf(fp,t10,is_null(rel_err_g,0.001));
     fprintf(fp,t11,is_null(int_sum_g,0.001));
-    fprintf(fp,t12);
+    fprintf(fp,"%s",t12);
     fprintf(fp,"\n");
  
  
@@ -2440,35 +2440,35 @@ t34="sum|";
 t35="---|";
  
        if( flag==JA ){
-         fprintf(fp,t01);
+         fprintf(fp,"%s",t01);
          for( i=1 ; i<=anz_niveaus ;++i )
-            fprintf(fp,t11);
-         fprintf(fp,t21);
+            fprintf(fp,"%s",t11);
+         fprintf(fp,"%s",t21);
          fprintf(fp,"\n");
        }
  
-    fprintf(fp,t02);
+    fprintf(fp,"%s",t02);
     for( i=1 ; i<=anz_niveaus ;++i )
-         fprintf(fp,t12);
-    fprintf(fp,t32);
+         fprintf(fp,"%s",t12);
+    fprintf(fp,"%s",t32);
     fprintf(fp,"\n");
  
-    fprintf(fp,t03);
+    fprintf(fp,"%s",t03);
     for( i=1 ; i<=anz_niveaus ;++i )
-         fprintf(fp,t13);
-    fprintf(fp,t33);
+         fprintf(fp,"%s",t13);
+    fprintf(fp,"%s",t33);
     fprintf(fp,"\n");
  
-    fprintf(fp,t04);
+    fprintf(fp,"%s",t04);
     for( i=1 ; i<=anz_niveaus ;++i )
          if( i<=9 ) fprintf(fp,t14,i); else fprintf(fp,t24,i);
-    fprintf(fp,t34);
+    fprintf(fp,"%s",t34);
     fprintf(fp,"\n");
  
-    fprintf(fp,t05);
+    fprintf(fp,"%s",t05);
     for( i=1 ; i<=anz_niveaus ;++i )
-         fprintf(fp,t15);
-    fprintf(fp,t35);
+         fprintf(fp,"%s",t15);
+    fprintf(fp,"%s",t35);
     fprintf(fp,"\n");
  
  

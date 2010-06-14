@@ -32,7 +32,7 @@ ifneq (,$(findstring CYGWIN,$(shell uname)))
 endif
 endif
 #
-# STATIC = static
+ STATIC = static
 #
 #---------------------------------------------------------------------
 #               ... and his Flags

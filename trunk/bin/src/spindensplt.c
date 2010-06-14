@@ -139,6 +139,12 @@ gp.scale_density_vectors=1;
   gp.spins_scale_moment=0;
   gp.spins_show_static_moment_direction=0;
 if(gp.read())printf("#reading graphic parameters from results/graphic_parameters.set\n");// read graphic parameters which are set by user in file results/graphic_parameters.set
+ gp.spins_scale_moment=0;
+ gp.spins_show_static_moment_direction=0;
+ gp.spins_wave_amplitude=0;
+ gp.spins_show_oscillation=0;
+ gp.spins_show_ellipses=0;
+
 // read cf-parameters into class object jjjpar
 cryststruct cs;
 

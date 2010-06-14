@@ -332,7 +332,7 @@ t03="|------+-----+-----+-----+-----|\n";
 t04="| %4s | %3.1f |  %1d  |  %1d  |  %1d  |\n";
 t05="|------+-----+-----+-----+-----|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -344,8 +344,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
     f22 = fkq(2,2,dimj);
  
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,f20,f21,f22  );
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
  printf("calculating F4q ... \n");
@@ -355,7 +355,7 @@ t03="|------+-----+-----+-----+-----+-----+-----|\n";
 t04="| %4s | %3.1f | %3d | %3d | %3d | %3d | %3d |\n";
 t05="|------+-----+-----+-----+-----+-----+-----|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -370,8 +370,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,f40,f41,f42,f43,f44 );
  
  
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
  printf("calculating F6q ... \n");
@@ -381,7 +381,7 @@ t03="|------+-----+-------+-------+-------+-------+-------+-------+-------|\n";
 t04="| %4s | %3.1f |%7d|%7d|%7d|%7d|%7d|%7d|%7d|\n";
 t05="|------+-----+-------+-------+-------+-------+-------+-------+-------|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -397,8 +397,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
     f66 = fkq(6,6,dimj);
  
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,f60,f61,f62,f63,f64,f65,f66);
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
  fclose(out);
@@ -449,7 +449,7 @@ t03="|------+-----+-----+-----+-----+-----+-----|\n";
 t04="| %4s | %3.1f |  %1d  |  %1d  |  %1d  |  %1d  |  %1d  |\n";
 t05="|------+-----+-----+-----+-----+-----+-----|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -463,8 +463,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
     g22 = gkq(2, 2,dimj);
  
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,g2m2,g2m1,g20,g21,g22  );
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
  printf("calculating G4q ... \n");
@@ -474,7 +474,7 @@ t03="|------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----|\n";
 t04="| %4s | %3.1f | %3d | %3d | %3d | %3d | %3d | %3d | %3d | %3d | %3d |\n";
 t05="|------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -494,8 +494,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
                                                g40,g41,g42,g43,g44 );
  
  
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
  printf("calculating G6q ... \n");
@@ -505,7 +505,7 @@ t03="|------+-----+-------+-------+-------+-------+-------+-------+-------|\n";
 t04="| %4s | %3.1f |%7d|%7d|%7d|%7d|%7d|%7d|%7d|\n";
 t05="|------+-----+-------+-------+-------+-------+-------+-------+-------|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -522,8 +522,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
  
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,g6m6,g6m5,g6m4,g6m3,g6m2,g6m1,
                                                g60);
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  
 t01="==============================================================\n";
@@ -532,7 +532,7 @@ t03="|------+-----+-------+-------+-------+-------+-------+-------|\n";
 t04="| %4s | %3.1f |%7d|%7d|%7d|%7d|%7d|%7d|\n";
 t05="|------+-----+-------+-------+-------+-------+-------+-------|\n";
  
-fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
+fprintf(out,"%s",t01);fprintf(out,"%s",t02);fprintf(out,"%s",t03);
  
  for( ionennr=0;ionennr< anz_ionen; ++ionennr ){
     dimj    = IONENIMP[ ionennr ].dimj;
@@ -547,8 +547,8 @@ fprintf(out,t01);fprintf(out,t02);fprintf(out,t03);
     g66 = gkq(6, 6,dimj);
  
     fprintf(out,t04,ionname,(DOUBLE)(dimj-1)/2,g61,g62,g63,g64,g65,g66);
-    if( ionennr < anz_ionen-1 ) fprintf(out,t05);
-    else { fprintf(out,t01);fprintf(out,"\n"); }
+    if( ionennr < anz_ionen-1 ) fprintf(out,"%s",t05);
+    else { fprintf(out,"%s",t01);fprintf(out,"\n"); }
  }
  fclose(out);
 }

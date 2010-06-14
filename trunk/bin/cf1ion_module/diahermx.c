@@ -307,8 +307,8 @@ t03="|                        SETUP - FILE                          |\n";
 t04="|                                                              |\n";
 t05=" ______________________________________________________________ \n";
 t06="\n";
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-fprintf(fp,t05);fprintf(fp,t06);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);
  
 t07="================================================================\n";
 t08="|                                                              |\n";
@@ -316,8 +316,8 @@ t09="| Computational accuracy  =  %5.0e                             |\n";
 t10="|                                                              |\n";
 t11="================================================================\n";
 t12="\n";
-fprintf(fp,t07);fprintf(fp,t08);fprintf(fp,t09,accuracy());
-fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
+fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);fprintf(fp,t09,accuracy());
+fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
  
 t01="================================================================\n";
 t02="|                                                              |\n";
@@ -335,10 +335,10 @@ t13="\n";
  
 KOMMASTELLE(setup) = 3;
 stelle = (INT)(-log(accuracy())/log(10.0)+1.0 );
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,stelle);
-fprintf(fp,t04);fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);
-fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,stelle);
+fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);
  
 t01="================================================================\n";
 t02="| The program outputs record into file which are NOT           |\n";
@@ -354,10 +354,10 @@ t11="|                                                              |\n";
 t12="================================================================\n";
 t13="\n";
  
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
-fprintf(fp,t04);fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);
-fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);
+fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);
 ANZ_DATENPUNKTE(setup) = 20;
  
 t01="================================================================\n";
@@ -374,10 +374,10 @@ t11="|                                                              |\n";
 t12="================================================================\n";
 t13="\n";
  
-fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
-fprintf(fp,t04);fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);
-fprintf(fp,t08);fprintf(fp,t09);fprintf(fp,t10);
-fprintf(fp,t11);fprintf(fp,t12);fprintf(fp,t13);
+fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);
+fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);
+fprintf(fp,"%s",t08);fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);
 ANZ_DATENPUNKTE(setup) = 20;
 fclose(fp);
 return(setup);
@@ -395,8 +395,8 @@ t01=" -----------------------\n";
 t02="| VERSION : %6.2f      |\n";
 t03=" -----------------------\n";
 t04="\n";
-/*fprintf(fp,t01);*/
-fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
+/*fprintf(fp,"%s",t01);*/
+fprintf(fp,t02,VERSION);/*fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
  
 t01=" -------------------------------------------------------------- \n";
 t02="|                                                              |\n";
@@ -416,10 +416,10 @@ t15="               |Tel.: 02461-616896                |             \n";
 t16="                __________________________________              \n";
  
  
-fprintf(fp,t01);/*fprintf(fp,t02);*/fprintf(fp,t03);fprintf(fp,t04);fprintf(fp,t05);
-/*fprintf(fp,t06);fprintf(fp,t07);*/fprintf(fp,t08);/*fprintf(fp,t09);fprintf(fp,t10);*/
-/*fprintf(fp,t11);*/fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
-fprintf(fp,t16);
+fprintf(fp,"%s",t01);/*fprintf(fp,"%s",t02);*/fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);fprintf(fp,"%s",t05);
+/*fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);*/fprintf(fp,"%s",t08);/*fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);*/
+/*fprintf(fp,"%s",t11);*/fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);
  
  
 }
@@ -436,8 +436,8 @@ t01="#{-----------------------\n";
 t02="#{VERSION : %6.2f      |\n";
 t03="#-----------------------\n";
 t04="#\n";
-/*fprintf(fp,t01);*/
-fprintf(fp,t02,VERSION);/*fprintf(fp,t03);fprintf(fp,t04);*/
+/*fprintf(fp,"%s",t01);*/
+fprintf(fp,t02,VERSION);/*fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);*/
  
 t01="#-------------------------------------------------------------- \n";
 t02="#                                                              |\n";
@@ -457,10 +457,10 @@ t15="#              |Tel.: 02461-616896                |             \n";
 t16="#               __________________________________              \n";
  
  
-fprintf(fp,t01);/*fprintf(fp,t02);*/fprintf(fp,t03);/*fprintf(fp,t04);*/fprintf(fp,t05);
-/*fprintf(fp,t06);fprintf(fp,t07);*/fprintf(fp,t08);/*fprintf(fp,t09);fprintf(fp,t10);*/
-/*fprintf(fp,t11);*/fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);
-fprintf(fp,t16);
+fprintf(fp,"%s",t01);/*fprintf(fp,"%s",t02);*/fprintf(fp,"%s",t03);/*fprintf(fp,"%s",t04);*/fprintf(fp,"%s",t05);
+/*fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);*/fprintf(fp,"%s",t08);/*fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);*/
+/*fprintf(fp,"%s",t11);*/fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);
+fprintf(fp,"%s",t16);
  
  
 }

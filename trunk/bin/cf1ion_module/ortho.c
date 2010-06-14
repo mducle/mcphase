@@ -247,7 +247,7 @@ t02="|             CRYSTAL FIELD FIT -------- OUTPUT               |\n";
 t03=" -------------------------------------------------------------- \n";
 t04="\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
  
 if( ANZ_VAR(neben) != 0  && ANZAHL(neben) != 0 ){
 t01=" --------------------------------------------------------------------- \n";
@@ -257,13 +257,13 @@ t04="| Iterationsverhalten : %14s within %3d                     |\n";
 t05="| Iteration step  : %4d <= %7d                               |\n";
 t06=" --------------------------------------------------------------------- \n";
 t07="\n";
-    fprintf(fp,t01);
+    fprintf(fp,"%s",t01);
     fprintf(fp,t02,FITIMP[FITROUTINENNR(iter)].fitname);
     fprintf(fp,t03,TEXT1(fit));
     fprintf(fp,t04,TEXT2(fit),MAX_WIEDER(fit));
     fprintf(fp,t05,ITER_STEPS(fit),FITMAX(iter));
-    fprintf(fp,t06);
-    fprintf(fp,t07);
+    fprintf(fp,"%s",t06);
+    fprintf(fp,"%s",t07);
  
  
     if( FITROUTINENNR(iter) == 1  ){
@@ -397,9 +397,9 @@ t03="| The number of operatirs to vary  is %3d , or        |\n";
 t04="| The number of conditions is           %3d .           |\n";
 t05=" -------------------------------------------------------------- \n";
 t06="\n";
-    fprintf(fp,t01);fprintf(fp,t02);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);
     fprintf(fp,t03,ANZ_VAR(neben));fprintf(fp,t04,ANZAHL(neben));
-    fprintf(fp,t05);fprintf(fp,t06);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);
 }
  
     no2p0  = N_O2P0(stevens);
@@ -688,9 +688,9 @@ t09="|   | B20 | B22 | B40 | B42 | B44 | B60 | B62 | B64 | B66 || Bx  | By  | Bz
 t10="|e%2d|%5.2f|%5.2f|%5.2f|%5.2f|%5.2f|%5.2f|%5.2f|%5.2f|%5.2f||%5.2f|%5.2f|%5.2f|\n";
 t11=" ----------------------------------------------------------------------------\n";
  
- fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
- fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
- fprintf(fp,t09);
+ fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+ fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+ fprintf(fp,"%s",t09);
  
  v0_old   = V0(  iter  );
  v0 = vr_alloc( VRDIM(v0_old) );
@@ -713,7 +713,7 @@ t11=" --------------------------------------------------------------------------
  }
  free_vr(v);
  
- fprintf(fp,t11);
+ fprintf(fp,"%s",t11);
  free_vr(v0);
  V0(iter) = v0_old;
  
@@ -758,8 +758,8 @@ t10="|   |  /10      |     /10         |         /10           ||    /10        
 t11="|   |%5.0f|%5.0f|%5.0f|%5.0f|%5.0f|%5.0f|%5.0f|%5.0f|%5.0f||%5.0f|%5.0f|%5.0f|\n";
 t12=" ----------------------------------------------------------------------------\n";
  
- fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
- fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
+ fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+ fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
  
  v0_old   = V0(  iter  );
  v0 = vr_alloc( VRDIM(v0_old) );
@@ -898,7 +898,7 @@ exp->facB6i = 1.0/pow__(10.0,exp->B6i);
 exp->facBmol= 1.0/pow__(10.0,exp->Bmol);
  
 fprintf(fp,t09,exp->B2i,exp->B4i,exp->B6i,exp->Bmol);
-fprintf(fp,t10);
+fprintf(fp,"%s",t10);
  
 fprintf(fp,t11,      is_null((RV(Bkq,1)*exp->facB2i ),0.5),
                      is_null((RV(Bkq,2)*exp->facB2i ),0.5),
@@ -916,7 +916,7 @@ fprintf(fp,t11,      is_null((RV(Bkq,1)*exp->facB2i ),0.5),
  
  free_vr(w);
  
- fprintf(fp,t12);
+ fprintf(fp,"%s",t12);
  free_vr(v0);
  free_vr(Bkq);
  free_(exp);
@@ -1005,11 +1005,11 @@ fprintf(fp,t02,zeile,is_null((RV(Bkq,1)*exp->facB2i ),0.5),
  
 if( zeile == max_zeile && is_feld==NEIN){
 t01=" ----------------------------------------------------------------------------\n";
-  fprintf(fp,t01);
+  fprintf(fp,"%s",t01);
 }
 else if( zeile == max_zeile && is_feld==JA){
 t01="|--------------------------------------------------------|-------------------\n";
-  fprintf(fp,t01);
+  fprintf(fp,"%s",t01);
 }
  
 }
@@ -1034,7 +1034,7 @@ fprintf(fp,t02,zeile,is_null((RV(p,10)  *exp->facBmol),0.5),
  
 if( zeile == max_zeile ){
 t01=" --------------------------------------------------------";
-  fprintf(fp,t01);
+  fprintf(fp,"%s",t01);
   fprintf(fp,"\n");
 }
  
@@ -1057,10 +1057,10 @@ t02="| It was found %2d Bkq-Parameters  which fitted         |\n";
 t03="| the constraints.                                   |\n";
 t04=" -------------------------------------------------------------- \n";
 t05="\n";
-    fprintf(fp,t01);fprintf(fp,t02,anz_saetze);
-    fprintf(fp,t03);
-    fprintf(fp,t04);
-    fprintf(fp,t05);
+    fprintf(fp,"%s",t01);fprintf(fp,t02,anz_saetze);
+    fprintf(fp,"%s",t03);
+    fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);
 t01=" ----------------------------------------------------------------------------\n";
 t02="|                                                        |     | next        |\n";
 t03="|     Bkq - Parameters in %6s.                   |             | cubic       |\n";
@@ -1074,17 +1074,17 @@ t10="|  | /10       |    /10          |      /10              |/10  |/10   |/10 
 t11="|--|-----------|-----------------|-----------------------|-----|------|------|\n";
  
  
- fprintf(fp,t01);
- fprintf(fp,t02);
+ fprintf(fp,"%s",t01);
+ fprintf(fp,"%s",t02);
  fprintf(fp,t03,einheit);
- fprintf(fp,t04);
+ fprintf(fp,"%s",t04);
  fprintf(fp,t05,ionname,einheit);
- fprintf(fp,t06);
- fprintf(fp,t07);
- fprintf(fp,t08);
+ fprintf(fp,"%s",t06);
+ fprintf(fp,"%s",t07);
+ fprintf(fp,"%s",t08);
  fprintf(fp,t09,exp->B2i,exp->B4i,exp->B6i,exp->chi2,exp->x,exp->W);
- fprintf(fp,t10);
- fprintf(fp,t11);
+ fprintf(fp,"%s",t10);
+ fprintf(fp,"%s",t11);
  
 }
 /*----------------------------------------------------------------------------
@@ -1104,11 +1104,11 @@ t03="|  |             (%3d)        |  in Tesla.               |\n";
 t04="|  |          /10             |                          |\n";
 t05="|--|--------|--------|--------|  Phi und theta in Grad.  |\n";
  
- fprintf(fp,t01);
- fprintf(fp,t02);
+ fprintf(fp,"%s",t01);
+ fprintf(fp,"%s",t02);
  fprintf(fp,t03,exp->Bmol);
- fprintf(fp,t04);
- fprintf(fp,t05);
+ fprintf(fp,"%s",t04);
+ fprintf(fp,"%s",t05);
  
 }
 /*----------------------------------------------------------------------------
@@ -2864,7 +2864,7 @@ for(zeile=1; zeile<= 2; ++zeile)
   printf(VALUE(bild,zeile),temperatur);
  
   printf(VALUE(bild, 3),iter_steps,einheit);
-  printf(VALUE(bild, 4));
+  printf("%s",VALUE(bild, 4));
  
  
 for(i=1; i<=12; ++i)
@@ -2878,7 +2878,7 @@ for(i=13; i<=14; ++i)
 if( i <= anz_niveaus )
   printf(VALUE(bild,i+4),g[i],e[i],pe[i],i01[i],p1[i],i02[i],p2[i]);
 else
-  printf(VALUE(bild,i+4) );
+  printf("%s",VALUE(bild,i+4) );
  
  
 for(i=15; i<=15; ++i)
@@ -2892,7 +2892,7 @@ for(i=16; i<=16; ++i)
 if( i <= anz_niveaus )
   printf(VALUE(bild,i+4),        g[i],e[i],pe[i],i01[i],p1[i],i02[i],p2[i]);
 else
-  printf(VALUE(bild,i+4) );
+  printf("%s",VALUE(bild,i+4) );
  
 for(i=17; i<=17; ++i)
 if( i <= anz_niveaus )
@@ -2914,7 +2914,7 @@ else
                              (IS_MAGP(iteration)? '*':' '),
                              (IS_POSFIT(iteration)? '*':' ')  );
  
-  printf(VALUE(bild,25) );
+  printf("%s",VALUE(bild,25) );
  
  
  

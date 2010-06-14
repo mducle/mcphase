@@ -38,12 +38,6 @@ FILE * fin_coq, * fout;
 int doijk=0;// to be implemented : orbmomdensity-component along specific direction (doijk=1,2,3)
  graphic_parameters gp;
  gp.threshhold=strtod(argv[1],NULL);
- gp.spins_scale_moment=0;
- gp.spins_show_ellipses=0;
- gp.spins_scale_moment=0;
- gp.spins_show_static_moment_direction=0;
- gp.spins_wave_amplitude=0;
- gp.spins_show_oscillation=0;
  gp.scale_density_vectors=1;
 
    spincf savmf;
@@ -136,7 +130,10 @@ else       {
 
   }}}}
  gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
-
+ gp.spins_scale_moment=0;
+ gp.spins_show_static_moment_direction=0;
+ gp.spins_wave_amplitude=0;
+ gp.spins_show_oscillation=0;
 
 //print out the long vector of moments 1-48
   printf("%s - spin configuration moments(i)\n",outstr);

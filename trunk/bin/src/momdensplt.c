@@ -143,6 +143,11 @@ gp.scale_pointcharges=1;
 gp.show_pointcharges=1;
 gp.scale_density_vectors=1;
  gp.read();// read graphic parameters which are set by user in file results/graphic_parameters.set
+ gp.spins_scale_moment=0;
+ gp.spins_show_static_moment_direction=0;
+ gp.spins_wave_amplitude=0;
+ gp.spins_show_oscillation=0;
+ gp.spins_show_ellipses=0;
 cryststruct cs;
 
  char text[1000];

@@ -244,22 +244,22 @@ void create_Vkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|*ReV66 :                      |*ImV66 :                      |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t20);
-    fprintf(fp,t21);
-    fprintf(fp,t22);
-    fprintf(fp,t23);
-    fprintf(fp,t24);
-    fprintf(fp,t25);
-    fprintf(fp,t26);
-    fprintf(fp,t27);
-    fprintf(fp,t28);
-    fprintf(fp,t29);
-    fprintf(fp,t30);
-    fprintf(fp,t31);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+    fprintf(fp,"%s",t20);
+    fprintf(fp,"%s",t21);
+    fprintf(fp,"%s",t22);
+    fprintf(fp,"%s",t23);
+    fprintf(fp,"%s",t24);
+    fprintf(fp,"%s",t25);
+    fprintf(fp,"%s",t26);
+    fprintf(fp,"%s",t27);
+    fprintf(fp,"%s",t28);
+    fprintf(fp,"%s",t29);
+    fprintf(fp,"%s",t30);
+    fprintf(fp,"%s",t31);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -397,22 +397,22 @@ void create_Dkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|*ReD66 :                      |*ImD66 :                      |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t20);
-    fprintf(fp,t21);
-    fprintf(fp,t22);
-    fprintf(fp,t23);
-    fprintf(fp,t24);
-    fprintf(fp,t25);
-    fprintf(fp,t26);
-    fprintf(fp,t27);
-    fprintf(fp,t28);
-    fprintf(fp,t29);
-    fprintf(fp,t30);
-    fprintf(fp,t31);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+    fprintf(fp,"%s",t20);
+    fprintf(fp,"%s",t21);
+    fprintf(fp,"%s",t22);
+    fprintf(fp,"%s",t23);
+    fprintf(fp,"%s",t24);
+    fprintf(fp,"%s",t25);
+    fprintf(fp,"%s",t26);
+    fprintf(fp,"%s",t27);
+    fprintf(fp,"%s",t28);
+    fprintf(fp,"%s",t29);
+    fprintf(fp,"%s",t30);
+    fprintf(fp,"%s",t31);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -582,28 +582,28 @@ void create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|*L 6, 6:                      |*L 6,-6:                      |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t51);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t51);
  
-    fprintf(fp,t12);fprintf(fp,t13);fprintf(fp,t14);
-    fprintf(fp,t15);fprintf(fp,t16);fprintf(fp,t17);fprintf(fp,t18);
-    fprintf(fp,t19);fprintf(fp,t20);
+    fprintf(fp,"%s",t12);fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);
+    fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);
+    fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
  
-    fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);
-    fprintf(fp,t25);fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);
-    fprintf(fp,t29);fprintf(fp,t30);
+    fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);
+    fprintf(fp,"%s",t25);fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+    fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);
  
-    fprintf(fp,t31);fprintf(fp,t32);fprintf(fp,t33);fprintf(fp,t34);
-    fprintf(fp,t35);fprintf(fp,t36);fprintf(fp,t37);fprintf(fp,t38);
-    fprintf(fp,t39);fprintf(fp,t40);
+    fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);
+    fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);
+    fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
  
-    fprintf(fp,t41);fprintf(fp,t42);fprintf(fp,t43);fprintf(fp,t44);
-    fprintf(fp,t45);fprintf(fp,t46);fprintf(fp,t47);fprintf(fp,t48);
-    fprintf(fp,t49);fprintf(fp,t50);
+    fprintf(fp,"%s",t41);fprintf(fp,"%s",t42);fprintf(fp,"%s",t43);fprintf(fp,"%s",t44);
+    fprintf(fp,"%s",t45);fprintf(fp,"%s",t46);fprintf(fp,"%s",t47);fprintf(fp,"%s",t48);
+    fprintf(fp,"%s",t49);fprintf(fp,"%s",t50);
  
-    fprintf(fp,t52);fprintf(fp,t53);fprintf(fp,t54);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t52);fprintf(fp,"%s",t53);fprintf(fp,"%s",t54);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -749,15 +749,15 @@ void create_Wkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|*ReW66 :                      |*ImW66 :                      |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t70);fprintf(fp,t71);fprintf(fp,t72);fprintf(fp,t73);
-    fprintf(fp,t74);fprintf(fp,t75);fprintf(fp,t76);fprintf(fp,t77);
-    fprintf(fp,t78);fprintf(fp,t79);fprintf(fp,t80);fprintf(fp,t81);
-    fprintf(fp,t82);fprintf(fp,t83);fprintf(fp,t84);fprintf(fp,t85);
-    fprintf(fp,t86);fprintf(fp,t87);fprintf(fp,t88);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+    fprintf(fp,"%s",t70);fprintf(fp,"%s",t71);fprintf(fp,"%s",t72);fprintf(fp,"%s",t73);
+    fprintf(fp,"%s",t74);fprintf(fp,"%s",t75);fprintf(fp,"%s",t76);fprintf(fp,"%s",t77);
+    fprintf(fp,"%s",t78);fprintf(fp,"%s",t79);fprintf(fp,"%s",t80);fprintf(fp,"%s",t81);
+    fprintf(fp,"%s",t82);fprintf(fp,"%s",t83);fprintf(fp,"%s",t84);fprintf(fp,"%s",t85);
+    fprintf(fp,"%s",t86);fprintf(fp,"%s",t87);fprintf(fp,"%s",t88);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -909,17 +909,17 @@ void create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|* A66 R:                                                     |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);fprintf(fp,t33);
-    fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);fprintf(fp,t37);
-    fprintf(fp,t38);fprintf(fp,t39);
-    fprintf(fp,t50);fprintf(fp,t51);fprintf(fp,t52);fprintf(fp,t53);
-    fprintf(fp,t54);fprintf(fp,t55);fprintf(fp,t56);
-    fprintf(fp,t70);fprintf(fp,t71);fprintf(fp,t72);fprintf(fp,t73);
-    fprintf(fp,t74);fprintf(fp,t75);fprintf(fp,t76);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+    fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);fprintf(fp,"%s",t33);
+    fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);fprintf(fp,"%s",t37);
+    fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);
+    fprintf(fp,"%s",t50);fprintf(fp,"%s",t51);fprintf(fp,"%s",t52);fprintf(fp,"%s",t53);
+    fprintf(fp,"%s",t54);fprintf(fp,"%s",t55);fprintf(fp,"%s",t56);
+    fprintf(fp,"%s",t70);fprintf(fp,"%s",t71);fprintf(fp,"%s",t72);fprintf(fp,"%s",t73);
+    fprintf(fp,"%s",t74);fprintf(fp,"%s",t75);fprintf(fp,"%s",t76);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -1064,15 +1064,15 @@ void create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     T66c= "|* B66 C:                      |*B66 s:                       |\n";
     t11 = "===============================================================\n";
  
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);
-    fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);fprintf(fp,t33);
-    fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);fprintf(fp,t37);
-    fprintf(fp,t38);fprintf(fp,t39);
-    fprintf(fp,t50);fprintf(fp,t51);fprintf(fp,t52);fprintf(fp,t53);
-    fprintf(fp,t54);fprintf(fp,t55);fprintf(fp,t56);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);
+    fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);fprintf(fp,"%s",t33);
+    fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);fprintf(fp,"%s",t37);
+    fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);
+    fprintf(fp,"%s",t50);fprintf(fp,"%s",t51);fprintf(fp,"%s",t52);fprintf(fp,"%s",t53);
+    fprintf(fp,"%s",t54);fprintf(fp,"%s",t55);fprintf(fp,"%s",t56);
+    fprintf(fp,"%s",t11);
  
     drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr );
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -1176,20 +1176,20 @@ void create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t51 = "|           2             3+                         O4(5/2)  |\n";
     t52 = "|            F    from  Ce   : B  = 0  =>  H  = x*W*-------   |\n";
     t53 = "|             5/2               60           kf       F(4)    |\n";
-    fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03,einheit_in);fprintf(fp,t04);
-    fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-    fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-    fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-    fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-    fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);
-    fprintf(fp,t25);fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);
-    fprintf(fp,t29);fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);
-    fprintf(fp,t33);fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);
-    fprintf(fp,t37);fprintf(fp,t38);fprintf(fp,t39);fprintf(fp,t40);
-    fprintf(fp,t41);fprintf(fp,t42);fprintf(fp,t43);fprintf(fp,t44);
-    fprintf(fp,t45);fprintf(fp,t46);fprintf(fp,t47);fprintf(fp,t48);
-    fprintf(fp,t49);fprintf(fp,t50);fprintf(fp,t51);fprintf(fp,t52);
-    fprintf(fp,t53);
+    fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,t03,einheit_in);fprintf(fp,"%s",t04);
+    fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+    fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+    fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+    fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);
+    fprintf(fp,"%s",t25);fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+    fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);
+    fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);
+    fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
+    fprintf(fp,"%s",t41);fprintf(fp,"%s",t42);fprintf(fp,"%s",t43);fprintf(fp,"%s",t44);
+    fprintf(fp,"%s",t45);fprintf(fp,"%s",t46);fprintf(fp,"%s",t47);fprintf(fp,"%s",t48);
+    fprintf(fp,"%s",t49);fprintf(fp,"%s",t50);fprintf(fp,"%s",t51);fprintf(fp,"%s",t52);
+    fprintf(fp,"%s",t53);
  
     t11 = "===============================================================\n";
     tss = "| Energy Eigenvalues are in  : %6s                         |\n";
@@ -1205,7 +1205,7 @@ void create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
     t11 = "===============================================================\n";
  
  
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t11);
     fprintf(fp,tss,einheit_out);
     fprintf(fp,t15,temp);
     fprintf(fp,t12,ion);
@@ -1217,14 +1217,14 @@ void create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
                      break;
        default    :  fprintf(fp,t14,ANGELEGT);
     }
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t11);
  
  
-    fprintf(fp,t11);
-    fprintf(fp,tx);
-    fprintf(fp,str);
-    fprintf(fp,tW);
-    fprintf(fp,t11);
+    fprintf(fp,"%s",t11);
+    fprintf(fp,"%s",tx);
+    fprintf(fp,"%s",str);
+    fprintf(fp,"%s",tW);
+    fprintf(fp,"%s",t11);
  
  
     if(modus != NOMAG )  drucke_mag( fp,modus );
@@ -4990,30 +4990,30 @@ void drucke_par( fp,modus,dimj,tabelle,einheit_out,temp,ion,symmetrienr )
                      break;
        default    :  fprintf(fp,T14,ANGELEGT);
     }
-    fprintf(fp,T11);
+    fprintf(fp,"%s",T11);
  
     tabelle = stern_setzen( tabelle,symmetrienr,dimj  );
  
-    fprintf(fp,T11);
-    fprintf(fp,T20);fprintf(fp,STR);
-    fprintf(fp,T21);fprintf(fp,STR);
-    fprintf(fp,T22);fprintf(fp,T11);
+    fprintf(fp,"%s",T11);
+    fprintf(fp,"%s",T20);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T21);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T22);fprintf(fp,"%s",T11);
  
-    fprintf(fp,T11);
-    fprintf(fp,T40);fprintf(fp,STR);
-    fprintf(fp,T41);fprintf(fp,STR);
-    fprintf(fp,T42);fprintf(fp,STR);
-    fprintf(fp,T43);fprintf(fp,STR);
-    fprintf(fp,T44);fprintf(fp,T11);
+    fprintf(fp,"%s",T11);
+    fprintf(fp,"%s",T40);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T41);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T42);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T43);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T44);fprintf(fp,"%s",T11);
  
-    fprintf(fp,T11);
-    fprintf(fp,T60);fprintf(fp,STR);
-    fprintf(fp,T61);fprintf(fp,STR);
-    fprintf(fp,T62);fprintf(fp,STR);
-    fprintf(fp,T63);fprintf(fp,STR);
-    fprintf(fp,T64);fprintf(fp,STR);
-    fprintf(fp,T65);fprintf(fp,STR);
-    fprintf(fp,T66);fprintf(fp,T11);
+    fprintf(fp,"%s",T11);
+    fprintf(fp,"%s",T60);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T61);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T62);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T63);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T64);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T65);fprintf(fp,"%s",STR);
+    fprintf(fp,"%s",T66);fprintf(fp,"%s",T11);
  
 }
 /*------------------------------------------------------------------------------
@@ -5187,9 +5187,9 @@ t02 ="|          constraints for a (ortho)rhombic              |\n";
 t03 ="|                 crsytal field fit                      |\n";
 t04 ="|                     for   %4s                          |\n";
 t05 =" -------------------------------------------------------- \n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);
   fprintf(fp,t04,ionname);
-  fprintf(fp,t05);
+  fprintf(fp,"%s",t05);
   fprintf(fp,"\n\n");
  
 t01 ="==========================================================\n";
@@ -5208,11 +5208,11 @@ t13 ="|-------------------------===============================|\n";
 t14 ="| Default                 : Intensities in barns         |\n";
 t15 ="|                         : Temperature : %8.2f Kelvin  |\n";
 t16 ="----------------------------------------------------------\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15,temperatur);
-  fprintf(fp,t16);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,t15,temperatur);
+  fprintf(fp,"%s",t16);
   fprintf(fp,"\n\n");
  
  
@@ -5226,14 +5226,14 @@ t07 ="| %2d |           |           |    |   ->   |           |            |\n";
 t09 ="| %2d |     0     |     0     |    |   ->   |           |            |\n";
 t08 ="------------------------------    -----------------------------------\n";
  
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
   fprintf(fp,t05,einheit_out,einheit_out);
-  fprintf(fp,t06);
+  fprintf(fp,"%s",t06);
   for(i=1;i<=ANZ_NIVEAUS;++i){
      if( i==1)  fprintf(fp,t09,i );
      else       fprintf(fp,t07,i );
   }
-  fprintf(fp,t08);
+  fprintf(fp,"%s",t08);
   fprintf(fp,"\n\n");
  
 t01 ="==========================================================\n";
@@ -5279,17 +5279,17 @@ t40 ="|SF for  QE  |                                           |\n";
 t41 ="|------------------====---====---------------------------|\n";
 t42 ="| Record number : 00 until 00 which the fit uses.        |\n";
 t43 ="----------------------------------------------------------\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-  fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-  fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);
-  fprintf(fp,t25);fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);
-  fprintf(fp,t29);fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);
-  fprintf(fp,t33);fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);
-  fprintf(fp,t37);fprintf(fp,t38);fprintf(fp,t39);fprintf(fp,t40);
-  fprintf(fp,t41);fprintf(fp,t42);fprintf(fp,t43);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+  fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+  fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);
+  fprintf(fp,"%s",t25);fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+  fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);
+  fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);
+  fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
+  fprintf(fp,"%s",t41);fprintf(fp,"%s",t42);fprintf(fp,"%s",t43);
   fprintf(fp,"\n\n");
  
  
@@ -5338,17 +5338,17 @@ t41 ="| Recordnr   .    der inverse Suscept. Polycrystal: 00   |\n";
 t42 ="| Molecular field constant Lambda (in  mol/emu ): 0000.00|\n";
 t43 ="| Filename (var.) Theta(T)   : Theta.chi2                |\n";
 t44 ="------------------------------===========================-\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-  fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-  fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);
-  fprintf(fp,t25);fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);
-  fprintf(fp,t29);fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);
-  fprintf(fp,t33);fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);
-  fprintf(fp,t37);fprintf(fp,t38);fprintf(fp,t39);fprintf(fp,t40);
-  fprintf(fp,t41);fprintf(fp,t42);fprintf(fp,t43);fprintf(fp,t44);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+  fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+  fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);
+  fprintf(fp,"%s",t25);fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+  fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);
+  fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);
+  fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
+  fprintf(fp,"%s",t41);fprintf(fp,"%s",t42);fprintf(fp,"%s",t43);fprintf(fp,"%s",t44);
   fprintf(fp,"\n\n");
  
 /* Magnetisierungskurven fitten?*/
@@ -5439,21 +5439,21 @@ t42 ="| Datnr of m for B_ex in     [ 0 1 0] : 00 |Temp: %7.2f K|\n";
 t43 ="| Datnr of m for B_ex in     [ 0 0 1] : 00 |Temp: %7.2f K|\n";
 t44 ="| Datnr of m for B_ex in  [%2d%2d%2d] : 00 |Temp: %7.2f K|\n";
 t45 ="------------------------------------======----==========--\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-  fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-  fprintf(fp,t21);fprintf(fp,t22);fprintf(fp,t23);fprintf(fp,t24);
-  fprintf(fp,t25);fprintf(fp,t26);fprintf(fp,t27);fprintf(fp,t28);
-  fprintf(fp,t29);fprintf(fp,t30);fprintf(fp,t31);fprintf(fp,t32);
-  fprintf(fp,t33);fprintf(fp,t34);fprintf(fp,t35);fprintf(fp,t36);
-  fprintf(fp,t37);fprintf(fp,t38);fprintf(fp,t39);fprintf(fp,t40);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+  fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+  fprintf(fp,"%s",t21);fprintf(fp,"%s",t22);fprintf(fp,"%s",t23);fprintf(fp,"%s",t24);
+  fprintf(fp,"%s",t25);fprintf(fp,"%s",t26);fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
+  fprintf(fp,"%s",t29);fprintf(fp,"%s",t30);fprintf(fp,"%s",t31);fprintf(fp,"%s",t32);
+  fprintf(fp,"%s",t33);fprintf(fp,"%s",t34);fprintf(fp,"%s",t35);fprintf(fp,"%s",t36);
+  fprintf(fp,"%s",t37);fprintf(fp,"%s",t38);fprintf(fp,"%s",t39);fprintf(fp,"%s",t40);
   fprintf(fp,t41,temperatur);
   fprintf(fp,t42,temperatur);
   fprintf(fp,t43,temperatur);
   fprintf(fp,t44,r1,r2,r3,temperatur);
-  fprintf(fp,t45);
+  fprintf(fp,"%s",t45);
   fprintf(fp,"\n\n");
  
  
@@ -5467,9 +5467,9 @@ t06 ="| Intensity wrt. Matrix elements    : 1                  |\n";
 t07 ="| Susceptibility curve              : 1                  |\n";
 t08 ="| Magnetisation curve               : 1                  |\n";
 t09 ="----------------------------------------------------------\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);
   fprintf(fp,"\n\n");
  
  
@@ -5502,19 +5502,19 @@ t26 ="|                               : GRADIENT  %12d |\n";
 t27 ="|                               : VA05A     %12d |\n";
 t28 ="|                               : DUMMY     %12d |\n";
 t29 ="----------------------------------------------------------\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-  fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);fprintf(fp,t20);
-  fprintf(fp,t21);fprintf(fp,t22,MAXDOWNHILL);
-  fprintf(fp,t23);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+  fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);fprintf(fp,"%s",t20);
+  fprintf(fp,"%s",t21);fprintf(fp,t22,MAXDOWNHILL);
+  fprintf(fp,"%s",t23);
   fprintf(fp,t24,MAXDOWNHILL);
   fprintf(fp,t25,MAXPOWELL  );
   fprintf(fp,t26,MAXGRADIENT);
   fprintf(fp,t27,MAXVA05A   );
   fprintf(fp,t28,MAXDUMMY   );
-  fprintf(fp,t29);
+  fprintf(fp,"%s",t29);
   fprintf(fp,"\n\n");
  
  
@@ -5539,9 +5539,9 @@ t[12]="| J : theta         | 1                                   |\n";
 t07 ="-----------------------------------------------------------\n";
 tl  ="|                   |                                     |\n";
  
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
   fprintf(fp,t05,einheit_in);
-  fprintf(fp,t06);
+  fprintf(fp,"%s",t06);
   for( i=1; i<= 9; ++i){
        switch(i){
           case 1:
@@ -5560,14 +5560,14 @@ tl  ="|                   |                                     |\n";
                    else              td = t[i];
                    break;
        }
-       fprintf(fp,td);
+       fprintf(fp,"%s",td);
   }
   if(is_feld=='a')
        for(i=10; i<=12; ++i)
-           fprintf(fp,t[i]);
+           fprintf(fp,"%s",t[i]);
   else for(i=10; i<=12; ++i)
-           fprintf(fp,tl);
-  fprintf(fp,t07);
+           fprintf(fp,"%s",tl);
+  fprintf(fp,"%s",t07);
   fprintf(fp,"\n\n");
  
  
@@ -5592,12 +5592,12 @@ t18 ="| Iteration step modulo  <Modulo> is zero .              |\n";
 t19 ="| example: <modulo>=5 ==> displays the table             |\n";
 t20 ="| after every 5th Iteration step.                        |\n";
 t21 ="----------------------------------------------------------\n";
-  fprintf(fp,t01);fprintf(fp,t02);fprintf(fp,t03);fprintf(fp,t04);
-  fprintf(fp,t05);fprintf(fp,t06);fprintf(fp,t07);fprintf(fp,t08);
-  fprintf(fp,t09);fprintf(fp,t10);fprintf(fp,t11);fprintf(fp,t12);
-  fprintf(fp,t13);fprintf(fp,t14);fprintf(fp,t15);fprintf(fp,t16);
-  fprintf(fp,t17);fprintf(fp,t18);fprintf(fp,t19);
-  fprintf(fp,t20);fprintf(fp,t21);
+  fprintf(fp,"%s",t01);fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
+  fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
+  fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t11);fprintf(fp,"%s",t12);
+  fprintf(fp,"%s",t13);fprintf(fp,"%s",t14);fprintf(fp,"%s",t15);fprintf(fp,"%s",t16);
+  fprintf(fp,"%s",t17);fprintf(fp,"%s",t18);fprintf(fp,"%s",t19);
+  fprintf(fp,"%s",t20);fprintf(fp,"%s",t21);
   fprintf(fp,"\n\n");
  
  
