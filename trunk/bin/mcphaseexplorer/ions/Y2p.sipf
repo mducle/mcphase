@@ -1,0 +1,17 @@
+#---------------------------------------------------------
+# Radial Matrix Elements (morrison 1987 "Angular Momentum
+#           Theory Applied to Interactions in Solids" US )
+#---------------------------------------------------------
+#ion   <r^2> <24> in units of a0^2 a0=0.5292 Angstroem
+#Y2p
+ R2=5.6193008
+R4=56.6139154
+
+#-------------------------------------------------------
+# Neutron Scattering Length (10^-12 cm) (can be complex)
+#-------------------------------------------------------
+SCATTERINGLENGTHREAL=0.775
+SCATTERINGLENGTHIMAG=0
+#  ... note: - if an occupancy other than 1.0 is needed, just reduce 
+#              the scattering length linear accordingly
+

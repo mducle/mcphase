@@ -42,7 +42,7 @@ clean:
                 bin/mcdiff.exe bin/cf1ion_module/cfield.dll \
                 bin/ic1ion.exe bin/so1ion.exe \
                 bin/ic1ion_module/ic1ion.dll \
-                bin/coq2cf.exe bin/fediff.exe bin/mf2fe.exe \
+                bin/fediff.exe bin/mf2fe.exe \
                 bin/spindensplt.exe bin/orbmomdensplt.exe bin/momdensplt.exe
 	rm -vf bin/addj bin/charges bin/coq2jjj \
 		bin/mcdispit bin/singleion bin/cfield \
@@ -51,6 +51,6 @@ clean:
                 bin/mcdiff bin/cf1ion_module/cfield.so \
                 bin/ic1ion bin/so1ion \
                 bin/ic1ion_module/ic1ion.so \
-                bin/coq2cf bin/fediff bin/mf2fe \
+                bin/fediff bin/mf2fe \
                 bin/spindensplt bin/orbmomdensplt bin/momdensplt
 
