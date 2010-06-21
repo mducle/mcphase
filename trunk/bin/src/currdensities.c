@@ -45,6 +45,16 @@ FILE * fin_coq, * fout;
    cryststruct cs;
 // read input file with mf configuration
 int doijk=0;
+if (argc>9){
+  xx=strtod(argv[6],NULL);
+  yy=strtod(argv[7],NULL);
+  zz=strtod(argv[8],NULL);
+  double rr;
+  // normalize direction vector
+  rr=sqrt(xx*xx+yy*yy+zz*zz);
+  xx/=rr;yy/=rr;zz/=rr;
+  doijk=3;
+ }
  if (argc==7+doijk)
  { fin_coq = fopen_errchk (argv[6+doijk], "rb");}
  else
@@ -134,7 +144,8 @@ for(nt=1;nt<=49;++nt){
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              gp.showprim=0;
-             sprintf(gp.title,"currdensity j(r).(%g,%g,%g)(milliAmp/A^2)",xx,yy,zz);
+ sprintf(gp.title,"currdensityabsvalue |j(r)|(milliAmp/A^2)");
+  if(doijk>0)sprintf(gp.title,"currdensityprojection j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
   fout = fopen_errchk ("./results/currdensities.grid", "w");
      extendedspincf.cd(fout,cs,gp,savev_real,savev_imag,0.0,hkl);
     fclose (fout);

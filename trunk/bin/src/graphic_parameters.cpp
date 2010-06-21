@@ -70,7 +70,7 @@ extract(instr,"spins_show_ellipses",spins_show_ellipses);
 extract(instr,"spins_show_static_moment_direction",spins_show_static_moment_direction);
 extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
 extract(instr,"spins_show_oscillation",spins_show_oscillation);
-extract(instr,"threshhold",threshhold);
+extract(instr,"density_threshhold",threshhold);
 }
 else
 {*instr='\0';}

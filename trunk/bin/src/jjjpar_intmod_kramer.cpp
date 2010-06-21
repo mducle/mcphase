@@ -260,3 +260,48 @@ if (pr==1) printf ("delta=%4.6g meV\n",delta);
 return 3; // kramers doublet has always exactly one transition + 2 levels (quasielastic scattering)!
 }
 /**************************************************************************/
+
+Matrix jjjpar::krameropmat (int & n ,Vector & gjmbH)
+{
+ /* on input
+    ABC(1...3)  A,M,Ci....saturation moment/gJ[MU_B] of groundstate doublet in a.b.c direction
+    gJ		lande factor
+    n		which operator 0=Hamiltonian, 1,2,3=J1,J2,J3
+    gjmbH	vector of effective field [meV]
+  on output    
+    operator matrix of Hamiltonian, J1, J2, J3 depending on n
+*/
+  // put matrix to format needed for library diagonalize function
+//   for(i1=M.Rlo();i1<=M.Rhi();++i1){for(j1=M.Clo();j1<=i1;++j1){
+//    mat1(j1,i1)=imag(M(i1,j1));
+//    mat1(i1,j1)=real(M(i1,j1));
+//   }}
+ // setup matrix and diagonalize
+ //  Driver routine to compute the  eigenvalues and normalized eigenvectors
+ //  of a complex Hermitian matrix z.The real parts of the elements must be
+ //  stored in the lower triangle of z,the imaginary parts (of the elements
+ //  corresponding to the lower triangle) in the positions
+ //  of the upper triangle of z[lo..hi,lo..hi].The eigenvalues are returned
+ //  in d[lo..hi] in ascending numerical  order if the sort flag is set  to
+ //  True, otherwise  not ordered for sort = False. The real  and imaginary
+ //  parts of the eigenvectors are  returned in  the columns of  zr and zi.
+ //  The storage requirement is 3*n*n + 4*n complex numbers.
+ //  All matrices and vectors have to be allocated and removed by the user.
+ //  They are checked for conformance !
+ // void  EigenSystemHermitean (Matrix& z, Vector& d, Matrix& zr, Matrix& zi,
+ // 			   int sort, int maxiter)
+
+Matrix opmat(1,2,1,2);
+switch(n)
+{case 0: opmat(1,1)= ABC[3]*gjmbH[3];      opmat(1,2)=ABC[2]*gjmbH[2];
+         opmat(2,1)= -ABC[1]*gjmbH[1];     opmat(2,2)=-ABC[3]*gjmbH[3];break;
+ case 1: opmat(1,1)= 0      ;opmat(1,2)=0;
+         opmat(2,1)= ABC[1];opmat(2,2)=0;break;
+ case 2: opmat(1,1)= 0      ;opmat(1,2)=-ABC[2];
+         opmat(2,1)= 0      ;opmat(2,2)=0;break;
+ case 3: opmat(1,1)= -ABC[3];opmat(1,2)=0;
+         opmat(2,1)= 0     ;opmat(2,2)=ABC[3];break;
+ default: fprintf(stderr,"ERROR operator calculation in module kramer - functio krameropmat: n=%i\n",n);exit(EXIT_FAILURE);
+}
+return opmat;
+}

@@ -12,6 +12,7 @@ class density
   int nofpts;  
   Vector **rtetafi;
   int type;
+   Vector pr;
 
   public:
   double dtheta;

@@ -59,7 +59,7 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
     {if(strcmp(modulefilename,"brillouin")==0)
      {module_type=3;fprintf (stderr,"[internal]\n");
       ABC=Vector(1,1);i=1;
-     nof_electrons=0; // not to be used in module brillouin !!
+      nof_electrons=0; // not to be used in module brillouin !!
       while(feof(cf_file)==false)
       {fgets(instr, MAXNOFCHARINLINE, cf_file);
        if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
@@ -98,6 +98,24 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
       mcalc_parstorage=ComplexMatrix(0,dj,1,dj);
       // get 1ion parameters - operator matrices
 
+     }
+     else if (strcmp(modulefilename,"cluster")==0)
+     {module_type=5;fprintf (stderr,"#[internal]\n");
+      ABC=Vector(1,1);i=1;
+      char clusterfilename[MAXNOFCHARINLINE];
+      nof_electrons=0; // not to be used in module brillouin !!
+      while(feof(cf_file)==false)
+      {fgets(instr, MAXNOFCHARINLINE, cf_file);
+       if(instr[strspn(instr," \t")]!='#'){//unless the line is commented ...
+                                           i+=extract(instr,"structurefile",clusterfilename,sizeof(clusterfilename))-1;
+                                          }
+      }// input all  lines starting with comments
+      if(i!=0){fprintf(stderr,"Error reading structurefile from file %s\ncorrect file format is:\n",sipffilename);
+              fprintf(stderr,"\n#!MODULE=cluster\n#comment lines ..\n# next line contains cluster structure filename\nstructurefile=cluster.j\n\n");exit(EXIT_FAILURE);}
+      fprintf(stderr," ... reading cluster structure from %s\n",clusterfilename);
+      clusterpars =new par(clusterfilename);
+      est=ComplexMatrix(0,2,1,2);est=0;// not used, just initialize to prevent errors
+      mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
      }
      else
       {fprintf (stderr,"#[external]\n");
@@ -179,36 +197,36 @@ module_type=0;
 
     m=(void(*)(Vector*,double*,Vector*,double*,Vector*,char**,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mcalc");
     //*(int **)(&m)=GetProcAddress(handle,"mcalc");
-     if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %s  module %s loading function mcalc not possible\n",GetLastError(),modulefilename);exit (EXIT_FAILURE);}
+     if (m==NULL) {fprintf (stderr,"jjjpar::jjjpar error %d  module %s loading function mcalc not possible\n",(int)GetLastError(),modulefilename);exit (EXIT_FAILURE);}
     dm=(int(*)(int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*,float*,ComplexMatrix*))GetProcAddress(handle,"dmcalc");
     //*(void **)(&dm)=GetProcAddress(handle,"dmcalc");
-     if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s module %s loading function dmcalc not possible - continuing\n",GetLastError(),modulefilename);}
+     if (dm==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d module %s loading function dmcalc not possible - continuing\n",(int)GetLastError(),modulefilename);}
     mq=(void(*)(ComplexVector*,double*,double*,double*,double*,double*,double*,ComplexMatrix*))GetProcAddress(handle,"mq");
     //*(void **)(&mq)=GetProcAddress(handle,"mq");
-     if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s  module %s loading function mq not possible - continuing\n",GetLastError(),modulefilename);}
+     if (mq==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mq not possible - continuing\n",(int)GetLastError(),modulefilename);}
     estates=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"estates");
     //*(void **)(&estates)=GetProcAddress(handle,"estates");
-     if (estates==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %s  module %s loading function estates not possible - continuing\n",GetLastError(),modulefilename);
+     if (estates==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function estates not possible - continuing\n",(int)GetLastError(),modulefilename);
                                 est=ComplexMatrix(0,2,1,2);// not used, just initialize to prevent errors
                                 est=0;
                                }
     mcalc_parameter_storage=(void(*)(ComplexMatrix*,Vector*,double*,double*,Vector*,char**))GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
     //*(void **)(&mcalc_parameter_storage)=GetProcAddress(handle,"mcalc_parameter_storage_matrix_init");
-    if (mcalc_parameter_storage==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %d  module %s loading function mcalc_parameter_storage_matrix_init not possible - continuing\n",GetLastError(),modulefilename);
+    if (mcalc_parameter_storage==NULL) {fprintf (stderr,"jjjpar::jjjpar warning %X  module %s loading function mcalc_parameter_storage_matrix_init not possible - continuing\n",(int)GetLastError(),modulefilename);
                                   mcalc_parstorage=ComplexMatrix(0,2,1,2);mcalc_parstorage=0;// not used, just initialize to prevent errors
                                   }
 
   ddnn=(int(*)(int*,double*,double*,double*,double*,double*,double*,ComplexMatrix*,double*,ComplexMatrix*))GetProcAddress(handle,"dncalc");
     //*(void **)(&dnn)=GetProcAddress(handle,"dncalc");
-     if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",GetLastError(),modulefilename);}
+     if (ddnn==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function dncalc not possible - continuing\n",(int)GetLastError(),modulefilename);}
 
     sd_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"spindensity_mcalc");
     //*(void **)(&sd_m)=GetProcAddress(handle,"spindensity_mcalc");
-    if (sd_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function spindensity_mcalc not possible - continuing\n",GetLastError(),modulefilename);}
+    if (sd_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function spindensity_mcalc not possible - continuing\n",(int)GetLastError(),modulefilename);}
 
     od_m=(void(*)(Vector*,int*,double*,Vector*,double*,Vector*,char**,ComplexMatrix*))GetProcAddress(handle,"orbmomdensity_mcalc");
     //*(void **)(&od_m)=GetProcAddress(handle,"orbmomdensity_mcalc");
-    if (od_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function orbmomdensity_mcalc not possible - continuing\n",GetLastError(),modulefilename);}
+    if (od_m==NULL) {fprintf (stderr,"jjjpar::jjjpar warning  %d  module %s loading function orbmomdensity_mcalc not possible - continuing\n",(int)GetLastError(),modulefilename);}
 
 #endif
      }
@@ -315,6 +333,7 @@ void jjjpar::mcalc (Vector &mom, double & T, Vector &  gjmbH, double & lnZ,doubl
    case 2:
    case 4: (*iops).cfieldJJ(mom,T,gjmbH,lnZ,U,parstorage);break;
    case 3: brillouin(mom,T,gjmbH,lnZ,U);break;
+   case 5: cluster_mcalc(mom,T,gjmbH,lnZ,U);break;
    default: (*m)(&mom,&T,&gjmbH,&gJ,&ABC,&cffilename,&lnZ,&U,&parstorage);
   }
 }
@@ -333,6 +352,7 @@ int jjjpar::dmcalc(double & T,Vector & gjmbheff,ComplexMatrix & mat,float & delt
    case 2:
    case 4: return (*iops).cfielddm(transitionnumber,T,gjmbheff,mat,delta,ests);break;
    case 3: return brillouindm(transitionnumber,T,gjmbheff,mat,delta);break;
+   case 5: return cluster_dm(transitionnumber,T,gjmbheff,mat,delta);break;
    default: return 0;
   }
 }
@@ -363,6 +383,16 @@ ComplexMatrix & jjjpar::mcalc_parameter_storage_init (Vector & gjmbheff,double &
    default: mcalc_parstorage=0;return mcalc_parstorage;
   }
 }
+/****************************************************************************/
+// returns operator matrices (n=0 Hamiltonian, n=1,...,nofcomponents: operators of moment components)
+/****************************************************************************/
+Matrix jjjpar::opmat(int n,Vector & gjmbH)
+{switch (module_type)
+  {case 1:  return krameropmat(n,gjmbH);break;
+   default: fprintf(stderr,"ERROR operator calculation in module jjjpar - opmat function not defined for module %i\n",module_type);exit(EXIT_FAILURE);
+  }
+}
+
 
 // OBSERVABLES *******************************************************
 //1 . NEUTRON SCATTERING OPERATOR  --------------------------------------
@@ -402,7 +432,7 @@ switch (module_type)
              // we must transform this to mcdiff internal xyz||cab coordinate system
             dummy=Mq(3);Mq(3)=Mq(2);Mq(2)=Mq(1);Mq(1)=dummy;
             return Mq;break;
-   default: fprintf(stderr,"ERROR in scattering operator function M(Q) for ion %s \nM(Q) is currently only implemented for internal module cfield:\n",cffilename);exit(EXIT_FAILURE);
+   default: fprintf(stderr,"ERROR in scattering operator function M(Q) for ion %s \nM(Q) is currently only implemented for internal module cfield and so1ion:\n",cffilename);exit(EXIT_FAILURE);
   }
 }
 
@@ -806,7 +836,11 @@ void jjjpar::spindensity_mcalc (Vector &mom,int xyz, double & T, Vector &  gjmbH
                            //
    case 3: fprintf(stderr,"Problem: magnetisation densities in module brillouin are not possible, quitting... \n");
            exit(EXIT_FAILURE);break;
-   default: (*sd_m)(&mom,&xyz,&T,&gjmbH,&gJ,&ABC,&cffilename,&parstorage);
+   case 0: (*sd_m)(&mom,&xyz,&T,&gjmbH,&gJ,&ABC,&cffilename,&parstorage);break;
+   case 5:fprintf(stderr,"Problem: magnetisation densities are not possible in module cluster, quitting... \n");
+           exit(EXIT_FAILURE);break;
+   default:fprintf(stderr,"Problem: magnetisation densities are not possible in module, quitting... \n");
+           exit(EXIT_FAILURE);break;
   }
 }
 
@@ -835,7 +869,11 @@ void jjjpar::orbmomdensity_mcalc (Vector &mom,int  xyz, double & T, Vector &  gj
                            //
    case 3: fprintf(stderr,"Problem: magnetisation densities in module brillouin are not possible, quitting... \n");
            exit(EXIT_FAILURE);break;
-   default: (*od_m)(&mom,&xyz,&T,&gjmbH,&gJ,&ABC,&cffilename,&parstorage);
+   case 0: (*od_m)(&mom,&xyz,&T,&gjmbH,&gJ,&ABC,&cffilename,&parstorage);break;
+   case 5:fprintf(stderr,"Problem: magnetisation densities are not possible in module cluster, quitting... \n");
+           exit(EXIT_FAILURE);break;
+   default:fprintf(stderr,"Problem: magnetisation densities are not possible in module, quitting... \n");
+           exit(EXIT_FAILURE);break;
   }
 }
 
@@ -974,7 +1012,7 @@ if (R>4.0||R<0){mm=0;}else{
  Matrix ax(0,6,-6,6),ay(0,6,-6,6),az(0,6,-6,6);
  Matrix bx(0,6,-6,6),by(0,6,-6,6),bz(0,6,-6,6);
  Matrix dx(0,6,-6,6),dy(0,6,-6,6),dz(0,6,-6,6);
- double ct,st,sf,cf,fp,fm;
+ double ct,st,sf,cf,fp;
  ct = cos(teta);                      // z/r
  st = sin(teta);   // y/r=st sfi
  sf = sin(fi);    // x/r=st cfi
@@ -1031,51 +1069,51 @@ if(q[i]!=0){
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);
       dz(k[i],q[i])+=res(3);
-     // add third term costheta |m| Jth x alm
-     a(1)=fabs(q[i])*ct*ax(k[i],q[i]);
-     a(2)=fabs(q[i])*ct*ay(k[i],q[i]);
-     a(3)=fabs(q[i])*ct*az(k[i],q[i]);
+     // add third term cottheta |m| Jth x alm
+     if(st>0){
+     a(1)=fabs(q[i])*ct/st*ax(k[i],q[i]);
+     a(2)=fabs(q[i])*ct/st*ay(k[i],q[i]);
+     a(3)=fabs(q[i])*ct/st*az(k[i],q[i]);
      xproduct(res,Jth,a);
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);
       dz(k[i],q[i])+=res(3);
+             }
            }
 // insert here addition of flm term !!
 if(q[i]==-1){
-     a(1)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
-     a(2)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
-     a(3)=sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
+     a(1)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ax(k[i],0);
+     a(2)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*ay(k[i],0);
+     a(3)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*sf*az(k[i],0);
      xproduct(res,Jth,a);
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);
       dz(k[i],q[i])+=res(3);
             }
 if(q[i]==+1){
-     a(1)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
-     a(2)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
-     a(3)=sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
+     a(1)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ax(k[i],0);
+     a(2)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*ay(k[i],0);
+     a(3)=-sqrt(k[i]*(double)(k[i]+1)/2.0)*cf*az(k[i],0);
      xproduct(res,Jth,a);
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);
       dz(k[i],q[i])+=res(3);
             }
 if(q[i]>+1){
-     fp=-0.5*(sqrt((k[i]+q[i]-1)/(k[i]-q[i]+1))+sqrt((k[i]-q[i]+1)*(k[i]+q[i])));
-     fm=-0.5*(sqrt((k[i]+q[i]-1)/(k[i]-q[i]+1))-sqrt((k[i]-q[i]+1)*(k[i]+q[i])));
-     a(1)=fm*cf*ax(k[i],q[i]-1)-fp*sf*ax(k[i],-q[i]+1);
-     a(2)=fm*cf*ay(k[i],q[i]-1)-fp*sf*ay(k[i],-q[i]+1);
-     a(3)=fm*cf*az(k[i],q[i]-1)-fp*sf*az(k[i],-q[i]+1);
+     fp=-sqrt(k[i]*(double)(k[i]+1)-q[i]*(q[i]-1));
+     a(1)=fp*cf*ax(k[i],q[i]-1)-fp*sf*ax(k[i],-q[i]+1);
+     a(2)=fp*cf*ay(k[i],q[i]-1)-fp*sf*ay(k[i],-q[i]+1);
+     a(3)=fp*cf*az(k[i],q[i]-1)-fp*sf*az(k[i],-q[i]+1);
      xproduct(res,Jth,a);
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);
       dz(k[i],q[i])+=res(3);
             }
 if(q[i]<-1){
-     fp=-0.5*(sqrt((k[i]-q[i]-1)/(k[i]+q[i]+1))+sqrt((k[i]+q[i]+1)*(k[i]-q[i])));
-     fm=-0.5*(sqrt((k[i]-q[i]-1)/(k[i]+q[i]+1))-sqrt((k[i]+q[i]+1)*(k[i]-q[i])));
-     a(1)=fp*cf*ax(k[i],q[i]+1)-fm*sf*ax(k[i],-q[i]-1);
-     a(2)=fp*cf*ay(k[i],q[i]+1)-fm*sf*ay(k[i],-q[i]-1);
-     a(3)=fp*cf*az(k[i],q[i]+1)-fm*sf*az(k[i],-q[i]-1);
+     fp=-sqrt(k[i]*(double)(k[i]+1)-q[i]*(q[i]+1));
+     a(1)=fp*cf*ax(k[i],q[i]+1)+fp*sf*ax(k[i],-q[i]-1);
+     a(2)=fp*cf*ay(k[i],q[i]+1)+fp*sf*ay(k[i],-q[i]-1);
+     a(3)=fp*cf*az(k[i],q[i]+1)+fp*sf*az(k[i],-q[i]-1);
      xproduct(res,Jth,a);
       dx(k[i],q[i])+=res(1);
       dy(k[i],q[i])+=res(2);

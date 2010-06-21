@@ -622,6 +622,7 @@ fprintf(fout,"        <points>\n");
              QR=(hkl*abc_in_ijk_Inverse)*dd;
              QR*=2*PI;
              xyz=magmom(i,j,k,l,cs.gJ[l])+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,cs.gJ[l])+sin(phase-QR)*savev_imag.magmom(i,j,k,l,cs.gJ[l]));
+              printf("gJ=%g magmom=%g %g %g %g %g %g %g %g %g\n",cs.gJ[l],mom[in(i,j,k)](1),mom[in(i,j,k)](2),mom[in(i,j,k)](3),mom[in(i,j,k)](4),mom[in(i,j,k)](5),mom[in(i,j,k)](6),xyz(1),xyz(2),xyz(3));
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
@@ -1052,9 +1053,14 @@ void spincf::cd(FILE * fout,cryststruct & cs, graphic_parameters & gp,
      {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,momSx)
                                                   +ionpar.orbmomdensity_calc(theta,fi,R,momLx);
     }}
-    if(strncmp(gp.title,"currdensity",10)==0)
-    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
+    if(strncmp(gp.title,"currdensityabsvalue",15)==0)
+    // here we calculate the currdensity of ion
     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz));
+    }
+    if(strncmp(gp.title,"currdensityprojection",15)==0)
+    // here we calculate the currdensity of ion
+    {Vector pr(1,3); extract(gp.title,"i",pr(1));extract(gp.title,"j",pr(2));extract(gp.title,"k",pr(3));
+     ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=pr*ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz);
     }
 
     if(strncmp(gp.title,"chargedensity",10)==0)
@@ -1071,7 +1077,7 @@ void spincf::cd(FILE * fout,cryststruct & cs, graphic_parameters & gp,
 
   // here starts printout density loop
   fprintf(fout,"#density map \n");
-  fprintf(fout,"#ri[A] rj[A] rk[A] density[|e|/A^3] (or [mb/A^3])\n");
+  fprintf(fout,"#ri[A] rj[A] rk[A] density[|e|/A^3] (or [mb/A^3]) (or  milliAmpere/A^2)\n");
   for (i=1;i<=nofpointsi;++i){for (j=1;j<=nofpointsj;++j){for (k=1;k<=nofpointsk;++k){
   // set position vector
   rijk=minv; rijk(1)+=(2*i-1)*max_min(1)/nofpointsi/2;rijk(2)+=(2*j-1)*max_min(2)/nofpointsj/2;rijk(3)+=(2*k-1)*max_min(3)/nofpointsk/2;

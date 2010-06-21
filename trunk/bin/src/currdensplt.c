@@ -31,6 +31,7 @@ printf("***********************************************************\n");
   if (argc < 7)
     { printf ("\nprogram currdensplt - calculate current density of a single ion\n\n\
                 use as: currdensplt threshhold T Ha Hb Hc mcphas.sipf \n\n\
+                    or: currdensplt threshhold T Ha Hb Hc i j k mcphas.sipf \n\n\
                 - given is temperature T[K] and magnetic effective field H[T]\n\
 		- the current density vector component along direction (i,j,k)\n\
                   is calculated (if omitted abs value of currdens is calc.)\n\
@@ -55,11 +56,25 @@ printf("***********************************************************\n");
   ha=strtod(argv[3],NULL);
   hb=strtod(argv[4],NULL);
   hc=strtod(argv[5],NULL);
+int doijk=0;
+if (argc>9){
+  xx=strtod(argv[6],NULL);
+  yy=strtod(argv[7],NULL);
+  zz=strtod(argv[8],NULL);
+  double rr;
+  // normalize direction vector
+  rr=sqrt(xx*xx+yy*yy+zz*zz);
+  xx/=rr;yy/=rr;zz/=rr;
+  doijk=3;
+ }
  FILE * fout;
 
  // read cf-parameters into class object jjjpar
- jjjpar jjjps(0.0,0.0,0.0,argv[6]);
- if(jjjps.module_type!=0){fprintf(stderr,"ERROR chrgplt: calculation not possible for this single ion module\n");exit(EXIT_FAILURE);}
+ jjjpar jjjps(0.0,0.0,0.0,argv[6+doijk]);
+ if(jjjps.module_type!=0){fprintf(stderr,"ERROR currdensplt: calculation not possible for this single ion module\n");exit(EXIT_FAILURE);}
+  if (jjjps.module_type==0&&jjjps.gJ!=0)
+  {fprintf(stderr,"************** WARNING **********************\n reading external single ion module with gJ not zero: gJ=%g - please check if calculation of density is supported !!!\n*********************************************\n",jjjps.gJ);}
+
   
   int dim=3*49;
 // Indices for currdensity
@@ -79,8 +94,8 @@ int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
   Vector momentlz(1,49);
   h=0;
 
-  if(jjjps.module_type==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;} 
-  if(jjjps.module_type==2||jjjps.module_type==4){ h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
+  if(jjjps.gJ==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;}
+  else { h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
   //int dj=(int)(2.0*(*iops).J+1);
 
   jjjps.mcalc_parameter_storage_init(h,T);
@@ -125,12 +140,12 @@ cryststruct cs;
  cs.cffilenames[1]=new char[MAXNOFCHARINLINE];
  cs.abc(1)=6.0;cs.abc(2)=6.0;cs.abc(3)=6.0;
  cs.r=0;cs.r(1,1)=1.0;cs.r(2,2)=1.0;cs.r(3,3)=1.0;
- strcpy(cs.cffilenames[1],argv[6]);
- cs.x[1]=0.5;cs.y[1]=0.5;cs.z[1]=0.5; // put atom in middle of cell
+ strcpy(cs.cffilenames[1],argv[6+doijk]);
+ cs.x[1]=0.5*gp.scale_view_1;cs.y[1]=0.5*gp.scale_view_2;cs.z[1]=0.5*gp.scale_view_3; // put atom in middle of cell
 
 
 // read pointcharge-parameters
-if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharges,cs.cffilenames,argv[6],cs.x,cs.y,cs.z,jjjps,cs.abc);
+if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp,cs.cffilenames,argv[6+doijk],cs.x,cs.y,cs.z,jjjps,cs.abc);
 
   spincf s(1,1,1,nofpc+1,2*dim);
   cs.gJ[1]=jjjps.gJ;
@@ -141,7 +156,8 @@ if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp.scale_pointcharg
   gp.show_atoms=1;gp.showprim=1;
   gp.spins_scale_moment=0;
   gp.spins_show_static_moment_direction=0;
-  sprintf(gp.title,"currdensity j(r).(%g,%g,%g)(milliAmp/A^2)",xx,yy,zz);
+  sprintf(gp.title,"currdensityabsvalue |j(r)|(milliAmp/A^2)");
+  if(doijk>0)sprintf(gp.title,"currdensityprojection j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
   fout = fopen_errchk ("results/currdensplt.jvx", "w");
    s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
   fclose (fout);

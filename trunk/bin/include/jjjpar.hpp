@@ -18,6 +18,8 @@ typedef void fnc_t();
 #include<ionpars.hpp>
 #include<myev.h>
 
+
+class par;
 class jjjpar
 {
 public:
@@ -89,6 +91,8 @@ public:
    ComplexMatrix & eigenstates (Vector & gjmbheff, double & T);
    // initialisis parameter storage for mcalc parameters (if possible)
    ComplexMatrix & mcalc_parameter_storage_init (Vector & gjmbheff,double & T);
+   // returns operator matrices (n=0 Hamiltonian, n=1,...,nofcomponents: operators of moment components)
+   Matrix opmat(int n,Vector & gjmbH);
 
 private:
   // external module functions, intern_mcalc=0
@@ -209,22 +213,27 @@ private:
    double zlmsum(Matrix & a, double & teta, double & fi);
 
 
-  // kramers internal module functions, intern_mcalc=1
+  // kramers internal module functions, module_type=1
   void kramer (Vector &mom,double & T,Vector & H, double & Z,double & U);
   int  kramerdm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+  Matrix krameropmat (int & n ,Vector & H);
 
   // realisation of class iops - cfield internal module functions, intern_mcalc=2
   // the class iops calls for some functionality the program cfield (e.g. for
   // getting stevens factors and other parameters, for the matrices Olm etc.)
   ionpars * iops;
 
-  // brillouin internal module functions, intern_mcalc=3
+  // brillouin internal module functions,module_type=3
   void brillouin (Vector &mom, double & T,Vector & H, double & Z,double & U);
   int  brillouindm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
 
-    
+  // cluster internal module functions, module_type=5
+  void cluster_mcalc (Vector &mom,double & T,Vector & H, double & Z,double & U);
+  int  cluster_dm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta);
+  par * clusterpars;
 
 
 };
 
+#include<par.hpp>
 #endif

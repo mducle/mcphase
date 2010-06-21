@@ -109,6 +109,16 @@ void nlimits_calc(Vector & nmin, Vector & nmax, double radius, Matrix & a);
  // this routine returns the maximum and minimum values of ni i=1,2,3
  // by probing the corners of a cube
 
+// some matrix functions for hermitian matrices in
+// real notation: The real parts of the elements must be
+ //  stored in the lower triangle of z,the imaginary parts (of the elements
+ //  corresponding to the lower triangle) in the positions
+ //  of the upper triangle of z[lo..hi,lo..hi].
+Matrix herm_dirprod(Matrix  A, Matrix  B); // direct product
+double aMb_real(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib);// transition matrix element
+double aMb_imag(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib);// <a|M|b>  a,b are columns ia and ib
+                                                                     // of zr+izc
+
 
 #endif
 

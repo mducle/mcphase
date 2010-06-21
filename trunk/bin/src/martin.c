@@ -3,7 +3,7 @@
 
 
 #include<martin.h>
-
+#include<myev.h>
 
 #ifndef __linux__
 #include<cfloat>
@@ -450,4 +450,105 @@ void nlimits_calc(Vector & nmin, Vector & nmax, double radius, Matrix & a)
    dd0=maxv;dd0(3)=minv(3);dd=a.Inverse()*dd0;ddd(8)=dd(i);
    nmin(i)=Min(ddd)-1;nmax(i)=Max(ddd)+1;
   }
+}
+
+// some matrix functions for hermitian matrices in
+// real notation: The real parts of the elements must be
+ //  stored in the lower triangle of z,the imaginary parts (of the elements
+ //  corresponding to the lower triangle) in the positions
+ //  of the upper triangle of z[lo..hi,lo..hi].
+Matrix herm_dirprod(Matrix  R, Matrix  T) // direct product
+{if(R.Rhi()!=R.Chi()){fprintf(stderr,"Error martin.c herm_dirproduct: Matrix A not square\n");exit(EXIT_FAILURE);}
+ if(T.Rhi()!=T.Chi()){fprintf(stderr,"Error martin.c herm_dirproduct: Matrix B not square\n");exit(EXIT_FAILURE);}
+//myPrintMatrix(stdout,R);
+//myPrintMatrix(stdout,T);
+
+ Matrix P(1,R.Rhi()*T.Rhi(),1,R.Rhi()*T.Rhi());
+ //P=0;
+ for(int a=1;a<=R.Rhi();++a)
+ for(int r=1;r<=T.Rhi();++r)
+ {for(int b=1;b<=a;++b)
+  {for(int s=1;s<r;++s)
+   {if(a==b)
+    {int i=(a-1)*T.Rhi()+r;
+     int j=(a-1)*T.Rhi()+s;
+     if(i>=j)P(i,j)=R(a,a)*T(r,s);
+     else    P(i,j)=-R(a,a)*T(s,r);
+         i=(a-1)*T.Rhi()+s;
+         j=(a-1)*T.Rhi()+r;
+     if(i>=j)P(i,j)=R(a,a)*T(r,s);
+     else    P(i,j)=R(a,a)*T(s,r);
+    }
+    else
+    {
+    int i=(a-1)*T.Rhi()+r;
+    int j=(b-1)*T.Rhi()+s;
+    if(i>=j)P(i,j)=R(a,b)*T(r,s)-R(b,a)*T(s,r);
+    else    P(i,j)=-R(a,b)*T(s,r)-R(b,a)*T(r,s);
+        i=(b-1)*T.Rhi()+r;
+        j=(a-1)*T.Rhi()+s;
+    if(i>=j)P(i,j)=R(a,b)*T(r,s)+R(b,a)*T(s,r);
+    else    P(i,j)=-R(a,b)*T(s,r)+R(b,a)*T(r,s);
+        i=(a-1)*T.Rhi()+s;
+        j=(b-1)*T.Rhi()+r;
+    if(i>=j)P(i,j)=R(a,b)*T(r,s)+R(b,a)*T(s,r);
+    else    P(i,j)=-R(b,a)*T(r,s)+R(a,b)*T(s,r);
+        i=(b-1)*T.Rhi()+s;
+        j=(a-1)*T.Rhi()+r;
+    if(i>=j)P(i,j)=R(a,b)*T(r,s)-R(b,a)*T(s,r);
+    else    P(i,j)=R(b,a)*T(r,s)+R(a,b)*T(s,r);
+    }
+   }
+   //s=r
+   int i=(a-1)*T.Rhi()+r;
+   int j=(b-1)*T.Rhi()+r;
+   if(i>=j)P(i,j)=R(a,b)*T(r,r);
+   else    P(i,j)=-R(b,a)*T(r,r);
+       i=(b-1)*T.Rhi()+r;
+       j=(a-1)*T.Rhi()+r;
+   if(i>=j)P(i,j)=R(a,b)*T(r,r);
+   else    {P(i,j)=R(b,a)*T(r,r);
+            if(a==b)P(i,j)=0;
+           }
+  }
+ }
+
+//myPrintMatrix(stdout,P);
+return P;
+}
+
+double aMb_real(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib) // transition matrix element
+{double real=0.0;                                                    // <a|M|b>  a,b are columns ia and ib
+                                                                     // of zr+izc
+
+  if(M.Rhi()!=M.Chi()){fprintf(stderr,"Error martin.c aMb_real: Matrix M not square\n");exit(EXIT_FAILURE);}
+  for(int a=1;a<=M.Rhi();++a)
+  {for(int b=1;b<a;++b)
+   {real+=zr(a,ia)*M(a,b)*zr(b,ib)-zr(a,ia)*M(b,a)*zc(b,ib)+zc(a,ia)*M(b,a)*zr(b,ib)+zc(a,ia)*M(a,b)*zc(b,ib);
+   }
+    real+=zr(a,ia)*M(a,a)*zr(a,ib)+zc(a,ia)*M(a,a)*zc(a,ib);
+   for(int b=a+1;b<M.Rhi();++b)
+   {real+=zr(a,ia)*M(b,a)*zr(b,ib)+zr(a,ia)*M(a,b)*zc(b,ib)+zc(a,ia)*M(b,a)*zc(b,ib)-zc(a,ia)*M(a,b)*zr(b,ib);
+   }
+
+  }
+
+ return real;
+}
+
+double aMb_imag(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib)
+{double imag=0.0;
+ if(M.Rhi()!=M.Chi()){fprintf(stderr,"Error martin.c aMb_imag: Matrix M not square\n");exit(EXIT_FAILURE);}
+  for(int a=1;a<=M.Rhi();++a)
+  {for(int b=1;b<a;++b)
+   {imag+=zc(a,ia)*M(b,a)*zc(b,ib)-zc(a,ia)*M(a,b)*zr(b,ib)+zr(a,ia)*M(b,a)*zr(b,ib)+zr(a,ia)*M(a,b)*zc(b,ib);
+   }
+    imag+=zr(a,ia)*M(a,a)*zc(a,ib)-zc(a,ia)*M(a,a)*zr(a,ib);
+   for(int b=a+1;b<M.Rhi();++b)
+   {imag+=zr(a,ia)*M(b,a)*zc(b,ib)-zr(a,ia)*M(a,b)*zr(b,ib)-zc(a,ia)*M(b,a)*zr(b,ib)-zc(a,ia)*M(a,b)*zc(b,ib);
+   }
+
+  }
+
+ return imag;
 }

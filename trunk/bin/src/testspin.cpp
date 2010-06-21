@@ -80,7 +80,7 @@ testspincf::testspincf (int nofconf, const char * file,const char * savfile,int 
   fin_coq = fopen(file, "rb");
   if (fin_coq == NULL)
     {
-      fprintf (stderr, "Couldn't open file %s: %s - no test spinconfigurations read - continuing ...\n",file, strerror (errno));
+      fprintf (stderr, "No file %s: %s - no test spinconfigurations read - no problem - continuing ...\n",file, strerror (errno));
       n=0;nofatoms=na;nofcomponents=nm;
      }
   else

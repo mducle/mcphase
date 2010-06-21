@@ -38,6 +38,7 @@ if(moments.Hi()>=3*49&&type<=3){type+=4;} // now the type of density is clear
     case 2: break; // component of orbmomdensity
     case 3: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentlx(i)=moments(i+49);}
             break; // component of total momdensity
+    case 8:
     case 4: for(i=1;i<=49;++i){momentlx(i)=moments(i);momently(i)=moments(i+49);momentlz(i)=moments(i+2*49);}
             break; // absvalue of current density
     case 5: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentsy(i)=moments(i+49);momentsz(i)=moments(i+2*49);}
@@ -73,6 +74,7 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
       case 6:      ro=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
       case 7:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
                            ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 8:      ro=pr*ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
       default:ro=ionpar.rocalc(theta,fi,R,moments);
      }
 
@@ -89,6 +91,7 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
       case 6:      ro=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
       case 7:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
                            ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 8:      ro=pr*ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
       default:ro=ionpar.rocalc(theta,fi,R,moments);
      }
      delta1=fabs(ro-ccc);
@@ -113,7 +116,8 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 	++anzahl;
 	rrttff(1)=R;rrttff(2)=theta;rrttff(3)=fi;
         if(type>=4){ switch (type)
-     {case 4:      mom=ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
+     {case 8:
+      case 4:      mom=ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
       case 5:      mom=ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz);break;
       case 6:      mom=ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
       case 7:      mom=ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
@@ -137,7 +141,9 @@ density::density(char * title,double dt,double df)
    if(strncmp(title,"spindensity",10)==0){type=1;}
    if(strncmp(title,"orbmomdensity",10)==0){type=2;}
    if(strncmp(title,"momdensity",10)==0){type=3;}
-   if(strncmp(title,"currdensity",10)==0){type=4;}
+   if(strncmp(title,"currdensityabsvalue",15)==0){type=4;}
+   if(strncmp(title,"currdensityprojection",15)==0){type=8;}
+   pr=Vector(1,3);extract(title,"i",pr(1));extract(title,"j",pr(2));extract(title,"k",pr(3));
    nofpts=(int)(2*3.1415/df+1)*(int)(3.1415/dt)+1;
    rtetafi = new Vector * [1+nofpts];
    int i;
@@ -150,6 +156,7 @@ density::density(const density & p) //kopier-konstruktor
   {dtheta=p.dtheta;dfi=p.dfi;
    nofpts=p.nofpts;
    type=p.type;
+   pr=Vector(1,3);pr=p.pr;
    rtetafi = new Vector * [1+nofpts];
    int i;
    for (i=1;i<=nofpts;++i){rtetafi[i]=new Vector(1,6);(*rtetafi[i])=(*p.rtetafi[i]);}

@@ -8,6 +8,7 @@
 // moreover, it loads also the user defined single ion module functions (linux only)
 #include "jjjpar.hpp"
 #include "../../version"
+#include<par.hpp>
 
 #define MAXNOFNUMBERSINLINE 2500
 #define MAXNOFCHARINLINE 7024
@@ -22,6 +23,7 @@
 #include "jjjpar_basmodfunc.cpp" // basic sipf module functions
 #include "jjjpar_intmod_kramer.cpp"   // some functions for module_type=1
 #include "jjjpar_intmod_brillouin.cpp"// some functions for module_type=3
+#include "jjjpar_intmod_cluster.cpp"// some functions for module_type=5
 
 
 
@@ -37,7 +39,7 @@ double jjjpar::J()
    case 2:
    case 4: return (*iops).J;break;
    case 3:  return ABC[1];break;
-   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate stevens parameters alpha beta gamma \n"); 
+   default: fprintf (stderr, "error class jjjpar: single ion module does not allow to calculate quantum number J \n");
             exit (EXIT_FAILURE);
   }
 }
@@ -311,6 +313,23 @@ void jjjpar::save_sipf(const char * path)
            fprintf(fout,"#\n# crystal field paramerized in Stevens formalism\n#\n");
            (*iops).save(fout);
           break;
+   case 5: fprintf(fout,"#!MODULE=cluster\n#<!--mcphase.sipf-->\n");
+           fprintf(fout,"#***************************************************************\n");
+           fprintf(fout,"# Single Ion Parameter File for Module Cluster for\n");
+           fprintf(fout,"# %s\n",MCPHASVERSION);
+           fprintf(fout,"# - program to calculate static magnetic properties\n");
+           fprintf(fout,"# reference: M. Rotter JMMM 272-276 (2004) 481\n");
+           fprintf(fout,"# %s\n",MCDISPVERSION);
+           fprintf(fout,"# - program to calculate the dispersion of magnetic excitations\n");
+           fprintf(fout,"# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n");
+           fprintf(fout,"# %s\n",MCDIFFVERSION);
+           fprintf(fout,"# - program to calculate neutron and magnetic xray diffraction\n");
+           fprintf(fout,"# reference: M. Rotter and A. Boothroyd PRB 79 (2009) 140405R\n");
+           fprintf(fout,"#****************************************************************\n#\n");
+           fprintf(fout,"#\n# single ion subsystem consists of cluster of ions\n");
+           fprintf(fout,"# cluster structure is desribed in file\n#\n");
+//           fprintf(fout,"structurefile = %s\n\n",clusterfile);
+          break;
    default: // in case of external single ion module just save a copy of the input file 
            char *token;
            cfin=fopen_errchk(cffilename,"rb");
@@ -515,7 +534,11 @@ jjjpar::jjjpar(double x,double y,double z, double slr,double sli, double dwf)
    Cp=Vector(1,9);Cp=0;
    r2=0;r4=0;r6=0;
   nof_electrons=0; // no electorns by default
+  paranz=0;
+  cffilename= new char [MAXNOFCHARINLINE];
+  module_type=1;
 }
+
 //constructor without file
 jjjpar::jjjpar(int n,int diag,int nofmom) 
 { cffilename= new char [MAXNOFCHARINLINE];
@@ -576,6 +599,7 @@ jjjpar::jjjpar (const jjjpar & p)
      mcalc_parstorage = ComplexMatrix(p.mcalc_parstorage.Rlo(),p.mcalc_parstorage.Rhi(),p.mcalc_parstorage.Clo(),p.mcalc_parstorage.Chi());
      mcalc_parstorage = p.mcalc_parstorage;
   }
+  if (p.module_type==5) {clusterpars=new par(*p.clusterpars);}
   if (p.module_type==2||p.module_type==4)  {iops=new ionpars(*p.iops);//((int)(2*(*p.iops).J+1));iops=p.iops;
                            int dj;dj=(int)(2*J()+1);
                            est=ComplexMatrix(0,dj,1,dj);est=p.est;
@@ -626,6 +650,7 @@ jjjpar::~jjjpar ()
    if(dn!=0)         delete []dn;  // will not work in linux
    if(sublattice!=0) delete []sublattice;
    delete []cffilename;// will not work in linux
+   if (module_type==5) delete clusterpars;
    if (module_type==2||module_type==4) delete iops;
 #ifdef __linux__
 // if (module_type==0)dlclose(handle);

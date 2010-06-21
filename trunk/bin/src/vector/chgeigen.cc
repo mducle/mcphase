@@ -128,7 +128,7 @@ void Chreduce (Matrix& A, Matrix& B, Matrix& L, Matrix& P)
 	    }
 	    if (i == j) {
 		if (Rex <= 0.0) 
-		    Matpack.Error(Mat::UnspecifiedError,"Chreduce: matrix B is not positiv definite");
+		    Matpack.Error(Mat::UnspecifiedError,"Chreduce: matrix B is not positiv definite - possible reason: magnetic structure in mcdisp.mf  metastable.\n");
 		else { 
 		    y = sqrt(Rex);		    
 		    l[i][i] = y;

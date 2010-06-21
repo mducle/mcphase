@@ -36,7 +36,7 @@ public class displaymag extends Panel implements Runnable {
 
  fileIni = new File(file[i]);
 ff = new FileInputStream(fileIni);
-    //ffnen der Datei
+    //open of file
     DataInputStream inStream = new DataInputStream(ff);
     
     String strLine;
@@ -144,7 +144,7 @@ ff = new FileInputStream(fileIni);
 
     catch (FileNotFoundException e)
     {++ctr;
-      System.out.println("File not found: " + e.getLocalizedMessage());
+      //System.out.println("File not found: " + e.getLocalizedMessage());
       //EntSession.CWatch("Konfigurationsdatei cti_listener.ini nicht gefunden!");
     }
 
