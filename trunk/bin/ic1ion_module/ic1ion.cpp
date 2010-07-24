@@ -33,6 +33,7 @@ extern "C" int estates(ComplexMatrix &est, Vector &gjmbheff, double *gJ, double 
 extern "C" int dmcalc(int &tn, double &T, Vector &gjmbH, double &g_J, Vector &ABC, char **sipffilename, ComplexMatrix &mat, float &delta, ComplexMatrix &est);
 extern "C" int mq(ComplexVector &Mq, double &th, double &ph, double &J0, double &J2, double &J4, double &J6, ComplexMatrix &est);
 extern "C" int dncalc(int &tn, double &th, double &ph, double &J0, double &J2, double &J4, double &J6, ComplexMatrix &est, double &T, ComplexMatrix &mat);
+extern "C" void mcalc_parameter_storage_matrix_init(ComplexMatrix *est, Vector &gjmbheff, double *g_J, double *T, Vector &ABC, char **sipffilename);
 #endif
 
 // --------------------------------------------------------------------------------------------------------------- //
@@ -312,6 +313,8 @@ void ic_parseinput(const char *filename, icpars &pars)
          ic_parsecfpars(varname, varval, pars, 2);
       else if(varname.find("density")!=std::string::npos)
          pars.density = varval;
+//    else if(varname.find("observable")!=std::string::npos)
+//       pars.observable = varval;
       else if(varname.find("eigenvectors")!=std::string::npos)
          iss >> pars.num_eigv;
       else if(varname.find("basis")!=std::string::npos)
@@ -803,10 +806,11 @@ int main(int argc, char *argv[])
 #ifdef _INTEGRAL
  //clock_t start,end; end = clock();
    Vector J(1,6,0.), gmbH(1,6,.0578838263), ABC; gmbH[1]*=2; gmbH[3]*=2; gmbH[5]*=2; 
-   double T=2.0,lnZ=0.,U=0.,gJ=0;
+   double T=2.0,lnZ=0.,U=0.,gJ=0.;
    char *filearray[1]; 
    filearray[0] = infile;
-   ComplexMatrix est; int Hsz=getdim(pars.n,pars.l); est = ComplexMatrix(0,Hsz,0,Hsz);
+   ComplexMatrix est; mcalc_parameter_storage_matrix_init(&est,gmbH,&gJ,&T,ABC,filearray);
+ //ComplexMatrix est; int Hsz=getdim(pars.n,pars.l); est = ComplexMatrix(0,Hsz,0,Hsz);
    end = clock();
 
    mcalc(J,&T,gmbH,&gJ,ABC,filearray,&lnZ,&U,est);
@@ -814,12 +818,13 @@ int main(int argc, char *argv[])
    std::cerr << "lnZ = " << lnZ << ", U = " << U << "\n";
    std::cerr << "J[1] = " << J[1] << ", J[2] = " << J[2] << ", J[3] = " << J[3] << ", J[4] = " << J[4] << ", J[5] = " << J[5] << ", J[6] = " << J[6] << "\n";
 
-   end = clock();
-   mcalc(J,&T,gmbH,&gJ,ABC,filearray,&lnZ,&U,est);
-   start = clock(); std::cerr << "Time to do mcalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
-   std::cerr << "lnZ = " << lnZ << ", U = " << U << "\n";
-   std::cerr << "J[1] = " << J[1] << ", J[2] = " << J[2] << ", J[3] = " << J[3] << ", J[4] = " << J[4] << ", J[5] = " << J[5] << ", J[6] = " << J[6] << "\n";
-
+//for (int it=0; it<1000; it++) {
+// end = clock();
+// mcalc(J,&T,gmbH,&gJ,ABC,filearray,&lnZ,&U,est);
+// start = clock(); std::cerr << "Time to do mcalc() = " << (double)(start-end)/CLOCKS_PER_SEC << "s.\n";
+// std::cerr << "lnZ = " << lnZ << ", U = " << U << "\n";
+// std::cerr << "J[1] = " << J[1] << ", J[2] = " << J[2] << ", J[3] = " << J[3] << ", J[4] = " << J[4] << ", J[5] = " << J[5] << ", J[6] = " << J[6] << "\n";
+// if(it%100==0) { std::cerr << it << " "; } } std::cerr << "\n";
    gmbH[1] = 0.; gmbH[2] = 0.; gmbH[3] = 0.; gmbH[4] = 0.; gmbH[5] = 0.; gmbH[6] = 0.; 
    estates(est,gmbH,&gJ,&T,ABC,filearray);
    end = clock(); std::cerr << "Time to do estates() = " << (double)(end-start)/CLOCKS_PER_SEC << "s.\n";

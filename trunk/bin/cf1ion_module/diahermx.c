@@ -47,6 +47,7 @@ Includedateien holen
 -----------------------------------------------------------------------------*/
 #include <stdio.h>          /* damit FILE definiert wird               */
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>           /* damit sqrt in define_j.c definiert wird */
 #define pi (4.0*atan(1.0))  /* atan() braucht <math.h>                 */
 #include "types.c"          /* benutze Datentypen laden                */
@@ -1350,7 +1351,7 @@ void info_ewproblem( ewproblem ) /* Diagonalisierungsroutine testen */
     fprintf(out,"| Answer :                                             |\n");
     fprintf(out,"---------------------------------------------------------\n");
     fprintf(out,"\n");
-    if(text==FAILED){ fprintf(out," Iteration has failed .\n");
+    if(strcmp(text,FAILED)){ fprintf(out," Iteration has failed .\n");
                         exit(1);fclose(out);}
     fprintf(out,"The interation has finsihed .\n");
     fprintf(out,"The calculated accuracy is                 : %6.1e.\n",

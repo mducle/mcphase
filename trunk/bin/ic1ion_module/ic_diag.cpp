@@ -55,7 +55,7 @@ int ic_diag(sMat<double> &Hic, sMat<double> &iHic, complexdouble *z, double *eig
       int *iwork = new int[liwork];
       F77NAME(zheevr)(&jobz, &range, &uplo, &n, zm, &lda, &vl, &vu, &il, &iu, &abstol, &numfnd, eigval, 
               z, &ldz, isuppz, zwork, &lwork, rwork, &lrwork, iwork, &liwork, &info);
-      delete []isuppz; delete []rwork; delete []iwork; free(zm);
+      delete []isuppz; delete []rwork; delete []iwork; free(zm); delete []zwork;
    }
    return info;
 }
@@ -75,7 +75,7 @@ int ic_diag(int n, complexdouble *zm, complexdouble *z, double *eigval)
       int *iwork = new int[liwork];
       F77NAME(zheevr)(&jobz, &range, &uplo, &n, zm, &lda, &vl, &vu, &il, &iu, &abstol, &numfnd, eigval, 
               z, &ldz, isuppz, zwork, &lwork, rwork, &lrwork, iwork, &liwork, &info);
-      delete []isuppz; delete []rwork; delete []iwork;
+      delete []isuppz; delete []rwork; delete []iwork; delete []zwork;
    }
    return info;
 }
@@ -94,7 +94,7 @@ int ic_diag(sMat<double> &Hic, double *m, double *eigval)
       int *iwork = new int[liwork];
       F77NAME(dsyevr)(&jobz, &range, &uplo, &n, mz, &lda, &vl, &vu, &il, &iu, &abstol, &numfnd, eigval, m, 
                       &ldz, isuppz, work, &lwork, iwork, &liwork, &info);
-      delete []isuppz; delete[]iwork; free(mz);
+      delete []isuppz; delete[]iwork; free(mz); delete []work;
    }
    return info;
 }
@@ -118,7 +118,7 @@ int ic_leig(sMat<double> &Hic, sMat<double> &iHic, complexdouble *z, double *eig
       int *iwork = new int[liwork];
       F77NAME(zheevr)(&jobz, &range, &uplo, &n, zm, &lda, &vl, &vu, &il, &iu, &abstol, &numfnd, eigval, 
               z, &ldz, isuppz, zwork, &lwork, rwork, &lrwork, iwork, &liwork, &info);
-      delete []isuppz; delete []rwork; delete []iwork; free(zm);
+      delete []isuppz; delete []rwork; delete []iwork; free(zm); delete []zwork;
    }
    return info;
 }
@@ -138,7 +138,7 @@ int ic_leig(int n, complexdouble *zm, complexdouble *z, double *eigval, int iu)
       int *iwork = new int[liwork];
       F77NAME(zheevr)(&jobz, &range, &uplo, &n, zm, &lda, &vl, &vu, &il, &iu, &abstol, &numfnd, eigval, 
               z, &ldz, isuppz, zwork, &lwork, rwork, &lrwork, iwork, &liwork, &info);
-      delete []isuppz; delete []rwork; delete []iwork;
+      delete []isuppz; delete []rwork; delete []iwork; delete []zwork;
    }
    return info;
 }
@@ -332,7 +332,7 @@ int ic_peig(int Hsz, complexdouble *zJmat, complexdouble *est, complexdouble *zV
             int *iwork = new int[liwork]; int *isuppz = new int[2*cb]; double *rwork = new double[lrwork];
             F77NAME(zheevr)(&jobz, &range, &uplo, &cb, zt, &cb, &vl, &vu, &il, &iu, &abstol, &numfnd, E1, zV1, 
                             &ldz, isuppz, zwork, &lwork, rwork, &lrwork, iwork, &liwork, &info);
-            delete []isuppz; delete []rwork; delete []iwork;
+            delete []isuppz; delete []rwork; delete []iwork; delete []zwork;
          }
       // F77NAME(zgemm)(&notranspose,&notranspose,&Hsz,&cb,&cb,&zalpha,pars.zV(i),&Hsz,zV1,&cb,&zbeta,&zVd[i*Hsz],&Hsz);
          F77NAME(zgemm)(&notranspose,&notranspose,&Hsz,&cb,&cb,&zalpha,zV,&Hsz,zV1,&cb,&zbeta,&zVd[i*Hsz],&Hsz);

@@ -191,7 +191,7 @@ module_type=0;
 
 #else
   handle=LoadLibrary(modulefilename);
-  if ((int)handle<= HINSTANCE_ERROR){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
+  if ((intptr_t)handle<= HINSTANCE_ERROR){fprintf (stderr, "jjjpar::jjjpar - Could not load dynamic library\n");
 	       exit (EXIT_FAILURE);
 	      }
 

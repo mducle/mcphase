@@ -1322,6 +1322,16 @@ pomtu= "---------------------------------------";
                    z2      = "   phi    ";
                    z3      = "          ";
                    break;
+         default : s_modus = "FEHLER!     ";
+                   x1      = "                                    ";
+                   x2      = "                                    ";
+                   x3      = "                                    ";
+                   y1      = "          ";
+                   y2      = "          ";
+                   y3      = "";
+                   z1      = "          ";
+                   z2      = "          ";
+                   z3      = "          ";
     }
  
     fprintf(fp,"===========================================================\n");
@@ -1508,7 +1518,7 @@ ITERATION *read_Vkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -1853,7 +1863,7 @@ ITERATION *read_Dkq(name,vsymmetrienr_vor)  /* Dkq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -2008,12 +2018,12 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     INT       anz_nn,dimj,zwei_j,ionennr,symmetrienr,e_4f;
     INT       buffer_size=381,einheitnr_in,einheitnr_out;
     DOUBLE    versionsnummer;
-    DOUBLE    x1,x2,x3,myB;
+    DOUBLE    x1=-1.,x2=-1.,x3=-1.,myB;
 
     DOUBLE    sin(),cos();
     DOUBLE    a_tof(),v40=0,v44=0,v60=0,v64=0,sqrt(),temperatur;
     CHAR      *einheit_in,*einheit_out,modus;
-    CHAR      *ion,*token;
+    CHAR      *ion=0,*token;
     CHAR      c,*string,*line,*fgets(),*a_tos();
     ITERATION *iteration,*iter_alloc();
     ITERATION *auswahlregel();
@@ -2690,7 +2700,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -2955,7 +2965,7 @@ ITERATION *read_Wkq(name,vsymmetrienr_vor)  /* Wkq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -3202,7 +3212,7 @@ ITERATION *read_Akq(name,vsymmetrienr_vor)  /* Akq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -3521,14 +3531,14 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     INT       anz_nn,dimj,zwei_j,ionennr,symmetrienr;
     INT       buffer_size=381,einheitnr_in,einheitnr_out;
     DOUBLE    versionsnummer;
-    DOUBLE    x1,x2,x3,myB;
+    DOUBLE    x1=-1.,x2=-1.,x3=-1.,myB;
     DOUBLE    sin(),cos();
     DOUBLE    omegan0n(),omegan1n(),omegan2n();
     DOUBLE    omegan3n(),omegan4n(),omegan5n();
     DOUBLE    omegan6n();
     DOUBLE    a_tof(),b40,b44,b60,b64,sqrt(),temperatur;
     CHAR      *einheit_in,*einheit_out,modus;
-    CHAR      *ion,*token;
+    CHAR      *ion=0,*token;
     CHAR      c,*string,*line,*fgets(),*a_tos();
     ITERATION *iteration,*iter_alloc();
     ITERATION *auswahlregel();
@@ -4165,7 +4175,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -4414,7 +4424,7 @@ ITERATION *read_xW(name,vsymmetrienr_vor)  /* x,W aus file name lesen */
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus = 0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -4473,7 +4483,7 @@ UMGEBUNG *read_nn(name) /* Lese Eingabefile name der Umgebungsatome */
     CHAR *name;
 {
     UMGEBUNG *umgebung;
-    DOUBLE   a_tof(),x1,x2,x3,temperatur;
+    DOUBLE   a_tof(),x1,x2,x3=0.,temperatur;
     FILE     *fp,*fopen();
     INT      buffer_size = 81;
     INT      i,anz_nn,nummer;
@@ -5056,6 +5066,10 @@ void drucke_mag( fp,modus ) /* Tabelle fuer Magnetfeld ausgeben */
                    z2      = "   phi    ";
                    z3      = "          ";
                    break;
+         default : s_modus = "FEHLER!     ";
+                   z1      = "          ";
+                   z2      = "          ";
+                   z3      = "          ";
     }
  
     fprintf(fp,"\n");
@@ -5160,6 +5174,7 @@ void neben_create( modus,name_chi2 ) /* Eingabefile Chi2 erzeugen  */
      case VKQ  : name_par = VKQNAME; break;
      case WKQ  : name_par = WKQNAME; break;
      case XW   : name_par = XWNAME ; break;
+     default   : name_par = "fehler      ";
    }
  
    read        = read_einheit(name_par,modus);
@@ -5683,7 +5698,7 @@ READ *read_einheit(name,art)
                    break;
         case 'n':  modus = 'n';
                    break;
-        default : read_error(24,fp,name);
+        default : read_error(24,fp,name); modus=0;
     }
  
     while(  *(line=fgets( string , buffer_size , fp )) != '='  );/* 3.==== */
@@ -5945,7 +5960,7 @@ NEBENBEDINGUNG *neben_read(setup,name,kristallfeld,einheitnr_out,macheps)
     NEBENBEDINGUNG *neben;
     MATRIX    *intensit,*d_intensit,*mx_alloc();
     VEKTOR    *ew      ,*d_ew      ,*vr_alloc(), *fix;
-    FILE      *fp,*fopen(),*fp_sus,*fp_theta;
+    FILE      *fp,*fopen(),*fp_sus=0,*fp_theta;
     INT       buffer_size=381,i,k,einheitnr_in,a_toi(),zeile,anzahl=0,j;
     INT       anz_lines,anz_par=0,anz_var=0,spalte,datnr,anz_dat;
     INT       fpzl, fnzl, fpa, fna, z, flag,imax,ipos;

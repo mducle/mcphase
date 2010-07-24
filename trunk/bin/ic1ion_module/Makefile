@@ -100,9 +100,10 @@ ifeq (,$(findstring CYGWIN,$(shell uname)))
 LDFLAGS += -lpthread
 endif
 else
-#LDFLAGS = -larpack -llapack -lblas
-LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
+LDFLAGS = -larpack -llapack -lblas
+#LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 #LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/cygwin32_penryn/lib -lf77blas -latlas -lgfortran
+#LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/mingw64_penryn/lib -lf77blas -latlas -lgfortran
 ifdef MSYS
 ifdef GCC4
 LDFLAGS+= -static
@@ -148,8 +149,8 @@ libs/libarpack.a:
 	cd libs && make
 
 ifdef integral
-../ic1ion$(EXE): checkgcc libs/libarpack.a $(OBJ) ic1ion.o ic1ion_module.o
-	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) ic1ion_module.o $(VECOBJ) $(STATIC)
+../ic1ion$(EXE): checkgcc libs/libarpack.a $(OBJ) ic1ion.o spectre.o ic1ion_module.o
+	$(LINKER) -o ../ic1ion ic1ion.o spectre.o ic1ion_module.o $(OBJ) $(LDFLAGS) $(VECOBJ) $(STATIC)
 else
 ../ic1ion$(EXE): checkgcc libs/libarpack.a $(OBJ) ic1ion.o
 	$(LINKER) -o ../ic1ion ic1ion.o $(OBJ) $(LDFLAGS) $(STATIC)

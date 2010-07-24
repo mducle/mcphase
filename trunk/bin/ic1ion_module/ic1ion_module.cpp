@@ -47,7 +47,6 @@ std::vector<double> spectre_expJ(icpars &pars, ComplexMatrix &est, int parvalsiz
 void truncate_hmltn(icpars &pars, ComplexMatrix &est, sMat<double> &Hic, sMat<double> &iHic, int JHi, int JLo);
 void truncate_expJ(icpars &pars, ComplexMatrix &est, Vector &gjmbH, Vector &J, double T, double *lnZ, double *U, complexdouble *Jm);
 
-
 void myPrintMatrix(FILE * file,sMat<double> & M,int d)
 {int i1,j1;
     fprintf (file,"Matrix\n");
@@ -301,7 +300,7 @@ __declspec(dllexport)
                       ComplexMatrix *est, // Output Eigenstates matrix (row 0: real==Eigenvalues;imag==population)
                       Vector &gjmbheff,   // Input  Effective mean fields (meV)
  /* Not Used */       double *g_J,        // Input  Lande g-factor
-                      double &T,          // Input  temperature
+                      double *T,          // Input  temperature
  /* Not Used */       Vector &ABC,        // Input  Vector of parameters from single ion property file
                       char **sipffilename)// Input  Single ion properties filename
 {

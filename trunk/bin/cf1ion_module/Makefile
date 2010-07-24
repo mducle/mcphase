@@ -24,7 +24,7 @@ INCLUDE= ../../include
 .SUFFIXES: .cc .o
 
 .c.o: 
-	${CC} -c ${COPTS}  -I ${INCLUDE} $<
+	${CC} -c $(patsubst -Wall,,${COPTS})  -I ${INCLUDE} $<
 
 .cc.o: 
 	${CCC} -c ${CCOPTS}   -I ${INCLUDE} $<
@@ -76,16 +76,16 @@ so1ion.o: types.c main.c
 cfieldrout.o: cfieldrout.c $(VECOBJS) $(CFOBJS) 
 
 cfield.so: module.o cfield.o  $(VECOBJS) $(CFOBJS) 
-	g++  -Wall -o cfield.so $^ -shared $(LFLAGS)
+	$(CCC) $(CCOPTS) -Wall -o cfield.so $^ -shared $(LFLAGS)
 
 ../cfield$(EXE): cfield.o  $(VECOBJS) $(CFOBJS)
-	g++  -Wall -o ../cfield $^ $(LFLAGS)
+	$(CCC) $(CCOPTS) -Wall -o ../cfield $^ $(LFLAGS)
 
 ../so1ion$(EXE): so1ion.o  $(VECOBJS) $(CFOBJS)
-	g++  -Wall -o ../so1ion $^ $(LFLAGS)
+	$(CCC) $(CCOPTS) -Wall -o ../so1ion $^ $(LFLAGS)
 
 module.o: module.c 
-	g++  -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) $(LFLAGS)
+	$(CCC) $(CCOPTS) -Wall -fPIC -c  -o module.o module.c  $(INCLDIRS) $(LFLAGS)
 
 clean:
 	rm -vf ./*.o ./*.info ./*.parameter ./*.output
