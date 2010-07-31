@@ -181,7 +181,7 @@ endproper:
    fprintf(stderr," reference: M. Rotter JMMM 272-276 (2004) 481\n");
    fprintf(stderr,"**********************************************\n");
 
-exit(0);
+return(0);
 }
 
 int normalizedadbdc(Vector & dadbdc,double n,par & inputpars)

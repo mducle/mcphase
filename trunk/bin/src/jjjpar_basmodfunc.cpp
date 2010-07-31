@@ -366,7 +366,8 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
   {case 0:  if(estates!=NULL){(*estates)(&est,&gjmbheff,&gJ,&T,&ABC,&cffilename);}
             return est;break;
    case 2:
-   case 4: est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
+   case 4: (*iops).cfeigenstates(&est,gjmbheff,T);return est;break;
+// case 4: est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
    default: est=0;return est;
   }
 }
@@ -379,7 +380,8 @@ ComplexMatrix & jjjpar::mcalc_parameter_storage_init (Vector & gjmbheff,double &
   {case 0:  if(mcalc_parameter_storage!=NULL){(*mcalc_parameter_storage)(&mcalc_parstorage,&gjmbheff,&gJ,&T,&ABC,&cffilename);}
             return mcalc_parstorage;break;
    case 2:
-   case 4: mcalc_parstorage=(*iops).cfeigenstates(gjmbheff,T);return mcalc_parstorage;break;
+   case 4: (*iops).cfeigenstates(&mcalc_parstorage,gjmbheff,T);return mcalc_parstorage;break;
+// case 4: mcalc_parstorage=(*iops).cfeigenstates(gjmbheff,T);return mcalc_parstorage;break;
    default: mcalc_parstorage=0;return mcalc_parstorage;
   }
 }

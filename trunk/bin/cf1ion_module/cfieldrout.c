@@ -58,7 +58,6 @@ Includedateien holen
 #include "types.c"  /* selbstdefinierte Typen holen */
  
  
- 
 /*----------------------------------------------------------------------------
 Extern definierte Funktionen
 -----------------------------------------------------------------------------*/
@@ -503,6 +502,9 @@ void cfield_mcphasnew(char * iontype, double * Jxr,double * Jxi,  double * Jyr, 
                               double * mo64cr, double * mo64ci,
                               double * mo65cr, double * mo65ci,
                               double * mo66cr, double * mo66ci,
+                              double * modxcr, double * modxci,
+                              double * modycr, double * modyci,
+                              double * modzcr, double * modzci,
                               int * dj, 
                               double * alpha, double * beta, double * gamma, 
                               double * lande,
@@ -564,6 +566,18 @@ void cfield_mcphasnew(char * iontype, double * Jxr,double * Jxi,  double * Jyr, 
     Bx=0.0;By=0.0; Bz=0.0;
     HMAG(iteration)=calc_Bmag( DIMJ(iteration),GJ(iteration),myB,Bx,By,Bz);
     ewproblem=setuphcf(setup,(EWPROBLEM*)0,NEIN,kristallfeld,BKQ);
+
+    /* h += singleion anisotropy */
+    for( n= DIMJ(iteration); n>=1 ; --n) for( m=DIMJ(iteration) ; m>=1 ; --m) {
+      modxcr[30*(n-1)+m-1]=0.; modxci[30*(n-1)+m-1]=0.;
+      modycr[30*(n-1)+m-1]=0.; modyci[30*(n-1)+m-1]=0.;
+      modzcr[30*(n-1)+m-1]=0.; modzci[30*(n-1)+m-1]=0.;
+      for( i=DIMJ(iteration) ; i>=1 ; --i){
+              modxcr[30*(n-1)+m-1] += Jxr[30*(n-1)+i-1]*Jxr[30*(i-1)+m-1];
+              modycr[30*(n-1)+m-1] -= Jyi[30*(n-1)+i-1]*Jyi[30*(i-1)+m-1];
+              modzcr[30*(n-1)+m-1] += Jzr[30*(n-1)+i-1]*Jzr[30*(i-1)+m-1]; }
+      }
+
 /*sets up hamiltonian using olms and solves ev problem (necessary step although CF is zero in this routine)*/
 
 /* here we use the stevens operators for the quadrupolar hamiltonian  (NOT the Racah) */
@@ -1179,6 +1193,22 @@ ITERATION *hamltn0(i)
               I(h,n,m) += I(mag,n,m);
          }
  
+    /* h += singleion anisotropy */
+    if( B1S(i)!=0.0 || B2S(i)!=0.0 || B3S(i)!=0.0 ) {
+       #include "define_j.c"          /* mj,J2,J+,... definieren */
+       MATRIX  *dx,*dy,*dz;
+       DOUBLE d1=sqrt(fabs(B1S(i))),d2=sqrt(fabs(B2S(i))),d3=sqrt(fabs(B3S(i))),jm,jp,s1=1.,s2=1.,s3=1.;
+       INT dimj=DIMJ(i),l; 
+       if(B1S(i)<0) s1=-1.; if(B2S(i)<0) s2=-1.; if(B3S(i)<0) s3=-1.;
+       dx = mx_alloc( dimj,dimj ); dy = mx_alloc( dimj,dimj ); dz = mx_alloc( dimj,dimj );
+       for( n=DIMJ(i) ; n>=1 ; --n) for( m=DIMJ(i) ; m>=1 ; --m){
+              jm=JM(mj)*D(nj,mj-1); jp=JP(mj)*D(nj,mj+1);
+              R(dx,n,m) = d1*0.5*( jm+jp ); I(dy,n,m) = d2*0.5*( jm-jp ); R(dz,n,m) = d3*mj*D(nj,mj); }
+
+       for( n=DIMJ(i) ; n>=1 ; --n ) for( m=DIMJ(i) ; m>=1 ; --m ) for( l=DIMJ(i) ; l>=1 ; --l){
+              R(h,n,m) += ( s1*R(dx,n,l)*R(dx,l,m) - s2*I(dy,n,l)*I(dy,l,m) + s3*R(dz,n,l)*R(dz,l,m) ); }
+       free(dx); free(dy); free(dz);
+    }
  
     return( i );
 }

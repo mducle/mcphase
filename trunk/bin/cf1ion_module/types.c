@@ -605,6 +605,8 @@ typedef struct _umgebung{
     DOUBLE *x2;
     DOUBLE *x3;
  
+    DOUBLE b1s,b2s,b3s; /* Anisotropieparameter Sx^2, Sy^2, Sz^2 */
+
     DOUBLE b1;     /* b = ( b1,b2,b3 ) angelegtes Magnetfeld */
     DOUBLE b2;     /*                                        */
     DOUBLE b3;     /*  H = H  + H    mit  H  = -g my J*b     */
@@ -656,6 +658,8 @@ typedef struct _iteration{
     DOUBLE  *r4_5;      /*  <r >  /  | R |     */
     DOUBLE  *r6_7;      /*                     */
  
+    DOUBLE b1s,b2s,b3s; /* Anisotropieparameter fuer Sx^2, Sy^2, Sz^2 operatoren */
+
     DOUBLE b1;     /* b = ( b1,b2,b3 ) externes   Magnetfeld */
     DOUBLE b2;     /*                                        */
     DOUBLE b3;     /*  H = H  + H    mit  H  =  g my J*b     */
@@ -1171,6 +1175,9 @@ benutzte Defines definieren
 #define X1(i,nr)              VALUE(X1_P(i) ,nr)
 #define X2(i,nr)              VALUE(X2_P(i) ,nr)
 #define X3(i,nr)              VALUE(X3_P(i) ,nr)
+#define B1S(i)                 (  (i) -> b1s  )
+#define B2S(i)                 (  (i) -> b2s  )
+#define B3S(i)                 (  (i) -> b3s  )
 #define B1(i)                 (  (i) -> b1  )
 #define B2(i)                 (  (i) -> b2  )
 #define B3(i)                 (  (i) -> b3  )

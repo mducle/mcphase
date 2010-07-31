@@ -374,11 +374,11 @@ ip.o: ionpars.cpp
 	@echo Linking ../mcdiff
 	@$(LINKER)  -Wall  -o ../mcdiff $^  $(LFLAGS)
 
-../mf2fe$(EXE): mf2fe.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+../mf2fe$(EXE): mf2fe.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o myev.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../mf2fe
 	@$(LINKER)  -Wall  -o ../mf2fe $^  $(LFLAGS)
 
-../fediff$(EXE): fediff.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
+../fediff$(EXE): fediff.o martin.o jjjpar.o inipar.o par.o ionpars.o density.o spincf.o mfcf.o testspin.o myev.o $(VOBS) $(CFIELDOBJS) $(FUNCTIONOBJS)
 	@echo Linking ../fediff
 	@$(LINKER)  -Wall  -o ../fediff $^  $(LFLAGS)
 

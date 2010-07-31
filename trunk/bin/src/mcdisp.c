@@ -1258,9 +1258,9 @@ diffint=0;diffintbey=0;
 #ifdef _THREADS
           for (ithread=0; ithread<NUM_THREADS; ithread++) 
           {
-             delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread]; delete thrdat.J[ithread]; delete tin[ithread];
+             delete thrdat.J[ithread]; delete tin[ithread];
           }
-          delete[] thrdat.md; delete[] thrdat.ini; delete[] thrdat.inputpars; delete[] thrdat.J; //delete tin;
+          delete[] thrdat.J; //delete tin;
 #endif
 	             fprintf (foutdstot, " %4.4g ",totint);
                      }  
@@ -1268,6 +1268,14 @@ diffint=0;diffintbey=0;
    fprintf (foutdstot, "\n");              
    fprintf (fout, "\n");
    }
+#ifdef _THREADS
+   for (ithread=0; ithread<NUM_THREADS; ithread++) 
+   {
+      delete thrdat.md[ithread]; delete thrdat.ini[ithread]; delete thrdat.inputpars[ithread]; 
+   }
+   delete[] thrdat.inputpars; delete[] thrdat.md; delete[] thrdat.ini;
+#endif
+
    if (ini.hkllist==1){hkl(1)=(double)counter;}
 }}}
     if (do_jqfile==1) 
@@ -1394,7 +1402,7 @@ dispcalc(ini,inputpars,do_Erefine,do_jqfile,do_createtrs,do_readtrs,do_verbose,m
    fprintf(stderr,"            M. Rotter J. Comp. Mat. Sci. 38 (2006) 400\n");
    fprintf(stderr,"************************************************************\n");
 
- exit(0);
+ return(0);
  
 }
 

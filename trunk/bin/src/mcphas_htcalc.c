@@ -210,9 +210,11 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
       // test spinconfiguration  and remember it                                    
       if (fe<femin)
             {               // first - reduce the spinconfiguration if possible
+fprintf(stdout,"fe(%i)= %f meV\n",tryrandom,fe); fflush(stdout);
 	       sps1=sps;sps1.reduce();
                    mf=new mfcf(sps1.na(),sps1.nb(),sps1.nc(),inputpars.nofatoms,inputpars.nofcomponents);
-               if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs))<=fe+0.00001)sps=sps1;
+//             if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs))<=fe+0.00001)sps=sps1;
+               if ((fered=fecalc(H ,T,inputpars,sps1,(*mf),u,testspins,testqs))<=fe+1e-14)sps=sps1;
                    delete mf;
                  // display spinstructure
                 if (verbose==1)

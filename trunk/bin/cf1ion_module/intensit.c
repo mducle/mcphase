@@ -110,6 +110,7 @@ INT output( setup,ewproblem,kristallfeld,modus )
     DOUBLE    gj,shift,j,mj,zu_summe,zustandssumme(),faktor;
     DOUBLE    Bx,By,Bz,anf_temp,end_temp,lambda;
     DOUBLE    macheps,Bx_ex,By_ex,Bz_ex,Bx_mol,By_mol,Bz_mol;
+    DOUBLE    Bx2,By2,Bz2;
     DOUBLE    aJxb_2,aJyb_2,aJzb_2,sumx,sumy,sumz;
     DOUBLE    mat_Jx2(),mat_Jy2(),mat_Jz2();
     DOUBLE    anf_feld,end_feld,temp;
@@ -192,6 +193,10 @@ t21="#\n";
     Bx =  B1(iteration);
     By =  B2(iteration);
     Bz =  B3(iteration);
+
+    Bx2=  B1S(iteration);
+    By2=  B2S(iteration);
+    Bz2=  B3S(iteration);
  
    Bx += B1MOL(iteration);
     By += B2MOL(iteration);
@@ -299,7 +304,7 @@ t25="#! By_mol  =   %11.2f                                     \n";
 t26="#! Bz_mol  =   %11.2f                                     \n";
 t27="#                                                              \n";
 t28="#-------------------------------------------------------------- \n";
-t29="#\n#\n";
+t29="#\n";
     if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) )  fprintf(fp,"%s",t01);
     fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04);
     fprintf(fp,"%s",t05);fprintf(fp,"%s",t06);fprintf(fp,"%s",t07);fprintf(fp,"%s",t08);
@@ -336,6 +341,22 @@ t21="# external Field B_ex in direction of  [ %5d, %5d, %5d].   \n";
     fprintf(fp,t26,is_null(B3MOL(iteration),0.001 ));fprintf(fp,"%s",t23);
     fprintf(fp,"%s",t27);fprintf(fp,"%s",t28);
     if( *(FILENAME(kristallfeld)+16) != *(ORTHO+16) ) fprintf(fp,"%s",t29);
+}
+if( (Bx2!=0.0 || By2!=0.0 || Bz2!=0.0) && (symmetrienr == 10 || symmetrienr == 0) ){
+t02="#-------------------------------------------------------------- \n";
+t03="#                Anisotropy parameters in meV.                  \n";
+t04="#-------------------------------------------------------------- \n";
+t05="#                                                              \n";
+t06="#! D1*Bx^2 =   %11.2f                                     \n";
+t07="#! D2*By^2 =   %11.2f                                     \n";
+t08="#! D3*Bz^2 =   %11.2f                                     \n";
+t09="#                                                              \n";
+t10="#-------------------------------------------------------------- \n";
+    fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04); fprintf(fp,"%s",t05);
+    fprintf(fp,t06,is_null(B1S(iteration),0.001 ));
+    fprintf(fp,t07,is_null(B2S(iteration),0.001 ));
+    fprintf(fp,t08,is_null(B3S(iteration),0.001 ));
+    fprintf(fp,"%s",t09);fprintf(fp,"%s",t10);fprintf(fp,"%s",t29);
 }
  
 t01="#-------------------------------------------------------------- \n";
@@ -3205,7 +3226,7 @@ INT is_parametersatz_null(iter,symmetrienr,macheps)
             case 10: return(JA);
         }
     }
-    if(  zwei_j >2 ){
+    if(  zwei_j >=2 ){ // changed from >2 to >=2 on 28.7.2010 MR to allow S=1
         switch( symmetrienr ){
             case 0 : if( flag ==  4 )  return(JA);
                      return(NEIN);

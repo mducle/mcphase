@@ -5,7 +5,7 @@
 #include "ionpars.h"
 #include "myev.h"
 
-#define NOF_OLM_MATRICES 45
+#define NOF_OLM_MATRICES 48
 
 #define SMALL 1e-6   //!!! must match SMALL in mcdisp.c and ionpars.cpp !!!
                      // because it is used to decide wether for small transition
@@ -53,7 +53,7 @@ ionpars::ionpars (int dimj) // constructor from dimj
   Jcc=ComplexMatrix(1,dimj,1,dimj);
    calcmagdensity=0;
    so1ion=0;
-   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Blm=Vector(1,48);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;nof_electrons=0;
@@ -90,7 +90,7 @@ ionpars::ionpars (char * ion) // constructor from iontype (mind:no matrices fill
   Jbb=ComplexMatrix(1,dimj,1,dimj);
   Jcc=ComplexMatrix(1,dimj,1,dimj);
 
-   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Blm=Vector(1,48);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
 
    Olm = new Matrix * [1+NOF_OLM_MATRICES];  // define array of pointers to our Olm matrices
@@ -129,7 +129,7 @@ ionpars::ionpars(FILE * cf_file)
   char instr[MAXNOFCHARINLINE];
   iontype= new char[MAXNOFCHARINLINE];
   char  moduletype[MAXNOFCHARINLINE];
-   Blm=Vector(1,45);Blm=0; // vector of crystal field parameters
+   Blm=Vector(1,48);Blm=0; // vector of crystal field parameters
    Llm=Vector(1,45);Llm=0; // vector of crystal field parameters
    calcmagdensity=0;so1ion=0;strcpy(moduletype,"cfield");
    alpha=0;beta=0;gamma=0;r2=0;r4=0;r6=0;gJ=0;
@@ -216,6 +216,9 @@ ionpars::ionpars(FILE * cf_file)
    extract(instr,"B64",Blm(43));
    extract(instr,"B65",Blm(44));
    extract(instr,"B66",Blm(45));
+   extract(instr,"Dx2",Blm(46));
+   extract(instr,"Dy2",Blm(47));
+   extract(instr,"Dz2",Blm(48));
 
         extract(instr,"L22S",Llm(1));
         extract(instr,"L21S",Llm(2));
@@ -322,6 +325,10 @@ ionpars::ionpars(FILE * cf_file)
   double  mo64cr[31*31],mo64ci[31*31];
   double  mo65cr[31*31],mo65ci[31*31];
   double  mo66cr[31*31],mo66ci[31*31];
+
+  double  modxcr[31*31],modxci[31*31];
+  double  modycr[31*31],modyci[31*31];
+  double  modzcr[31*31],modzci[31*31];
     
 
 if (pr==1) {printf("#using %s ...\n",moduletype);
@@ -384,6 +391,10 @@ if (pr==1) {printf("#using %s ...\n",moduletype);
   mo64cr,mo64ci,
   mo65cr,mo65ci,
   mo66cr,mo66ci,
+
+  modxcr,modxci,
+  modycr,modyci,
+  modzcr,modzci,
 
   &dimj,&alpha,&beta,&gamma,&gJ,&r2,&r4,&r6, &nof_electrons);
 
@@ -529,6 +540,13 @@ if(i<j){(*Olm[43])(i,j)=mo64ci[30*(j-1)+i-1];}else{(*Olm[43])(i,j)=mo64cr[30*(i-
 if(i<j){(*Olm[44])(i,j)=mo65ci[30*(j-1)+i-1];}else{(*Olm[44])(i,j)=mo65cr[30*(i-1)+j-1];}
     (*OOlm[45])(i,j)=im*mo66ci[30*(i-1)+j-1]+mo66cr[30*(i-1)+j-1];
 if(i<j){(*Olm[45])(i,j)=mo66ci[30*(j-1)+i-1];}else{(*Olm[45])(i,j)=mo66cr[30*(i-1)+j-1];}
+
+    (*OOlm[46])(i,j)=im*modxci[30*(i-1)+j-1]+modxcr[30*(i-1)+j-1];
+if(i<j){(*Olm[46])(i,j)=modxci[30*(j-1)+i-1];}else{(*Olm[46])(i,j)=modxcr[30*(i-1)+j-1];}
+    (*OOlm[47])(i,j)=im*modyci[30*(i-1)+j-1]+modycr[30*(i-1)+j-1];
+if(i<j){(*Olm[47])(i,j)=modyci[30*(j-1)+i-1];}else{(*Olm[47])(i,j)=modycr[30*(i-1)+j-1];}
+    (*OOlm[48])(i,j)=im*modzci[30*(i-1)+j-1]+modzcr[30*(i-1)+j-1];
+if(i<j){(*Olm[48])(i,j)=modzci[30*(j-1)+i-1];}else{(*Olm[48])(i,j)=modzcr[30*(i-1)+j-1];}
     
    }}
 //printf("%g\n",mo54sr[1][1]);
@@ -558,20 +576,20 @@ cnst(6,6)=  0.6831942;
 for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);} 
 
    fprintf(stderr,"crystal field parameters:\n");  
-   const char lm[]="B22SB21SB20 B21 B22 B33SB32SB31SB30 B31 B32 B33 B44SB43SB42SB41SB40 B41 B42 B43 B44 B55SB54SB53SB52SB51SB50 B51 B52 B53 B54 B55 B66SB65SB64SB63SB62SB61SB60 B61 B62 B63 B64 B65 B66 ";
+   const char lm[]="B22SB21SB20 B21 B22 B33SB32SB31SB30 B31 B32 B33 B44SB43SB42SB41SB40 B41 B42 B43 B44 B55SB54SB53SB52SB51SB50 B51 B52 B53 B54 B55 B66SB65SB64SB63SB62SB61SB60 B61 B62 B63 B64 B65 B66 Dx2 Dy2 Dz2 ";
    char lm4[5];lm4[4]='\0';
-   for(i=1;i<=45;++i){strncpy(lm4,lm+(i-1)*4,4);l=lm4[1]-48;m=lm4[2]-48;if(lm4[3]=='S'){m=-m;}
-                     if(Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module %s: wybourne parameter %s is not implemented\n",moduletype,lm4);
+   for(i=1;i<=48;++i){strncpy(lm4,lm+(i-1)*4,4);l=lm4[1]-48;m=lm4[2]-48;if(lm4[3]=='S'){m=-m;}
+                     if(i<=45&&Llm(i)!=0){if(l==3||l==5){lm4[0]='L';fprintf(stderr,"Error internal module %s: wybourne parameter %s is not implemented\n",moduletype,lm4);
                                                   exit(EXIT_FAILURE);}
                                   double Blmcalc=Llm(i)*cnst(l,m)*sqrt(4.0*PI/(2*l+1))*thetaJ(l);if(m!=0){Blmcalc*=sqrt(2.0);}
                                   if((Blm(i)!=0)&(fabs(Blm(i)-Blmcalc)/(fabs(Blmcalc)+1e-14)>0.001)){fprintf(stderr,"Warning internal module %s - reading %s=%12.6g meV is ignored, because Wybourne Parameter Llm=%12.6g meV does not correspond ! \npresse enter to continue\n",moduletype,lm4,Blm(i),Llm(i));getchar();}
                                   Blm(i)=Blmcalc;// here set the Blm as calculated from the Llm
                                   }
                      if(Blm(i)!=0){fprintf(stderr," %s=%12.6g meV ",lm4,Blm(i));
-                                   if((l!=3)&(l!=5)){Llm(i)=Blm(i)/thetaJ(l)/cnst(l,m)/sqrt(4.0*PI/(2*l+1));if(m!=0){Llm(i)/=sqrt(2.0);}
+                                   if(i<=45){if((l!=3)&(l!=5)){Llm(i)=Blm(i)/thetaJ(l)/cnst(l,m)/sqrt(4.0*PI/(2*l+1));if(m!=0){Llm(i)/=sqrt(2.0);}
                                                  lm4[0]='L';fprintf(stderr,"<-> %s=%12.6g meV",lm4,Llm(i));}
                                                 else
-                                                {lm4[0]='L';fprintf(stderr,"<-> %s=Wybourne parameter not implemented, ",lm4);}
+                                                {lm4[0]='L';fprintf(stderr,"<-> %s=Wybourne parameter not implemented, ",lm4);}}
                                    fprintf(stderr,"\n");  
                                   }
                      }
@@ -582,7 +600,7 @@ for(l=2;l<=6;l+=2){for(m=0;m<=l;++m)cnst(l,-m)=cnst(l,m);}
 
    if(Hcf==(double)0.0){
 
-   for(l=1;l<=45;++l){Hcf+=Blm(l)*(*Olm[l]);
+   for(l=1;l<=48;++l){Hcf+=Blm(l)*(*Olm[l]);
 //                   if(Blm(l)!=0){if(l<24){fprintf(stderr,"B%c=%g   ",l+99,Blm(l));}
 //		                     else{fprintf(stderr,"B(z+%i)=%g   ",l-23,Blm(l));}
 //		                }
@@ -963,7 +981,7 @@ if(gjmbH.Hi()>48)
 
 }
 /**************************************************************************/
-ComplexMatrix & ionpars::cfeigenstates(Vector & gjmbH, double & T)
+void ionpars::cfeigenstates(ComplexMatrix *eigenstates,Vector & gjmbH, double & T)
 {   /*on input
     gJmbH	vector of effective field [meV]
       on output
@@ -994,7 +1012,8 @@ if(gjmbH.Hi()>48)
    int dj,i,j;
 //   complex <double> imag(0,1);
    dj=Hcf.Rhi();
-static ComplexMatrix eigenstates(0,dj,1,dj);
+// static ComplexMatrix eigenstates(0,dj,1,dj);
+   (*eigenstates) = ComplexMatrix(0,dj,1,dj);
    Matrix Ham(1,dj,1,dj);
    ComplexMatrix z(1,dj,1,dj);
    ComplexMatrix za(1,dj,1,dj);
@@ -1024,16 +1043,16 @@ static ComplexMatrix eigenstates(0,dj,1,dj);
    EigenSystemHermitean (Ham,En,zr,zi,sort,maxiter);
 
    for(i=1;i<=dj;++i){//eigenstates(0,i)=complex <double> (En(i),0);
-     for(j=1;j<=dj;++j){eigenstates(i,j)=complex <double> (zr(i,j),zi(i,j));
+     for(j=1;j<=dj;++j){(*eigenstates)(i,j)=complex <double> (zr(i,j),zi(i,j));
    }}
     //calculate partition sum
      double zz=0;double KBT,E0;KBT=T*KB;E0=En(1);
       for(j=1;j<=dj;++j){zz+=exp(-((En(j)-E0)/KBT));}
         // put boltzmann population into row 0 of eigenstates...
         for(j=1;j<=dj;++j)
-         {eigenstates(0,j)=complex<double>(En(j),exp(-(En(j)-E0)/KBT)/zz);}
+         {(*eigenstates)(0,j)=complex<double>(En(j),exp(-(En(j)-E0)/KBT)/zz);}
    
- return eigenstates;
+// return eigenstates;
 }
 
 /**************************************************************************/

@@ -144,7 +144,7 @@ void create_Vkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -297,7 +297,7 @@ void create_Dkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -452,7 +452,7 @@ void create_Lkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -642,7 +642,7 @@ void create_Wkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -797,7 +797,7 @@ void create_Akq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -959,7 +959,7 @@ void create_Bkq(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -1114,7 +1114,7 @@ void create_xW(einheitnr_in,einheitnr_out,ion,symmetrienr,modus,temp)
  
     ionennr     = isimplementiert(ion);
     dimj        = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -1491,7 +1491,7 @@ ITERATION *read_Vkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -1836,7 +1836,7 @@ ITERATION *read_Dkq(name,vsymmetrienr_vor)  /* Dkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -2105,7 +2105,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -2523,6 +2523,44 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
            }
         } 
 
+   /*read Dx2*/
+      if ((token = strstr (line, "Dx2"))!=NULL)
+        {          token+=strlen("Dx2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B1S(iteration) = strtod (token, NULL);
+            printf("Dx2=%g meV ", B1S(iteration) );
+              }
+           }
+        } 
+
+   /*read Dy2*/
+      if ((token = strstr (line, "Dy2"))!=NULL)
+        {          token+=strlen("Dy2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B2S(iteration) = strtod (token, NULL);
+            printf("Dy2=%g meV ", B2S(iteration) );
+              }
+           }
+        } 
+   /*read Dz2*/
+      if ((token = strstr (line, "Dz2"))!=NULL)
+        {          token+=strlen("Dz2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B3S(iteration) = strtod (token, NULL);
+            printf("Dz2=%g meV ", B3S(iteration) );
+              }
+           }
+        } 
+
      }
     }
     printf("\n");
@@ -2673,7 +2711,7 @@ ITERATION *read_Lkq(name,vsymmetrienr_vor)  /* Lkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -2938,7 +2976,7 @@ ITERATION *read_Wkq(name,vsymmetrienr_vor)  /* Wkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -3185,7 +3223,7 @@ ITERATION *read_Akq(name,vsymmetrienr_vor)  /* Akq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -3421,7 +3459,7 @@ ITERATION *read_Bkqnew(ion)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+  if(strncmp(ion,"S=",2)==0) /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -3503,6 +3541,9 @@ ITERATION *read_Bkqnew(ion)  /* Vkq aus file name lesen */
        B1(iteration) = 0.0;
         B2(iteration) = 0.0;
         B3(iteration) = 0.0;
+       B1S(iteration) = 0.0;
+        B2S(iteration) = 0.0;
+        B3S(iteration) = 0.0;
         HMAG(iteration) = calc_Bmag( DIMJ(iteration),GJ(iteration),myB,
                                      B1(iteration),
                                      B2(iteration),
@@ -3619,7 +3660,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
               }    
@@ -4037,6 +4078,44 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
            }
         } 
 
+   /*read Dx2*/
+      if ((token = strstr (line, "Dx2"))!=NULL)
+        {          token+=strlen("Dx2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B1S(iteration) = strtod (token, NULL);
+            printf("Dx2=%g meV ", B1S(iteration) );
+              }
+           }
+        } 
+
+   /*read Dy2*/
+      if ((token = strstr (line, "Dy2"))!=NULL)
+        {          token+=strlen("Dy2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B2S(iteration) = strtod (token, NULL);
+            printf("Dy2=%g meV ", B2S(iteration) );
+              }
+           }
+        } 
+   /*read Dz2*/
+      if ((token = strstr (line, "Dz2"))!=NULL)
+        {          token+=strlen("Dz2");
+         if (strstr (token, "=")!=NULL)
+           {while(strstr(token," ")==token)++token;
+            if(token ==strstr (token, "="))
+              {++token;while(strstr(token," ")==token)++token;
+                              B3S(iteration) = strtod (token, NULL);
+            printf("Dz2=%g meV ", B3S(iteration) );
+              }
+           }
+        } 
+
      }
     }
     fclose(fp);printf("\n");
@@ -4147,7 +4226,7 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -4397,7 +4476,7 @@ ITERATION *read_xW(name,vsymmetrienr_vor)  /* x,W aus file name lesen */
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    
@@ -5682,7 +5761,7 @@ READ *read_einheit(name,art)
     anz_nn    = 0;
     ionennr   = isimplementiert(ion);
     dimj      = IONENIMP[ ionennr ].dimj;
-    if(dimj==0) /* S=... ion !! extract dimj from string ion */
+    if(strncmp(ion,"S=",2)==0)  /* S=... ion !! extract dimj from string ion */
      {dimj =(int)( 2 * strtod (ion+2, NULL)+1);
       IONENIMP[ ionennr ].dimj=dimj;
      }    

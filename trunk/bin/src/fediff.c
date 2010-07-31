@@ -49,8 +49,9 @@ double fecalc(Vector Hex, double T, par &inputpars, spincf &sps, mfcf &mf, doubl
             for (l=1;l<=inputpars.nofatoms;++l)
             {
                ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1] = 
-                  new ComplexMatrix((*inputpars.jjj[l]).est.Rlo(),(*inputpars.jjj[l]).est.Rhi(),(*inputpars.jjj[l]).est.Clo(),(*inputpars.jjj[l]).est.Chi());
-               (*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1])=(*inputpars.jjj[1]).est;
+                  new ComplexMatrix((*inputpars.jjj[l]).mcalc_parstorage.Rlo(),(*inputpars.jjj[l]).mcalc_parstorage.Rhi(),
+		                    (*inputpars.jjj[l]).mcalc_parstorage.Clo(),(*inputpars.jjj[l]).est.Chi());
+               (*ests[inputpars.nofatoms*sps.in(i-1,j-1,k-1)+l-1])=(*inputpars.jjj[l]).mcalc_parstorage;
             }
 
    FILE * fin_coq;
@@ -313,7 +314,7 @@ int main (int argc, char **argv)
    //determine saturation momentum (used for scaling the plots, generation of qvectors)
    for(int l=1;l<=inputpars.nofatoms;++l)
    {
-      h1=0; (*inputpars.jjj[l]).blank_eigenstates(h1,T); // initialize eigenstate matrix
+      h1=0; (*inputpars.jjj[l]).mcalc_parameter_storage_init(h1,T); // initialize eigenstate matrix
    }
 // double fe;
   

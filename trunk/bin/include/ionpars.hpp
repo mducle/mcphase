@@ -46,7 +46,7 @@ class ionpars
    // functions needed to calculate thermal expectation value of moment  
    Vector & cfield (double & T,Vector & H, double & Z,double & U, ComplexMatrix & ests);
    void cfieldJJ(Vector & JJ,double & T, Vector & gjmbH, double & lnZs, double & U, ComplexMatrix & ests);
-   ComplexMatrix & cfeigenstates (Vector & H, double & T);
+   void cfeigenstates (ComplexMatrix *est, Vector & H, double & T);
    // and transition matrix elements
    int  cfielddm (int & tn,double & T,Vector &  heff, ComplexMatrix & mat,float & delta,ComplexMatrix & ests);
    int cfielddn(int & tn,double & th,double & ph,double & J0,double & J2,double & J4,double & J6,Vector & Zc,ComplexMatrix & est,double & T,ComplexMatrix & nat);
