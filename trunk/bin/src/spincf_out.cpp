@@ -397,16 +397,6 @@ fprintf(fout,"showpage\n");
 
  }
 
-// output for javaview
-void spincf::jvx(FILE * fout,char * text,cryststruct & cs,
-                 graphic_parameters & gp,
-                 double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl)
-              // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
-              // omega t= phase
-{gp.spins_wave_amplitude=0;gp.show_density=0;
- jvx_cd(fout,text,cs,gp,phase,savev_real,savev_imag,hkl);
-}
-
 int check_atom_in_big_unitcell(Vector & dd,Vector & maxv1,Vector & minv1,Matrix  &abc_in_ijk_Inverse){
             Vector dd1(1,3); dd1=abc_in_ijk_Inverse*dd;
 //	    Vector minv1(1,3); minv1=minv*abc_in_ijk_Inverse;
@@ -419,6 +409,7 @@ int check_atom_in_big_unitcell(Vector & dd,Vector & maxv1,Vector & minv1,Matrix 
            {return 0;}
 }
 
+//output for javaview
 void spincf::jvx_cd(FILE * fout,char * text,cryststruct & cs,graphic_parameters & gp,
                     double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl)
 { int i,j,k,l,ctr=0;int i1,j1,k1;
@@ -622,7 +613,7 @@ fprintf(fout,"        <points>\n");
              QR=(hkl*abc_in_ijk_Inverse)*dd;
              QR*=2*PI;
              xyz=magmom(i,j,k,l,cs.gJ[l])+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.magmom(i,j,k,l,cs.gJ[l])+sin(phase-QR)*savev_imag.magmom(i,j,k,l,cs.gJ[l]));
-//            printf("gJ=%g magmom=%g %g %g %g %g %g %g %g %g\n",cs.gJ[l],mom[in(i,j,k)](1),mom[in(i,j,k)](2),mom[in(i,j,k)](3),mom[in(i,j,k)](4),mom[in(i,j,k)](5),mom[in(i,j,k)](6),xyz(1),xyz(2),xyz(3));
+              //printf("gJ=%g magmom=%g %g %g %g %g %g %g %g %g\n",cs.gJ[l],mom[in(i,j,k)](1),mom[in(i,j,k)](2),mom[in(i,j,k)](3),mom[in(i,j,k)](4),mom[in(i,j,k)](5),mom[in(i,j,k)](6),xyz(1),xyz(2),xyz(3));
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
               //spins=savspins+(savev_real*cos(-phase) + savev_imag*sin(phase))*amplitude; // Q ri not considered for test !!!
@@ -750,7 +741,7 @@ for(l=1;l<=nofatoms;++l)
    density cd(gp.title,dtheta,dfi);int ndd;
    for (i=1;i<=1+(nofa-1)*gp.scale_view_1;++i){for(j=1;j<=1+(nofb-1)*gp.scale_view_2;++j){for(k=1;k<=1+(nofc-1)*gp.scale_view_2;++k){
    dd=pos(i,j,k,l, cs);
-   Vector moments(1,nofcomponents);
+   Vector moments(1,nofcomponents);//printf("nofcomp=%i\n",nofcomponents);
    double QR; // old: QR=hkl(1)*dd(1)/cs.abc(1)+hkl(2)*dd(2)/cs.abc(2)+hkl(3)*dd(3)/cs.abc(3);
    QR=(hkl*abc_in_ijk_Inverse)*dd;
    QR*=2*PI;
@@ -782,7 +773,7 @@ fprintf(fout,"      </pointSet>\n");
 fprintf(fout,"      <lineSet  arrow=\"show\" line=\"show\" color=\"show\">\n");
 fprintf(fout,"        <lines>\n");
   for(i=0;i<ctr;++i)fprintf(fout,"          <l>%i %i</l>\n",2*i,2*i+1);
-if (strncmp(gp.title,"currdensity",10)==0){
+if (strncmp(gp.title+14,"currdensity",10)==0){
   fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",220,153,0);
                                              }
  else
@@ -873,16 +864,16 @@ for(l=1;l<=nofatoms;++l)
     offset+=pointnr+1;
  }
  //fprintf(fout,"<color type=\"rgb\">100 230 255</color>\n");
- if(radius>0)
+ if(radius>0||(strncmp(gp.title,"divergence",10)==0&&gp.threshhold>0))
  {fprintf(fout,"<color type=\"rgb\"> 255 0 0</color>\n");}
- else if (radius<0)
+ else if (radius<0||(strncmp(gp.title,"divergence",10)==0&&gp.threshhold<0))
  {fprintf(fout,"<color type=\"rgb\">0  0 255</color>\n");}
  else
  {
  if(strncmp(gp.title,"chargedensity",10)==0){
   fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",0,(int)(gp.show_density*((l*97)%256)),(int)(255*gp.show_density));
                                              }
- else if (strncmp(gp.title,"currdensity",10)==0){
+ else if (strncmp(gp.title+14,"currdensity",10)==0){
   fprintf(fout,"<color type=\"rgb\">%i %i %i </color>\n",200+(int)(gp.show_density*((l*97)%56)),153,0);
                                              }
  else
@@ -970,29 +961,29 @@ void spincf::cd(FILE * fout,cryststruct & cs, graphic_parameters & gp,
    for(i0=-1;i0<=1;++i0){for(j0=-1;j0<=1;++j0){for(k0=-1;k0<=1;++k0){
    for (i1=1;i1<=nofa;++i1){for(j1=1;j1<=nofb;++j1){for(k1=1;k1<=nofc;++k1){
    dd0=pos(i0*nofa+i1,j0*nofb+j1,k0*nofc+k1,l, cs);
-  //printf("%i %i %i\n",i1,j1,k1);
+ 
    Vector moments(1,nofcomponents);
-   Vector momSx(1,49),momLx(1,49),momSy(1,49),momLy(1,49),momSz(1,49),momLz(1,49);
+   density cd(gp.title,6,6);
+//   Vector momSx(1,49),momLx(1,49),momSy(1,49),momLy(1,49),momSz(1,49),momLz(1,49);
    double QR; // old: QR=hkl(1)*dd0(1)/cs.abc(1)+hkl(2)*dd0(2)/cs.abc(2)+hkl(3)*dd0(3)/cs.abc(3);
    QR=(hkl*abc_in_ijk_Inverse)*dd0;
    QR*=2*PI;int i1r=i1,j1r=j1,k1r=k1;
-//   while(i1r<=0)i1r+=nofa;while(i1r>nofa)i1r-=nofa;
-//   while(j1r<=0)j1r+=nofb;while(j1r>nofb)j1r-=nofb;
-//   while(k1r<=0)k1r+=nofc;while(k1r>nofc)k1r-=nofc;
+
                 for(ndd=1;ndd<=savev_real.nofcomponents;++ndd)
    {moments(ndd)=moment(i1r,j1r,k1r,l)(ndd)+gp.spins_wave_amplitude*(cos(-phase+QR)*savev_real.moment(i1r,j1r,k1r,l)(ndd)+sin(phase-QR)*savev_imag.moment(i1r,j1r,k1r,l)(ndd));}
-   if(strncmp(gp.title,"momdensity",10)==0){if(nofcomponents>=3*49)
-                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);momLx(i1i)=moments(i1i+3*49);momLy(i1i)=moments(i1i+4*49);momLz(i1i)=moments(i1i+5*49);}}
-                                            else
-                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momLx(i1i)=moments(i1i+49);}}
-                                           }
-   else if (strncmp(gp.title,"orbmomdensity",10)==0&&nofcomponents>=3*49)
-                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}}
-   else if (strncmp(gp.title,"spindensity",10)==0&&nofcomponents>=3*49)
-                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);}}
-   else if(strncmp(gp.title,"currdensity",10)==0){
-                                            int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}
-                                                 }
+    cd.moments_init(moments);
+//   if(strncmp(gp.title+14,"momdensity",10)==0){if(nofcomponents>=3*49)
+//                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);momLx(i1i)=moments(i1i+3*49);momLy(i1i)=moments(i1i+4*49);momLz(i1i)=moments(i1i+5*49);}}
+//                                            else
+//                                            {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momLx(i1i)=moments(i1i+49);}}
+//                                           }
+//   else if (strncmp(gp.title+14,"orbmomdensity",10)==0&&nofcomponents>=3*49)
+//                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}}
+//   else if (strncmp(gp.title+14,"spindensity",10)==0&&nofcomponents>=3*49)
+//                                           {int i1i;for(i1i=1;i1i<=49;++i1i){momSx(i1i)=moments(i1i);momSy(i1i)=moments(i1i+49);momSz(i1i)=moments(i1i+2*49);}}
+//   else if(strncmp(gp.title+14,"currdensity",10)==0){
+//                                            int i1i;for(i1i=1;i1i<=49;++i1i){momLx(i1i)=moments(i1i);momLy(i1i)=moments(i1i+49);momLz(i1i)=moments(i1i+2*49);}
+//                                                 }
 
           // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase
@@ -1030,42 +1021,44 @@ void spincf::cd(FILE * fout,cryststruct & cs, graphic_parameters & gp,
      theta=acos(dd(3)/R);Rxy=sqrt(dd(1)*dd(1)+dd(2)*dd(2));if(Rxy>SMALL){fi=acos(dd(1)/Rxy);}else{fi=0;}
                          if (dd(2)<0)fi=-fi;
                               }
-    if(strncmp(gp.title,"spindensity",10)==0)
-    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {if(nofcomponents>=3*49)
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz));}
-     else
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,moments);}
-    }
 
-    if(strncmp(gp.title,"orbmomdensity",10)==0)
+    ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=cd.denscalc(theta,fi,R,moments,ionpar);
+//    if(strncmp(gp.title+14,"spindensity",10)==0)
     // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {if(nofcomponents>=3*49)
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
-     else
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.orbmomdensity_calc(theta,fi,R,moments);}
-    }
-    if(strncmp(gp.title,"momdensity",10)==0)
-    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
-    {if(nofcomponents>=3*49)
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz)+ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
-     else
-     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,momSx)
-                                                  +ionpar.orbmomdensity_calc(theta,fi,R,momLx);
-    }}
-    if(strncmp(gp.title,"currdensityabsvalue",15)==0)
-    // here we calculate the currdensity of ion
-    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz));
-    }
-    if(strncmp(gp.title,"currdensityprojection",15)==0)
-    // here we calculate the currdensity of ion
-    {Vector pr(1,3); extract(gp.title,"i",pr(1));extract(gp.title,"j",pr(2));extract(gp.title,"k",pr(3));
-     ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=pr*ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz);
-    }
+//    {if(nofcomponents>=3*49)
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz));}
+//     else
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,moments);}
+//    }
 
-    if(strncmp(gp.title,"chargedensity",10)==0)
+//    if(strncmp(gp.title+14,"orbmomdensity",10)==0)
+    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
+//    {if(nofcomponents>=3*49)
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
+//     else
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.orbmomdensity_calc(theta,fi,R,moments);}
+//    }
+//    if(strncmp(gp.title+14,"momdensity",10)==0)
+    // here we calculate the spindensity of ion  (negative sign, because rocalc does give positive values)
+//    {if(nofcomponents>=3*49)
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.spindensity_calc(theta,fi,R,momSx,momSy,momSz)+ionpar.orbmomdensity_calc(theta,fi,R,momLx,momLy,momLz));}
+//     else
+//     {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=ionpar.spindensity_calc(theta,fi,R,momSx)
+//                                                  +ionpar.orbmomdensity_calc(theta,fi,R,momLx);
+//    }}
+//    if(strncmp(gp.title,"abs value  of currdensity",25)==0)
+    // here we calculate the currdensity of ion
+//    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=Norm(ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz));
+//    }
+//    if(strncmp(gp.title,"projection of currdensity",25)==0)
+    // here we calculate the currdensity of ion
+//    {Vector pr(1,3); extract(gp.title,"i",pr(1));extract(gp.title,"j",pr(2));extract(gp.title,"k",pr(3));
+//     ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]+=pr*ionpar.currdensity_calc(theta,fi,R,momLx,momLy,momLz);
+//    }
+
+//    if(strncmp(gp.title,"chargedensity",10)==0)
     // here we calculate the chargedensity of ion  (negative sign, because rocalc does give positive values)
-    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]-=ionpar.rocalc(theta,fi,R,moments);}
+//    {ro[((i-1)*nofpointsj+(j-1))*nofpointsk+k-1]-=ionpar.rocalc(theta,fi,R,moments);}
    // printf("%g %g %g %g\n",R,theta,fi,ro);
         }
    } // end if rijk is in primitive magnetic unit cell

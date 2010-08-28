@@ -10,7 +10,7 @@
                       // delta and therefore being included into output 
 		      // transitions of single ions less then SMALL have in Mijkl wn/kT instead of wn-wn'
 		      // !!! must match SMALL in jjjpar.cpp !!!!
-#define SMALLINT 1e-4 // small intensity treshhold
+#define SMALLINT 1e-4 // small intensity treshhold in barn/f.u.
 #define SMALLEDIF 1e-5 // small difference in calculation of transition energy
                        // used to give error if recalculation of mcdisp.trs
 		       // energies gives different results than file
@@ -44,7 +44,7 @@
 #define EVENT_INIT(e) e = CreateEvent (NULL, TRUE, FALSE, NULL)
 #define EVENT_SIG(e)  SetEvent(e)
 #endif
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 
 // ----------------------------------------------------------------------------------- //
 // Declares a struct to store all the information needed for each disp_calc iteration
@@ -253,6 +253,29 @@ void sortE(Vector & d,ComplexMatrix & z)
     }
 }
 
+
+// some function to efficiently output standard deviations
+void staout(FILE*fout,double & sta,double & sta_int,double & sta_without_antipeaks,double & sta_int_without_antipeaks,double & sta_without_weights,double & sta_int_without_weights,double & sta_without_antipeaks_weights,double & sta_int_without_antipeaks_weights)
+    {
+    fprintf(fout,"#definitions:\n\n");
+    fprintf(fout,"#sta                               = sum_i |weight(i)|*[Eexp(i) - nearestEcalc]^[2*sign(weight(i))]\n");
+    fprintf(fout,"#sta_int                           = sum_i |weight(i)|*[Eexp(i) - nearestEcalc_with_Int>%gb/srf.u.]^[2*sign(weight(i))]\n",SMALLINT);
+    fprintf(fout,"#sta_without_antipeaks             = sum_i_with_weight(i)>0  weight(i)*[Eexp(i) - nearestEcalc]^2\n");
+    fprintf(fout,"#sta_int_without_antipeaks         = sum_i_with_weight(i)>0  weight(i)*[Eexp(i) - nearestEcalc_with_Int>%gb/srf.u.]^2\n",SMALLINT);
+    fprintf(fout,"#sta_without_weights               = sum_i [Eexp(i) - nearestEcalc]^[2*sign(weight(i))]\n");
+    fprintf(fout,"#sta_int_without_weights           = sum_i [Eexp(i) - nearestEcalc_with_Int>%gb/srf.u.]^[2*sign(weight(i))]\n",SMALLINT);
+    fprintf(fout,"#sta_without_antipeaks_weights     = sum_i_with_weight(i)>0 [Eexp(i) - nearestEcalc]^2\n");
+    fprintf(fout,"#sta_int_without_antipeaks_weights = sum_i_with_weight(i)>0 [Eexp(i) - nearestEcalc_with_Int>%gb/srf.u.]^2\n\n",SMALLINT);
+    fprintf(fout,"#!sta= %8.6g \n",sta);
+    fprintf(fout,"#!sta_int= %8.6g \n",sta_int);
+    fprintf(fout,"#!sta_without_antipeaks= %8.6g \n",sta_without_antipeaks);
+    fprintf(fout,"#!sta_int_without_antipeaks= %8.6g \n",sta_int_without_antipeaks);
+    fprintf(fout,"#!sta_without_weights= %8.6g \n",sta_without_weights);
+    fprintf(fout,"#!sta_int_without_weights= %8.6g \n",sta_int_without_weights);
+    fprintf(fout,"#!sta_without_antipeaks_weights= %8.6g \n",sta_without_antipeaks_weights);
+    fprintf(fout,"#!sta_int_without_antipeaks_weights= %8.6g \n",sta_int_without_antipeaks_weights);
+    }
+
 // procedure to calculate the dispersion
 void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do_createtrs,int do_readtrs, int do_verbose,int maxlevels,double minE,double maxE,double epsilon, const char * filemode)
 { int i,j,k,l,ll,s,ss,i1,i2,j1,j2,k1,k2,l1,l2,t1,t2,b,bb,m,n,tn;
@@ -269,7 +292,8 @@ void dispcalc(inimcdis & ini,par & inputpars,int do_Erefine,int do_jqfile,int do
   float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
   int do_gobeyond=1;
   double E;
-  double sta=0,sta_int=0;
+  double sta=0,sta_int=0,sta_without_antipeaks=0,sta_int_without_antipeaks=0;
+  double sta_without_weights=0,sta_int_without_weights=0,sta_without_antipeaks_weights=0,sta_int_without_antipeaks_weights=0;
   double jqsta=-1.0e10;  double jqsta_int=0;
   double jq0=0;
   Vector hkl(1,3),q(1,3);
@@ -962,7 +986,9 @@ if (do_jqfile==1){
                    // myPrintComplexMatrix(stdout,Tau); 
                     fprintf(stdout,"#saving the following eigenvalues (meV) to mcdisp.qom:\n");}
    int dim=3;
-   if (ini.hkllist==1){dim=(int)ini.hkls[counter][0]-3;}
+   if (ini.hkllist==1){dim=(int)((ini.hkls[counter][0]-3)/4);
+                       if(ini.hklfile_start_index[0]>0)for(int is=1;is<=ini.hklfile_start_index[0];++is)if(ini.hklfile_start_index[is]==counter)fprintf(foutqei,"#!hklfile_number=%i\n",is);
+                      }
    fprintf (fout, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g ",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3));
 
    for (i=1;i<=dimA;++i){
@@ -985,7 +1011,12 @@ if (do_jqfile==1){
 diffint=0;diffintbey=0;
                   if(do_gobeyond)do_gobeyond=intcalc_beyond_ini(ini,inputpars,md,do_verbose,hkl);
                   Vector dd(1,dim),dd_int(1,dim);  dd+=100000.0;dd_int+=100000.0;
-#ifndef _THREADS  
+                  Vector dd1(1,dim),dd1_int(1,dim);  dd1+=100000.0;dd1_int+=100000.0;
+                  Vector dd_without_antipeaks(1,dim),dd_int_without_antipeaks(1,dim);  dd_without_antipeaks+=100000.0;dd_int_without_antipeaks+=100000.0;
+                  Vector dd_without_weights(1,dim),dd_int_without_weights(1,dim);  dd_without_weights+=100000.0;dd_int_without_weights+=100000.0;
+                  Vector dd_without_antipeaks_weights(1,dim),dd_int_without_antipeaks_weights(1,dim);  dd_without_antipeaks_weights+=100000.0;dd_int_without_antipeaks_weights+=100000.0;
+
+ #ifndef _THREADS
                      ComplexMatrix chi(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
                      ComplexMatrix chibey(1,md.nofcomponents*dimA,1,md.nofcomponents*dimA);
                      Matrix pol(1,md.nofcomponents,1,md.nofcomponents);
@@ -1064,9 +1095,38 @@ diffint=0;diffintbey=0;
 #endif
                      if (ini.hkllist==1)
 	             {double test; // add to sta distance to nearest measured peak squared
-	              for (j1=1;j1<=ini.hkls[counter][0]-3;++j1)
-	              {if ((test=fabs(En(i)-ini.hkls[counter][j1+3]))<dd(j1))dd(j1)=test;
-                       if ((test=fabs(En(i)-ini.hkls[counter][j1+3]))<dd_int(j1)&&ints(i)>1e-4)dd_int(j1)=test;
+ 	              for (j1=1;4*j1<=ini.hkls[counter][0]-3;++j1)
+	              {if ((test=fabs(En(i)-ini.hkls[counter][4*j1]))<dd1(j1)){dd1(j1)=test;double weight=ini.hkls[counter][4*j1+1];
+                                                                               if(weight>0){dd(j1)=sqrt(weight)*test;  // weight>0
+                                                                                            dd_without_antipeaks(j1)=sqrt(weight)*test;
+                                                                                            dd_without_weights(j1)=test;
+                                                                                            dd_without_antipeaks_weights(j1)=test;}
+                                                                               if(weight==0){dd(j1)=0.0;  // weight=0
+                                                                                             dd_without_antipeaks(j1)=0;
+                                                                                             dd_without_weights(j1)=test;
+                                                                                             dd_without_antipeaks_weights(j1)=test;}
+                                                                               if(weight<0){if(fabs(test)<SMALL)test=SMALL;// prevents division by zero
+                                                                                            dd(j1)=sqrt(-weight)/test;  // weight<0
+                                                                                            dd_without_antipeaks(j1)=0;
+                                                                                            dd_without_weights(j1)=1/test;
+                                                                                            dd_without_antipeaks_weights(j1)=0;}
+                                                                               }
+                       if ((test=fabs(En(i)-ini.hkls[counter][4*j1]))<dd1_int(j1)&&ints(i)>SMALLINT){dd1_int(j1)=test;
+                                                                               double weight=ini.hkls[counter][4*j1+1];
+                                                                               if(weight>0){dd_int(j1)=sqrt(weight)*test;  // weight>0
+                                                                                            dd_int_without_antipeaks(j1)=sqrt(weight)*test;
+                                                                                            dd_int_without_weights(j1)=test;
+                                                                                            dd_int_without_antipeaks_weights(j1)=test;}
+                                                                               if(weight==0){dd_int(j1)=0.0;  // weight=0
+                                                                                             dd_int_without_antipeaks(j1)=0;
+                                                                                             dd_int_without_weights(j1)=test;
+                                                                                             dd_int_without_antipeaks_weights(j1)=test;}
+                                                                               if(weight<0){if(fabs(test)<SMALL)test=SMALL;// prevents division by zero
+                                                                                            dd_int(j1)=sqrt(-weight)/test;  // weight<0
+                                                                                            dd_int_without_antipeaks(j1)=0;
+                                                                                            dd_int_without_weights(j1)=1/test;
+                                                                                            dd_int_without_antipeaks_weights(j1)=0;}
+                                                                               }
                       }
 	             }
 
@@ -1114,6 +1174,12 @@ diffint=0;diffintbey=0;
 #endif
     fprintf (foutdstot, " %4.4g %4.4g %4.4g %4.4g %4.4g %4.4g  %4.4g %4.4g %4.4g",ini.Ha,ini.Hb,ini.Hc,ini.T,hkl(1),hkl(2),hkl(3),diffint,diffintbey);
     sta+=dd*dd;sta_int+=dd_int*dd_int;
+    sta_without_antipeaks+=dd_without_antipeaks*dd_without_antipeaks;
+    sta_int_without_antipeaks+=dd_int_without_antipeaks*dd_int_without_antipeaks;
+    sta_without_weights+=dd_without_weights*dd_without_weights;
+    sta_int_without_weights+=dd_int_without_weights*dd_int_without_weights;
+    sta_without_antipeaks_weights+=dd_without_antipeaks_weights*dd_without_antipeaks_weights;
+    sta_int_without_antipeaks_weights+=dd_int_without_antipeaks_weights*dd_int_without_antipeaks_weights;
 
               //initialize output file for display
             errno = 0;
@@ -1295,21 +1361,11 @@ diffint=0;diffintbey=0;
       fprintf(jqfile,"#!sta4=%g\n",jqsta_int);fclose(jqfile);}
     else
      {
-    fprintf(fout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
-    fprintf(fout,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
-    fprintf (fout, "#!sta= %8.6g \n",sta);
-    fprintf (fout, "#!sta_int= %8.6g \n",sta_int);
 
-    fprintf(foutqei,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
-    fprintf(foutqei,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
-    fprintf (foutqei, "#!sta= %8.6g \n",sta);
-    fprintf (foutqei, "#!sta_int= %8.6g \n",sta_int);
+      staout(fout,sta,sta_int,sta_without_antipeaks,sta_int_without_antipeaks,sta_without_weights,sta_int_without_weights,sta_without_antipeaks_weights,sta_int_without_antipeaks_weights);
+      staout(foutqei,sta,sta_int,sta_without_antipeaks,sta_int_without_antipeaks,sta_without_weights,sta_int_without_weights,sta_without_antipeaks_weights,sta_int_without_antipeaks_weights);
+      staout(stdout,sta,sta_int,sta_without_antipeaks,sta_int_without_antipeaks,sta_without_weights,sta_int_without_weights,sta_without_antipeaks_weights,sta_int_without_antipeaks_weights);
 
-    fprintf(stdout,"#definitions: sta= sum_i [Eexp(i) - nearestEcalc(i)]^2\n");
-    fprintf(stdout,"#             sta_int= sum_i [Eexp(i) - nearestEcalc_with_Int>0.1mb/srf.u.(i)]^2\n");
-    fprintf(stdout, "#!sta= %8.6g \n",sta);
-    fprintf(stdout, "#!sta_int= %8.6g \n",sta_int);
-   
     fclose(foutqei);
     fclose(foutqev);
     fclose(foutqee);

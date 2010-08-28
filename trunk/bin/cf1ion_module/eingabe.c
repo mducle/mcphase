@@ -43,42 +43,43 @@ extern DOUBLE    exp_();             /* definiert in ORTHO.C */
 extern VEKTOR *vr_alloc();    /* definiert in MATRIX.C */
 extern MATRIX *mx_alloc();    /* definiert in MATRIX.C */
  
-extern DOUBLE omegan0n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan1n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan2n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan3n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan4n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan5n();     /* definiert in CFIELD.C  */
-extern DOUBLE omegan6n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn0n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn1n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn2n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn3n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn4n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn5n();     /* definiert in CFIELD.C  */
-extern DOUBLE epn6n();     /* definiert in CFIELD.C  */
+extern DOUBLE omegan0n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan1n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan2n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan3n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan4n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan5n();     /* definiert in MAIN.C  */
+extern DOUBLE omegan6n();     /* definiert in MAIN.C  */
+extern DOUBLE epn0n();     /* definiert in MAIN.C  */
+extern DOUBLE epn1n();     /* definiert in MAIN.C  */
+extern DOUBLE epn2n();     /* definiert in MAIN.C  */
+extern DOUBLE epn3n();     /* definiert in MAIN.C  */
+extern DOUBLE epn4n();     /* definiert in MAIN.C  */
+extern DOUBLE epn5n();     /* definiert in MAIN.C  */
+extern DOUBLE epn6n();     /* definiert in MAIN.C  */
  
-extern INT    is_einheit_imp();  /* definiert in CFIELD.C */
-extern INT    isinlimits();      /* definiert in CFIELD.C */
-extern INT    isimplementiert(); /* definiert in CFIELD.C */
-extern INT    isreell();         /* definiert in CFIELD.C */
-extern DOUBLE a_tof();           /* definiert in CFIELD.C  */
-extern INT    a_toi();           /* definiert in CFIELD.C */
-extern CHAR  *a_tos();           /* definiert in CFIELD.C */
-extern INT    read_error();      /* definiert in CFIELD.C */
-extern INT    Bkq_error();       /* definiert in CFIELD.C */
+extern INT    is_einheit_imp();  /* definiert in MAIN.C */
+extern INT    isinlimits();      /* definiert in MAIN.C */
+extern INT    isimplementiert(); /* definiert in MAIN.C */
+extern INT    isreell();         /* definiert in MAIN.C */
+extern DOUBLE a_tof();           /* definiert in MAIN.C  */
+extern INT    a_toi();           /* definiert in MAIN.C */
+extern CHAR  *a_tos();           /* definiert in MAIN.C */
+extern INT    read_error();      /* definiert in MAIN.C */
+extern INT    Bkq_error();       /* definiert in MAIN.C */
 extern INT    write_title();     /* definiert in DIAHERMX.C*/
   
-extern CHAR  *leftcopy();        /* definiert in CFIELD.C */
+extern CHAR  *leftcopy();        /* definiert in MAIN.C */
  
-extern IONEN     IONENIMP[];     /* definiert in CFIELD.C  */
-extern EINHEIT   EINHEITIMP[];   /* definiert in CFIELD.C  */
-extern SYMMETRIE SYMLISTE[];     /* definiert in CFIELD.C  */
+extern IONEN     IONENIMP[];     /* definiert in MAIN.C  */
+extern EINHEIT   EINHEITIMP[];   /* definiert in MAIN.C  */
+extern SYMMETRIE SYMLISTE[];     /* definiert in MAIN.C  */
  
-extern ITERATION *iter_alloc();  /* definiert in CFIELD.C */
-extern ITERATION *auswahlregel();/* definiert in CFIELD.C */
-extern MATRIX    *calc_Bmag();   /* definiert in CFIELD.C */
-extern MATRIX    *calcBmol();    /* definiert in CFIELD.C */
+extern ITERATION *iter_alloc();  /* definiert in MAIN.C */
+extern ITERATION *auswahlregel();/* definiert in MAIN.C */
+extern MATRIX    *calc_Bmag();   /* definiert in MAIN.C */
+extern MATRIX    *calc_Bmag_D(); /* definiert in MAIN.C */
+extern MATRIX    *calcBmol();    /* definiert in MAIN.C */
 extern STEVENS   *calc_Pkq();    /* definiert in STEVENS.C */
 
 void drucke_par();
@@ -4168,10 +4169,13 @@ ITERATION *read_Bkq(name,vsymmetrienr_vor)  /* Vkq aus file name lesen */
  
     isinlimits(fp,name ,0, x1,x2,x3,MODUS(iteration) );
  
-    HMAG(iteration) = calc_Bmag( DIMJ(iteration),GJ(iteration),
+    HMAG(iteration) = calc_Bmag_D( DIMJ(iteration),GJ(iteration),
                                           myB,B1(iteration),
                                               B2(iteration),
-                                              B3(iteration) );
+                                              B3(iteration),
+                                              B1S(iteration),
+                                              B2S(iteration),
+                                              B3S(iteration) );
  
         B1MOL(iteration) = 0.0;
         B2MOL(iteration) = 0.0;

@@ -32,12 +32,15 @@ printf("***********************************************************\n");
     { printf ("\nprogram momdensplt - calculate moment density of a single ion\n\n\
                 use as: momdensplt threshhold T Ha Hb Hc i j k mcphas.sipf \n\n\
                     or: momdensplt threshhold T Ha Hb Hc mcphas.sipf \n\n\
+                    or: momdensplt threshhold T Ha Hb Hc -div mcphas.sipf \n\n\
                 - given is temperature T[K] and magnetic effective field H[T]\n\
 		- the moment density vector component along direction (i,j,k)\n\
                   is calculated (if omitted abs value of momdens is calc.)\n\
                 - crystal field  parameters Blm should be read from a \n\
 	          standard mcphas single ion property file mcphas.sipf \n\
-                options: if T<0 then no thermal boltzmann distribution is taken\n\
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
+                - if T<0 then no thermal boltzmann distribution is taken\n\
 		the statistical probability of each CF state has to be entered \n\
                 by hand.\n\
 		\n");
@@ -67,6 +70,9 @@ if (argc>9)
   xx/=rr;yy/=rr;zz/=rr;
   doijk=3;
   }
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
  FILE * fout;
 
  // read cf-parameters into class object jjjpar
@@ -76,7 +82,7 @@ if (argc>9)
   {fprintf(stderr,"************** WARNING **********************\n reading external single ion module with gJ not zero: gJ=%g - please check if calculation of density is supported !!!\n*********************************************\n",jjjps.gJ);}
 
   
-  int dim=49;if(doijk==0){dim=3*49;}
+  int dim=49;if(doijk<3){dim=3*49;}
 // Indices for momdensity
 //          0 not used
 //          0 1  2 3 4  5  6 7 8  9 10 11 1213141516 17 18 192021222324 25 26 27 28 29303132333435 36 37 38 39 40 414243444546474849
@@ -105,21 +111,28 @@ int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
   printf("calculating expectation values ....\n");
 //double lnz,u;
  // jjjps.mcalc(moms,T,h,lnz,u,jjjps.mcalc_parstorage);
-if(xx!=0||doijk==0)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
-if(yy!=0||doijk==0)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
-if(zz!=0||doijk==0)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
+if(xx!=0||doijk<3)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
+if(yy!=0||doijk<3)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
+if(zz!=0||doijk<3)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
  momS=xx*momentsx+yy*momentsy+zz*momentsz;
-if(xx!=0||doijk==0)jjjps.orbmomdensity_mcalc (momentlx,1, T, h, jjjps.mcalc_parstorage);
-if(yy!=0||doijk==0)jjjps.orbmomdensity_mcalc (momently,2, T, h, jjjps.mcalc_parstorage);
-if(zz!=0||doijk==0)jjjps.orbmomdensity_mcalc (momentlz,3, T, h, jjjps.mcalc_parstorage);
+if(xx!=0||doijk<3)jjjps.orbmomdensity_mcalc (momentlx,1, T, h, jjjps.mcalc_parstorage);
+if(yy!=0||doijk<3)jjjps.orbmomdensity_mcalc (momently,2, T, h, jjjps.mcalc_parstorage);
+if(zz!=0||doijk<3)jjjps.orbmomdensity_mcalc (momentlz,3, T, h, jjjps.mcalc_parstorage);
  momL=xx*momentlx+yy*momently+zz*momentlz;
 int i,nofpc=0;
+fout = fopen_errchk ("results/momdensplt.coeff", "w");
+fprintf(fout,"# coefficients for density calculation\n#T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
+printf("# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
 printf("#momdensity is expanded in tesseral harmonics Zlm\n\
 #   M(r).(%g,%g,%g)= sum_lm (aS(l,m) R^2(r)+ aL(l,m) F(r) Zlm(Omega)\n\
 #   with F(r)=1/r int_r^inf R^2(x) dx\n\
 #   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
+fprintf(fout,"#momdensity is expanded in tesseral harmonics Zlm\n\
+#   M(r).(%g,%g,%g)= sum_lm (aS(l,m) R^2(r)+ aL(l,m) F(r) Zlm(Omega)\n\
+#   with F(r)=1/r int_r^inf R^2(x) dx\n\
+#   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
    for(i=1;i<=49;++i){
-if(doijk>0){moments(i)=momS(i);moments(i+49)=momL(i);
+if(doijk==3){moments(i)=momS(i);moments(i+49)=momL(i);
                        printf(" aS(%i,%i) =%12.6f  ",k[i],q[i],moments(i));
                        printf(" aL(%i,%i) =%12.6f\n",k[i],q[i],moments(i+49));
            }
@@ -131,12 +144,19 @@ else
                        printf(" aLx(%i,%i) =%12.6f  ",k[i],q[i],momentlx(i));
                        printf(" aLy(%i,%i) =%12.6f  ",k[i],q[i],momently(i));
                        printf(" aLz(%i,%i) =%12.6f\n",k[i],q[i],momentlz(i));
+                       fprintf(fout," aSx(%i,%i) =%12.6f  ",k[i],q[i],momentsx(i));
+                       fprintf(fout," aSy(%i,%i) =%12.6f  ",k[i],q[i],momentsy(i));
+                       fprintf(fout," aSz(%i,%i) =%12.6f  ",k[i],q[i],momentsz(i));
+                       fprintf(fout," aLx(%i,%i) =%12.6f  ",k[i],q[i],momentlx(i));
+                       fprintf(fout," aLy(%i,%i) =%12.6f  ",k[i],q[i],momently(i));
+                       fprintf(fout," aLz(%i,%i) =%12.6f\n",k[i],q[i],momentlz(i));
              moments(i)=momentsx(i);moments(i+49)=momentsy(i);moments(i+2*49)=momentsz(i);
              moments(i+3*49)=momentlx(i);moments(i+4*49)=momently(i);moments(i+5*49)=momentlz(i);
 
            }
 }
 printf("\n");
+fclose(fout);
  graphic_parameters gp;
 gp.show_abc_unitcell=0;
 gp.show_primitive_crystal_unitcell=0;
@@ -176,7 +196,11 @@ if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp,cs.cffilenames,a
   gp.show_atoms=1;gp.showprim=1;
   gp.spins_scale_moment=0;
   gp.spins_show_static_moment_direction=0;
-  sprintf(gp.title,"momdensity M(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==3) sprintf(gp.title,"projection of momdensity M(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of momdensity div ML(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of momdensity |ML(r)|");
+  printf("%s\n",gp.title);
+
   fout = fopen_errchk ("results/momdensplt.jvx", "w");
    s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
   fclose (fout);
@@ -205,6 +229,7 @@ fprintf(stderr,"# * javaview results/momdensplt.jvx\n");
 fprintf(stderr,"# * displaycontour 2 3 4 results/momdensplti.grid\n");
 fprintf(stderr,"# * displaycontour 1 3 4 results/momdenspltj.grid\n");
 fprintf(stderr,"# * displaycontour 1 2 4 results/momdenspltk.grid\n");
+fprintf(stderr,"# * saved density mesh in results/momdensplt.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;

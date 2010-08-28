@@ -47,7 +47,7 @@ par::par (const char *filejjj)
    extract(instr,"r1c",r[3][1]); extract(instr,"r2c",r[3][2]); extract(instr,"r3c",r[3][3]);
    extract(instr,"nofatoms",nofatoms);extract(instr,"nofcomponents",nofcomponents); 
 		  if(feof(fin_coq)!=0)
-                    {fprintf(stderr,"ERROR reading header of file mcphas.j: no line ****** found\n");exit(EXIT_FAILURE);}
+                    {fprintf(stderr,"ERROR reading header of file %s: line '#! nofatoms=...' not found\n",filejjj);exit(EXIT_FAILURE);}
   }
   if(nofatoms>MAX_NOF_ATOMS_IN_PRIMITIVE_CRYST_UNITCELL)
   {fprintf(stderr,"ERROR reading mcphas.j: maximum number of atoms in unit cell exceeded - enlarge it in par.hpp and recompile\n");exit(EXIT_FAILURE);}

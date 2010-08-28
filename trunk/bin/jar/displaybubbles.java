@@ -6,12 +6,17 @@
  */
 
 //package demo;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Rectangle2D;
 
 import java.awt.Color;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
-import javax.swing.JPanel;
+import javax.swing.*;
+//import javax.swing.JButton;
+//import javax.swing.SwingConstants;
 import java.io.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.title.LegendTitle;
@@ -20,6 +25,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYBubbleRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.DefaultXYZDataset;
 import org.jfree.data.xy.XYZDataset;
@@ -33,7 +40,10 @@ import com.sun.image.codec.jpeg.JPEGImageEncoder;
  * A bubble chart demo.
  */
 public class displaybubbles extends ApplicationFrame {
- Button bRot=new Button("save display.jpg");                       //erstellt einen Button
+ JButton bRot=new JButton("save display.jpg");                       //erstellt einen Button
+ Box.Filler bRot1=new Box.Filler (new Dimension(350,10),new Dimension(350,10),new Dimension(370,10));                       //erstellt einen Button
+// AbstractButton bRot= new AbstractButton();
+ static int noffiles;
  static String[] file;
  static long[] lastmod;
  static int[] colx;
@@ -47,6 +57,7 @@ public class displaybubbles extends ApplicationFrame {
  static DefaultXYZDataset dataset;
  static JFreeChart chart;
  static JPanel chartPanel;
+// static JFrame displayFrame;
     /**
      * A demonstration application showing a bubble chart.
      *
@@ -54,11 +65,28 @@ public class displaybubbles extends ApplicationFrame {
      */
     public displaybubbles(String title) {
         super(title);
+        //displayFrame= new JFrame();
         chartPanel = createDemoPanel();
+        //bRot.setHorizontalAlignment(SwingConstants.LEFT);
+        //chartPanel.add(bRot);
         chartPanel.setPreferredSize(new java.awt.Dimension(500, 270));
+        //chartPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
         setContentPane(chartPanel);
-        chartPanel.setAlignmentY(Component.LEFT_ALIGNMENT);
-        chartPanel.add(bRot);
+          // get the top-level container in the Frame (= Window)
+        // bRot.setAlignmentY(Component.RIGHT_ALIGNMENT);
+        //bRot.setLocation(10,10);
+        //bRot.doLayout();
+         //bRot.setSize(100,100);
+        //bRot.setBounds(10,10,40,40);
+        //bRot.setOpaque(true);
+        //setLayout(new BorderLayout());
+        //add(bRot,BorderLayout.NORTH);
+        //add(displayFrame,BorderLayout.SOUTH);
+        //setLayout(new FlowLayout(0));
+        //setLayout(new CardLayout());
+         //bRot.list();
+        add(bRot1);
+        add(bRot);
 
    bRot.addActionListener(new ActionListener(){
     public void actionPerformed(ActionEvent ed){
@@ -99,10 +127,22 @@ public class displaybubbles extends ApplicationFrame {
         plot.setBackgroundPaint(Color.white);
         plot.setForegroundAlpha(1.0f);
 
-        XYItemRenderer renderer = plot.getRenderer();
+        XYBubbleRenderer renderer = ( XYBubbleRenderer)plot.getRenderer();
+//    XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
         renderer.setSeriesPaint(0, Color.blue);
         renderer.setSeriesPaint(1, Color.red);
         renderer.setSeriesPaint(2, Color.green);
+        renderer.setSeriesPaint(3, Color.black);
+        renderer.setSeriesPaint(4, Color.orange);
+        renderer.setSeriesPaint(5, Color.pink);
+           //renderer.setPlotShapes(true);
+           //renderer.setShapesFilled(true);
+          //renderer.setSeriesShapesVisible(0, true);
+          //renderer.setSeriesShapesVisible(1, true);
+          //renderer.setSeriesShapesVisible(2, true);
+            renderer.setSeriesShape(0, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
+            renderer.setSeriesShape(1, new Rectangle2D.Double(-3.0, -3.0, 6.0, 6.0));
+           // renderer.setSeriesShape(1, ShapeUtilities.createDiamond(4.0f));
 
         // increase the margins to account for the fact that the auto-range
         // doesn't take into account the bubble size...
@@ -151,8 +191,8 @@ public class displaybubbles extends ApplicationFrame {
      * @param args  ignored.
      */
     public static void main(String[] args) {
-          String ss;
-      if (args.length<3)
+          String ss; String s;
+      if (args.length<1)
       {System.out.println("- too few arguments...\n");
        System.out.println("  program displaybubbles - show and watch data file by viewing a xy graphic on screen\n\n");
        System.out.println("use as:  displaybubbles xcol ycol intcol filename [xcol1 ycol1 intcol filename1 ...]\n\n");
@@ -160,29 +200,33 @@ public class displaybubbles extends ApplicationFrame {
        System.out.println("	 filename ..... filename of datafile\n\n");
        System.exit(0);
       }
-       file = new String[args.length/3];
-       lastmod = new long[args.length/3];
-       colx = new int[args.length/3];
-       coly = new int[args.length/3];
-       colint = new int[args.length/3];
+       file = new String[5];
+       lastmod = new long[5];
+       colx = new int[5];
+       coly = new int[5];
+       colint = new int[5];
        Double p = new Double(0.0);
        //      System.out.println(sx+" "+sy);
        //      p.valueOf(strLine);
        //    double[] myDatax = {};
        int j=0;
        String title="displaybubbles";
-       for(int i=0; i<args.length-1;	i+=4)
-       {file[j]=args[i+3];lastmod[j]=0;
-       Integer pp;
-       ss=args[i];
-       colx[j]=p.valueOf(ss).intValue();
-       ss=args[i+1];
-       coly[j]=p.valueOf(ss).intValue();
-       ss=args[i+2];
-       colint[j]=p.valueOf(ss).intValue();
-       ++j; 
-       title=title+" "+args[i]+" "+args[i+1]+" "+args[i+2]+" "+args[i+3];
-       }
+       s=args[0];s=TrimString(s);
+       for(int i=0;s.length()>0;	i+=0)
+       {Integer pp;
+       ss=FirstWord(s);
+       colx[j]=p.valueOf(ss).intValue();       title=title+" "+ss;
+       s=DropWord(s); if (s.length()==0){++i;s=args[i];s=TrimString(s);}
+       ss=FirstWord(s);
+       coly[j]=p.valueOf(ss).intValue();       title=title+" "+ss;
+       s=DropWord(s); if (s.length()==0){++i;s=args[i];s=TrimString(s);}
+       ss=FirstWord(s);
+       colint[j]=p.valueOf(ss).intValue();       title=title+" "+ss;
+       s=DropWord(s); if (s.length()==0){++i;s=args[i];s=TrimString(s);}
+       ss=FirstWord(s);
+       file[j]=ss;lastmod[j]=0; title=title+" "+ss;++j;
+       s=DropWord(s); if (s.length()==0&&i<args.length-1){++i;s=args[i];s=TrimString(s);}
+       }noffiles=j;
         displaybubbles demo = new displaybubbles(title);
         demo.pack();
         RefineryUtilities.centerFrameOnScreen(demo);
@@ -212,13 +256,13 @@ public class displaybubbles extends ApplicationFrame {
 
             File fileIni;
            int filechanged=0;
-           for (int i=0;i<file.length;++i)
+           for (int i=0;i<noffiles;++i)
                   {fileIni = new File(file[i]);
                    if(fileIni.lastModified()!=lastmod[i]){lastmod[i]=fileIni.lastModified();filechanged=1;}
                   }
        if(filechanged==1)
       { try{
-           for (int i=0;i<file.length;++i)
+           for (int i=0;i<noffiles;++i)
            {           
             String s="";
             //XYDataset ds = chart.getXYPlot().getDataset(i);
@@ -295,7 +339,7 @@ public class displaybubbles extends ApplicationFrame {
                if (cx>0) {sx=sx.substring(0,cx);}
                if (cy>0) {sy=sy.substring(0,cy);}
                if (cint>0) {sint=sint.substring(0,cint);}
-              //System.out.println(sx+" "+sy+" "+sint);
+             // System.out.println(sx+" "+sy+" "+sint);
 
                Double p = new Double(0.0);
                try{data[1][j]=p.parseDouble(sx);
@@ -356,18 +400,20 @@ public class displaybubbles extends ApplicationFrame {
        fw=strSource.substring(iPos);
        fw=TrimString(fw); 
        }
+       else
+       {fw="";}
  return(fw); 
  }
 
  static private String TrimString(String strSource)
  {
-    while ((strSource.startsWith(" "))
+    while ((strSource.startsWith(" ")) || (strSource.startsWith("\""))
       && (strSource.length() > 0))
       {
         strSource = strSource.substring(1, strSource.length());
       }
 
-    while ((strSource.endsWith(" "))
+    while ((strSource.endsWith(" "))|| (strSource.startsWith("\""))
         && (strSource.length() > 0))
       {
         strSource = strSource.substring(0, strSource.length() - 1);

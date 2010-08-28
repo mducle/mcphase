@@ -17,6 +17,7 @@ typedef void fnc_t();
 #include<martin.h>
 #include<ionpars.hpp>
 #include<myev.h>
+#include<stdlib.h>
 
 
 class par;
@@ -195,6 +196,14 @@ Vector spindensity_calc (double & teta,double & fi,double & R, Vector & momentsx
 double orbmomdensity_calc (double & teta,double & fi,double & R, Vector & moments);
 Vector orbmomdensity_calc (double & teta,double & fi,double & R, Vector & momentsx, Vector & momentsy, Vector & momentsz);
 Vector currdensity_calc (double & teta,double & fi,double & R, Vector & momentlx, Vector & momently, Vector & momentlz);
+
+//***********************************************************************
+// subs for calculation gradient of spin and orbital moment density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+ Matrix gradspindensity_calc(double & teta,double & fi,double & R, Vector & momentsx, Vector & momentsy, Vector & momentsz);
+ Matrix gradorbmomdensity_calc(double & teta,double & fi,double & R, Vector & momentlx, Vector & momently, Vector & momentlz);
+ Matrix gradcurrdensity_calc(double & teta,double & fi,double & R, Vector & momentlx, Vector & momently, Vector & momentlz);
 
 private:
 #ifdef __linux__

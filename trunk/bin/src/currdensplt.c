@@ -32,12 +32,15 @@ printf("***********************************************************\n");
     { printf ("\nprogram currdensplt - calculate current density of a single ion\n\n\
                 use as: currdensplt threshhold T Ha Hb Hc mcphas.sipf \n\n\
                     or: currdensplt threshhold T Ha Hb Hc i j k mcphas.sipf \n\n\
+                    or: currdensplt threshhold T Ha Hb Hc -div mcphas.sipf \n\n\
                 - given is temperature T[K] and magnetic effective field H[T]\n\
 		- the current density vector component along direction (i,j,k)\n\
                   is calculated (if omitted abs value of currdens is calc.)\n\
                 - crystal field  parameters Blm should be read from a \n\
 	          standard mcphas single ion property file mcphas.sipf \n\
-                options: if T<0 then no thermal boltzmann distribution is taken\n\
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
+                - if T<0 then no thermal boltzmann distribution is taken\n\
 		the statistical probability of each CF state has to be entered \n\
                 by hand.\n\
 		\n");
@@ -67,6 +70,9 @@ if (argc>9){
   xx/=rr;yy/=rr;zz/=rr;
   doijk=3;
  }
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
  FILE * fout;
 
  // read cf-parameters into class object jjjpar
@@ -106,7 +112,15 @@ jjjps.orbmomdensity_mcalc (momentlx,1, T, h, jjjps.mcalc_parstorage);
 jjjps.orbmomdensity_mcalc (momently,2, T, h, jjjps.mcalc_parstorage);
 jjjps.orbmomdensity_mcalc (momentlz,3, T, h, jjjps.mcalc_parstorage);
 int i,nofpc=0;
+fout = fopen_errchk ("results/currdensplt.coeff", "w");
+fprintf(fout,"# coefficients for density calculation\n#T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
+printf("# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
 printf("#currdensity is expanded in tesseral harmonics Zlm\n\
+#   j(r).(%g,%g,%g)= sum_lm (b(l,m) R^2(r)+ d(l,m) F(r) Zlm(Omega)\n\
+#   with F(r)=1/r int_r^inf R^2(x) dx\n\
+#   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
+fprintf(fout,"# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
+fprintf(fout,"#currdensity is expanded in tesseral harmonics Zlm\n\
 #   j(r).(%g,%g,%g)= sum_lm (b(l,m) R^2(r)+ d(l,m) F(r) Zlm(Omega)\n\
 #   with F(r)=1/r int_r^inf R^2(x) dx\n\
 #   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
@@ -114,9 +128,13 @@ printf("#currdensity is expanded in tesseral harmonics Zlm\n\
                        printf(" aLx(%i,%i) =%12.6f  ",k[i],q[i],momentlx(i));
                        printf(" aLy(%i,%i) =%12.6f  ",k[i],q[i],momently(i));
                        printf(" aLz(%i,%i) =%12.6f\n",k[i],q[i],momentlz(i));
+                       fprintf(fout," aLx(%i,%i) =%12.6f  ",k[i],q[i],momentlx(i));
+                       fprintf(fout," aLy(%i,%i) =%12.6f  ",k[i],q[i],momently(i));
+                       fprintf(fout," aLz(%i,%i) =%12.6f\n",k[i],q[i],momentlz(i));
              moments(i)=momentlx(i);moments(i+49)=momently(i);moments(i+2*49)=momentlz(i);
              }
 printf("\n");
+fclose(fout);
  graphic_parameters gp;
 gp.show_abc_unitcell=0;
 gp.show_primitive_crystal_unitcell=0;
@@ -156,9 +174,11 @@ if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp,cs.cffilenames,a
   gp.show_atoms=1;gp.showprim=1;
   gp.spins_scale_moment=0;
   gp.spins_show_static_moment_direction=0;
-  sprintf(gp.title,"currdensityabsvalue |j(r)|(milliAmp/A^2)");
-  if(doijk>0)sprintf(gp.title,"currdensityprojection j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
-  fout = fopen_errchk ("results/currdensplt.jvx", "w");
+  if(doijk==3) sprintf(gp.title,"projection of currdensity j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of currdensity div j(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of currdensity |j(r)|(milliAmp/A^2)");
+  printf("%s\n",gp.title);
+fout = fopen_errchk ("results/currdensplt.jvx", "w");
    s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
   fclose (fout);
   fout = fopen_errchk ("results/currdensplt.grid", "w");
@@ -186,6 +206,7 @@ fprintf(stderr,"# * javaview results/currdensplt.jvx\n");
 fprintf(stderr,"# * displaycontour 2 3 4 results/currdensplti.grid\n");
 fprintf(stderr,"# * displaycontour 1 3 4 results/currdenspltj.grid\n");
 fprintf(stderr,"# * displaycontour 1 2 4 results/currdenspltk.grid\n");
+fprintf(stderr,"# * saved density mesh in results/currdensplt.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;

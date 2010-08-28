@@ -193,8 +193,8 @@ fprintf(fout,"#              ~sum_n ()n exp(-2 DWFn sin^2(theta) / lambda^2)=EXP
 fprintf(fout,"#              relation to other notations: 2*DWF = B = 8 pi^2 <u^2>, units DWF (A^2)\n");
 fprintf(fout,"#\n");
 fprintf(fout,"#! use_dadbdc=%i\n",use_dadbdc);
-fprintf(fout,"#            - 0 means: da db and dc are not used by the program, dr1,dr2 and dr3 \n");
-fprintf(fout,"#              refer to the primitive lattice given below\n");
+fprintf(fout,"#            - 0 means: da db and dc are not used by the program (unless you enter a line #! use_dadbdc=1),\n");
+fprintf(fout,"#               dr1,dr2 and dr3 refer to the primitive lattice given below\n");
 fprintf(fout,"# Real Imag[scattering length(10^-12cm)]   da(a)    db(b)    dc(c)    dr1(r1)  dr2(r2)  dr3(r3)  DWF(A^2)\n");
 
   if (nat!=0){ for(i=1;i<=nat;++i) { pos=ftell(fin_coq); 
@@ -392,7 +392,7 @@ fprintf(fout,"#                 -it must contain the Formfactor Coefficients (e.
 fprintf(fout,"#                                      Lande factor\n");
 fprintf(fout,"#                                      Neutron Scattering Length (10^-12 cm) \n");
 fprintf(fout,"#                 -it may contain a    Debey Waller Factor\n");
-fprintf(fout,"# 'da' 'db' and 'dc' are not used by the program, \n");
+fprintf(fout,"# 'da' 'db' and 'dc' are not used by the program (unless you enter a line #! use_dadbdc=1)\n");
 fprintf(fout,"# 'dr1','dr2' and 'dr3' refer to the primitive lattice given below\n");
 fprintf(fout,"# 'Ma','Mb','Mc' denote the magnetic moment components in Bohr magnetons\n");
 fprintf(fout,"#                in case of non orthogonal lattices instead of Ma Mb Mc the components Mi Mj Mk\n");
@@ -567,13 +567,16 @@ if (argc>1){int nr;
        while(feof(fin)==false){nr=inputline(fin,nn);
                                if(nr>2)
                                {hhkkll(1)=nn[1];hhkkll(2)=nn[2];hhkkll(3)=nn[3];++m;
-//printf("%g %g %g\n", hhkkll(1),hhkkll(2),hhkkll(3));
                                 code=1;                                
                                // transformieren der millerindizes auf magnetische einheitszelle
                                   hkl[m](1)=hhkkll*(rtoxyz.Inverse()*r1);
                                   hkl[m](2)=hhkkll*(rtoxyz.Inverse()*r2);
                                   hkl[m](3)=hhkkll*(rtoxyz.Inverse()*r3);
-//printf("%g %g %g\n\n", hkl[m](1), hkl[m](2), hkl[m](3));                                
+                              // check if magnetic reflection is indeed on magnetic reciprocal lattice
+                              if(fabs(rint(hkl[m](1))-hkl[m](1))>SMALL||fabs(rint(hkl[m](2))-hkl[m](2))>SMALL||fabs(rint(hkl[m](3))-hkl[m](3))>SMALL)
+                                {fprintf(stderr,"Warning - reading (%g %g %g): calculation impossible, because this corresponds to ", hhkkll(1),hhkkll(2),hhkkll(3));
+                                 fprintf(stderr,"non integer magnetic reciprocal lattice (%g %g %g)\n\n", hkl[m](1), hkl[m](2), hkl[m](3));
+                                }
                                 if(nr>3){mx[m]=complex <double> (nn[4],0);code=2;}// intensities given                                
                                 if(nr>4){my[m]=complex <double> (nn[5],0);code=3;}// errors given                                
                               }}

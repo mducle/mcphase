@@ -346,10 +346,10 @@ if( (Bx2!=0.0 || By2!=0.0 || Bz2!=0.0) && (symmetrienr == 10 || symmetrienr == 0
 t02="#-------------------------------------------------------------- \n";
 t03="#                Anisotropy parameters in meV.                  \n";
 t04="#-------------------------------------------------------------- \n";
-t05="#                                                              \n";
-t06="#! D1*Bx^2 =   %11.2f                                     \n";
-t07="#! D2*By^2 =   %11.2f                                     \n";
-t08="#! D3*Bz^2 =   %11.2f                                     \n";
+t05="#         H= + Dx2 Jx ^ 2+ Dy2 Jy ^ 2+ Dz2 Jz ^ 2               \n";
+t06="#! Dx2 =   %11.2f                                     \n";
+t07="#! Dy2 =   %11.2f                                     \n";
+t08="#! Dz2 =   %11.2f                                     \n";
 t09="#                                                              \n";
 t10="#-------------------------------------------------------------- \n";
     fprintf(fp,"%s",t02);fprintf(fp,"%s",t03);fprintf(fp,"%s",t04); fprintf(fp,"%s",t05);
@@ -3226,7 +3226,7 @@ INT is_parametersatz_null(iter,symmetrienr,macheps)
             case 10: return(JA);
         }
     }
-    if(  zwei_j >=2 ){ // changed from >2 to >=2 on 28.7.2010 MR to allow S=1
+    if(  zwei_j >=2 ){ /* changed from >2 to >=2 on 28.7.2010 MR to allow S=1 */
         switch( symmetrienr ){
             case 0 : if( flag ==  4 )  return(JA);
                      return(NEIN);

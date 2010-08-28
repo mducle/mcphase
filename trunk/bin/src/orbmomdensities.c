@@ -25,11 +25,14 @@ printf("# **********************************************************\n");
     { printf ("\n \
 program orbmomdensities - display orbmomdensities at HT point\n\n \
 use as: orbmomdensities threshhold T Ha Hb Hc [i j k] [file.mf]\n \
+    or: orbmomdensities threshhold T Ha Hb Hc -div [file.mf]\n \
                         (default input file is results/mcphas.mf)\n\n \
 This program outputs orbmomdensities on of magnetic ions in the magnetic\n \
 unit cell the graphics output format can be fine tuned in .mf and\n \
 and results/graphic_parameters.set\n\n \
 jvx files can be viewed by: java javaview results/orbmomdensities.jvx \n \
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
 \n\n");
       exit (1);
     }
@@ -55,6 +58,9 @@ if (argc>=9){
   xx/=rr;yy/=rr;zz/=rr;
   doijk=3;
  }
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
  if (argc==7+doijk)
  { fin_coq = fopen_errchk (argv[6+doijk], "rb");}
  else
@@ -76,7 +82,7 @@ if (argc>=9){
   par inputpars("./mcphas.j");
 
   Vector hh(1,savmf.nofcomponents*savmf.nofatoms);
-  int dim=49; if(doijk==0){dim=3*49;}
+  int dim=49; if(doijk<3){dim=3*49;}
   spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,dim);
 
   // determine primitive magnetic unit cell
@@ -106,10 +112,10 @@ hh=0;for(ii=1;ii<=inputpars.nofatoms;++ii)
             if((*inputpars.jjj[ii]).module_type==0)
             {//(*inputpars.jjj[ii]).mcalc(moms,T,h,lnz,u,(*inputpars.jjj[ii]).mcalc_parstorage); // here we trigger single ion
                                                            // module to calculate all dim moments of orbmomdensity
-if(xx!=0||doijk==0)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsx,1, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
-if(yy!=0||doijk==0)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsy,2, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
-if(zz!=0||doijk==0)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsz,3, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
-if(doijk>0){ moments=xx*momentsx+yy*momentsy+zz*momentsz;}
+if(xx!=0||doijk<3)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsx,1, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
+if(yy!=0||doijk<3)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsy,2, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
+if(zz!=0||doijk<3)(*inputpars.jjj[ii]).orbmomdensity_mcalc (momentsz,3, T, h, (*inputpars.jjj[ii]).mcalc_parstorage);
+if(doijk==3){ moments=xx*momentsx+yy*momentsy+zz*momentsz;}
 else       {
             for(nt=1;nt<=49;++nt){moments(nt)=momentsx(nt);moments(nt+49)=momentsy(nt);moments(nt+2*49)=momentsz(nt);}
             }
@@ -143,7 +149,11 @@ else       {
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              gp.showprim=0;
-             sprintf(gp.title,"orbmomdensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==3) sprintf(gp.title,"projection of orbmomdensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of orbmomdensity div ML(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of orbmomdensity |ML(r)|");
+  printf("%s\n",gp.title);
+
   fout = fopen_errchk ("./results/orbmomdensities.grid", "w");
      extendedspincf.cd(fout,cs,gp,savev_real,savev_imag,0.0,hkl);
     fclose (fout);
@@ -169,6 +179,7 @@ fprintf(stderr,"# * \n\n results/orbmomdensities.grid created");
 fprintf(stderr,"# * view jvx file by:\n");
 fprintf(stderr,"# * javaview results/orbmomdensities.jvx\n");
 fprintf(stderr,"# * java javaview \"model=results/orbmomdensities.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
+fprintf(stderr,"# * saved density mesh in results/obrmomdensities.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}

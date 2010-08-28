@@ -69,17 +69,17 @@ $noflevels=1; # initialize noflevels
 
                                                 }
 
-   if($line=~/^.*\QNumber of different energy levels\E\s*:/) # read noflevels
+   if($line=~/^.*\QNr of different energy levels\E/) # read noflevels
 
-      {($noflevels)=($line=~m|\QNumber of different energy levels\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
-
+      {#($noflevels)=($line=~m|\QNr of different energy levels \E\s*([\d.eEdD\Q-\E\Q+\E]+)|);
+       ($noflevels)=extract("noflevels",$line);
        print "#Number of different energy levels: $noflevels\n";
 
       } 
 
-   if($line=~/^.*\QEnergy shift\E\s*\Q(Eshift)\E\s*:/) # read energyshift
+   if($line=~/^.*\QEnergy shift\E/) # read energyshift
 
-      {($energyshift)=($line=~m|\QEnergy shift\E\s*\Q(Eshift)\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
+      {($energyshift)=extract("Eshift",$line);#($line=~m|\QEnergy shift\E\s*\Q(Eshift)\E\s*:\s*([\d.eEdD\Q-\E\Q+\E]+)|);
 
        print "#Energy shift: $energyshift meV\n";
 
@@ -91,7 +91,7 @@ $noflevels=1; # initialize noflevels
 
       {($E[$i])=($line=~m|\QE( \E$i\Q)\E\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);
 
-       ($deg[$i])=($line=~m|.*\QDegeneracy\E\s*:\s*([\d.eEdD]+)|);
+       ($deg[$i])=extract("Degeneracy",$line);#($line=~m|.*\QDegeneracy\E\s*:\s*([\d.eEdD]+)|);
 
       print "#! E($i)=".$E[$i]."meV degeneracy ".$deg[$i]."-fold\n";
 
@@ -236,3 +236,67 @@ $T=$T0+$dT/2;
 return $cpc;
 
 }
+
+# **********************************************************************************************
+# extracts number from string
+#
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+#
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extract {
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
+
+# **********************************************************************************************
+# extracts string from string
+#
+# ($standarddeviation)=extract("sta","sta=0.3");
+# ($standarddeviation)=extract("sta","#!sta=0.3 # sta=0.2");  # i.e. comments are ignored unless followed by !
+#
+# ... it stores 0.3 in the variable $standarddeviation
+#
+sub extractstring {
+             my ($variable,$string)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if($string=~/^(#!|[^#])*\b$var\s*=\s*/) {($value)=($string=~m/^(?:#!|[^#])*\b$var\s*=\s*\b([^\n\s]+)[\s\n]/);
+#             ($value)=($string=~m|^?:\#!|[^\#])*($var\s*=\s*([^\s]*))|);
+             return $value;}
+            }
+# **********************************************************************************************
+
+
+# **********************************************************************************************
+# extracts number from file
+#
+# for example somewhere in a file data.dat is written the text "sta=0.24"
+# to extract this number 0.24 just use:
+#
+# ($standarddeviation)=extractfromfile("sta","data.dat");
+#
+# ... it stores 0.24 in the variable $standarddeviation
+#
+sub extractfromfile {
+             my ($variable,$filename)=@_;
+             $var="\Q$variable\E";
+             $value="";
+             if(open (Fin,$filename))
+             {while($line=<Fin>){
+                if($line=~/^.*$var\s*=/) {($value)=($line=~m|$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);}                                        }
+              close Fin;
+       	     }
+             else
+             {
+             print STDERR "Warning: failed to read data file \"$filename\"\n";
+             }
+             return $value;
+            }
+# **********************************************************************************************

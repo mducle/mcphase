@@ -16,6 +16,56 @@
  return (*rtetafi[p]);
 }
 
+void density::moments_init(Vector & moments)
+{int i;
+   switch (type)
+   {case 0: break; // chargedensity
+    case 1: break; // component of spindensity
+    case 2: break; // component of orbmomdensity
+    case 3: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentlx(i)=moments(i+49);}
+            break; // component of total momdensity
+    case 4: // component of current density
+    case 8: // absvalue of current density
+    case 12: for(i=1;i<=49;++i){momentlx(i)=moments(i);momently(i)=moments(i+49);momentlz(i)=moments(i+2*49);}
+            break; // divergence of current density
+    case 5: // absvalue of spindensity
+    case 9: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentsy(i)=moments(i+49);momentsz(i)=moments(i+2*49);}
+            break; // divergence of spindensity
+    case 6: // absvalue of orbmomdensity
+    case 10: for(i=1;i<=49;++i){momentlx(i)=moments(i);momently(i)=moments(i+49);momentlz(i)=moments(i+2*49);}
+            break; // divergence of orbmomdensity
+    case 7: // absvalue of tot momdensity
+    case 11: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentsy(i)=moments(i+49);momentsz(i)=moments(i+2*49);
+                                     momentlx(i)=moments(i+3*49);momently(i)=moments(i+4*49);momentlz(i)=moments(i+5*49);}
+            break; // diverngence of tot momdensity
+    default: fprintf(stderr,"Error Density: type %i not implemented\n",type); exit(EXIT_FAILURE);    // chargedensity
+   }
+}
+
+double density::denscalc(double &theta,double& fi,double& R,Vector & moments,jjjpar & ionpar)
+   {double ro;
+     switch (type)
+     {case 0:      ro=ionpar.rocalc(theta,fi,R,moments);break;
+      case 1:      ro=ionpar.spindensity_calc(theta,fi,R,moments);break;
+      case 2:      ro=ionpar.orbmomdensity_calc(theta,fi,R,moments);break;
+      case 3:      ro=ionpar.spindensity_calc(theta,fi,R,momentsx)+
+                      ionpar.orbmomdensity_calc(theta,fi,R,momentlx);break;
+      case 4:      ro=pr*ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
+      case 5:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz));break;
+      case 6:      ro=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 7:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
+                           ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 8:      ro=Norm(ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 9:       ro=Trace(ionpar.gradspindensity_calc(theta,fi,R,momentsx,momentsy,momentsz));break;
+      case 10:      ro=Trace(ionpar.gradorbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 11:      ro=Trace(ionpar.gradspindensity_calc(theta,fi,R,momentsx,momentsy,momentsz))+
+                       Trace(ionpar.gradorbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      case 12:      ro=Trace(ionpar.gradcurrdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
+      default: fprintf(stderr,"Error Density: type %i not implemented\n",type); exit(EXIT_FAILURE);
+     }
+    return ro;
+   }
+
 void density::calc_cd_surface(Vector & moments,jjjpar & ionpar,  double ccc)
 { // double ccc = surface value of density
 // here the set of points for this ion should be created corresponding to its
@@ -23,77 +73,26 @@ void density::calc_cd_surface(Vector & moments,jjjpar & ionpar,  double ccc)
 //REM dieses programm berechnet aus alm die ladungsdichteverteilung
 //REM und zeichnet diese auf
 int anzahl = 0;
-Vector momentsx(1,49);
-Vector momentsy(1,49);
-Vector momentsz(1,49);
-Vector momentlx(1,49);
-Vector momently(1,49);
-Vector momentlz(1,49);
-int i;Vector mom(1,3);
+Vector mom(1,3);
 
-if(moments.Hi()>=3*49&&type<=3){type+=4;} // now the type of density is clear
-
-    switch (type)
-   {case 1: break; // component of spindensity
-    case 2: break; // component of orbmomdensity
-    case 3: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentlx(i)=moments(i+49);}
-            break; // component of total momdensity
-    case 8:
-    case 4: for(i=1;i<=49;++i){momentlx(i)=moments(i);momently(i)=moments(i+49);momentlz(i)=moments(i+2*49);}
-            break; // absvalue of current density
-    case 5: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentsy(i)=moments(i+49);momentsz(i)=moments(i+2*49);}
-            break; // absvalue of spindensity
-    case 6: for(i=1;i<=49;++i){momentlx(i)=moments(i);momently(i)=moments(i+49);momentlz(i)=moments(i+2*49);}
-            break; // absvalue of orbmomdensity
-    case 7: for(i=1;i<=49;++i){momentsx(i)=moments(i);momentsy(i)=moments(i+49);momentsz(i)=moments(i+2*49);
-                                     momentlx(i)=moments(i+3*49);momently(i)=moments(i+4*49);momentlz(i)=moments(i+5*49);}
-            break; // absvalue of tot momdensity
-    default: ;     // chargedensity
-   }
-
+moments_init(moments); // initialize moments
 
 int imax = 3,iii,iv;
 Vector rp(1,imax),rrttff(1,6);
 double rmax = 0;
 double rstp = .1;
-double max = .01 * ccc;  //end of intervalschachtelung to find r(ro=ccc)
+double max = fabs(.01 * ccc);  //end of intervalschachtelung to find r(ro=ccc)
 double theta,fi,R,rin,ro,deltaa,rstpp,delta1;
 int nt,tt,ff;
 for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
    rp=0;theta=(double)tt*dtheta;fi=(double)ff*dfi;
    nt=0;
    for(rin=0.1;rin<=3.0;rin+=0.2){
-   R=rin; 
-    switch (type) 
-     {case 1:      ro=ionpar.spindensity_calc(theta,fi,R,moments);break;
-      case 2:      ro=ionpar.orbmomdensity_calc(theta,fi,R,moments);break;
-      case 3:      ro=ionpar.spindensity_calc(theta,fi,R,momentsx)+
-                      ionpar.orbmomdensity_calc(theta,fi,R,momentlx);break;
-      case 4:      ro=Norm(ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 5:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz));break;
-      case 6:      ro=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 7:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
-                           ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 8:      ro=pr*ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
-      default:ro=ionpar.rocalc(theta,fi,R,moments);
-     }
-
+   R=rin; ro=denscalc(theta,fi,R,moments,ionpar);
    deltaa=fabs(ro-ccc);rstpp=rstp;delta1=1e4;
    for(iii=1;(iii<=100)&(delta1>=max);++iii)
      {R+=rstpp;
-    switch (type) 
-     {case 1:      ro=ionpar.spindensity_calc(theta,fi,R,moments);break;
-      case 2:      ro=ionpar.orbmomdensity_calc(theta,fi,R,moments);break;
-      case 3:      ro=ionpar.spindensity_calc(theta,fi,R,momentsx)+
-                      ionpar.orbmomdensity_calc(theta,fi,R,momentlx);break;
-      case 4:      ro=Norm(ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 5:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz));break;
-      case 6:      ro=Norm(ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 7:      ro=Norm(ionpar.spindensity_calc(theta,fi,R,momentsx,momentsy,momentsz)+
-                           ionpar.orbmomdensity_calc(theta,fi,R,momentlx,momently,momentlz));break;
-      case 8:      ro=pr*ionpar.currdensity_calc(theta,fi,R,momentlx,momently,momentlz);break;
-      default:ro=ionpar.rocalc(theta,fi,R,moments);
-     }
+      ro=denscalc(theta,fi,R,moments,ionpar);
      delta1=fabs(ro-ccc);
       if(delta1>=max){
                       if(delta1<deltaa){deltaa=delta1;}
@@ -138,11 +137,13 @@ for(tt=0;tt<=3.1415/dtheta;++tt){for(ff=0;ff<=2*3.1415/dfi;++ff){
 //constructor
 density::density(char * title,double dt,double df)
   {type=0;
-   if(strncmp(title,"spindensity",10)==0){type=1;}
-   if(strncmp(title,"orbmomdensity",10)==0){type=2;}
-   if(strncmp(title,"momdensity",10)==0){type=3;}
-   if(strncmp(title,"currdensityabsvalue",15)==0){type=4;}
-   if(strncmp(title,"currdensityprojection",15)==0){type=8;}
+   if(strncmp(title+14,"spindensity",10)==0){type=1;}
+   if(strncmp(title+14,"orbmomdensity",10)==0){type=2;}
+   if(strncmp(title+14,"momdensity",10)==0){type=3;}
+   if(strncmp(title+14,"currdensity",10)==0){type=4;}
+   if(strncmp(title,"abs value ",10)==0){type+=4;}
+   if(strncmp(title,"divergence",10)==0){type+=8;}
+   //printf("type=%i\n",type);
    pr=Vector(1,3);extract(title,"i",pr(1));extract(title,"j",pr(2));extract(title,"k",pr(3));
    nofpts=(int)(2*3.1415/df+1)*(int)(3.1415/dt)+1;
    rtetafi = new Vector * [1+nofpts];
@@ -150,6 +151,13 @@ density::density(char * title,double dt,double df)
    for (i=1;i<=nofpts;++i){rtetafi[i]=new Vector(1,6);(*rtetafi[i])=0;}
    dtheta=dt;
    dfi=df;
+ momentsx=Vector(1,49);
+ momentsy=Vector(1,49);
+ momentsz=Vector(1,49);
+ momentlx=Vector(1,49);
+ momently=Vector(1,49);
+ momentlz=Vector(1,49);
+
  }
   
 density::density(const density & p) //kopier-konstruktor
@@ -160,6 +168,18 @@ density::density(const density & p) //kopier-konstruktor
    rtetafi = new Vector * [1+nofpts];
    int i;
    for (i=1;i<=nofpts;++i){rtetafi[i]=new Vector(1,6);(*rtetafi[i])=(*p.rtetafi[i]);}
+ momentsx=Vector(1,49);
+ momentsy=Vector(1,49);
+ momentsz=Vector(1,49);
+ momentlx=Vector(1,49);
+ momently=Vector(1,49);
+ momentlz=Vector(1,49);
+ momentsx=p.momentsx;
+ momentsy=p.momentsy;
+ momentsz=p.momentsz;
+ momentlx=p.momentlx;
+ momently=p.momently;
+ momentlz=p.momentlz;
   }
 
 density::~density () //destruktor

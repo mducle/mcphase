@@ -25,8 +25,6 @@ public:
     void eps(FILE * fout,const char * text);
     void eps3d(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z,int orientation, Vector & gJ);
     void fst(FILE * fout,char * text,Vector & abc,Matrix & r,float * x,float *y,float*z, Vector & gJ);
-    void jvx(FILE * fout,char * text,cryststruct & cs,
-             graphic_parameters & gp,double phase,spincf & savev_real,spincf & savev_imag,Vector & hkl);
 
               // <Jalpha>(i)=<Jalpha>0(i)+amplitude * real( exp(-i omega t+ Q ri) <ev_alpha>(i) )
               // omega t= phase

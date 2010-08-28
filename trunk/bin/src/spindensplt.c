@@ -35,12 +35,15 @@ printf("***********************************************************\n");
     { printf ("\nprogram spindensplt - calculate spindensity of a single ion\n\n\
                 use as: spindensplt threshhold T Ha Hb Hc i j k mcphas.sipf \n\n\
                 use or: spindensplt threshhold T Ha Hb Hc mcphas.sipf \n\n\
+                use or: spindensplt threshhold T Ha Hb Hc -div mcphas.sipf \n\n\
                 - given is temperature T[K] and magnetic effective field H[T]\n\
 		- the spindensity vector component along direction (i,j,k) is\n\
                   calculated (if omitted absolute value of spind. is calc.)\n\
                 - crystal field  parameters Blm should be read from a \n\
 	          standard mcphas single ion property file mcphas.sipf \n\
-                options: if T<0 then no thermal boltzmann distribution is taken\n\
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
+                - if T<0 then no thermal boltzmann distribution is taken\n\
 		the statistical probability of each CF state has to be entered \n\
                 by hand.\n\
 		\n");
@@ -72,11 +75,15 @@ if (argc>9){
   doijk=3;
  }
 
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
+
  jjjpar jjjps(0.0,0.0,0.0,argv[6+doijk]);
 
 
   if(jjjps.module_type!=0){fprintf(stderr,"ERROR spindensplt: calculation not possible for this single ion module\n");exit(EXIT_FAILURE);}
-    int dim=49; if(doijk==0){dim=3*49;}
+    int dim=49; if(doijk<3){dim=3*49;}
 
   if (jjjps.module_type==0&&jjjps.gJ!=0)
   {fprintf(stderr,"************** WARNING **********************\n reading external single ion module with gJ not zero: gJ=%g - please check if calculation of density is supported !!!\n*********************************************\n",jjjps.gJ);}
@@ -98,9 +105,9 @@ int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
   Vector momentsy(1,49);
   Vector momentsz(1,49);
   h=0;
+ FILE * fout;
 
 
-  printf("# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
  if(jjjps.gJ==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;}
   else { h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
    //int dj=(int)(2.0*(*iops).J+1);
@@ -111,25 +118,35 @@ int q[] = {-1,0,-1,0,1,-2,-1,0,1,2,-3,-2,-1,0,1,2,3,-4,-3,-2,-1,0,1,2,3,4,-5,-4,
   printf("calculating expectation values ....\n");
 //double lnz,u;
   //jjjps.mcalc(moms,T,h,lnz,u,jjjps.mcalc_parstorage);
-if(xx!=0||doijk==0)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
-if(yy!=0||doijk==0)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
-if(zz!=0||doijk==0)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
-if(doijk>0){ moments=xx*momentsx+yy*momentsy+zz*momentsz;}
+if(xx!=0||doijk<3)jjjps.spindensity_mcalc (momentsx,1, T, h, jjjps.mcalc_parstorage);
+if(yy!=0||doijk<3)jjjps.spindensity_mcalc (momentsy,2, T, h, jjjps.mcalc_parstorage);
+if(zz!=0||doijk<3)jjjps.spindensity_mcalc (momentsz,3, T, h, jjjps.mcalc_parstorage);
+if(doijk==3){ moments=xx*momentsx+yy*momentsy+zz*momentsz;}
 
 int i,nofpc=0;
+fout = fopen_errchk ("results/spindensplt.coeff", "w");
+fprintf(fout,"# coefficients for density calculation\n#T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
+printf("# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
 printf("#spindensity is expanded in tesseral harmonics Zlm\n\
 #   Ms(r).(%g,%g,%g)= sum_lm aS(l,m) R^2(r) Zlm(Omega)\n\
 #   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
+fprintf(fout,"#spindensity is expanded in tesseral harmonics Zlm\n\
+#   Ms(r).(%g,%g,%g)= sum_lm aS(l,m) R^2(r) Zlm(Omega)\n\
+#   E. Balcar J. Phys. C. 8 (1975) 1581\n#\n ",xx,yy,zz);
    for(i=1;i<=49;++i){
-  if(doijk>0){             printf(" aS(%i,%i) =%12.6f\n",k[i],q[i],moments(i));}
+  if(doijk==3){             printf(" aS(%i,%i) =%12.6f\n",k[i],q[i],moments(i));}
   else{printf(" aSx(%i,%i) =%12.6f",k[i],q[i],momentsx(i));
        printf(" aSy(%i,%i) =%12.6f",k[i],q[i],momentsy(i));
        printf(" aSz(%i,%i) =%12.6f\n",k[i],q[i],momentsz(i));
+       fprintf(fout," aSx(%i,%i) =%12.6f",k[i],q[i],momentsx(i));
+       fprintf(fout," aSy(%i,%i) =%12.6f",k[i],q[i],momentsy(i));
+       fprintf(fout," aSz(%i,%i) =%12.6f\n",k[i],q[i],momentsz(i));
        moments(i)=momentsx(i);moments(i+49)=momentsy(i);moments(i+2*49)=momentsz(i);
       }
 
 }
 printf("\n");
+fclose(fout);
 graphic_parameters gp;
 gp.show_abc_unitcell=0;
 gp.show_primitive_crystal_unitcell=0;
@@ -168,11 +185,13 @@ if(gp.show_pointcharges>0) nofpc=read_pointcharge_parameters(gp,cs.cffilenames,a
   spincf s(1,1,1,nofpc+1,dim);
   Vector hkl(1,3);hkl=0;s=s*0;
   spincf ev_real(s),ev_imag(s);
- FILE * fout;
 
   for(i=1;i<=dim;++i)s.m(1,1,1)(i)=moments(i);
   cs.gJ[1]=jjjps.gJ;
- sprintf(gp.title,"spindensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==3) sprintf(gp.title,"projection of spindensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of spindensity div Ms(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of spindensity |Ms(r)|");
+  printf("%s\n",gp.title);
   fout = fopen_errchk ("results/spindensplt.jvx", "w");
    s.jvx_cd(fout,text,cs,gp,0.0,ev_real,ev_imag,hkl);
   fclose (fout);
@@ -200,6 +219,7 @@ fprintf(stderr,"# * javaview results/spindensplt.jvx\n");
 fprintf(stderr,"# * displaycontour 2 3 4 results/spindensplti.grid\n");
 fprintf(stderr,"# * displaycontour 1 3 4 results/spindenspltj.grid\n");
 fprintf(stderr,"# * displaycontour 1 2 4 results/spindenspltk.grid\n");
+fprintf(stderr,"# * saved density mesh in results/spindensplt.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;

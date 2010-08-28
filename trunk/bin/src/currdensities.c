@@ -24,12 +24,14 @@ printf("# **********************************************************\n");
   if (argc < 6)
     { printf ("\n \
 program currdensities - display currdensities at HT point\n\n \
-use as: currdensities threshhold T Ha Hb Hc [file.mf]\n \
+use as: currdensities threshhold T Ha Hb Hc [-div] [file.mf]\n \
                         (default input file is results/mcphas.mf)\n\n \
 This program outputs currdensities on of magnetic ions in the magnetic\n \
 unit cell the graphics output format can be fine tuned in .mf and\n \
 and results/graphic_parameters.set\n\n \
 jvx files can be viewed by: java javaview results/currdensities.jvx \n \
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
 \n\n");
       exit (1);
     }
@@ -55,6 +57,9 @@ if (argc>9){
   xx/=rr;yy/=rr;zz/=rr;
   doijk=3;
  }
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
  if (argc==7+doijk)
  { fin_coq = fopen_errchk (argv[6+doijk], "rb");}
  else
@@ -144,8 +149,10 @@ for(nt=1;nt<=49;++nt){
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              gp.showprim=0;
- sprintf(gp.title,"currdensityabsvalue |j(r)|(milliAmp/A^2)");
-  if(doijk>0)sprintf(gp.title,"currdensityprojection j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
+  if(doijk==3) sprintf(gp.title,"projection of currdensity j(r).(i=%g,j=%g,k=%g)(milliAmp/A^2)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of currdensity div j(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of currdensityabsvalue |j(r)|(milliAmp/A^2)");
+  printf("%s\n",gp.title);
   fout = fopen_errchk ("./results/currdensities.grid", "w");
      extendedspincf.cd(fout,cs,gp,savev_real,savev_imag,0.0,hkl);
     fclose (fout);
@@ -169,6 +176,7 @@ fprintf(stderr,"# * \n\n results/currdensities.grid created");
 fprintf(stderr,"# * view jvx file by:\n");
 fprintf(stderr,"# * javaview results/currdensities.jvx\n");
 fprintf(stderr,"# * java javaview \"model=results/currdensities.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
+fprintf(stderr,"# * saved density mesh in results/currdensplt.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}

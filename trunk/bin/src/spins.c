@@ -70,7 +70,8 @@ printf("#****************************************************\n");
 
   // input file header and mfconf------------------------------------------------------------------
    n=headerinput(fin_coq,fout,gp,cs);
-
+gp.read();
+gp.show_density=0;
 // load spinsconfigurations and check which one is nearest -------------------------------   
 
      check_for_best(fin_coq,strtod(argv[1],NULL),strtod(argv[2],NULL),strtod(argv[3],NULL),strtod(argv[4],NULL),savspins,T,Ha,Hb,Hc,outstr);
@@ -127,18 +128,18 @@ Vector gJJ(1,n); for (i=1;i<=n;++i){gJJ(i)=cs.gJ[i];}
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins.jvx", "w");
     gp.showprim=0;gp.spins_wave_amplitude=0;
-     savspins.jvx(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
+     savspins.jvx_cd(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 // create jvx file of spinconfiguration - checkout polytope/goldfarb3.jvx  primitive/cubewithedges.jvx
    fin_coq = fopen_errchk ("./results/spins_prim.jvx", "w");
      gp.showprim=1;
-     savspins.jvx(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
+     savspins.jvx_cd(fin_coq,outstr,cs,gp,0.0,savev_real,savev_imag,hkl);
     fclose (fin_coq);
 
 if (argc>=9){// try a spinwave picture
              double E,ddh,ddk,ddl,ddE;
-             double spins_wave_amplitude=1.0,spins_show_ellipses=1.0,spins_show_static_moment_direction=1; 
+             gp.spins_wave_amplitude=1;gp.spins_show_ellipses=1;gp.spins_show_static_moment_direction=1;
              fin_coq = fopen_errchk ("./results/mcdisp.qev", "rb");
              // input file header ------------------------------------------------------------------
              instr[0]='#';
@@ -150,10 +151,11 @@ if (argc>=9){// try a spinwave picture
                 // inserted 4.4.08 in order to format output correctly (characterstring 13 spoiled output string)
                 for(i=0;i<=strlen(instr);++i){if(instr[i]==13)instr[i]=32;} 
                // load evs and check which one is nearest -------------------------------   
-               extract(instr,"spins_wave_amplitude",spins_wave_amplitude);
-               extract(instr,"spins_show_ellipses",spins_show_ellipses);
-               extract(instr,"spins_show_static_moment_direction",spins_show_static_moment_direction);
+               extract(instr,"spins_wave_amplitude",gp.spins_wave_amplitude);
+               extract(instr,"spins_show_ellipses",gp.spins_show_ellipses);
+               extract(instr,"spins_show_static_moment_direction",gp.spins_show_static_moment_direction);
               }
+              gp.read();gp.show_density=0;
                j=fseek(fin_coq,pos,SEEK_SET); 
                if (j!=0){fprintf(stderr,"Error: wrong qev file format\n");exit (EXIT_FAILURE);}
    
@@ -197,13 +199,14 @@ if (argc>=9){// try a spinwave picture
                printf("\n calculating movie sequence %i(16)\n",i+1);
                sprintf(filename,"./results/spins.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
+               //printf("swa %g\n",gp.spins_wave_amplitude);
                gp.showprim=0;
-                     savspins.jvx(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
+                     savspins.jvx_cd(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
                sprintf(filename,"./results/spins_prim.%i.jvx",i+1);
                fin_coq = fopen_errchk (filename, "w");
                gp.showprim=1;
-                     savspins.jvx(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
+                     savspins.jvx_cd(fin_coq,outstr,cs,gp,phase,savev_real,savev_imag,hkl);
                fclose (fin_coq);
               }
           printf("# %s\n",outstr);  

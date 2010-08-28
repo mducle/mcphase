@@ -83,6 +83,9 @@ Vector h(1,dim);
   Vector moments(1,dim);
   h=0;
 
+fout = fopen_errchk ("results/chrgplt.coeff", "w");
+fprintf(fout,"# coefficients for density calculation\n#T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
+
 printf("# T=%g K field H=(%g,%g,%g) Tesla\n",T,ha,hb,hc);
   if(jjjps.gJ==0){ h(1)=2.0*MU_B*ha;h(3)=2.0*MU_B*hb;h(5)=2.0*MU_B*hc;h(2)=MU_B*ha;h(4)=MU_B*hb;h(6)=MU_B*hc;}
   else { h(1)=jjjps.gJ*MU_B*ha;h(2)=jjjps.gJ*MU_B*hb;h(3)=jjjps.gJ*MU_B*hc;}
@@ -100,6 +103,7 @@ const char lm[]=             "Jy  Jz  Jx  O22SO21SO20 O21 O22 O33SO32SO31SO30 O3
 const char lme[]="Sx  Lx  Sy  Ly  Sz  Lz  O22SO21SO20 O21 O22 O33SO32SO31SO30 O31 O32 O33 O44SO43SO42SO41SO40 O41 O42 O43 O44 O55SO54SO53SO52SO51SO50 O51 O52 O53 O54 O55 O66SO65SO64SO63SO62SO61SO60 O61 O62 O63 O64 O65 O66 ";
 char lm4[5];lm4[4]='\0';
 printf("#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f(r)|^2 sum_lm clm Zlm(Omega)\n#\n");
+fprintf(fout,"#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f(r)|^2 sum_lm clm Zlm(Omega)\n#\n");
    for(i=1;i<=dim;++i){int l,m;double factor;
                        if (dim==48) strncpy(lm4,lm+(i-1)*4,4);
                        if (dim==51) strncpy(lm4,lme+(i-1)*4,4);
@@ -113,8 +117,10 @@ printf("#chargedensity is expanded in tesseral harmonics as\n#   ro(r)= -|e||R4f
                                                            else{factor=sqrt((2.0*l+1)/4/PI);}
                                                        }
                                                } 
-                       printf(" <J%c> = <%s> =%12.6f   clm=%12.6f\n",'a'-1+i,lm4,moments(i),moments(i)*factor);}
+                       printf(" <J%c> = <%s> =%12.6f   clm=%12.6f\n",'a'-1+i,lm4,moments(i),moments(i)*factor);
+                       fprintf(fout," <J%c> = <%s> =%12.6f   clm=%12.6f\n",'a'-1+i,lm4,moments(i),moments(i)*factor);}
 printf("\n");
+  fclose (fout);
 
  char text[1000];
  if(jjjps.module_type==0||jjjps.module_type==4){sprintf(text,"<title>T=%4gK h||a=%4gT h||b=%4gT h||c=%4gT with coordinates xyz=abc</title>\n", T, ha, hb, hc);}
@@ -165,6 +171,7 @@ fprintf(stderr,"# * javaview results/chrgplt.jvx\n");
 fprintf(stderr,"# * displaycontour 2 3 4 results/chrgplti.grid\n");
 fprintf(stderr,"# * displaycontour 1 3 4 results/chrgpltj.grid\n");
 fprintf(stderr,"# * displaycontour 1 2 4 results/chrgpltk.grid\n");
+fprintf(stderr,"# * saved density mesh in results/chrgplt.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   int dj;

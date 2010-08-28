@@ -14,6 +14,13 @@ class density
   int type;
    Vector pr;
 
+Vector momentsx;
+Vector momentsy;
+Vector momentsz;
+Vector momentlx;
+Vector momently;
+Vector momentlz;
+
   public:
   double dtheta;
   double dfi;
@@ -22,12 +29,11 @@ class density
   
   // sub for calculation of charge density given a radiu R and polar angles teta, 
   // fi and expansion coeff. alm
-  double rocalc (double & teta,double & fi,double & R, Vector & moments,ionpars & ionpar);
-
+  double denscalc(double & theta, double & fi,double & R,Vector & moments,jjjpar & ionpar);
   void calc_cd_surface(Vector & moments,jjjpar & ionpar,double ccc);
   //ccc ... surface value of density
 
-
+  void moments_init(Vector & moments);
   //constructor
   density(char*title,double dtheta,double dfi);
   density(const density & p);//kopier-konstruktor

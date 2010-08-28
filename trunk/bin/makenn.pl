@@ -161,7 +161,7 @@ print "$n1min to $n1max, $n2min to $n2max, $n3min to $n3max\n";
 
      #initialize output file results/makenn.j
  my ($h,$l)=printlattice("./mcphas.j",">./results/makenn.j");
-
+print "number of atoms = $nofatoms\n";
  for ($nnn=1;$nnn<=$nofatoms;++$nnn)    
  {   my $gJ=$gJ[$nnn];
      my ($rn)=new PDL ();
@@ -402,9 +402,10 @@ sub printlattice {
      {#next if /^\s*#/;
       $text=$_;
       if ($nofatoms==0){($nofatoms)=extract("nofatoms",$_);}
-      last if (/^#.*\Q**********\E/&&$nofatoms!=0);
-      print $l ($text);      
+      print $l ($text);
+      last if ($nofatoms!=0); # the line nofatoms= must be the last line of the file header !!!!
      }
+     if ($nofatoms==0){die "ERROR makenn: unable to find 'nofatoms=' in file $filein\n";}
  return ($h,$l);
 }
 
@@ -415,23 +416,28 @@ sub printneighbourlist {
      if ($nofn=="-1"){$nofn="0";}
 
      print $l ("#*************************************************************************\n");
-     my $stopheader=0;
-     my $stopprint=0;
      while(<$h>)
-     {#next if /^\s*#/;
-      last if /^#.*\Q**********\E/;
-      $text=$_;
-     if (/^(#!|[^#])*nofneighbours\s*=\s*/){$text=~s!nofneighbours\s*=\s*\d+!nofneighbours=$nofn!;$stopheader=1;}
+     {$text=$_;
+     if (/^(#!|[^#])*nofneighbours\s*=\s*/){($nn0)=extract("nofneighbours",$text);
+                                            $text=~s!nofneighbours\s*=\s*\d+!nofneighbours=$nofn!;}
      if (/^(#!|[^#])*diagonalexchange\s*=\s*/){
 
       if ($rkky>=1)
-       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=1!;$stopheader=1;}
+       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=1!;}
       else
-       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=0!;$stopheader=1;}
+       {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=0!;}
       }
-      if ($stopprint==0){print $l ($text);}
-      $stopprint=$stopheader;
+      print $l ($text);
+      last if (/^(#!|[^#])*diagonalexchange\s*=\s*/);
      }
+# the next lines are to advance $h to the end of the numeric table
+
+      while(<$h>)
+      {last if ($nn0==0);
+       unless (/^\s*#/){--$nn0;}
+      }
+
+
 print $l "#-------------------------------------------------------------------------------------\n";
 print $l "# output of program makenn $rmax - table with neighbors and interactions\n";
 print $l "# Reference: M. Rotter et al. PRB 68 (2003) 144418\n";

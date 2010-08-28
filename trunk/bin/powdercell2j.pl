@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 BEGIN{@ARGV=map{glob($_)}@ARGV}
 
+use File::Copy;
 #function make_input_mcphas
 #% Lucian G Pascut
 #% pascutlucian@yahoo.com
@@ -104,12 +105,16 @@ EOF
     print "@atomtypetempp\n";
     print "    Number of different atoms for each type:\n";
     print "@nofatoms\n";
+    @nofmagatoms=@nofatoms;
 
-
+$i=0;
   foreach(@atomtypetempp)
   {  open (Fout1, ">$_.sipf");
-     print "For $_ atom the oxidation state is? \nPlease give the charge in units of elementary charge |e|; for ex. -2 or +1 or +3:\n";
+     print "For $_ atom the oxidation state is? \nPlease give the charge in units of elementary charge |e|; e.g. -2 or +1 or +3:\n";
      $charge=<STDIN>;$charge=~s/\n//;
+     print " ... is it magnetic (1) or nonmagnetic (0) ? "; $magnetic=<STDIN>;$magnetic=~s/\n//;
+     if ($magnetic==0){$nofmagatoms[$i]=0;}
+     ++$i;
      print Fout1 << "EOF";
 #!MODULE=kramer
 #<!--mcphase.sipf-->
@@ -127,6 +132,7 @@ EOF
 #***************************************************************
 #IONTYPE=$_
 CHARGE=$charge
+MAGNETIC=$magnetic
 
 # this is a crystal field ground state doublet
 # module, parameters are the following 3 matrix
@@ -173,109 +179,28 @@ while($line=<Fin>)
 
 
 if(abs($slr)+abs($sli)<0.00000001)
-{   
-print Fout1 "\n\n\n\n#-------------------------------------------------------\n";
-print Fout1 "# Neutron Scattering Length (10^-12 cm) (can be complex)\n";
-print Fout1 "#-------------------------------------------------------\n";
-print Fout1 "SCATTERINGLENGTHREAL=".(0.1*$slrn)."\n";
-print Fout1 "SCATTERINGLENGTHIMAG=".(0.1*$slin)."\n";
-print Fout1 "#  ... note: - if an occupancy other than 1.0 is needed, just reduce \n";
-print Fout1 "#              the scattering length linear accordingly\n\n";
-}
-else
-{print "scatteringlength for element $element not found in internal table";}
+ {
+ print Fout1 "\n\n\n\n#-------------------------------------------------------\n";
+ print Fout1 "# Neutron Scattering Length (10^-12 cm) (can be complex)\n";
+ print Fout1 "#-------------------------------------------------------\n";
+ print Fout1 "SCATTERINGLENGTHREAL=".(0.1*$slrn)."\n";
+ print Fout1 "SCATTERINGLENGTHIMAG=".(0.1*$slin)."\n";
+ print Fout1 "#  ... note: - if an occupancy other than 1.0 is needed, just reduce \n";
+ print Fout1 "#              the scattering length linear accordingly\n\n";
+ }
+ else
+ {print "scatteringlength for element $element not found in internal table";}
      close Fout1;
-  }
-    open (Fout, ">mcphas.j");
-  print "\n\n\n\n\n\n";
-  print Fout "#<!--mcphase.mcphas.j-->\n";
-  print Fout "#***************************************************************\n";
-  print Fout "# Lattice and Exchange Parameter file for\n";
-  print Fout "# mcphas version 3.0\n";
-  print Fout "# - program to calculate static magnetic properties\n";
-  print Fout "# reference: M. Rotter JMMM 272-276 (2004) 481\n";
-  print Fout "# mcdisp version 3.0\n";
-  print Fout "# - program to calculate the dispersion of magnetic excitations\n";
-  print Fout "# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n";
-  print Fout "#***************************************************************\n";
-  print Fout "#\n";
-  print Fout "# ";
-  $i=0;foreach(@atomtypetempp)
-  {print Fout " $_ (".($nofatoms[$i]/min(@nofatoms)).")";
-   print " $_ (".($nofatoms[$i]/min(@nofatoms)).")";++$i;
-  }
+}
 
-print STDOUT << "EOF";
-
-
- If this is not the formula of your system
- please check the format of the input file
-
-Example:
- No   name       crystal coordinates          cartesian coordinates
-                x        y        z           x        y        z
- ------------------------------------------------------------------
- 1     Sr1    0.3644   0.0000   0.2500     1.0962  -4.1497  -2.7991
- ...
-EOF
  my $total = 0;
 ($total+=$_) for @nofatoms;
-  print Fout "\n";
-  print Fout "#\n";
-  print Fout "# Lattice Constants (A)\n";
-  print Fout "#\n";
-  print Fout "#! a= $alattice b= $blattice c= $clattice  alpha= $alpha beta= $beta gamma= $gamma\n";
-  print Fout "#\n";
-  print Fout "#! r1a=   1 r2a= 0 r3a=  0\n";
-  print Fout "#! r1b=   0 r2b= 1 r3b=  0   primitive lattice vectors [a][b][c]\n";
-  print Fout "#! r1c=   0 r2c= 0 r3c=  1\n";
-  print Fout "#\n";
-  print Fout "#! nofatoms= $total  nofcomponents=3  number of atoms in primitive unit cell/number of components of each spin\n";
+ my $totalmag = 0;
+($totalmag+=$_) for @nofmagatoms;
+ $totalnonmag=$total-$totalmag;
 
-$i=0;$nr=1;
-  foreach(@atomtypetempp)
-   {$ii=0;
-    foreach(@atomtype)
-      {  if($_=~$atomtypetempp[$i])
-           {
-           print Fout "#********************************************************************* \n";
-           print Fout "#ATOM TYPE $_ ; number of the atom in the UNIT CELL = $nr ; number of the atom within this type = $nofatoms[$i]\n";
-           print Fout "#! da= $x[$ii] [a] db= $y[$ii] [b] dc= $z[$ii] [c] nofneighbours=0 diagonalexchange=1 gJ= 2 cffilename= $_.sipf\n";
-           ++$nr; }
-       ++$ii;
-      }
-    ++$i;
-   }
-print Fout "#********************************************************************* \n";
-close Fout;
-
- 
-print "\n\n";
-print "The folowing file have been created by this program:\n\n";
-print "mcphas.j - the input file for McPhase program\n";
-print "\n";
-foreach(@atomtypetempp) {print "$_.sipf - contain the oxidation state of $_\n";}
-
-
-
-print STDOUT << "EOF";
-
- running \"makenn R\" command in McPhase will create a number of files 
- \"makenn.aN.pc\" equal with the number of the atoms in the unit cell.
- in this file you find the neighbours of the N atom in the unit cell.
- It is important to know what number corresponds to each atom type!
-
-EOF
-print STDOUT "press enter to generate mcdiff.in file, too\n";
-<STDIN>;
-system ("spinsfromq 1 1 1 0 0 0 > powdercell2j.sps");
-system ("fact 1 0 powdercell2j.sps");
-system ("spins 0 0 0 0 powdercell2j.sps > powdercell2j.spo");
-mydel  ("powdercell2j.spo");
-mydel  ("powdercell2j.sps");
-mydel ("scatteringlengths.txt");
-open (Fout, ">mcdiff.in");
-print Fout << "EOF";
+open (Fout2, ">mcdiff.in");
+print Fout2 << "EOF";
 # this file is the input file created by program powdercell2j
 #<!--mcdiff.mcdiff.in>
 #***************************************************************
@@ -317,7 +242,7 @@ print Fout << "EOF";
 # %SECTION 2% LIST OF NONMAGNETIC ATOMS IN CRYSTALLOGRAPHIC UNIT CELL
 #
 #
-#! nat=0      number of nonmagnetic atoms in primitive crystalographic unit cell
+#! nat=$totalnonmag      number of nonmagnetic atoms in primitive crystalographic unit cell
 #
 # it follows a list of nat lines with nonmagnetic atoms
 # ... notes: - if an occupancy other than 1.0 is needed, just reduce
@@ -329,6 +254,143 @@ print Fout << "EOF";
 #              relation to other notations: 2*DWF = B = 8 pi^2 <u^2>, units DWF (A^2)
 #
 # Real Imag[scattering length(10^-12cm)]   da(a)    db(b)    dc(c)    dr1(r1)  dr2(r2)  dr3(r3)  DWF(A^2)
+EOF
+
+    open (Fout, ">mcphas_all_atoms.j");
+    open (Foutmag, ">mcphas_magnetic_atoms.j");
+  print "\n\n\n\n\n\n";
+  print Fout "#<!--mcphase.mcphas.j-->\n";
+  print Fout "#***************************************************************\n";
+  print Fout "# Lattice and Exchange Parameter file for\n";
+  print Fout "# mcphas version 3.0\n";
+  print Fout "# - program to calculate static magnetic properties\n";
+  print Fout "# reference: M. Rotter JMMM 272-276 (2004) 481\n";
+  print Fout "# mcdisp version 3.0\n";
+  print Fout "# - program to calculate the dispersion of magnetic excitations\n";
+  print Fout "# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n";
+  print Fout "#***************************************************************\n";
+  print Fout "#\n";
+  print Foutmag "# ";
+  print Foutmag "#<!--mcphase.mcphas.j-->\n";
+  print Foutmag "#***************************************************************\n";
+  print Foutmag "# Lattice and Exchange Parameter file for\n";
+  print Foutmag "# mcphas version 3.0\n";
+  print Foutmag "# - program to calculate static magnetic properties\n";
+  print Foutmag "# reference: M. Rotter JMMM 272-276 (2004) 481\n";
+  print Foutmag "# mcdisp version 3.0\n";
+  print Foutmag "# - program to calculate the dispersion of magnetic excitations\n";
+  print Foutmag "# reference: M. Rotter et al. J. Appl. Phys. A74 (2002) 5751\n";
+  print Foutmag "#***************************************************************\n";
+  print Foutmag "#\n";
+  print Foutmag "# ";
+  $i=0;foreach(@atomtypetempp)
+  {print Fout " $_ (".($nofatoms[$i]/min(@nofatoms)).")";
+   print " $_ (".($nofatoms[$i]/min(@nofatoms)).")";++$i;
+  }
+
+print STDOUT << "EOF";
+
+
+ If this is not the formula of your system
+ please check the format of the input file
+
+Example:
+ No   name       crystal coordinates          cartesian coordinates
+                x        y        z           x        y        z
+ ------------------------------------------------------------------
+ 1     Sr1    0.3644   0.0000   0.2500     1.0962  -4.1497  -2.7991
+ ...
+EOF
+
+  print Fout "\n";
+  print Fout "#\n";
+  print Fout "# Lattice Constants (A)\n";
+  print Fout "#\n";
+  print Fout "#! a= $alattice b= $blattice c= $clattice  alpha= $alpha beta= $beta gamma= $gamma\n";
+  print Fout "#\n";
+  print Fout "#! r1a=   1 r2a= 0 r3a=  0\n";
+  print Fout "#! r1b=   0 r2b= 1 r3b=  0   primitive lattice vectors [a][b][c]\n";
+  print Fout "#! r1c=   0 r2c= 0 r3c=  1\n";
+  print Fout "#\n";
+  print Fout "#! nofatoms= $total  nofcomponents=3  number of atoms in primitive unit cell/number of components of each spin\n";
+  print Foutmag "\n";
+  print Foutmag "#\n";
+  print Foutmag "# Lattice Constants (A)\n";
+  print Foutmag "#\n";
+  print Foutmag "#! a= $alattice b= $blattice c= $clattice  alpha= $alpha beta= $beta gamma= $gamma\n";
+  print Foutmag "#\n";
+  print Foutmag "#! r1a=   1 r2a= 0 r3a=  0\n";
+  print Foutmag "#! r1b=   0 r2b= 1 r3b=  0   primitive lattice vectors [a][b][c]\n";
+  print Foutmag "#! r1c=   0 r2c= 0 r3c=  1\n";
+  print Foutmag "#\n";
+  print Foutmag "#! nofatoms= $totalmag  nofcomponents=3  number of atoms in primitive unit cell/number of components of each spin\n";
+
+$i=0;$nr=1;$nrmag=1;
+  foreach(@atomtypetempp)
+   {$ii=0;
+    foreach(@atomtype)
+      {  if($_=~$atomtypetempp[$i])
+           {
+           print Fout "#********************************************************************* \n";
+           print Fout "#ATOM TYPE $_ ; number of the atom in the UNIT CELL = $nr ; number of the atom within this type = $nofatoms[$i]\n";
+           print Fout "#! da= $x[$ii] [a] db= $y[$ii] [b] dc= $z[$ii] [c] nofneighbours=0 diagonalexchange=1 gJ= 2 cffilename= $_.sipf\n";
+
+           ($SR)=extract("SCATTERINGLENGTHREAL","$_.sipf");
+           ($SI)=extract("SCATTERINGLENGTHIMAG","$_.sipf");
+           ($magnetic)=extract("MAGNETIC","$_.sipf");
+           if($magnetic)
+           {print Fout2 "# $SR $SI $x[$ii] $y[$ii] $z[$ii] $x[$ii] $y[$ii] $z[$ii] 0  # $_.sipf\n";
+           print Foutmag "#********************************************************************* \n";
+           print Foutmag "#ATOM TYPE $_ ; number of the atom in the UNIT CELL = $nrmag ; number of the atom within this type = $nofatoms[$i]\n";
+           print Foutmag "#! da= $x[$ii] [a] db= $y[$ii] [b] dc= $z[$ii] [c] nofneighbours=0 diagonalexchange=1 gJ= 2 cffilename= $_.sipf\n";
+           ++$nrmag;
+           }
+           else
+           {print Fout2 "$SR $SI $x[$ii] $y[$ii] $z[$ii] $x[$ii] $y[$ii] $z[$ii] 0  # $_.sipf\n";}
+
+           ++$nr; }
+       ++$ii;
+      }
+    ++$i;
+   }
+print Fout "#********************************************************************* \n";
+close Fout;
+print Foutmag "#********************************************************************* \n";
+close Foutmag;
+
+ 
+print "\n\n";
+print "The folowing file have been created by this program:\n\n";
+print "mcphas.j - the input file for McPhase program\n";
+print "\n";
+foreach(@atomtypetempp) {print "$_.sipf - contain the oxidation state of $_\n";}
+
+
+print STDOUT << "EOF";
+
+ mcphas_all.j and mcphas_magnetic_atoms.j=mcphas.j created
+
+EOF
+print STDOUT "press enter to generate mcdiff.in file, too\n";
+<STDIN>;
+print " Please enter the magnetic supercell dimension na nb nc and the propagation vector (h,k,l):\n";
+print " na (>=1)?\n";$na=<STDIN>;$na=~s/\n//;
+print " nb (>=1) ?\n";$nb=<STDIN>;$nb=~s/\n//;
+print " nc (>=1) ?\n";$nc=<STDIN>;$nc=~s/\n//;
+print " h ?\n";$h=<STDIN>;$h=~s/\n//;
+print " k ?\n";$k=<STDIN>;$k=~s/\n//;
+print " l ?\n";$l=<STDIN>;$l=~s/\n//;
+
+copy("mcphas_magnetic_atoms.j","mcphas.j");
+system ("spinsfromq $na $nb $nc $h $k $l > powdercell2j.sps");
+#system ("fact 1 0 powdercell2j.sps");
+system ("spins 0 0 0 0 powdercell2j.sps > powdercell2j.spo");
+system ("javaview results/spins.jvx");
+mydel  ("powdercell2j.spo");
+mydel  ("powdercell2j.sps");
+mydel ("scatteringlengths.txt");
+
+print Fout2 << "EOF";
 #
 #
 # %SECTION 3% DESCRIPTION OF THE LATTICE
@@ -339,8 +401,31 @@ print Fout << "EOF";
 # -----------------------------------------------------------------------------
 EOF
 open (Fin,"results/spins.out");
-while($line=<Fin>) {print Fout $line;}
-close Fin, Fout;
+while($line=<Fin>) {print Fout2 $line;}
+close Fin, Fout2;
+
+print STDOUT << "EOF";
+
+END OF PROGRAM powdercell2j
+
+Created files:
+
+ mcphas_all.j                      ... contains all atoms (magnetic and nonmag)
+ mcphas_magnetic_atoms.j=mcphas.j  ... contains only magnetic atoms
+
+   running \"makenn R\" command  will create from mcphas.j a number of files
+   \"makenn.aN.pc\" equal with the number of the atoms in the unit cell.
+   in this file you find the neighbours of the N atom in the unit cell.
+   It is important to know what number corresponds to each atom type!
+
+
+ mcdiff.in                              ... input file for mcdiff
+   running javaview results/spins.jvx displays the corresponding
+   spinstructure (collinear)
+
+
+
+EOF
 
 
 
@@ -785,3 +870,29 @@ Cm 	--- 	--- 	--- 	0 	--- 	--- 	---
 EOF
 close Fout;
 }
+
+# **********************************************************************************************
+# extracts variable from file
+#
+# for example somewhere in a file data.dat is written the text "sta=0.24"
+# to extract this number 0.24 just use:
+#
+# ($standarddeviation)=extract("sta","data.dat");
+#
+# ... it stores 0.24 in the variable $standarddeviation
+#
+sub extract {
+             my ($variable,$filename)=@_;
+             $var="\Q$variable\E";
+             if(open (Fin,$filename))
+             {while($line=<Fin>){
+                if($line=~/^.*$var\s*=/) {($value)=($line=~m|$var\s*=\s*([\d.eEdD\Q-\E\Q+\E]+)|);}                                        }
+              close Fin;
+       	     }
+             else
+             {
+             print STDERR "Warning: failed to read data file \"$filename\"\n";
+             }
+             return $value;
+            }
+# **********************************************************************************************

@@ -15,7 +15,7 @@ $numbersold[6]=0;
 $numbersold[7]=0;
 $numbersold[8]=0;
 $numbersold[11]=0;
-unless (open(Fin,"./results/mcdiff.out")){ die "Error program sum_mcdiff_out: file  ./results/mcdiff.out not found\n";}
+unless (open(Fin,"./results/mcdiff.out")){ die "Error program sum_mcdiff_out: file  ./results/mcdiff.out not found\n (type 'sum_mcdiff_out -h' to get help )\n";}
 open(Fout,">".$fileout);
 while($line=<Fin>)
 {if ($line=~/^\s*#/){print Fout $line;}

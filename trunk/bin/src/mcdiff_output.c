@@ -127,9 +127,9 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    {
     if((double)(i-imin)/50==(double)((i-imin)/50))
     {if (ortho==1)
-     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) F1:max-Isigpi azim Ipisig azim Ipipig azim F2:max-Isigpi azim Ipisig azim Ipipig azim  |^ma_q| |^mb_q| |^mc_q| |^ma^2_q||^mb^2_q||^mc^2_q||(^ma*^mb)_q||(^ma*^mc)_q||(^mb*^mc)_q|}\n");}
+     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t)   Itot(2t) |sf|        LF   Imag_dip(2t) F1:max-Isigpi azim Ipisig azim Ipipig azim F2:max-Isigpi azim Ipisig azim Ipipig azim  |^ma_q| |^mb_q| |^mc_q| |^ma^2_q||^mb^2_q||^mc^2_q||(^ma*^mb)_q||(^ma*^mc)_q||(^mb*^mc)_q|}\n");}
      else
-     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) \n");}
+     {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t)   Itot(2t) |sf|        LF   Imag_dip(2t) \n");}
     }
     // calculate alpha_i delta_i for reflection hkl[i](1..3)  [currently ok only for ortholattices !!!]
     double alpha1,alpha2,alpha3,delta1,delta2,delta3,sqr1,sqr2;
@@ -239,7 +239,7 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    }
    if(code==2)//calculate rpvalue and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
-    {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs\n");}
+    {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t)   Itot(2t) |sf|        LF   Imag_dip(2t) Iobs\n");}
       fprintf(fout,   "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E %8.4f\n",
       hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]));
      if(real(mx[i])>=0){
@@ -252,8 +252,8 @@ void printeln(jjjpar ** jjjpars,int code,const char * filename,const char* infil
    }
    if(code==3)//calculate also rpvalue and chisquared and output neutrons only
    {if((double)(i-imin)/50==(double)((i-imin)/50))
-    {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t) Itot(2t) |sf|     LF   Imag_dip(2t) Iobs error\n");}
-      fprintf(fout,    "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E %8.4f %8.4f\n",
+    {fprintf(fout, "#{h     k      l      d[A]    |Q|[1/A] 2theta  Inuc(2t) Imag(2t)   Itot(2t) |sf|        LF   Imag_dip(2t) Iobs        error\n");}
+      fprintf(fout,    "%6.3f %6.3f %6.3f %7.4f %7.4f %7.3f %8.4f %5.4E %8.4f %8.4f %8.4f %5.4E %5.4E %5.4E\n",
       hkl[i](1), hkl[i](2), hkl[i](3),D[i],2 * PI / D[i],2 * theta[i],ikern[i], intmag[i], ikern[i]+intmag[i],sf[i],lpg[i],intmagdip[i],real(mx[i]),abs(my[i]));
      if(real(mx[i])>=0){
       rpvalue+=abs(isave+ikern[i]+intmag[i]-abs(mx[i])); total+=abs(mx[i]);

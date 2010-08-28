@@ -25,11 +25,14 @@ printf("# **********************************************************\n");
     { printf ("\n \
 program momdensities - display momdensities at HT point\n\n \
 use as: momdensities threshhold T Ha Hb Hc [i j k] [file.mf]\n \
+    or: momdensities threshhold T Ha Hb Hc -div [file.mf]\n \
                         (default input file is results/mcphas.mf)\n\n \
 This program outputs momdensities on of magnetic ions in the magnetic\n \
 unit cell the graphics output format can be fine tuned in .mf and\n \
 and results/graphic_parameters.set\n\n \
 jvx files can be viewed by: java javaview results/momdensities.jvx \n \
+                options: \n\
+                -div triggers calculation of divergence of the vector field\n\
 \n\n");
       exit (1);
     }
@@ -55,6 +58,9 @@ if (argc>=9){
   xx/=rr;yy/=rr;zz/=rr;
   doijk=3;
  }
+if (argc>7&&strncmp(argv[6],"-div",4)==0)
+{doijk=1;
+}
  if (argc==7+doijk)
  { fin_coq = fopen_errchk (argv[6+doijk], "rb");}
  else
@@ -76,7 +82,7 @@ if (argc>=9){
   par inputpars("./mcphas.j");
 
   Vector hh(1,savmf.nofcomponents*savmf.nofatoms);
-  int dim=49; if(doijk==0){dim=3*49;}
+  int dim=49; if(doijk<3){dim=3*49;}
   spincf extendedspincf(savmf.na(),savmf.nb(),savmf.nc(),savmf.nofatoms,dim);
 
   // determine primitive magnetic unit cell
@@ -111,15 +117,15 @@ hh=0;for(l=1;l<=inputpars.nofatoms;++l)
             if((*inputpars.jjj[l]).module_type==0)
             {//(*inputpars.jjj[l]).mcalc(moms,T,h,lnz,u,(*inputpars.jjj[l]).mcalc_parstorage); // here we trigger single ion
                                                            // module to calculate all dim moments of momdensity
-if(xx!=0||doijk==0)(*inputpars.jjj[l]).spindensity_mcalc (momentsx,1, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
-if(yy!=0||doijk==0)(*inputpars.jjj[l]).spindensity_mcalc (momentsy,2, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
-if(zz!=0||doijk==0)(*inputpars.jjj[l]).spindensity_mcalc (momentsz,3, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
-if(xx!=0||doijk==0)(*inputpars.jjj[l]).orbmomdensity_mcalc (momentlx,1, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
-if(yy!=0||doijk==0)(*inputpars.jjj[l]).orbmomdensity_mcalc (momently,2, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
-if(zz!=0||doijk==0)(*inputpars.jjj[l]).orbmomdensity_mcalc (momentlz,3, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(xx!=0||doijk<3)(*inputpars.jjj[l]).spindensity_mcalc (momentsx,1, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(yy!=0||doijk<3)(*inputpars.jjj[l]).spindensity_mcalc (momentsy,2, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(zz!=0||doijk<3)(*inputpars.jjj[l]).spindensity_mcalc (momentsz,3, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(xx!=0||doijk<3)(*inputpars.jjj[l]).orbmomdensity_mcalc (momentlx,1, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(yy!=0||doijk<3)(*inputpars.jjj[l]).orbmomdensity_mcalc (momently,2, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
+if(zz!=0||doijk<3)(*inputpars.jjj[l]).orbmomdensity_mcalc (momentlz,3, T, h, (*inputpars.jjj[l]).mcalc_parstorage);
  momS=xx*momentsx+yy*momentsy+zz*momentsz;momL=xx*momentlx+yy*momently+zz*momentlz;
 for(nt=1;nt<=49;++nt){
-                      if(doijk>0){moments(nt)=momS(nt);moments(nt+49)=momL(nt);}
+                      if(doijk==3){moments(nt)=momS(nt);moments(nt+49)=momL(nt);}
                       else {
                             moments(nt)=momentsx(nt);moments(nt+49)=momentsy(nt);moments(nt+2*49)=momentsz(nt);
                             moments(nt+3*49)=momentlx(nt);moments(nt+4*49)=momently(nt);moments(nt+5*49)=momentlz(nt);
@@ -155,7 +161,11 @@ for(nt=1;nt<=49;++nt){
              spincf savev_real(extendedspincf*0.0);
              spincf savev_imag(extendedspincf*0.0);
              gp.showprim=0;
-             sprintf(gp.title,"momdensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==3) sprintf(gp.title,"projection of momdensity Ms(r).(%g,%g,%g)",xx,yy,zz);
+  if(doijk==1){sprintf(gp.title,"divergence of momdensity div ML(r)");gp.scale_density_vectors=0;}
+  if(doijk==0) sprintf(gp.title,"abs value  of momdensity |ML(r)|");
+  printf("%s\n",gp.title);
+
   fout = fopen_errchk ("./results/momdensities.grid", "w");
      extendedspincf.cd(fout,cs,gp,savev_real,savev_imag,0.0,hkl);
     fclose (fout);
@@ -179,6 +189,7 @@ fprintf(stderr,"# * \n\n results/momdensities.grid created");
 fprintf(stderr,"# * view jvx file by:\n");
 fprintf(stderr,"# * javaview results/momdensities.jvx\n");
 fprintf(stderr,"# * java javaview \"model=results/momdensities.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
+fprintf(stderr,"# * saved density mesh in results/momdensities.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}

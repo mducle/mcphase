@@ -32,6 +32,12 @@ void jjjpar::get_parameters_from_sipfile(char * sipffilename)
     {fprintf(stderr,"Error: single ion property file %s does not start with '#!' or 'MODULE='\n",sipffilename);
      exit(EXIT_FAILURE);}
    }
+   //ic1ion entered without path ?
+      if (strncmp(modulefilename,"ic1ion",6)==0)
+      {strcpy(modulefilename,getenv("MCPHASE_DIR"));
+    //   strcat(modulefilename,"\\bin\\ic1ion_module\\ic1ion.so");
+       strcat(modulefilename,"/bin/ic1ion_module/ic1ion.so");
+}
 
   fprintf (stderr,"#parsing single ion property file: %s - loading module %s\n",sipffilename,modulefilename);
 
@@ -367,7 +373,6 @@ ComplexMatrix & jjjpar::eigenstates (Vector & gjmbheff,double & T)
             return est;break;
    case 2:
    case 4: (*iops).cfeigenstates(&est,gjmbheff,T);return est;break;
-// case 4: est=(*iops).cfeigenstates(gjmbheff,T);return est;break;
    default: est=0;return est;
   }
 }
@@ -381,7 +386,6 @@ ComplexMatrix & jjjpar::mcalc_parameter_storage_init (Vector & gjmbheff,double &
             return mcalc_parstorage;break;
    case 2:
    case 4: (*iops).cfeigenstates(&mcalc_parstorage,gjmbheff,T);return mcalc_parstorage;break;
-// case 4: mcalc_parstorage=(*iops).cfeigenstates(gjmbheff,T);return mcalc_parstorage;break;
    default: mcalc_parstorage=0;return mcalc_parstorage;
   }
 }
@@ -688,7 +692,7 @@ else     {for(l=2;l<=6;l+=2){for(m=-l;m<=l;++m){if(m!=0){a(l,m)*=sqrt((2.0*l+1)/
          } // in case
            // of module ic1ion we just take the prefactors of the Zlm ... ??? what should we take here ???
 
- ro=rr*zlmsum(a,teta,fi);
+ ro=-rr*zlmsum(a,teta,fi); // minus, because electrons are negative
  }
 return ro;
 }
@@ -905,7 +909,7 @@ int i;
    ro=rr*zlmsum(a,teta,fi);
  }
  else
- {fprintf(stderr,"Error jjjpar.spindensitycalc: dimension of moments must be 49 or 3x49=147\n");
+ {fprintf(stderr,"Error jjjpar.spindensitycalc: dimension of moments=%i must be 49\n",moments.Hi());
   exit(EXIT_FAILURE);
  }
  }
@@ -940,6 +944,92 @@ int i;
    mm(3)=rr*zlmsum(a,teta,fi);
  }
 return mm;
+}
+
+//***********************************************************************
+// subs for calculation gradient of spin  density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+ Matrix jjjpar::gradspindensity_calc(double & teta,double & fi,double & R, Vector & momentx, Vector & momenty, Vector & momentz)
+{static Matrix grad(1,3,1,3);
+ if (R>3.9||R<0){grad=0;}else{
+ Vector m0(1,3);Vector m1(1,3);Vector m2(1,3);Vector m3(1,3);
+ double d=0.01; // differential in Angstroem
+ double teta1,teta2,teta3,fi1,fi2,fi3,R1,R2,R3;
+ double ct,st,sf,cf;
+ ct = cos(teta); st = sin(teta);   // y/r=st sfi
+ sf = sin(fi);   cf = cos(fi);
+ // now we use Jacobi Matrix (dr,dth,dfi)=J (dx,dy,dz)
+  // dx                      dy             dz
+ R1=R+d*st*cf;          R2=R+d*st*sf;       R3=R+d*ct;
+ teta1=teta+d*ct*cf/R;  teta2=teta+d*ct*sf/R; teta3=teta-d*st/R;
+ if(st>0){fi1=fi-d*sf/st/R;fi2=fi+d*cf/st/R;}else{fi1=fi;fi2=fi;} fi3=fi;
+
+ m0=spindensity_calc(teta,fi,R,momentx,momenty,momentz);
+ m1=spindensity_calc(teta1,fi1,R1,momentx,momenty,momentz);
+ m2=spindensity_calc(teta2,fi2,R2,momentx,momenty,momentz);
+ m3=spindensity_calc(teta3,fi3,R3,momentx,momenty,momentz);
+ //            d/dx     d/dy      d/dz
+ m1=(m1-m0)/d; m2=(m2-m0)/d; m3=(m3-m0)/d;grad=MatrixfromVectors(m1,m2,m3);
+ }
+ return grad;
+}
+//***********************************************************************
+// subs for calculation gradient of orbital moment density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+ Matrix jjjpar::gradorbmomdensity_calc(double & teta,double & fi,double & R, Vector & momentx, Vector & momenty, Vector & momentz)
+{static Matrix grad(1,3,1,3);
+ if (R>3.9||R<0){grad=0;}else{
+ Vector m0(1,3);Vector m1(1,3);Vector m2(1,3);Vector m3(1,3);
+ double d=0.01; // differential in Angstroem
+ double teta1,teta2,teta3,fi1,fi2,fi3,R1,R2,R3;
+ double ct,st,sf,cf;
+ ct = cos(teta);  st = sin(teta);   // y/r=st sfi
+ sf = sin(fi);    cf = cos(fi);
+ // now we use Jacobi Matrix (dr,dth,dfi)=J (dx,dy,dz)
+  // dx                      dy             dz
+ R1=R+d*st*cf;          R2=R+d*st*sf;       R3=R+d*ct;
+ teta1=teta+d*ct*cf/R;  teta2=teta+d*ct*sf/R; teta3=teta-d*st/R;
+ if(st>0){fi1=fi-d*sf/st/R;fi2=fi+d*cf/st/R;}else{fi1=fi;fi2=fi;} fi3=fi;
+
+ m0=orbmomdensity_calc(teta,fi,R,momentx,momenty,momentz);
+ m1=orbmomdensity_calc(teta1,fi1,R1,momentx,momenty,momentz);
+ m2=orbmomdensity_calc(teta2,fi2,R2,momentx,momenty,momentz);
+ m3=orbmomdensity_calc(teta3,fi3,R3,momentx,momenty,momentz);
+ //            d/dx     d/dy      d/dz
+ m1=(m1-m0)/d; m2=(m2-m0)/d; m3=(m3-m0)/d;grad=MatrixfromVectors(m1,m2,m3);
+ }
+ return grad;
+}
+
+//***********************************************************************
+// subs for calculation gradient of current density given a radiu R and polar angles teta,
+// fi and expansion coeff. of Zlm R^2(r)
+//***********************************************************************
+ Matrix jjjpar::gradcurrdensity_calc(double & teta,double & fi,double & R, Vector & momentx, Vector & momenty, Vector & momentz)
+{static Matrix grad(1,3,1,3);
+ if (R>3.9||R<0){grad=0;}else{
+ Vector m0(1,3);Vector m1(1,3);Vector m2(1,3);Vector m3(1,3);
+ double d=0.01; // differential in Angstroem
+ double teta1,teta2,teta3,fi1,fi2,fi3,R1,R2,R3;
+ double ct,st,sf,cf;
+ ct = cos(teta);  st = sin(teta);   // y/r=st sfi
+ sf = sin(fi);    cf = cos(fi);
+ // now we use Jacobi Matrix (dr,dth,dfi)=J (dx,dy,dz)
+  // dx                      dy             dz
+ R1=R+d*st*cf;          R2=R+d*st*sf;       R3=R+d*ct;
+ teta1=teta+d*ct*cf/R;  teta2=teta+d*ct*sf/R; teta3=teta-d*st/R;
+ if(st>0){fi1=fi-d*sf/st/R;fi2=fi+d*cf/st/R;}else{fi1=fi;fi2=fi;} fi3=fi;
+
+ m0=currdensity_calc(teta,fi,R,momentx,momenty,momentz);
+ m1=currdensity_calc(teta1,fi1,R1,momentx,momenty,momentz);
+ m2=currdensity_calc(teta2,fi2,R2,momentx,momenty,momentz);
+ m3=currdensity_calc(teta3,fi3,R3,momentx,momenty,momentz);
+ //            d/dx     d/dy      d/dz
+ m1=(m1-m0)/d; m2=(m2-m0)/d; m3=(m3-m0)/d;grad=MatrixfromVectors(m1,m2,m3);
+ }
+ return grad;
 }
 
 //***********************************************************************
@@ -1019,7 +1109,7 @@ if (R>4.0||R<0){mm=0;}else{
  st = sin(teta);   // y/r=st sfi
  sf = sin(fi);    // x/r=st cfi
  cf = cos(fi);
- Vector Jr(1,3),Jth(1,3),Jfi(1,3);
+ Vector Jr(1,3),Jth(1,3),Jfi(1,3); // Jacobi matrix
  Jr(1)=st*cf; Jr(2)=st*sf; Jr(3)=ct;
  Jth(1)=ct*cf;Jth(2)=ct*sf;Jth(3)=-st;
  if(st>0){Jfi(1)=-sf/st;Jfi(2)=cf/st;Jfi(3)=0;}else{Jfi=0;}

@@ -151,7 +151,7 @@ int inputline (FILE * fin_coq, float *nn)
   token = instr+strspn(instr," \t");
   i=0;
   if (*token!='\n'){
-  for (i = 1; token != NULL ; ++i)
+  for (i = 1; token != NULL&&(*token!='#') ; ++i)
     {
 if(i>=(int)nn[0])
         { fprintf (stderr, "Error in function inputline: maximum value of numbers in line exceeded,more numbers in line (>%i) to be read.\n",i);
@@ -551,4 +551,11 @@ double aMb_imag(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib)
   }
 
  return imag;
+}
+
+
+Matrix MatrixfromVectors(Vector & v1,Vector & v2,Vector & v3)
+{static Matrix m(1,3,v1.Lo(),v1.Hi());
+ for(int i=v1.Lo();i<=v1.Hi();++i){m(i,1)=v1(i);m(i,2)=v2(i);m(i,3)=v3(i);}
+return m;
 }

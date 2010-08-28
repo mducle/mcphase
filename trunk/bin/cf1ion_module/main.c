@@ -1697,7 +1697,7 @@ EWPROBLEM *setuphcf(setup,ewproblem,overwrite,kristallfeld,modus)
  
     iteration = ITERATION(kristallfeld);
     sym       =  SYMMETRIENR(kristallfeld);
-    switch( sym  ){
+   switch( sym  ){
  
          case 0 : switch(modus){
                      case SIN: iteration = Vkq0(iteration,sym);
@@ -1900,22 +1900,6 @@ ITERATION *hamltn0(i)
               I(h,n,m) += I(mag,n,m);
          }
  
-    /* h += singleion anisotropy */
-    if( B1S(i)!=0.0 || B2S(i)!=0.0 || B3S(i)!=0.0 ) {
-       #include "define_j.c"          /* mj,J2,J+,... definieren */
-       MATRIX  *dx,*dy,*dz;
-       DOUBLE d1=sqrt(fabs(B1S(i))),d2=sqrt(fabs(B2S(i))),d3=sqrt(fabs(B3S(i))),jm,jp,s1=1.,s2=1.,s3=1.;
-       INT dimj=DIMJ(i),l; 
-       if(B1S(i)<0) s1=-1.; if(B2S(i)<0) s2=-1.; if(B3S(i)<0) s3=-1.;
-       dx = mx_alloc( dimj,dimj ); dy = mx_alloc( dimj,dimj ); dz = mx_alloc( dimj,dimj );
-       for( n=DIMJ(i) ; n>=1 ; --n) for( m=DIMJ(i) ; m>=1 ; --m){
-              jm=JM(mj)*D(nj,mj-1); jp=JP(mj)*D(nj,mj+1);
-              R(dx,n,m) = d1*0.5*( jm+jp ); I(dy,n,m) = d2*0.5*( jm-jp ); R(dz,n,m) = d3*mj*D(nj,mj); }
-
-       for( n=DIMJ(i) ; n>=1 ; --n ) for( m=DIMJ(i) ; m>=1 ; --m ) for( l=DIMJ(i) ; l>=1 ; --l){
-              R(h,n,m) += ( s1*R(dx,n,l)*R(dx,l,m) - s2*I(dy,n,l)*I(dy,l,m) + s3*R(dz,n,l)*R(dz,l,m) ); }
-       free(dx); free(dy); free(dz);
-    }
  
     return( i );
 }
@@ -1981,7 +1965,22 @@ ITERATION *hamltn1(i)
               R(h,n,m) += R(mag,n,m);
               I(h,n,m) += I(mag,n,m);
          }
- 
+    /* h += singleion anisotropy */
+    if( B1S(i)!=0.0 || B2S(i)!=0.0 || B3S(i)!=0.0 ) {
+       #include "define_j.c"          /* mj,J2,J+,... definieren */
+       MATRIX  *dx,*dy,*dz;
+       DOUBLE d1=sqrt(fabs(B1S(i))),d2=sqrt(fabs(B2S(i))),d3=sqrt(fabs(B3S(i))),jm,jp,s1=1.,s2=1.,s3=1.;
+       INT dimj=DIMJ(i),l; 
+       if(B1S(i)<0) s1=-1.; if(B2S(i)<0) s2=-1.; if(B3S(i)<0) s3=-1.;
+       dx = mx_alloc( dimj,dimj ); dy = mx_alloc( dimj,dimj ); dz = mx_alloc( dimj,dimj );
+       for( n=DIMJ(i) ; n>=1 ; --n) for( m=DIMJ(i) ; m>=1 ; --m){
+              jm=JM(mj)*D(nj,mj-1); jp=JP(mj)*D(nj,mj+1);
+              R(dx,n,m) = d1*0.5*( jm+jp ); I(dy,n,m) = d2*0.5*( jm-jp ); R(dz,n,m) = d3*mj*D(nj,mj); }
+
+       for( n=DIMJ(i) ; n>=1 ; --n ) for( m=DIMJ(i) ; m>=1 ; --m ) for( l=DIMJ(i) ; l>=1 ; --l){
+              R(h,n,m) += ( s1*R(dx,n,l)*R(dx,l,m) - s2*I(dy,n,l)*I(dy,l,m) + s3*R(dz,n,l)*R(dz,l,m) ); }
+       free(dx); free(dy); free(dz);
+    }
  
     return( i );
 }
@@ -3063,7 +3062,7 @@ ITERATION *auswahlregel(iter,symmetrienr)
     INT zwei_j;
     zwei_j = DIMJ(iter) - 1;
  
-    switch( zwei_j >=2 ){ // changed from > to >= because S=1 should also give nonzero CEF MR 28.7.2010
+    switch( zwei_j >=2 ){  /* changed from > to >= because S=1 should also give nonzero CEF MR 28.7.2010 */
        case JA : switch( symmetrienr ){
                     case 8 : RT( V20(iter) ) = 0.0;
  
@@ -3475,6 +3474,37 @@ MATRIX *calc_Bmag( dimj,gj,myB,Bx,By,Bz ) /*magnetischen Hamiltonian */
     }
     return( bmag );
 }
+/*------------------------------------------------------------------------------
+                                    calc_Bmag_D()
+------------------------------------------------------------------------------*/
+MATRIX *calc_Bmag_D( dimj,gj,myB,Bx,By,Bz,Dx2,Dy2,Dz2 ) /*magnetischen Hamiltonian */
+    INT    dimj;                                     /* Hmag = - gJ muB J.B + simple anisotropy  H= + Dx2 Jx ^ 2+ Dy2 Jy ^ 2+ Dz2 Jz ^ 2      */
+    DOUBLE gj,myB,Bx,By,Bz,Dx2,Dy2,Dz2;
+{
+    INT    m,n;
+    MATRIX *bmag,*mx_alloc();
+    DOUBLE jm,jp,jx2,jy2;
+
+    #include "define_j.c"          /* mj,J2,J+,... definieren */
+    bmag = mx_alloc( dimj,dimj );  /* Speicher fuer (J nj| Hmag |mj J)*/
+
+ for( n=dimj ; n>=1 ; --n)
+         for( m=dimj ; m>=1 ; --m){
+              jm=JM(mj)*D(nj,mj-1);
+              jp=JP(mj)*D(nj,mj+1);
+              jx2=0.25*(JM(mj)*JP(mj-1)*D(nj,mj)+JM(mj+1)*JP(mj)*D(nj,mj));
+              jy2=jx2;
+              if (D(nj,mj-2)>0.5) {jx2+=0.25*JM(mj)*JM(mj-1);jy2-=0.25*JM(mj)*JM(mj-1);}
+              if (D(nj,mj+2)>0.5) {jx2+=0.25*JP(mj+1)*JP(mj);jy2-=0.25*JP(mj+1)*JP(mj);}
+/* sign changed 24.9.08 because zeeman term has negative sign */
+              R(bmag,n,m) = -gj*myB*(  0.5*Bx*( jm+jp ) + mj*Bz*D(nj,mj)  )+Dz2*mj*mj*D(nj,mj)+Dx2*jx2+Dy2*jy2;
+              I(bmag,n,m) = -gj*myB*   0.5*By*( jm-jp );
+    }
+
+
+    return( bmag );
+}
+
 /*------------------------------------------------------------------------------
                                     calcBmol()
 ------------------------------------------------------------------------------*/

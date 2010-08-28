@@ -252,6 +252,7 @@ fprintf(stderr,"# * \n");
 fprintf(stderr,"# * view jvx file by:\n");
 fprintf(stderr,"# * javaview results/charges.jvx\n");
 fprintf(stderr,"# * java javaview \"model=results/charges.*.jvx\" Animation.LastKey=16 background=\"255 255 255\" \n");
+fprintf(stderr,"# * saved density mesh in results/charges.grid\n");
 fprintf(stderr,"# ************************************************************************\n");
 
   for(i=1;i<=cs.nofatoms;++i){  delete cs.cffilenames[i];}

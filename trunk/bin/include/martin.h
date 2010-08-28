@@ -119,6 +119,7 @@ double aMb_real(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib);// transiti
 double aMb_imag(Matrix & M, Matrix & zr,Matrix & zc, int ia, int ib);// <a|M|b>  a,b are columns ia and ib
                                                                      // of zr+izc
 
+Matrix MatrixfromVectors(Vector & v1,Vector & v2,Vector & v3);
 
 #endif
 

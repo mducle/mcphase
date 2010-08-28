@@ -4,7 +4,7 @@
 #include "../../version"
 
 
-
+#define NOFHKLCOLUMNS 7
 
 
  // *************************************************************************
@@ -82,14 +82,28 @@ void inimcdis::save()
   fprintf(fout,"lmin=%g lmax=%g deltal=%g\n",qmin[3],qmax[3],deltaq[3]);
 
   fprintf(fout,"#\n");
-  fprintf(fout,"# or (if no mesh is given the program takes)\n");
-  fprintf(fout,"# (ii) a list of Q vectors with (optional) energies of observed excitations to be fitted\n");
-  fprintf(fout,"# h k l [E1(meV) E2(meV) ...]\n");
+  fprintf(fout,"# or \n");
+  fprintf(fout,"# (ii) file(s) containing list of Q vectors with (optional) energies of observed excitations to be fitted\n");
+  fprintf(fout,"# h k l [E(meV) [statistical_weight  [intensity [fwhm ]]]]\n");
+  fprintf(fout,"#\n");
+  fprintf(fout,"# hklfile=file1\n");
+  fprintf(fout,"# hklfile=file2\n");
+  fprintf(fout,"# ...\n");
+  fprintf(fout,"#\n");
+  fprintf(fout,"# or\n");
+  fprintf(fout,"# (iii) a list of Q vectors with (optional) energies of observed excitations to be fitted\n");
+  fprintf(fout,"# h k l [E(meV) [statistical_weight  [intensity [fwhm ]]]]\n");
   if(hkllist==0) {fprintf(fout,"0.45 1 1 0.523 0.745\n 0.75 1 1 0.523 0.745\n");}
   else { for (j=1;j<=(int)qmax(1);++j) 
-  	      {for(i=1;i<=hkls[j][0];++i)
-         	    {fprintf(fout,"%g ",hkls[j][i]);}
+  	      {if(hkls[j][0]<=3){for(i=1;i<=hkls[j][0];++i)fprintf(fout,"%g ",hkls[j][i]);fprintf(fout,"\n");} // print hkl
+               else             { int k;
+               for(k=NOFHKLCOLUMNS;k<=hkls[j][0];k+=NOFHKLCOLUMNS-3){
+               for(i=1;i<=3;++i){fprintf(fout,"%g ",hkls[j][i]);} // print hkl
+                                 fprintf(fout,"%g ",hkls[j][k-NOFHKLCOLUMNS+4]);// print E
+                                 fprintf(fout,"%g ",hkls[j][k-NOFHKLCOLUMNS+5]);// print weight
+                                 for(i=6;i<=NOFHKLCOLUMNS&&hkls[j][k-NOFHKLCOLUMNS+6]>0;++i)fprintf(fout,"%g ",hkls[j][k-NOFHKLCOLUMNS+i]);
                fprintf(fout,"\n");
+                                 }}
 	      }
        }
   fprintf(fout,"\n");
@@ -116,9 +130,9 @@ void inimcdis::save()
 //constructor ... load initial parameters from file
 inimcdis::inimcdis (const char * file,const char * spinfile)
 { float nn[MAXNOFCHARINLINE];nn[0]=MAXNOFCHARINLINE;
-  char instr[MAXNOFCHARINLINE];
-  int i=0,j=0;
-  FILE * fin;
+  char instr[MAXNOFCHARINLINE],hklfile[MAXNOFCHARINLINE];
+  int i=0,j=0,nofhklfiles=0;
+  FILE *fin,*finhkl;
   fin=fopen(spinfile,"rb");if (fin==NULL) {fprintf(stderr,"ERROR - file %s not found \n",spinfile);errexit();}
   instr[0]='#';  
   while(instr[strspn(instr," \t")]=='#'){fgets(instr,MAXNOFCHARINLINE,fin);}
@@ -166,6 +180,9 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
      extract(instr,"ki",ki); 
      extract(instr,"kf",kf); 
      extract(instr,"extended_eigenvector_dimension",extended_eigenvector_dimension);
+     if(!extract(instr,"hklfile",hklfile,MAXNOFCHARINLINE-1))
+                 {finhkl=fopen_errchk(hklfile,"rb");while (fgets(hklfile,MAXNOFCHARINLINE,finhkl)!=NULL)++i;fclose(finhkl);++nofhklfiles;
+                 }
   }
   if (ki==0) {if (kf==0) kf=10;
               fprintf(stdout,"#Calculating intensities for  kf=const=%4.4g/A\n",kf);
@@ -178,19 +195,78 @@ inimcdis::inimcdis (const char * file,const char * spinfile)
   if (Norm(qmin)+Norm(qmax)+Norm(deltaq)<=0.00001)
     {  hkllist=1;
        hkls=new double *[i+10];
+       hklfile_start_index= new int [nofhklfiles+1];hklfile_start_index[0]=nofhklfiles;
+       nofhklfiles=0;
        deltaq(1)=1.0;qmin(1)=1.0;
        deltaq(2)=1000.0;deltaq(3)=1000.0;
+       fin_coq = fopen(file, "rb"); // if in mcdisp.par we find a hklfile= ... insert hkl from this file into list
+            while (fgets(instr,MAXNOFCHARINLINE,fin_coq)!=NULL)
+               {if(!extract(instr,"hklfile",hklfile,MAXNOFCHARINLINE-1))
+                 {finhkl=fopen_errchk(hklfile,"rb");++nofhklfiles;hklfile_start_index[nofhklfiles]=qmax(1)+1;
+                  while (feof(finhkl)==0)
+                     {if ((i=inputline(finhkl,nn))>=3)
+	              {// here check if hkl already in list and if yes, extend its energies
+                     if((int)qmax(1)>1&&fabs(hkls[(int)qmax(1)][1]-nn[1])+fabs(hkls[(int)qmax(1)][2]-nn[2])+fabs(hkls[(int)qmax(1)][3]-nn[3])<0.001)
+                       {if(i>3)
+                        {int nold=hkls[(int)qmax(1)][0];
+                         hkls[(int)qmax(1)+1]=new double [nold+1];
+                         for(j=0;j<=nold;++j){hkls[(int)qmax(1)+1][j]=hkls[(int)qmax(1)][j];}
+                         delete []hkls[(int)qmax(1)];
+                         hkls[(int)qmax(1)]=new double [nold+NOFHKLCOLUMNS-3+1];hkls[(int)qmax(1)][0]=nold+NOFHKLCOLUMNS-3;
+                         for(j=1;j<=nold;++j){hkls[(int)qmax(1)][j]=hkls[(int)qmax(1)+1][j];}
+                         for(j=4;j<=i&&j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][nold+j-3]=nn[j];}
+                         for(j=i+1;j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][nold+j-3]=0.0;}
+                         if(i==4){hkls[(int)qmax(1)][nold+2]=1.0;} // put weight to 1 if not entered
+                         delete []hkls[(int)qmax(1)+1];
+                        }
+                       }
+                       else 
+                       {// a new set of hkl starts
+                       ++qmax(1);
+	               hkls[(int)qmax(1)]=new double [NOFHKLCOLUMNS+1];
+                       hkls[(int)qmax(1)][0]=NOFHKLCOLUMNS;if (i==3)hkls[(int)qmax(1)][0]=3;
+                       for(j=1;j<=i&&j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][j]=nn[j];}
+                       for(j=i+1;j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][j]=0.0;}
+                       if(i==4){hkls[(int)qmax(1)][5]=1.0;} // put weight to 1 if not entered
+                       }
+	              }
+                     }
+                  fclose(finhkl);
+                 }
+              }
+       fclose (fin_coq);
        fin_coq = fopen(file, "rb");
-       while (feof(fin_coq)==0)
-          {if ((i=inputline(fin_coq,nn))>=3)
-	      {++qmax(1);
-	       hkls[(int)qmax(1)]=new double [i+1];
-               hkls[(int)qmax(1)][0]=i;    
-               for(j=1;j<=i;++j)
-         	    {hkls[(int)qmax(1)][j]=nn[j];
-	            }
-	      }
-	  }
+       while (feof(fin_coq)==0) // insert hkl from list in mcdisp.par
+                    {if ((i=inputline(fin_coq,nn))>=3)
+	              {// here check if hkl already in list and if yes, extend its energies
+                                        if((int)qmax(1)>1&&fabs(hkls[(int)qmax(1)][1]-nn[1])+fabs(hkls[(int)qmax(1)][2]-nn[2])+fabs(hkls[(int)qmax(1)][3]-nn[3])<0.001)
+                       {if(i>3)
+                        {int nold=hkls[(int)qmax(1)][0];
+                         hkls[(int)qmax(1)+1]=new double [nold+1];
+                         for(j=0;j<=nold;++j){hkls[(int)qmax(1)+1][j]=hkls[(int)qmax(1)][j];}
+                         delete []hkls[(int)qmax(1)];
+                         hkls[(int)qmax(1)]=new double [nold+NOFHKLCOLUMNS-3+1];hkls[(int)qmax(1)][0]=nold+NOFHKLCOLUMNS-3;
+                         for(j=1;j<=nold;++j){hkls[(int)qmax(1)][j]=hkls[(int)qmax(1)+1][j];}
+                         for(j=4;j<=i&&j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][nold+j-3]=nn[j];}
+                         for(j=i+1;j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][nold+j-3]=0.0;}
+                         if(i==4){hkls[(int)qmax(1)][nold+2]=1.0;} // put weight to 1 if not entered
+                         delete []hkls[(int)qmax(1)+1];
+                        }
+                       }
+                       else 
+                       {// a new set of hkl starts
+                       ++qmax(1);
+	               hkls[(int)qmax(1)]=new double [NOFHKLCOLUMNS+1];
+                       hkls[(int)qmax(1)][0]=NOFHKLCOLUMNS;if (i==3)hkls[(int)qmax(1)][0]=3;
+                       for(j=1;j<=i&&j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][j]=nn[j];}
+                       for(j=i+1;j<=NOFHKLCOLUMNS;++j){hkls[(int)qmax(1)][j]=0.0;}
+                       if(i==4){hkls[(int)qmax(1)][5]=1.0;} // put weight to 1 if not entered
+                       }
+	              }
+                     }
+       fclose (fin_coq);
+
+	  
      }
    else
      {hkllist=0;}
@@ -221,8 +297,8 @@ inimcdis::inimcdis (const inimcdis & p)
    {
       hkls=new double *[(int)qmax(1)+10];
       for (j=1;j<=(int)qmax(1);++j) 
-  	      {
-	       hkls[j]=new double [(int)p.hkls[j][0]+1];
+  	      {if ((int)p.hkls[j][0]==3){hkls[j]=new double [8];}
+               else {hkls[j]=new double [(int)p.hkls[j][0]+1];}
                for(i=0;i<=p.hkls[j][0];++i)
          	    {hkls[j][i]=p.hkls[j][i];}
 	      }
@@ -236,6 +312,7 @@ inimcdis::~inimcdis ()
  if (hkllist==1)
  { for (i=1;i<=(int)qmax(1);++i) 
    { delete []hkls[i];}
-   delete []hkls; 
+   delete []hkls;
+   delete  []hklfile_start_index;
  }
 }

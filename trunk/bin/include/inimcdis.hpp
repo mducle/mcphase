@@ -17,7 +17,7 @@ class inimcdis
   char * savfilename;
     
   public:
-
+  int * hklfile_start_index;
   char * info;
   double ** hkls;
   int hkllist; 
