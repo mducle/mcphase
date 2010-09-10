@@ -10,6 +10,9 @@
 
 include ../Makefile.common
 
+COPTS+= -fpermissive
+CCOPTS+= -fpermissive
+
 ## C compiler 
 #CC= g++ -pipe
 #COPTS= -ansi -O3 -fomit-frame-pointer -fforce-addr -m486 -x c 

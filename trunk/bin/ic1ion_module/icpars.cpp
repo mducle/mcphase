@@ -27,6 +27,7 @@
 
 #define SMALL 1e-6   // must match SMALL in mcdisp.c and ionpars.cpp because it is used to decide wether for small
 		     // transition, energy the matrix Mijkl contains wn-wn' or wn/kT
+#define MAXNOFCHARINLINE 7024
 
 // --------------------------------------------------------------------------------------------------------------- //
 // Calculates the number of allowed states from the number of electrons and l
@@ -891,12 +892,16 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
    // Sets energy levels relative to lowest level, and determines the maximum energy level needed.
    for(Esz=0; Esz<J[0].nr(); Esz++) { E.push_back(VE.E(Esz)-VE.E(0)); if(exp(-E[Esz]/(KB*T))<DBL_EPSILON || VE.E(Esz+1)==0) break; }
 
+   if (T<0){Esz=(int)(-T);printf ("Temperature T<0: please choose probability distribution of states by hand\n");
+                         printf ("Number   Excitation Energy\n");
+     for (ind_j=0;ind_j<Esz;++ind_j) printf ("%i    %4.4g meV\n",ind_j+1,E[ind_j]);
+     } // MR 10.9.2010
+
    for(int ii=0; ii<Hsz; ii++) for(int jj=0; jj<Hsz; jj++) 
       if(fabs(VE.zV(ii,jj).r*VE.zV(ii,jj).r+VE.zV(ii,jj).i*VE.zV(ii,jj).i)<DBL_EPSILON*100000) 
       {
          VE.zV(ii,jj).r=0.; VE.zV(ii,jj).i=0.;  
       }  
-
    // For first run calculate also the partition function and internal energy
    me.assign(Esz,0.); eb.assign(Esz,0.); Z=0.;
    if(!VE.iscomplex()) 
@@ -910,7 +915,16 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
 #else
          me[ind_j] = F77NAME(ddot)(&Hsz, VE.V(ind_j), &incx, vt, &incx);
 #endif
-         eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=E[ind_j]*eb[ind_j];
+//MR 10.9.2010
+     if (T<0)
+     { char instr[MAXNOFCHARINLINE];
+      printf("eigenstate %i: %4.4g meV  - please enter probability w(%i):",ind_j+1,E[ind_j],ind_j+1);
+       if(fgets(instr, MAXNOFCHARINLINE, stdin)==NULL) { fprintf(stderr,"Error reading input\n"); exit(1); }
+       eb[ind_j]=strtod(instr,NULL);
+     }
+      else
+        { eb[ind_j] = exp(-E[ind_j]/(KB*T));} ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
+//MRend 10.9.2010                                                                   !!!!    -----------------!!!!
       }
       free(fJmat); free(vt); matel.push_back(me); ex[0]/=Z; U/=Z;
    }
@@ -928,7 +942,16 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
          zme = F77NAME(zdotc)(&Hsz, VE.zV(ind_j), &incx, zt, &incx);
 #endif
          me[ind_j] = zme.r;
-         eb[ind_j] = exp(-E[ind_j]/(KB*T)); ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
+//MR 10.9.2010
+     if (T<0)
+     { char instr[MAXNOFCHARINLINE];
+      printf("eigenstate %i: %4.4g meV  - please enter probability w(%i):",ind_j+1,E[ind_j],ind_j+1);
+       if(fgets(instr, MAXNOFCHARINLINE, stdin)==NULL) { fprintf(stderr,"Error reading input\n"); exit(1); }
+       eb[ind_j]=strtod(instr,NULL);
+     }
+      else
+        { eb[ind_j] = exp(-E[ind_j]/(KB*T));} ex[0]+=me[ind_j]*eb[ind_j]; Z+=eb[ind_j]; U+=(E[ind_j]+VE.E(0))*eb[ind_j];
+//MRend 10.9.2010
       }
       free(zJmat); free(zt); matel.push_back(me); ex[0]/=Z; U/=Z;
    }
@@ -1041,7 +1064,7 @@ std::vector<double> icmfmat::expJ(iceig &VE, double T, std::vector< std::vector<
          }
          free(zJmat); free(zt); matel.push_back(me); ex[iJ]/=Z;
       }
-      if(fabs(ex[iJ])<DBL_EPSILON) ex[iJ]=0.; 
+      if(fabs(ex[iJ])<DBL_EPSILON) ex[iJ]=0.;
    }
    ex[iJ] = log(Z)-VE.E(0)/(KB*T); ex[iJ+1] = U;
    return ex;

@@ -35,34 +35,33 @@ int main(int iArgC, char ** szArgV)
  int iSet[2]={1,1},iPrint=0;
  int ix1=1, ix2=1, iy1=2, iy2=2;
  char cOp=0;
- const char *szManPath="Usage: Fileop -f op [-x #[,#]] [-y #[,#]] [-s #,#] [-t] [-v] [-h]  (File1) File2
-        -s #,#: (int) number of data set to use for the calculation
-	        Two numbers separated by commas can be specified, refering 
-		to File1 or File2, respectively   
-                (Only valid if file type supports multiple data sets)  
-         -f op: A single character defining operation
-        -x #,#:             
-        -y #,#: (int) number of x-, y-columns used for the calculation.
-	        Two numbers separated by commas can be specified, refering 
-		to File1 or File2, respectively   
-	        If ommited the default values x:1, y:2 are assumed.
-       -t dos : OutFile in DOS <lf><cr> format
-       -t unix: OutFile in UNIX <lf> format
-            -t: ommited: OutFile same as IputFile format
-            -v: verify -> print header before and after operation (stderr)          
-            -h: Print this help message 
-     InputFile: Input data file
-RESULT:
-The operation defined by the character is performed:
-y1(x1) = y1(x1) <op> y2(x1). 
-x(File1) and x(File2) need not be same, linear interpolation is used to get
-the value y2(x1) from y2(x2)
-Columns not involved in the operation are unchanged.
-Values MUST be sorted by x-column
-File1 can be piped (>).
-Output is written to stdout.
-$Id: Fileop.man,v 1.4 1999/04/29 09:44:09 herbie Exp herbie $
- ";
+ const char *szManPath="Usage: Fileop -f op [-x #[,#]] [-y #[,#]] [-s #,#] [-t] [-v] [-h]  (File1) File2\n"
+"        -s #,#: (int) number of data set to use for the calculation\n"
+"	        Two numbers separated by commas can be specified, refering \n"
+"		to File1 or File2, respectively   \n"
+"                (Only valid if file type supports multiple data sets)  \n"
+"         -f op: A single character defining operation\n"
+"        -x #,#:             \n"
+"        -y #,#: (int) number of x-, y-columns used for the calculation.\n"
+"	        Two numbers separated by commas can be specified, refering \n"
+"		to File1 or File2, respectively   \n"
+"	        If ommited the default values x:1, y:2 are assumed.\n"
+"       -t dos : OutFile in DOS <lf><cr> format\n"
+"       -t unix: OutFile in UNIX <lf> format\n"
+"            -t: ommited: OutFile same as IputFile format\n"
+"            -v: verify -> print header before and after operation (stderr)          \n"
+"            -h: Print this help message \n"
+"     InputFile: Input data file\n"
+"RESULT:\n"
+"The operation defined by the character is performed:\n"
+"y1(x1) = y1(x1) <op> y2(x1). \n"
+"x(File1) and x(File2) need not be same, linear interpolation is used to get\n"
+"the value y2(x1) from y2(x2)\n"
+"Columns not involved in the operation are unchanged.\n"
+"Values MUST be sorted by x-column\n"
+"File1 can be piped (>).\n"
+"Output is written to stdout.\n"
+"$Id: Fileop.man,v 1.4 1999/04/29 09:44:09 herbie Exp herbie $\n";
 
  if(iArgC<1)exit(EXIT_FAILURE);
 

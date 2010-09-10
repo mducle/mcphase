@@ -104,6 +104,7 @@ LDFLAGS = -larpack -llapack -lblas
 #LDFLAGS = -Llibs -larpack -llapack -lblas $(LIBFORTRAN)
 #LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/cygwin32_penryn/lib -lf77blas -latlas -lgfortran
 #LDFLAGS = -Llibs -larpack -llapack -L/home/eqr/src/ATLAS-3.8.3/mingw64_penryn/lib -lf77blas -latlas -lgfortran
+#LDFLAGS = -Llibs -larpack -llapack -L/home/mdl27/src/ATLAS-3.9.23/linux_x86_pineview/lib -lf77blas -latlas -lgfortran
 ifdef MSYS
 ifdef GCC4
 LDFLAGS+= -static

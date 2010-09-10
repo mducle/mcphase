@@ -1900,6 +1900,22 @@ ITERATION *hamltn0(i)
               I(h,n,m) += I(mag,n,m);
          }
  
+    /* h += singleion anisotropy */
+    if( B1S(i)!=0.0 || B2S(i)!=0.0 || B3S(i)!=0.0 ) {
+       #include "define_j.c"          /* mj,J2,J+,... definieren */
+       MATRIX  *dx,*dy,*dz;
+       DOUBLE d1=sqrt(fabs(B1S(i))),d2=sqrt(fabs(B2S(i))),d3=sqrt(fabs(B3S(i))),jm,jp,s1=1.,s2=1.,s3=1.;
+       INT dimj=DIMJ(i),l; 
+       if(B1S(i)<0) s1=-1.; if(B2S(i)<0) s2=-1.; if(B3S(i)<0) s3=-1.;
+       dx = mx_alloc( dimj,dimj ); dy = mx_alloc( dimj,dimj ); dz = mx_alloc( dimj,dimj );
+       for( n=DIMJ(i) ; n>=1 ; --n) for( m=DIMJ(i) ; m>=1 ; --m){
+              jm=JM(mj)*D(nj,mj-1); jp=JP(mj)*D(nj,mj+1);
+              R(dx,n,m) = d1*0.5*( jm+jp ); I(dy,n,m) = d2*0.5*( jm-jp ); R(dz,n,m) = d3*mj*D(nj,mj); }
+
+       for( n=DIMJ(i) ; n>=1 ; --n ) for( m=DIMJ(i) ; m>=1 ; --m ) for( l=DIMJ(i) ; l>=1 ; --l){
+              R(h,n,m) += ( s1*R(dx,n,l)*R(dx,l,m) - s2*I(dy,n,l)*I(dy,l,m) + s3*R(dz,n,l)*R(dz,l,m) ); }
+       free(dx); free(dy); free(dz);
+    }
  
     return( i );
 }

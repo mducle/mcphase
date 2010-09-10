@@ -32,7 +32,8 @@
 //#define TEST_CDATA
 //#define DEBUG_CDATA
 
-extern int errno;
+//extern int errno;
+#include <errno.h>
 // ******************************************************
 // class CData Functions
 // ******************************************************

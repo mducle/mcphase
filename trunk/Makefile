@@ -9,7 +9,7 @@ vecdir = bin/src/vector
 funcdir = bin/src/functions
 calcdir = bin/src/calc
 
-all: vector functions cfield mcphase
+all: vector functions calc cfield mcphase
 
 vector: 
 	cd $(vecdir) && $(MAKE) 
