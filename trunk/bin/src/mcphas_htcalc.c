@@ -156,7 +156,7 @@ int htcalc_iteration(int j, double &femin, spincf &spsmin, Vector H, double T, p
  Vector nettom(1,inputpars.nofcomponents*inputpars.nofatoms),q(1,3);
  Vector mmom(1,inputpars.nofcomponents);
  Vector h1(1,inputpars.nofcomponents),hkl(1,3);
- char text[100];
+ char text[10000];
  spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
  mfcf * mf;
  FILE * felog; // logfile for q dependence of fe
@@ -380,7 +380,7 @@ int  htcalc (Vector Habc,double T,par & inputpars,qvectors & testqs,
                   abc(4)=inputpars.alpha; abc(5)=inputpars.beta; abc(6)=inputpars.gamma;
  dadbdc2ijk(H,Habc,abc); // transform Habc to ijk coordinates ... this is H
                   abc(1)=inputpars.a; abc(2)=inputpars.b; abc(3)=inputpars.c;
- double femin=10000;char text[100];
+ double femin=10000;char text[1000];
  spincf  sps(1,1,1,inputpars.nofatoms,inputpars.nofcomponents),sps1(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
  spincf  spsmin(1,1,1,inputpars.nofatoms,inputpars.nofcomponents);
  mfcf * mf;

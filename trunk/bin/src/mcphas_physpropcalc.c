@@ -1,7 +1,7 @@
 /************************************************************************/
 
 void physpropclc(Vector H,double T,spincf & sps,mfcf & mf,physproperties & physprops,par & inputpars)
-{ int i,j,k,l,n;div_t result;float mmax; char text[100];FILE * fin_coq;
+{ int i,j,k,l,n;div_t result;float mmax; char text[1000];FILE * fin_coq;
  //save fe and u
  // calculate nettomoment from spinstructure
      physprops.m=sps.nettomagmom(inputpars.gJ)/(double)sps.n()/(double)sps.nofatoms;
