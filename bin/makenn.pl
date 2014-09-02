@@ -1,4 +1,4 @@
-#! /usr/bin/perl
+#!/usr/bin/perl
 
 use FileHandle;
 
@@ -18,7 +18,7 @@ unless ($#ARGV>=0)
 {
 print STDOUT << "EOF";
 
- usage: makenn 23.3 [options] 
+ usage: makenn 23.3 [options] [-d]
 
  meaning take mcphas.j, generate all neighbors within sphere of 23.3A 
  and put them into makenn.j,the output values are sorted by ascending distance
@@ -64,7 +64,7 @@ print " option -bvk filename\n";
 print "              for phonon take Born van Karman model with longitudinal and\n";
 print "              transversal spring constants from file - file format:\n";
 print "                 atom_n_sipf atom_n'_sipf bondlength(A) long(N/m) trans(n/M)\n";
-print " option -d puts to the last column the distance of the neighbors (A)\n\n";
+print "        -d puts to the last column the distance of the neighbors (A)\n\n";
 print " The neigbours of each atom are also stored in seperate files\n";
 print " results\/makenn.a*.pc, which can be used with the program pointc to evaluate\n";
 print " the pointcharge model and calculate crystal field paramaters.\n\n";
@@ -342,7 +342,7 @@ sub getinteraction {
  if($bvk==1)
  { # here do the Born von Karman calculation using spring constants
   $a0 = .5292e-10;#(m)
-  $J2meV=1/1.60217646e-22; #1 millielectron volt = 1.60217646 × 10-22 joules
+  $J2meV=1/1.60217646e-22; #1 millielectron volt = 1.60217646 ï¿½ 10-22 joules
   $jaa=0;$jbb=0;$jcc=0;$jab=0;$jbc=0;$jac=0;
   for($n=1;$n<=$nof_springs;++$n){
          if(abs($r-$bondlength[$n])<0.01
@@ -552,9 +552,9 @@ sub printneighbourlist {
       else
        {$text=~s!diagonalexchange\s*=\s*\d+!diagonalexchange=0!;}
       }
-      print $l ($text);
       last if (/^(#!|[^#])*diagonalexchange\s*=\s*/);
      }
+      print $l ($text);
 # the next lines are to advance $h to the end of the numeric table
 
       while(<$h>)
