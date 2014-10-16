@@ -2,8 +2,6 @@
 BEGIN{@ARGV=map{glob($_)}@ARGV}
 
 unless ($#ARGV >2) {usage();}
-GetOptions("help"=>\$helpflag);
-usage() if $helpflag;
 
 sub usage() {
 
@@ -68,4 +66,3 @@ $ARGV[0]=~s/exp/essp/g;$ARGV[0]=~s/x/*/g;$ARGV[0]=~s/essp/exp/g;$const=eval $ARG
       print ">\n";
  }   
 
- 
