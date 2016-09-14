@@ -18,7 +18,8 @@
 #define MAXNOFCHARINLINE 7024
 #define MAGFF_NOF_COEFF 9
 
-#define SMALL 1e-6   
+#define SMALL 1e-6  // for module kramer - to trigger numerical limited calculation 
+                    // for adding jjpar sets to see what is difference in position or what is equal
 
 #include "jjjpar_basmodfunc.cpp" // basic sipf module functions
 #include "jjjpar_observables.cpp" // function for physical observables
@@ -187,6 +188,39 @@ void jjjpar::addpars (int number, jjjpar & addjjj)
   delete []jijn;
   delete []dnn;
 }
+
+// scale all interaction parameters
+void jjjpar::scalepars (double scalefactor)
+{int i;for (i=1;i<=paranz;++i)
+  {jij[i]*=scalefactor;
+  }
+
+}
+
+// remove neighbour from list
+void jjjpar::delpar (int number)
+{ Matrix * jijn;
+  Vector * dnn;
+  int * sublatticen;
+  int i;
+  --paranz;
+  jijn = new Matrix[paranz+1];
+  dnn = new Vector[paranz+1];
+  sublatticen = new int[paranz+1];
+  int offset=0;
+  for (i=1;i<=paranz;++i)
+  {if(i==number)offset=1;
+   jijn[i]=jij[i+offset];
+   dnn[i]=dn[i+offset];
+   sublatticen[i]=sublattice[i+offset];
+  }
+
+  delete []jij;
+  delete []dn;
+  delete []sublattice;
+  dn=dnn;jij=jijn;sublattice=sublatticen;
+}
+
 
 /************************************************************************************/
 // save/get parameters 

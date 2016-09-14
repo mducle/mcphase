@@ -74,8 +74,8 @@ public:
    void addpars (int number, jjjpar & addjjj); // enlarge the set of parameters by
                                                         // inserting a new exchange parameters addjjj
 							// into field at position number
-
-
+   void scalepars (double scalefactor); // multiply all exchange parameters with scale factor
+   void delpar (int number); // remove a neighbour from list
 
    void save (FILE *file); // to save the parameters to a filehandle
    void saveatom (FILE *file); // to save the atom coordinates and properties to a filehandle
