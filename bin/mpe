@@ -1,1 +1,0 @@
-$MCPHASE_DIR/bin/mcphaseexplorer/bin/mcphaseexplorer 1> $MCPHASE_DIR/bin/mcphaseexplorer.log  2> $MCPHASE_DIR/bin/mcphaseexplorer.log &

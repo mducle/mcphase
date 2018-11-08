@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module codename="org.mcphase.ini">
-    <module_version install_time="1265633644238" last="true" origin="installer" specification_version="1.0">
-        <file crc="3535016834" name="config/Modules/org-mcphase-ini.xml"/>
-        <file crc="2017085203" name="modules/org-mcphase-ini.jar"/>
-    </module_version>
-</module>

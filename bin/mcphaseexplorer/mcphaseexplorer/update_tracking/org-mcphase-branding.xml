@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module codename="org.mcphase.branding">
-    <module_version install_time="1265633643394" last="true" origin="installer" specification_version="1.0">
-        <file crc="701413483" name="config/Modules/org-mcphase-branding.xml"/>
-        <file crc="193148596" name="modules/org-mcphase-branding.jar"/>
-    </module_version>
-</module>

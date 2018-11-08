@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<module codename="org.netbeans.modules.diff/1">
-    <module_version install_time="1248325840494" last="true" origin="installer" specification_version="1.21.1.42.1">
-        <file crc="4206616121" name="config/Modules/org-netbeans-modules-diff.xml"/>
-        <file crc="3672389264" name="modules/org-netbeans-modules-diff.jar"/>
-    </module_version>
-</module>

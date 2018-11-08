@@ -1,8 +1,0 @@
-Usage: XHelp InputFile
-     InputFile: Input text file
-RESULT:
-Input text file is displayed in a read only edit window
-X-Windows is needed.
-InputFile can be piped (|).
-
-$Id: Xhelp.man,v 1.3 1999/03/15 09:41:51 herbie Exp herbie $

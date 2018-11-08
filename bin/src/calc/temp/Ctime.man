@@ -1,7 +1,0 @@
-Usage: Ctime # of secs
-
-RESULT:
-A readable date/time format is displayed
-Input: # of seconds since 1.1.1970 00:00:00
-
-$Id: Ctime.man,v 1.1 1999/03/17 14:20:57 herbie Exp herbie $
