@@ -1,4 +1,0 @@
-BUGS:
-
-- assignment of empty matrix  gives seg-fault !!!
-- check all matrix routines for empty matrices ! complex/vectors also !!!!!!!
