@@ -228,7 +228,7 @@ void jsss_mult(int ll, long int &nofneighbours, Vector q,  par &inputpars, inimc
 //          if (do_verbose==1) {printf("#s=%i %i %i  s'=%i %i %i\n",i,j,k,i1,j1,k1);}
           // sum up 
 
-//         mdl - Changed 110710 - To speed up computation by calculating exp(-2i.Pi.Q.d) real and imag parts separately, 
+//         mdl - Changed 110710 - To speed up computation by calculating exp(+2i.Pi.Q.d) real and imag parts separately, 
 //                                and put into J.mati(s,ss) directly without using intermediate jsss matrix.
            complex<double> **jsss = J.mati(s,ss).M;
 
@@ -247,8 +247,10 @@ void jsss_mult(int ll, long int &nofneighbours, Vector q,  par &inputpars, inimc
 	     for(m=1;m<=ini.nofcomponents;++m){for(n=1;n<=ini.nofcomponents;++n){ //this should also be ok for nofcomponents > 3 !!! (components 1-3 denote the magnetic moment)
          jjval = (*inputpars.jjj[ll]).jij[l](m,n);  
          jsss[jsi+m][jsj+n] += complex<double>(jjval*REexpqd, jjval*IMexpqd);
+//         jsss(jsi+m,jsj+n) += complex<double>(jjval*REexpqd, jjval*IMexpqd);
                                               }                                 } // but orbitons should be treated correctly by extending 3 to n !!
-	                                         }}        
+	                                         }} 
+//       J.mati(s,ss)+=jsss;
 
           ++nofneighbours; // count neighbours summed up
 	 }}}
@@ -942,6 +944,7 @@ if (do_jqfile){
                            myPrintComplexMatrix(stdout,Ac); 
                            myPrintComplexMatrix(stdout,Lambda); 
                    }
+
    // diagonalize Ac to get energies  and eigenvectors !!!
    Vector En(1,dimA);
    ComplexVector Enc(1,dimA);  // For complex eigenvalues in case the non-symmetric eigensolver is used.
