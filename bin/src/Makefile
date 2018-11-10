@@ -296,7 +296,7 @@ ip.o: ionpars.cpp
 # mcphase software suite programs
 ../cond$(EXE): cond.o paramete.o $(VOBS) martin.o
 	@echo Linking ../cond
-	@$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
+	$(LINKER)  -Wall  -o ../cond $^ $(LFLAGS)
 
 ../coq2jjj$(EXE): coq2jjj.o paramete.o $(VOBS) martin.o
 	@echo Linking ../coq2jjj

@@ -86,7 +86,9 @@ inline char *gconvert (double value,int ndigit,int trailing,char *buf)
 
 #elif defined( __GNUC__ ) && defined( __alpha__ )
 // absolute value for long
+#if __GNUC__ < 6
 inline long abs (long x){return(x<0)?-x:x;}
+#endif
 #include <cfloat>
 extern "C" {  
     char *ecvt (double,int,int*,int*);
@@ -145,7 +147,9 @@ inline char *gconvert (double value,int ndigit,int,char *buf)
 //-----------------------------------------------------------------------------//
 
 // absolute value for long
+#if __GNUC__ < 6
 inline long abs (long x){return(x<0)?-x:x;}
+#endif
 #else 
 #include <cfloat>
 #include <climits>
