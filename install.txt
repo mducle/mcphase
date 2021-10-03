@@ -48,8 +48,8 @@ Installation Procedure:
      on your computer, open a dos shell and type:
      java -version
 
-    install compiler MinGW-4.3.5.exe (or later) and MSYS-1.0.10.exe
-    install MSYS
+    install MSYS2 (see http://msys2.github.io)
+    install gcc and gcc-fortran using packman
 
     cd  mcphas\
     type: make clean
