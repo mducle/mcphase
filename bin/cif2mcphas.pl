@@ -12,7 +12,7 @@
 # Fri Sep 26 12:00:53 KST 2014 - Duc Le - mducle@snu.ac.kr
 
 use PDL;
-use PDL::Slatec;
+#use PDL::Slatec;
 use File::Copy;
 use Getopt::Long;
 use IPC::Open3;
@@ -370,7 +370,8 @@ $v=sqrt($v);
 $rtoijk = pdl [ [ $a, $b*cos($gamma), $c*cos($beta) ],
                 [  0, $b*sin($gamma), $c*(cos($alpha)-cos($beta)*cos($gamma))/sin($gamma) ],
                 [  0,              0, $c*$v/sin($gamma) ] ];
-$invrtoijk = matinv($rtoijk);
+#$invrtoijk = matinv($rtoijk);
+$invrtoijk = inv($rtoijk);
 
 if($debug==1) {
   print STDERR $rtoijk;
@@ -1199,7 +1200,7 @@ print FOUT << "EOF";
 #              ~sum_n ()n exp(-2 DWFn sin^2(theta) / lambda^2)=EXP (-Wn),
 #              relation to other notations: 2*DWF = B = 8 pi^2 <u^2>, units DWF (A^2)
 #
-#! use_dadbdc=1
+#! use_dadbdc=0
 #
 # Real Imag[scattering length(10^-12cm)]   da(a)    db(b)    dc(c)    dr1(r1)  dr2(r2)  dr3(r3)  DWF(A^2)
 EOF
@@ -1211,11 +1212,8 @@ for $si (0..$sa-1) {
         if($ismag[$ions{$ps[7]}]==0) {
           $pa = ($ps[1]+$si)/$sa; $pb = ($ps[2]+$sj)/$sb; $pc = ($ps[3]+$sk)/$sc;
           $fpos = pdl [ ($ps[1]+$si), ($ps[2]+$sj), ($ps[3]+$sk) ];
-          # use $cpos if #!use_dadbdc=0 in above, fpos if #!use_dadbdc=1
-          #$cpos = $rtoijk x transpose($fpos);
           printf FOUT "%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f%10.5f 0  # %s.sipf\n",
-             #$realb[$ions{$ps[7]}], $imagb[$ions{$ps[4]}], $pa, $pb, $pc, $cpos->at(0,0), $cpos->at(0,1), $cpos->at(0,2), $ps[7];
-             $realb[$ions{$ps[7]}], $imagb[$ions{$ps[4]}], $pa, $pb, $pc, $fpos->at(0), $fpos->at(1), $fpos->at(2), $ps[7];
+              $realb[$ions{$ps[7]}], $imagb[$ions{$ps[4]}], $pa, $pb, $pc, $fpos->at(0), $fpos->at(1), $fpos->at(2), $ps[7];
         }
       }
     } 
@@ -1276,4 +1274,3 @@ print "   running javaview results/spins.jvx displays the corresponding\n";
 print "   spinstructure (collinear), !! mind to edit formfactor information\n";
 print "   in the magnetic ions .sipf files before running mcdiff !!\n";
 print "\n";
-

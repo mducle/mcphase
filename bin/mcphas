@@ -2,7 +2,7 @@
 # main program batch of mcphase
 
 
-if [ X"$1" != X"-version" -a  X"$1" != X"-help" -a  X"$1" != X"-h" -a  != X"-prefix"]; then
+if [ X"$1" != X"-version" -a  X"$1" != X"-help" -a  X"$1" != X"-h" -a  X"$1" != X"-prefix" ]; then
 # yes do a calculation
  #start displaying results
  java IniConfigurator &

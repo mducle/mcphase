@@ -10,7 +10,6 @@
  * you entered into with Sun.
  */
 
-
 import java.util.*;
 import java.io.*;
 import java.net.*;
@@ -195,7 +194,8 @@ public class PostscriptViewer extends JApplet implements ActionListener, Runnabl
 	f.pack();
         int w = 390; 
         int h = 440;
-	f.setSize(new Dimension(w, h));
+	//f.setSize(new Dimension(w, h));
+        f.setSize(w, h);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         f.setLocation(screenSize.width/2 - w/2, screenSize.height/2 - h/2);
 	f.show();

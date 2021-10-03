@@ -1,1 +1,6 @@
-ls --ignore '*.bat' --ignore '*.pl' $MCPHASE_DIR/bin/* 
+ls $MCPHASE_DIR/bin | sed '/\.bat$/ { N; s/.*bat\n//g ;}' \
+| sed '/\.pl$/ { N; s/.*pl\n//g ;}' \
+| sed '/\.pm$/ { N; s/.*pm\n//g ;}' \
+| sed '/\.exe$/ { N; s/.*exe\n//g ;}' 
+
+
