@@ -4,7 +4,8 @@ basedir=`dirname $(echo $0)`
 
 if test ! -x $basedir/checkgcc.exe
 then
-   $2 -static-libgcc $basedir/checkgcc.cpp -o $basedir/checkgcc.exe 1>/dev/null 2>/dev/null
+#   $2 -static-libgcc $basedir/checkgcc.cpp -o $basedir/checkgcc.exe 1>/dev/null 2>/dev/null
+   $2 $basedir/checkgcc.cpp -o $basedir/checkgcc.exe 1>/dev/null 2>/dev/null
 fi
 
 $basedir/checkgcc.exe $1

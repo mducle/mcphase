@@ -529,10 +529,10 @@ VEKTOR *loese(a,b)      /* loese  Ax = b */
    LUDCMP *_ludcmp, *ludcmp();
    VEKTOR *x,       *lubksb();
  
-   _ludcmp = ludcmp(a);
+   _ludcmp = ludcmp(&a);
    x       = (VEKTOR*)0;
    if( _ludcmp->invers == JA ){  /* inverse matrix exestiert */
-       x = lubksb(_ludcmp,b);
+       x = lubksb(_ludcmp,&b);
    }
  
    free_vr( _ludcmp->index );

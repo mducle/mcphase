@@ -167,6 +167,7 @@ HEADER = maths states ic1ion icpars icmf
 
 default: all
 all: ../ic1ionit$(EXE) ic1ion.so ../icf1ionit$(EXE) icf1ion.so
+  
 
 # Defines some variables
 OBJ := $(foreach objs,$(OBJECT),$(objs).o)

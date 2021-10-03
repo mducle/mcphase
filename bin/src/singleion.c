@@ -46,6 +46,8 @@ void helpexit()
           "         -opmat 2 .... output operator matrix number 2 to results/op.mat\n"
           "    n=0 Hamiltonian, n=1,...,nofcomponents: operator Matrix In in standard basis\n"
           "                     n=-1,..,-nofomponents: operator Matrix In for Hamiltonian eigenstates basis\n"
+          "                     n>nofomponents: all operator Matrices (n=0 to n=nofcomponents) in standard basis\n"
+          "                     n<-nofomponents: all operator Matrices (n=0 to n=-nofcomponents) in Hamiltonain eigenstates basis\n"
           "Note: for calculating T or H dependencies you can put single ion in a loop\n"
           "      and pipe the result into a file\n"
           "  .... linux:   for B in $(seq 0 0.1 14); do singleion 2 $B 0 0 0 0 0; done > results/fielddep.dat\n"
@@ -204,9 +206,30 @@ if (!do_sipf)
         fclose(fout_trs);
         if(nmax<nt){printf("...");}
       }
-     if(opmat<1e10){Matrix op((*inputpars.jjj[i]).opmat((int)opmat,Hxc,Hext));
-                     myPrintComplexMatrix(fout_opmat,op);}
-     
+     if(opmat<1e10){fprintf(fout_opmat,"#! d=%i  ",(*inputpars.jjj[i]).est.Chi());
+                    if(opmat>nofcomponents){ for(int opmati=0;opmati<=nofcomponents;++opmati)
+                                             {Matrix op((*inputpars.jjj[i]).opmat(opmati,Hxc,Hext));
+                                             myPrintComplexMatrix(fout_opmat,op);}
+
+                                           }
+                    else
+                    { if(opmat<-nofcomponents){
+
+                                                Matrix opp((*inputpars.jjj[i]).opmat(0,Hxc,Hext)); opp=0;
+                                               for (int opmati=1;opmati<=(*inputpars.jjj[i]).est.Chi();++opmati)
+                                               {opp(opmati,opmati)=real((*inputpars.jjj[i]).est(0,opmati));}
+                                                myPrintComplexMatrix(fout_opmat,opp);
+                                             
+                                             for(int opmati=-1;opmati>=-nofcomponents;--opmati)
+                                             {Matrix op((*inputpars.jjj[i]).opmat(opmati,Hxc,Hext));
+                                             myPrintComplexMatrix(fout_opmat,op);}
+                                              }
+                     else
+                     {Matrix op((*inputpars.jjj[i]).opmat((int)opmat,Hxc,Hext));
+                      myPrintComplexMatrix(fout_opmat,op);
+                     }
+                    }
+                   }     
       printf("\n");
      } if(opmat<1e10)fclose(fout_opmat);
    } else { // option -r sipffile
@@ -254,8 +277,7 @@ if (!do_sipf)
         jjj.maxE=maxE;jjj.pinit=pinit;jjj.ninit=ninit;
         jjj.transitionnumber=0;int tc=0;nt=0;
         if(trs_write_next_line(fout_trs,jjj,nt,1,1,1,1,tc,TT,Hxc,Hext,jjj.eigenstates(Hxc,Hext,TT),d,-1e100,maxE,observable,Q))
-        {fprintf(stderr,"Warning singleion: no transition found within energy in range [minE,maxE]=[%g,%g] found\n"
-                        " (within first crystallographic unit of magnetic unit cell)\n"
+        {fprintf(stderr,"Warning singleion: no transition found within energy in range [minE,maxE]=[%g,%g]\n"
                         " please increase energy range in option -maxE \n",0.0,maxE);
         }
         else
@@ -267,8 +289,27 @@ if (!do_sipf)
         fclose(fout_trs);
         if(nmax<nt){printf("...");}
       } if(opmat<1e10){fout_opmat=fopen_errchk("results/op.mat","w");
-                  Matrix op(jjj.opmat((int)opmat,Hxc,Hext));
-                  myPrintComplexMatrix(fout_opmat,op);fclose(fout_opmat);}
+                       fprintf(fout_opmat,"#! d=%i  ",jjj.est.Chi());
+if(opmat>nofcomponents){ for(int opmati=0;opmati<=nofcomponents;++opmati)
+                                             {Matrix op(jjj.opmat(opmati,Hxc,Hext));
+                      myPrintComplexMatrix(fout_opmat,op);}
+
+                        }
+                    else
+                    { if(opmat<-nofcomponents){Matrix opp(jjj.opmat(0,Hxc,Hext)); opp=0;
+                                               for (int opmati=1;opmati<=jjj.est.Chi();++opmati)
+                                               {opp(opmati,opmati)=real(jjj.est(0,opmati));}
+                                                myPrintComplexMatrix(fout_opmat,opp);
+                                             for(int opmati=-1;opmati>=-nofcomponents;--opmati)
+                                             {Matrix op(jjj.opmat(opmati,Hxc,Hext));
+                                              myPrintComplexMatrix(fout_opmat,op);}
+                                              }
+                     else
+                     {Matrix op(jjj.opmat((int)opmat,Hxc,Hext));
+                      myPrintComplexMatrix(fout_opmat,op);
+                     }
+                    }
+fclose(fout_opmat);}
  
       printf("\n");
    }
