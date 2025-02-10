@@ -1,5 +1,9 @@
 # McPhase
 
+> [!NOTE]
+> This repository has been superceded by the official McPhase source repository: [https://github.com/mcphase/source](https://github.com/mcphase/source)
+> and will no longer be updated.
+
 McPhase is a Mean-field monte-Carlo simulation program for magnetic PHASE diagrams 
 and excitations, originally developed by Martin Rotter. For the 
 [online documentation](http://www.mcphase.de/manual/index.html),
